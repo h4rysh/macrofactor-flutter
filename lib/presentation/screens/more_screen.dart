@@ -59,7 +59,7 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.info_outline_rounded,
             iconColor: AppTheme.textSecondary,
             title: 'About MacroFactor (Indian Edition)',
-            subtitle: 'v1.1.0 • Clean-Room Adherence-Neutral',
+            subtitle: 'v1.2.0 • Clean-Room Adherence-Neutral',
             destination: const AboutScreen(),
           ),
         ],
