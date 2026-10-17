@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
+import '../widgets/apple_tactile_card.dart';
 import '../widgets/expenditure_card.dart';
 import '../widgets/macro_gauge_ring.dart';
 import '../widgets/weight_trend_card.dart';
 import 'food_search_screen.dart';
+import 'goal_questionnaire_sheet.dart';
 import 'quick_actions_sheet.dart';
 import 'weight_log_modal.dart';
 
@@ -90,6 +92,17 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                           onPressed: () => WeightLogModal.show(context),
                         ),
+                        // Adaptive Goal Questionnaire Action
+                        IconButton(
+                          key: const Key('dashboard_goal_setup_btn'),
+                          tooltip: 'Personalize Program',
+                          icon: const Icon(
+                            Icons.tune_rounded,
+                            color: AppTheme.activeBlue,
+                            size: 22,
+                          ),
+                          onPressed: () => GoalQuestionnaireSheet.show(context),
+                        ),
                         // Strategy Action
                         if (onNavigateToStrategy != null)
                           IconButton(
@@ -114,6 +127,89 @@ class DashboardScreen extends ConsumerWidget {
               sliver: SliverList(
                 delegate: SliverChildListDelegate(
                   [
+                    // Top Interactive Direction Banner (Apple Tactile)
+                    AppleBouncy(
+                      onTap: () => GoalQuestionnaireSheet.show(context),
+                      child: Container(
+                        key: const Key('dashboard_goal_banner'),
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: AppTheme.activeBlue.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppTheme.activeBlue.withValues(alpha: 0.25),
+                            width: 0.9,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(9),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppTheme.activeBlue.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.auto_awesome_rounded,
+                                color: AppTheme.activeBlue,
+                                size: 22,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'ADAPTIVE SETUP',
+                                        style: TextStyle(
+                                          fontFamily: 'MacroSans',
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppTheme.activeBlue,
+                                          letterSpacing: 0.8,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Personalize Your Goal & Diet',
+                                    style: TextStyle(
+                                      fontFamily: 'MacroSans',
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppTheme.textPrimary,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'Tailor rate, Indian staples, and protein strategy in 6 steps',
+                                    style: TextStyle(
+                                      fontFamily: 'DMSans',
+                                      fontSize: 11,
+                                      color: AppTheme.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 14,
+                              color: AppTheme.activeBlue,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                     // A. Nutrition Focus Tile: Macro Gauge Ring (Calories + P/F/C breakdown)
                     MacroGaugeRing(
                       consumed: dailyNutrition,
@@ -195,15 +291,17 @@ class DashboardScreen extends ConsumerWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return InkWell(
+    return AppleBouncy(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
         decoration: BoxDecoration(
           color: AppTheme.cardSurface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppTheme.cardBorder, width: 0.8),
+          border: Border.all(
+            color: color.withValues(alpha: 0.25),
+            width: 0.8,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,

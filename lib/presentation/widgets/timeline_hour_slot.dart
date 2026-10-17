@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../domain/models/food_models.dart';
 import '../theme/app_theme.dart';
+import 'apple_tactile_card.dart';
 import 'food_svg_icon.dart';
 import 'timeline_food_card.dart';
 
@@ -59,7 +60,8 @@ class TimelineHourSlot extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Time capsule with plus button
-              GestureDetector(
+              AppleBouncy(
+                scaleDown: 0.94,
                 onTap: onAddTap,
                 child: Container(
                   padding:
@@ -160,7 +162,8 @@ class TimelineHourSlot extends StatelessWidget {
                     children: entries.map((entry) {
                       return Padding(
                         padding: const EdgeInsets.only(right: 10),
-                        child: GestureDetector(
+                        child: AppleBouncy(
+                          scaleDown: 0.90,
                           onTap: () => onEntryTap(entry),
                           child: FoodSvgIcon(
                             iconName: entry.food.iconName,

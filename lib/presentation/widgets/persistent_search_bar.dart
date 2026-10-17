@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
+import 'apple_tactile_card.dart';
 
 /// Persistent quick search bar docked above the bottom nav bar.
 class PersistentSearchBar extends StatelessWidget {
@@ -33,52 +34,71 @@ class PersistentSearchBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          // Search Icon & Prompt
+          // Search Icon & Prompt with tactile bounce
           Expanded(
-            child: GestureDetector(
+            child: AppleBouncy(
               onTap: onSearchTap,
-              behavior: HitTestBehavior.opaque,
-              child: const Row(
-                children: [
-                  Icon(
-                    Icons.search_rounded,
-                    color: AppTheme.textSecondary,
-                    size: 20,
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'Search for a food',
-                    style: TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+              scaleDown: 0.98,
+              child: Container(
+                color: Colors.transparent,
+                child: const Row(
+                  children: [
+                    Icon(
+                      Icons.search_rounded,
                       color: AppTheme.textSecondary,
+                      size: 20,
                     ),
-                  ),
-                ],
+                    SizedBox(width: 8),
+                    Text(
+                      'Search for a food',
+                      style: TextStyle(
+                        fontFamily: 'DMSans',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
 
           // Barcode scanner shortcut
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner_rounded, size: 20),
-            color: AppTheme.textSecondary,
-            visualDensity: VisualDensity.compact,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            onPressed: onBarcodeTap,
+          AppleBouncy(
+            scaleDown: 0.90,
+            onTap: onBarcodeTap,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.transparent,
+              ),
+              child: const Icon(
+                Icons.qr_code_scanner_rounded,
+                size: 20,
+                color: AppTheme.textSecondary,
+              ),
+            ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 8),
 
           // Custom Food / Plate shortcut
-          IconButton(
-            icon: const Icon(Icons.restaurant_menu_rounded, size: 20),
-            color: AppTheme.textSecondary,
-            visualDensity: VisualDensity.compact,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            onPressed: onCustomFoodTap,
+          AppleBouncy(
+            scaleDown: 0.90,
+            onTap: onCustomFoodTap,
+            child: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.transparent,
+              ),
+              child: const Icon(
+                Icons.restaurant_menu_rounded,
+                size: 20,
+                color: AppTheme.textSecondary,
+              ),
+            ),
           ),
         ],
       ),

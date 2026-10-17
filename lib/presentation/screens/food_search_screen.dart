@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/food_models.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
+import '../widgets/apple_tactile_card.dart';
 import '../widgets/food_svg_icon.dart';
 import 'plate_serving_sheet.dart';
 
@@ -239,29 +240,43 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                     final isSelected = _selectedFilter == filter;
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: FilterChip(
-                        label: Text(filter.displayName),
-                        selected: isSelected,
-                        selectedColor: AppTheme.activeBlue.withAlpha(50),
-                        backgroundColor: AppTheme.cardSurface,
-                        side: BorderSide(
-                          color: isSelected
-                              ? AppTheme.activeBlue
-                              : AppTheme.cardBorder,
-                        ),
-                        labelStyle: TextStyle(
-                          fontFamily: 'MacroSans',
-                          fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: isSelected
-                              ? AppTheme.textPrimary
-                              : AppTheme.textSecondary,
-                        ),
-                        onSelected: (selected) {
+                      child: AppleBouncy(
+                        scaleDown: 0.94,
+                        onTap: () {
                           setState(() => _selectedFilter = filter);
                           _performSearch(_searchController.text);
                         },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 7,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? AppTheme.activeBlue.withValues(alpha: 0.16)
+                                : AppTheme.cardSurface,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppTheme.activeBlue
+                                  : AppTheme.cardBorder,
+                              width: isSelected ? 1.2 : 0.8,
+                            ),
+                          ),
+                          child: Text(
+                            filter.displayName,
+                            style: TextStyle(
+                              fontFamily: 'MacroSans',
+                              fontSize: 12,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
+                              color: isSelected
+                                  ? AppTheme.activeBlue
+                                  : AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
                       ),
                     );
                   }).toList(),
@@ -305,46 +320,78 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final food = _searchResults[index];
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.cardSurface,
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: AppTheme.cardBorder),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(16),
-                        child: ListTile(
-                          leading: FoodSvgIcon(
-                            iconName: food.iconName,
-                            size: 32,
+                    return AppleBouncy(
+                      scaleDown: 0.98,
+                      onTap: () => _openPlateSheet(food),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardSurface,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: AppTheme.cardBorder,
+                            width: 0.8,
                           ),
-                          title: Text(
-                            food.name,
-                            style: const TextStyle(
-                              fontFamily: 'MacroSans',
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
+                        ),
+                        child: Row(
+                          children: [
+                            FoodSvgIcon(
+                              iconName: food.iconName,
+                              size: 34,
                             ),
-                          ),
-                          subtitle: Padding(
-                            padding: const EdgeInsets.only(top: 4),
-                            child: Text(
-                              '${food.caloriesPer100g.round()} kcal • ${food.proteinPer100g.toStringAsFixed(1)}P • ${food.fatPer100g.toStringAsFixed(1)}F • ${food.carbsPer100g.toStringAsFixed(1)}C per 100g',
-                              style: const TextStyle(
-                                fontFamily: 'DMSans',
-                                fontSize: 12,
-                                color: AppTheme.textSecondary,
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    food.name,
+                                    style: const TextStyle(
+                                      fontFamily: 'MacroSans',
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Wrap(
+                                    spacing: 6,
+                                    runSpacing: 4,
+                                    children: [
+                                      AppleBadge(
+                                        label:
+                                            '${food.caloriesPer100g.round()} kcal',
+                                        color: AppTheme.calories,
+                                      ),
+                                      AppleBadge(
+                                        label:
+                                            '${food.proteinPer100g.toStringAsFixed(1)}P',
+                                        color: AppTheme.protein,
+                                      ),
+                                      AppleBadge(
+                                        label:
+                                            '${food.fatPer100g.toStringAsFixed(1)}F',
+                                        color: AppTheme.fat,
+                                      ),
+                                      AppleBadge(
+                                        label:
+                                            '${food.carbsPer100g.toStringAsFixed(1)}C',
+                                        color: AppTheme.carbs,
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-                          trailing: const Icon(
-                            Icons.arrow_forward_ios_rounded,
-                            size: 14,
-                            color: AppTheme.textMuted,
-                          ),
-                          onTap: () => _openPlateSheet(food),
+                            const Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 13,
+                              color: AppTheme.textMuted,
+                            ),
+                          ],
                         ),
                       ),
                     );

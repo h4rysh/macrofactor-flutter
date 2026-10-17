@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../../domain/models/food_models.dart';
 import '../theme/app_theme.dart';
+import '../widgets/apple_tactile_card.dart';
 import 'food_search_screen.dart';
+import 'goal_questionnaire_sheet.dart';
 import 'weight_log_modal.dart';
 
 /// Quick actions bottom sheet triggered by the center '+' navigation button.
@@ -52,9 +54,19 @@ class QuickActionsSheet extends StatelessWidget {
               const SizedBox(height: 16),
               _buildTile(
                 context: context,
+                icon: Icons.tune_rounded,
+                title: 'Personalize Goals & Preferences',
+                color: AppTheme.activeBlue,
+                onTap: () {
+                  Navigator.pop(context);
+                  GoalQuestionnaireSheet.show(context);
+                },
+              ),
+              _buildTile(
+                context: context,
                 icon: Icons.search_rounded,
                 title: 'Search Food / Add to Plate',
-                color: AppTheme.activeBlue,
+                color: AppTheme.calories,
                 onTap: () {
                   Navigator.pop(context);
                   Navigator.push(
@@ -67,7 +79,7 @@ class QuickActionsSheet extends StatelessWidget {
                 context: context,
                 icon: Icons.qr_code_scanner_rounded,
                 title: 'Scan Barcode',
-                color: AppTheme.calories,
+                color: AppTheme.carbs,
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -130,40 +142,45 @@ class QuickActionsSheet extends StatelessWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.cardElevated,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.cardBorder.withAlpha(80)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: ListTile(
-          leading: Container(
-            width: 38,
-            height: 38,
-            decoration: BoxDecoration(
-              color: color.withAlpha(35),
-              borderRadius: BorderRadius.circular(10),
+    return AppleBouncy(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.cardElevated,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: AppTheme.cardBorder.withAlpha(80)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: color.withAlpha(35),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 20),
             ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'MacroSans',
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(
+                  fontFamily: 'MacroSans',
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
             ),
-          ),
-          trailing: const Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 14,
-            color: AppTheme.textMuted,
-          ),
-          onTap: onTap,
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: AppTheme.textMuted,
+            ),
+          ],
         ),
       ),
     );

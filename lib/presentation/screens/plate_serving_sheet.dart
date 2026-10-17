@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/models/food_models.dart';
 import '../../domain/models/user_profile.dart';
 import '../theme/app_theme.dart';
+import '../widgets/apple_tactile_card.dart';
 import '../widgets/food_svg_icon.dart';
 
 /// Authentic MacroFactor Plate Serving Selector Bottom Sheet.
@@ -335,14 +336,24 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                   ),
                   child: Row(
                     children: [
-                      IconButton(
-                        icon: const Icon(Icons.remove, size: 18),
-                        color: AppTheme.textPrimary,
-                        onPressed: () {
+                      AppleBouncy(
+                        scaleDown: 0.88,
+                        onTap: () {
                           if (_quantity > 0.5) {
                             setState(() => _quantity -= 0.5);
                           }
                         },
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          child: Icon(
+                            Icons.remove,
+                            size: 18,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
                       ),
                       Text(
                         _quantity.toStringAsFixed(1),
@@ -353,12 +364,22 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                           color: AppTheme.textPrimary,
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.add, size: 18),
-                        color: AppTheme.textPrimary,
-                        onPressed: () {
+                      AppleBouncy(
+                        scaleDown: 0.88,
+                        onTap: () {
                           setState(() => _quantity += 0.5);
                         },
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          child: Icon(
+                            Icons.add,
+                            size: 18,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -429,26 +450,39 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                   final isSelected = _selectedOil == oil;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(oil.displayName),
-                      selected: isSelected,
-                      selectedColor: AppTheme.activeBlue.withAlpha(60),
-                      backgroundColor: AppTheme.cardElevated,
-                      side: BorderSide(
-                        color: isSelected
-                            ? AppTheme.activeBlue
-                            : AppTheme.cardBorder,
+                    child: AppleBouncy(
+                      scaleDown: 0.94,
+                      onTap: () => setState(() => _selectedOil = oil),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? AppTheme.activeBlue.withValues(alpha: 0.18)
+                              : AppTheme.cardElevated,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected
+                                ? AppTheme.activeBlue
+                                : AppTheme.cardBorder,
+                            width: isSelected ? 1.4 : 1.0,
+                          ),
+                        ),
+                        child: Text(
+                          oil.displayName,
+                          style: TextStyle(
+                            fontFamily: 'DMSans',
+                            fontSize: 12,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected
+                                ? AppTheme.textPrimary
+                                : AppTheme.textSecondary,
+                          ),
+                        ),
                       ),
-                      labelStyle: TextStyle(
-                        fontFamily: 'DMSans',
-                        fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected
-                            ? AppTheme.textPrimary
-                            : AppTheme.textSecondary,
-                      ),
-                      onSelected: (_) => setState(() => _selectedOil = oil),
                     ),
                   );
                 }).toList(),
@@ -504,16 +538,9 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
             SizedBox(
               width: double.infinity,
               height: 52,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.activeBlue,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  elevation: 0,
-                ),
-                onPressed: () {
+              child: AppleBouncy(
+                scaleDown: 0.96,
+                onTap: () {
                   widget.onLogConfirmed(
                     unit: _selectedUnit,
                     quantity: _quantity,
@@ -522,12 +549,34 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                   );
                   Navigator.pop(context);
                 },
-                child: const Text(
-                  'Add to Plate',
-                  style: TextStyle(
-                    fontFamily: 'MacroSans',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
+                child: Container(
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [
+                        AppTheme.activeBlue,
+                        Color(0xFF0056B3),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.activeBlue.withValues(alpha: 0.35),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'Add to Plate',
+                    style: TextStyle(
+                      fontFamily: 'MacroSans',
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
                   ),
                 ),
               ),
