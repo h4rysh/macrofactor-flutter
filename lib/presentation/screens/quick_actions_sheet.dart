@@ -50,7 +50,6 @@ class QuickActionsSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-
               _buildTile(
                 context: context,
                 icon: Icons.search_rounded,

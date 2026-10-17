@@ -88,8 +88,9 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     final macroTargets = ref.watch(macroTargetProvider);
 
     // Filter logs for selected date
-    final dayLogs =
-        allLogs.where((log) => _isSameDay(log.loggedAt, _selectedDate)).toList();
+    final dayLogs = allLogs
+        .where((log) => _isSameDay(log.loggedAt, _selectedDate))
+        .toList();
 
     // Compute daily nutrition aggregate for selected date
     final dailyAggregate = dayLogs.fold<DailyNutritionAggregate>(

@@ -329,8 +329,7 @@ class FoodLogEntry {
         region: 'All',
         caloriesPer100g:
             gramWeight > 0 ? (calories / gramWeight) * 100 : calories,
-        proteinPer100g:
-            gramWeight > 0 ? (protein / gramWeight) * 100 : protein,
+        proteinPer100g: gramWeight > 0 ? (protein / gramWeight) * 100 : protein,
         carbsPer100g: gramWeight > 0 ? (carbs / gramWeight) * 100 : carbs,
         fatPer100g: gramWeight > 0 ? (fat / gramWeight) * 100 : fat,
         fiberPer100g: gramWeight > 0 ? (fiber / gramWeight) * 100 : fiber,

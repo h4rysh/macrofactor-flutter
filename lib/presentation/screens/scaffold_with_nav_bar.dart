@@ -39,7 +39,8 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           color: AppTheme.surface,
-          border: Border(top: BorderSide(color: AppTheme.cardBorder, width: 0.8)),
+          border:
+              Border(top: BorderSide(color: AppTheme.cardBorder, width: 0.8)),
         ),
         child: SafeArea(
           child: SizedBox(

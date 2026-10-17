@@ -134,7 +134,8 @@ class DateCarouselRibbon extends StatelessWidget {
             children: days.map((day) {
               final isSelected = _isSameDay(day, selectedDate);
               final isToday = _isSameDay(day, now);
-              final dayInitial = DateFormat('E').format(day)[0]; // 'M', 'T', 'W'...
+              final dayInitial =
+                  DateFormat('E').format(day)[0]; // 'M', 'T', 'W'...
               final dayNumber = day.day.toString();
 
               return GestureDetector(
@@ -144,14 +145,15 @@ class DateCarouselRibbon extends StatelessWidget {
                   width: 44,
                   height: 56,
                   decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppTheme.cardElevated
-                        : Colors.transparent,
+                    color:
+                        isSelected ? AppTheme.cardElevated : Colors.transparent,
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(
                       color: isSelected
                           ? AppTheme.activeBlue
-                          : (isToday ? AppTheme.cardBorder : Colors.transparent),
+                          : (isToday
+                              ? AppTheme.cardBorder
+                              : Colors.transparent),
                       width: isSelected ? 2.2 : 1.0,
                     ),
                   ),

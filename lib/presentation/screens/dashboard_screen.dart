@@ -45,8 +45,8 @@ class DashboardScreen extends ConsumerWidget {
             // 1. Sleek Dashboard Header
             SliverToBoxAdapter(
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 16.0, vertical: 12.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -54,7 +54,9 @@ class DashboardScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          DateFormat('EEEE, MMM d').format(selectedDate).toUpperCase(),
+                          DateFormat('EEEE, MMM d')
+                              .format(selectedDate)
+                              .toUpperCase(),
                           style: const TextStyle(
                             fontFamily: 'MacroSans',
                             fontSize: 11,
@@ -256,8 +258,7 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
                   color: badgeColor.withAlpha(30),
                   borderRadius: BorderRadius.circular(6),

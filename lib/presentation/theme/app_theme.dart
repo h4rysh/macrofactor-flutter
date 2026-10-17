@@ -5,7 +5,8 @@ class AppTheme {
   AppTheme._();
 
   // Core Palette (Authentic Obsidian Dark Mode extracted from com.sbs.diet APK)
-  static const Color background = Color(0xFF0B0B0E); // Authentic Obsidian Pitch Black
+  static const Color background =
+      Color(0xFF0B0B0E); // Authentic Obsidian Pitch Black
   static const Color surface = Color(0xFF141418); // Elevated Dark Card
   static const Color cardSurface = Color(0xFF16161C); // Card Background
   static const Color cardElevated = Color(0xFF1F1F26); // Pill & Input Surface
@@ -17,8 +18,10 @@ class AppTheme {
   static const Color fat = Color(0xFFFACC15); // Bright Golden Amber
   static const Color carbs = Color(0xFF38BDF8); // Electric Cyan Aqua
   static const Color expenditure = Color(0xFF34D399); // Dynamic Emerald Green
-  static const Color trendWeight = Color(0xFFC084FC); // Smoothed Lavender / Violet
-  static const Color activeBlue = Color(0xFF0055E1); // Authentic MacroFactor Sapphire Blue
+  static const Color trendWeight =
+      Color(0xFFC084FC); // Smoothed Lavender / Violet
+  static const Color activeBlue =
+      Color(0xFF0055E1); // Authentic MacroFactor Sapphire Blue
 
   // Neutral Text & Icons
   static const Color textPrimary = Color(0xFFFFFFFF);

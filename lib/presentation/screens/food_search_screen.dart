@@ -95,7 +95,8 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
       results = results.where((f) => f.proteinPer100g >= 12.0).toList();
     } else if (_selectedFilter == FoodFilterType.vegetarian) {
       results = results
-          .where((f) => !f.category.toLowerCase().contains('meat') &&
+          .where((f) =>
+              !f.category.toLowerCase().contains('meat') &&
               !f.category.toLowerCase().contains('poultry') &&
               !f.category.toLowerCase().contains('fish'))
           .toList();

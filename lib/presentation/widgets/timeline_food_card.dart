@@ -32,7 +32,8 @@ class TimelineFoodCard extends StatelessWidget {
           color: AppTheme.protein.withAlpha(50),
           borderRadius: BorderRadius.circular(14),
         ),
-        child: const Icon(Icons.delete_outline_rounded, color: AppTheme.protein),
+        child:
+            const Icon(Icons.delete_outline_rounded, color: AppTheme.protein),
       ),
       child: GestureDetector(
         onTap: onTap,

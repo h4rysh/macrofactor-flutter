@@ -113,8 +113,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
         '${_loggedAt.hour % 12 == 0 ? 12 : _loggedAt.hour % 12}:${_loggedAt.minute.toString().padLeft(2, '0')} ${_loggedAt.hour >= 12 ? 'PM' : 'AM'}';
 
     // Calculate percentage macro contribution of this food item
-    final totalMacroGrams =
-        _effectiveProtein + _effectiveFat + _effectiveCarbs;
+    final totalMacroGrams = _effectiveProtein + _effectiveFat + _effectiveCarbs;
     final proteinPct = totalMacroGrams > 0
         ? ((_effectiveProtein / totalMacroGrams) * 100).round()
         : 0;

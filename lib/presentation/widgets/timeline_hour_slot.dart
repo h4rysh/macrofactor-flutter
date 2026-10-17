@@ -62,7 +62,8 @@ class TimelineHourSlot extends StatelessWidget {
               GestureDetector(
                 onTap: onAddTap,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   decoration: BoxDecoration(
                     color: AppTheme.cardSurface,
                     borderRadius: BorderRadius.circular(16),
@@ -146,7 +147,8 @@ class TimelineHourSlot extends StatelessWidget {
             if (isCollapsed)
               // Collapsed mode: horizontal scroll of food icons
               Container(
-                padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                padding:
+                    const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 decoration: BoxDecoration(
                   color: AppTheme.cardSurface.withAlpha(150),
                   borderRadius: BorderRadius.circular(12),
