@@ -36,33 +36,40 @@ class WeightTrendCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppTheme.trendWeight.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
+                Flexible(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppTheme.trendWeight.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.show_chart,
+                          size: 16,
+                          color: AppTheme.trendWeight,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.show_chart,
-                        size: 16,
-                        color: AppTheme.trendWeight,
+                      const SizedBox(width: 8),
+                      const Flexible(
+                        child: Text(
+                          'WEIGHT TREND',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'MacroSans',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.trendWeight,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'WEIGHT TREND',
-                      style: TextStyle(
-                        fontFamily: 'MacroSans',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.trendWeight,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 6),
                 OutlinedButton.icon(
                   onPressed: onLogWeightTap,
                   icon: const Icon(Icons.add, size: 14),

@@ -19,6 +19,11 @@ void main() {
   testWidgets(
       'MacroFactorApp loads dashboard and renders core adherence-neutral UI',
       (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(450, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -30,28 +35,43 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Verify Brand Title
-    expect(find.text('MacroFactor'), findsOneWidget);
-    expect(find.text('MF'), findsOneWidget);
+    // The app starts on Food Log screen (Index 1) as reconstructed from MacroFactor
+    expect(find.text('Today'), findsOneWidget);
+
+    // Switch to Dashboard tab (Index 0)
+    await tester.tap(find.text('Dashboard').first);
+    await tester.pumpAndSettle();
+
+    // Verify Brand / Screen Header
+    expect(find.text('Dashboard'), findsWidgets);
 
     // Verify Core Dynamic Algorithm Cards
     expect(find.text('ENERGY EXPENDITURE'), findsOneWidget);
+
+    // Scroll until Weight Trend and Energy Balance are visible
+    await tester.scrollUntilVisible(
+      find.text('WEIGHT TREND'),
+      200.0,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+
     expect(find.text('WEIGHT TREND'), findsOneWidget);
+    expect(find.text('ENERGY BALANCE'), findsOneWidget);
 
-    // Verify 4 Meal Sections
-    expect(find.text('BREAKFAST'), findsOneWidget);
-    expect(find.text('LUNCH'), findsOneWidget);
-    expect(find.text('DINNER'), findsOneWidget);
-    expect(find.text('SNACKS & EXTRAS'), findsOneWidget);
-
-    // Verify Date Switcher
-    expect(find.byIcon(Icons.chevron_left), findsOneWidget);
-    expect(find.byIcon(Icons.chevron_right), findsOneWidget);
+    // Verify Quick Actions
+    expect(find.text('Log Food'), findsOneWidget);
+    expect(find.text('Log Weight'), findsOneWidget);
   });
 
   testWidgets(
       'Tapping FAB opens Quick Log bottom sheet with meal and weight actions',
       (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(450, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -63,17 +83,16 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Tap the centered FAB (+)
-    await tester.tap(find.byType(FloatingActionButton));
+    // Tap the centered FAB (+) in bottom nav bar
+    await tester.tap(find.byKey(const Key('center_action_fab')));
     await tester.pumpAndSettle();
 
-    // Verify Quick Log Sheet contents
-    expect(find.text('Quick Log'), findsOneWidget);
-    expect(find.text('Breakfast'), findsOneWidget);
-    expect(find.text('Lunch'), findsOneWidget);
-    expect(find.text('Dinner'), findsOneWidget);
-    expect(find.text('Snacks'), findsOneWidget);
-    expect(find.text('Scale Weight'), findsOneWidget);
+    // Verify Quick Actions Sheet contents
+    expect(find.text('Quick Actions'), findsOneWidget);
+    expect(find.text('Search Food / Add to Plate'), findsOneWidget);
+    expect(find.text('Scan Barcode'), findsOneWidget);
+    expect(find.text('Log Scale Weight'), findsOneWidget);
+    expect(find.textContaining('Quick Add Calories'), findsOneWidget);
   });
 
   testWidgets(
@@ -90,8 +109,8 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Strategy icon is in the bottom app bar
-    final strategyIcon = find.byIcon(Icons.tune_outlined).last;
+    // Strategy icon is Icons.hub_outlined (authentic MacroFactor 3 interconnected nodes)
+    final strategyIcon = find.byIcon(Icons.hub_outlined);
     expect(strategyIcon, findsOneWidget);
 
     await tester.tap(strategyIcon);

@@ -36,33 +36,40 @@ class DynamicExpenditureCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppTheme.expenditure.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
+                Flexible(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppTheme.expenditure.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(
+                          Icons.bolt,
+                          size: 16,
+                          color: AppTheme.expenditure,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.bolt,
-                        size: 16,
-                        color: AppTheme.expenditure,
+                      const SizedBox(width: 8),
+                      const Flexible(
+                        child: Text(
+                          'ENERGY EXPENDITURE',
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontFamily: 'MacroSans',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.expenditure,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'ENERGY EXPENDITURE',
-                      style: TextStyle(
-                        fontFamily: 'MacroSans',
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.expenditure,
-                        letterSpacing: 0.8,
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(width: 6),
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 3),

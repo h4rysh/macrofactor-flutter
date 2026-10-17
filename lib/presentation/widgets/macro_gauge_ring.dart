@@ -154,29 +154,33 @@ class _MacroProgressItem extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'MacroSans',
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: color,
-                letterSpacing: 0.5,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'MacroSans',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
-            Text(
-              '${consumedGrams.round()}/${targetGrams.round()}g',
-              style: const TextStyle(
-                fontFamily: 'DMSans',
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: AppTheme.textSecondary,
+              const SizedBox(width: 4),
+              Text(
+                '${consumedGrams.round()}/${targetGrams.round()}g',
+                style: const TextStyle(
+                  fontFamily: 'DMSans',
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                  color: AppTheme.textSecondary,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 6),
         ClipRRect(

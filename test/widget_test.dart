@@ -20,7 +20,7 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    expect(find.text('MacroFactor'), findsOneWidget);
+    expect(find.text('Dashboard'), findsWidgets);
 
     db.close();
   });

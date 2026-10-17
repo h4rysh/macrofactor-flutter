@@ -1,24 +1,44 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/domain/models/food_models.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/screens/food_detail_modal.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/food_svg_icon.dart';
+import '../../domain/models/food_models.dart';
+import '../providers/app_providers.dart';
+import '../theme/app_theme.dart';
+import '../widgets/food_svg_icon.dart';
+import 'plate_serving_sheet.dart';
 
-/// Instant FTS5 Food Search screen for Indian and International foods.
+enum FoodFilterType {
+  all('All'),
+  southIndian('South Indian'),
+  northIndian('North Indian'),
+  highProtein('High Protein'),
+  vegetarian('Vegetarian');
+
+  const FoodFilterType(this.displayName);
+  final String displayName;
+}
+
+/// Instant FTS5 Food Search screen for Indian & Global foods.
+/// Features cuisine and macro filter pills, and opens the authentic PlateServingSheet.
 class FoodSearchScreen extends ConsumerStatefulWidget {
   const FoodSearchScreen({
     super.key,
-    required this.mealType,
+    this.mealType = MealType.lunch,
+    this.initialLoggedAt,
   });
 
   final MealType mealType;
+  final DateTime? initialLoggedAt;
 
-  static MaterialPageRoute<void> route(MealType mealType) {
+  static MaterialPageRoute<void> route({
+    MealType mealType = MealType.lunch,
+    DateTime? initialLoggedAt,
+  }) {
     return MaterialPageRoute(
-      builder: (_) => FoodSearchScreen(mealType: mealType),
+      builder: (_) => FoodSearchScreen(
+        mealType: mealType,
+        initialLoggedAt: initialLoggedAt,
+      ),
     );
   }
 
@@ -31,6 +51,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   Timer? _debounceTimer;
   List<FoodItem> _searchResults = [];
   bool _isLoading = false;
+  FoodFilterType _selectedFilter = FoodFilterType.all;
 
   @override
   void initState() {
@@ -47,7 +68,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
 
   void _onSearchChanged(String text) {
     _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 200), () {
+    _debounceTimer = Timer(const Duration(milliseconds: 150), () {
       _performSearch(text);
     });
   }
@@ -55,89 +76,218 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   void _performSearch(String query) {
     setState(() => _isLoading = true);
     final db = ref.read(databaseProvider);
-    final results = db.searchFoods(query, limit: 40);
+    var results = db.searchFoods(query, limit: 60);
+
+    // Apply active filter
+    if (_selectedFilter == FoodFilterType.southIndian) {
+      results = results
+          .where((f) =>
+              f.region.toLowerCase().contains('south') ||
+              f.cuisine.toLowerCase().contains('south'))
+          .toList();
+    } else if (_selectedFilter == FoodFilterType.northIndian) {
+      results = results
+          .where((f) =>
+              f.region.toLowerCase().contains('north') ||
+              f.cuisine.toLowerCase().contains('north'))
+          .toList();
+    } else if (_selectedFilter == FoodFilterType.highProtein) {
+      results = results.where((f) => f.proteinPer100g >= 12.0).toList();
+    } else if (_selectedFilter == FoodFilterType.vegetarian) {
+      results = results
+          .where((f) => !f.category.toLowerCase().contains('meat') &&
+              !f.category.toLowerCase().contains('poultry') &&
+              !f.category.toLowerCase().contains('fish'))
+          .toList();
+    }
+
     setState(() {
       _searchResults = results;
       _isLoading = false;
     });
   }
 
+  void _openPlateSheet(FoodItem food) {
+    final db = ref.read(databaseProvider);
+    final portionUnits = db.getPortionUnits(food.id);
+    final macroTargets = ref.read(macroTargetProvider);
+
+    PlateServingSheet.show(
+      context: context,
+      food: food,
+      portionUnits: portionUnits,
+      macroTargets: macroTargets,
+      initialLoggedAt: widget.initialLoggedAt ?? DateTime.now(),
+      onLogConfirmed: ({
+        required PortionUnit unit,
+        required double quantity,
+        required OilModifier oilModifier,
+        required DateTime loggedAt,
+      }) {
+        ref.read(dailyFoodLogsProvider.notifier).addEntry(
+              food: food,
+              portionUnit: unit,
+              quantity: quantity,
+              mealType: widget.mealType,
+              oilModifier: oilModifier,
+              loggedAt: loggedAt,
+            );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Logged ${food.name} to Plate'),
+            backgroundColor: AppTheme.cardElevated,
+            duration: const Duration(seconds: 2),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+
+        Navigator.pop(context);
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: Text('Log ${widget.mealType.displayName}'),
+        title: const Text(
+          'Search Food',
+          style: TextStyle(
+            fontFamily: 'MacroSans',
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(64),
-          child: Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              autofocus: true,
-              style: const TextStyle(
-                fontFamily: 'DMSans',
-                fontSize: 16,
-                color: AppTheme.textPrimary,
-              ),
-              decoration: InputDecoration(
-                hintText:
-                    'Search 2,500+ Indian & global foods (e.g. Idli, Paneer, Dosa)...',
-                hintStyle: const TextStyle(
-                  fontFamily: 'DMSans',
-                  fontSize: 13,
-                  color: AppTheme.textMuted,
+          preferredSize: const Size.fromHeight(110),
+          child: Column(
+            children: [
+              // Search Input Box
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: TextField(
+                  controller: _searchController,
+                  autofocus: true,
+                  style: const TextStyle(
+                    fontFamily: 'DMSans',
+                    color: AppTheme.textPrimary,
+                    fontSize: 16,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: 'Search 2,500+ Indian & Global foods...',
+                    hintStyle: const TextStyle(
+                      fontFamily: 'DMSans',
+                      color: AppTheme.textSecondary,
+                    ),
+                    prefixIcon: const Icon(
+                      Icons.search_rounded,
+                      color: AppTheme.activeBlue,
+                    ),
+                    suffixIcon: _searchController.text.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(
+                              Icons.clear_rounded,
+                              color: AppTheme.textSecondary,
+                            ),
+                            onPressed: () {
+                              _searchController.clear();
+                              _performSearch('');
+                            },
+                          )
+                        : null,
+                    filled: true,
+                    fillColor: AppTheme.cardSurface,
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 12,
+                      horizontal: 16,
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: AppTheme.cardBorder),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: AppTheme.cardBorder),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(
+                        color: AppTheme.activeBlue,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                  onChanged: _onSearchChanged,
                 ),
-                prefixIcon:
-                    const Icon(Icons.search, color: AppTheme.textSecondary),
-                suffixIcon: _searchController.text.isNotEmpty
-                    ? IconButton(
-                        icon: const Icon(Icons.clear,
-                            color: AppTheme.textSecondary),
-                        onPressed: () {
-                          _searchController.clear();
-                          _performSearch('');
+              ),
+
+              const SizedBox(height: 10),
+
+              // Filter Pills Row
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Row(
+                  children: FoodFilterType.values.map((filter) {
+                    final isSelected = _selectedFilter == filter;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: Text(filter.displayName),
+                        selected: isSelected,
+                        selectedColor: AppTheme.activeBlue.withAlpha(50),
+                        backgroundColor: AppTheme.cardSurface,
+                        side: BorderSide(
+                          color: isSelected
+                              ? AppTheme.activeBlue
+                              : AppTheme.cardBorder,
+                        ),
+                        labelStyle: TextStyle(
+                          fontFamily: 'MacroSans',
+                          fontSize: 12,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected
+                              ? AppTheme.textPrimary
+                              : AppTheme.textSecondary,
+                        ),
+                        onSelected: (selected) {
+                          setState(() => _selectedFilter = filter);
+                          _performSearch(_searchController.text);
                         },
-                      )
-                    : null,
-                filled: true,
-                fillColor: AppTheme.surface,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppTheme.cardBorder),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: AppTheme.cardBorder),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide:
-                      const BorderSide(color: AppTheme.calories, width: 1.5),
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
-            ),
+              const SizedBox(height: 8),
+            ],
           ),
         ),
       ),
       body: _isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.calories))
+              child: CircularProgressIndicator(color: AppTheme.activeBlue),
+            )
           : _searchResults.isEmpty
               ? Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.search_off,
-                          size: 48, color: AppTheme.textMuted),
+                      const Icon(
+                        Icons.search_off_rounded,
+                        size: 54,
+                        color: AppTheme.textMuted,
+                      ),
                       const SizedBox(height: 12),
                       Text(
                         'No foods found for "${_searchController.text}"',
                         style: const TextStyle(
-                          fontFamily: 'DMSans',
+                          fontFamily: 'MacroSans',
                           fontSize: 15,
+                          fontWeight: FontWeight.w600,
                           color: AppTheme.textSecondary,
                         ),
                       ),
@@ -147,127 +297,50 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
                   itemCount: _searchResults.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final food = _searchResults[index];
-                    return _FoodSearchResultTile(
-                      food: food,
-                      onTap: () {
-                        FoodDetailModal.show(
-                          context,
-                          food: food,
-                          mealType: widget.mealType,
-                        );
-                      },
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: AppTheme.cardSurface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: AppTheme.cardBorder),
+                      ),
+                      child: ListTile(
+                        leading: FoodSvgIcon(
+                          iconName: food.iconName,
+                          size: 32,
+                        ),
+                        title: Text(
+                          food.name,
+                          style: const TextStyle(
+                            fontFamily: 'MacroSans',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        subtitle: Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(
+                            '${food.caloriesPer100g.round()} kcal • ${food.proteinPer100g.toStringAsFixed(1)}P • ${food.fatPer100g.toStringAsFixed(1)}F • ${food.carbsPer100g.toStringAsFixed(1)}C per 100g',
+                            style: const TextStyle(
+                              fontFamily: 'DMSans',
+                              fontSize: 12,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
+                        trailing: const Icon(
+                          Icons.arrow_forward_ios_rounded,
+                          size: 14,
+                          color: AppTheme.textMuted,
+                        ),
+                        onTap: () => _openPlateSheet(food),
+                      ),
                     );
                   },
                 ),
-    );
-  }
-}
-
-class _FoodSearchResultTile extends StatelessWidget {
-  const _FoodSearchResultTile({
-    required this.food,
-    required this.onTap,
-  });
-
-  final FoodItem food;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: AppTheme.cardBorder, width: 1),
-        ),
-        child: Row(
-          children: [
-            FoodSvgIcon(iconSvg: food.iconSvg, size: 42),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    food.name,
-                    style: const TextStyle(
-                      fontFamily: 'MacroSans',
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          borderRadius: BorderRadius.circular(6),
-                          border:
-                              Border.all(color: AppTheme.cardBorder, width: 1),
-                        ),
-                        child: Text(
-                          food.region,
-                          style: const TextStyle(
-                            fontFamily: 'DMSans',
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textSecondary,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        '${food.caloriesPer100g.round()} kcal / 100g',
-                        style: const TextStyle(
-                          fontFamily: 'DMSans',
-                          fontSize: 12,
-                          color: AppTheme.calories,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${food.proteinPer100g.toStringAsFixed(1)}g P',
-                  style: const TextStyle(
-                    fontFamily: 'MacroSans',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.protein,
-                  ),
-                ),
-                Text(
-                  '${food.carbsPer100g.toStringAsFixed(1)}g C • ${food.fatPer100g.toStringAsFixed(1)}g F',
-                  style: const TextStyle(
-                    fontFamily: 'DMSans',
-                    fontSize: 10,
-                    color: AppTheme.textMuted,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(width: 8),
-            const Icon(Icons.chevron_right,
-                size: 18, color: AppTheme.textMuted),
-          ],
-        ),
-      ),
     );
   }
 }

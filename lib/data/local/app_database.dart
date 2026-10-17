@@ -143,6 +143,9 @@ class AppDatabase {
     }).toList();
   }
 
+  /// Alias for getPortionUnitsForFood.
+  List<PortionUnit> getPortionUnits(int foodId) => getPortionUnitsForFood(foodId);
+
   FoodItem _mapFoodRow(Row row) {
     final foodId = row['id'] as int;
     final portionUnits = getPortionUnitsForFood(foodId);

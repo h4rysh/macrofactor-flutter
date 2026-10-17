@@ -49,6 +49,11 @@ class MacroTarget {
   final double carbsGrams;
   final double fatGrams;
 
+  double get targetCalories => calories;
+  double get targetProteinGrams => proteinGrams;
+  double get targetCarbsGrams => carbsGrams;
+  double get targetFatGrams => fatGrams;
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -62,6 +67,8 @@ class MacroTarget {
   @override
   int get hashCode => Object.hash(calories, proteinGrams, carbsGrams, fatGrams);
 }
+
+typedef MacroTargets = MacroTarget;
 
 /// User profile and active coaching program.
 @immutable

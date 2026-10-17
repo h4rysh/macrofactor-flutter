@@ -82,6 +82,50 @@ class DailyFoodLogsNotifier extends StateNotifier<List<FoodLogEntry>> {
     _db.deleteFoodLog(id);
     refresh();
   }
+
+  void removeEntry(int? id) {
+    if (id != null) {
+      deleteFood(id);
+    }
+  }
+
+  int addEntry({
+    required FoodItem food,
+    required PortionUnit portionUnit,
+    required double quantity,
+    required MealType mealType,
+    required OilModifier oilModifier,
+    required DateTime loggedAt,
+  }) {
+    final grams = (portionUnit.gramsPerUnit * quantity);
+    final effectiveCalories =
+        (food.caloriesPer100g * grams / 100.0) + oilModifier.additionalCalories;
+    final effectiveProtein = food.proteinPer100g * grams / 100.0;
+    final effectiveFat = (food.fatPer100g * grams / 100.0) +
+        (oilModifier.additionalCalories / 9.0);
+    final effectiveCarbs = food.carbsPer100g * grams / 100.0;
+    final effectiveFiber = food.fiberPer100g * grams / 100.0;
+
+    final entry = FoodLogEntry(
+      id: 0,
+      date: DateFormat('yyyy-MM-dd').format(loggedAt),
+      mealType: mealType,
+      foodId: food.id,
+      foodName: food.name,
+      servingQuantity: quantity,
+      unitName: portionUnit.unitName,
+      gramWeight: grams,
+      calories: effectiveCalories,
+      protein: effectiveProtein,
+      carbs: effectiveCarbs,
+      fat: effectiveFat,
+      fiber: effectiveFiber,
+      oilModifier: oilModifier,
+      loggedAt: loggedAt,
+      iconSvg: food.category,
+    );
+    return addFood(entry);
+  }
 }
 
 final dailyFoodLogsProvider =
@@ -217,3 +261,6 @@ final dailyMacroTargetProvider = Provider<MacroTarget>((ref) {
   final expenditureState = ref.watch(expenditureStateProvider);
   return profile.calculateTargetMacros(expenditureState.expenditureKcal);
 });
+
+/// Backwards compatible alias for dailyMacroTargetProvider
+final macroTargetProvider = dailyMacroTargetProvider;

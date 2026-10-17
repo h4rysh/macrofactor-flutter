@@ -1,4 +1,4 @@
-# MacroFactor (Indian Edition)
+# MacroFactor (Indian Edition) • 1:1 Clean-Room Flutter Reconstruction
 
 <div align="center">
 
@@ -10,33 +10,41 @@
 
 <br/>
 
-**A clean-room, adherence-neutral macro tracking and metabolic expenditure application for Android & iOS, featuring an authentic 2,500+ Indian food database (ICMR-NIN IFCT), 1-tap oil modifiers, and dynamic Bayesian energy balance algorithms.**
+**A clean-room 1:1 visual & UX reconstruction of MacroFactor for Android & iOS, featuring authentic Obsidian dark UI, hourly timeline logging, adherence-neutral Bayesian metabolic expenditure algorithms, and a 2,500+ Indian food database (ICMR-NIN IFCT) with 1-tap cooking oil modifiers.**
 
-[Download Production APK (v1.0.0)](https://github.com/h4rysh/macrofactor-flutter/releases/download/v1.0.0/app-release.apk) • [View Architecture](docs/ARCHITECTURE.md) • [Algorithm Specifications](docs/ALGORITHMS.md)
+<br/>
+
+[📥 **Download Production APK (v1.0.0)**](https://github.com/h4rysh/macrofactor-flutter/releases/download/v1.0.0/app-release.apk) • [🏛️ **Architecture Spec**](docs/ARCHITECTURE.md) • [📐 **Algorithm Formulations**](docs/ALGORITHMS.md)
 
 </div>
 
 ---
 
-## 📖 Table of Contents
-- [Philosophy: Adherence-Neutral Nutrition](#-philosophy-adherence-neutral-nutrition)
-- [Key Features](#-key-features)
-  - [1. Dynamic Expenditure Engine (Kalman Filter V3)](#1-dynamic-expenditure-engine-kalman-filter-v3)
-  - [2. Weight Trend Smoothing (EMA V2 + Noise Envelope)](#2-weight-trend-smoothing-ema-v2--noise-envelope)
-  - [3. HealthifyMe-Grade Indian Food Database](#3-healthifyme-grade-indian-food-database)
-  - [4. 1-Tap Cooking Oil Modifier](#4-1-tap-cooking-oil-modifier)
-  - [5. Dark High-Contrast UI & Custom Macro Gauges](#5-dark-high-contrast-ui--custom-macro-gauges)
-- [Mathematical Formulations](#-mathematical-formulations)
-- [System Architecture](#-system-architecture)
-- [Verification & Quality Gate](#-verification--quality-gate)
-- [Quick Start & Development](#-quick-start--development)
-- [License](#-license)
+## 📱 Visual & UX Reconstruction (REA Clean-Room)
+
+Engineered through systematic clean-room reverse engineering analysis of the authentic application topology, design tokens, and user experience patterns:
+
+```
+Obsidian Base:     #0B0B0E  (True deep OLED dark)
+Elevated Cards:    #16161C  (Subtle elevated surface)
+Hairline Borders:  #26262E  (1px micro-dividers)
+Macro Accents:     🔥 #FF5722 Cal  •  🍗 #FB923C Protein  •  🥑 #FACC15 Fat  •  🌾 #38BDF8 Carbs  •  ⚡ #0055E1 Expenditure
+```
+
+### Authentic Core Components
+- ⏱️ **Boot to Food Log**: Default startup launches directly into the hourly food timeline (Index 1), matching daily workflow.
+- 📅 **7-Day Date Ribbon**: Interactive horizontal date ribbon showing day abbreviations, numerical dates, today indicator, and completion status pips.
+- 🔥 **Flame & Macro Nutrition Strip**: Sleek horizontal status strip featuring flame icon, remaining calories, macro targets with color underlines, and page dot indicators.
+- 🕒 **Hourly Timeline Slots**: `[ 8 AM | + ]` capsule buttons for rapid hourly food entry, collapsed food icon rows, and detailed meal breakdown cards.
+- 🍽️ **Plate Serving Bottom Sheet**: Interactive serving size adjustor with real-time macro calculation, instant portion multipliers, and log confirmation.
+- 🔍 **Floating Docked Action Bar**: Persistent floating search bar docked above bottom nav with instant search, barcode scanner trigger, and quick-add actions (`+` bottom sheet).
+- 🧭 **Authentic 4-Tab Bottom Navigation**: Dashboard, Food Log, Strategy (3-node hub icon), and More, anchored by the elevated circular action button.
 
 ---
 
 ## 🧠 Philosophy: Adherence-Neutral Nutrition
 
-Traditional nutrition applications punish the user with bright red "over-budget" rings, guilt-inducing alerts, and arbitrary calorie deductions. When life happens and a meal is over-eaten, traditional apps ask you to starve the next day—leading to the all-too-common restrict-binge cycle.
+Traditional nutrition applications punish the user with bright red "over-budget" rings, guilt-inducing alerts, and arbitrary calorie deductions. When life happens and a meal is over-eaten, traditional apps ask you to starve the next day—perpetuating the restrict-binge cycle.
 
 **MacroFactor does not judge. MacroFactor calculates.**
 
@@ -45,7 +53,7 @@ Traditional Apps:      Calories Consumed > Target  ➜  Red Shame Screen  ➜  C
 MacroFactor Engine:    Calories Consumed > Target  ➜  Observe Weight    ➜  Update Metabolic Model
 ```
 
-Whether you eat under, on, or over your target, the app's algorithms simply treat every day as an **informative data observation**. If you ate 3,500 kcal and did not gain weight, the algorithm recognizes your metabolic rate is higher than anticipated and adjusts your expenditure **up**, not down.
+Every day is treated as an **informative data observation**. If you ate 3,500 kcal and did not gain weight, the algorithm recognizes your metabolic expenditure is higher than anticipated and adjusts your targets **up**, not down.
 
 | Attribute | Traditional Apps (MyFitnessPal, LoseIt) | MacroFactor (Indian Edition) |
 |---|---|---|
@@ -89,11 +97,6 @@ Home-cooked Indian meals frequently vary in oil and ghee usage. Instead of break
   - `+1 tbsp Oil / Ghee` (+120.0 kcal, +14.0g fat)
 - The nutrition aggregate updates instantaneously in memory.
 
-### 5. Dark High-Contrast UI & Custom Macro Gauges
-- Tailored for OLED displays with `#121620` background and `#1A1F2C` elevated cards.
-- **Concentric Multi-Ring Gauge**: Custom-drawn canvas rings displaying calories, protein, carbs, and fat progress simultaneously without visual clutter.
-- Bottom sheet Quick Log modal for breakfast, lunch, dinner, snacks, and scale weights.
-
 ---
 
 ## 📐 Mathematical Formulations
@@ -130,31 +133,38 @@ $$\text{Flux Clamp}: \quad \Delta x_k = \text{clamp}(\hat{x}_k - \hat{x}_{k-1}, 
 
 ```mermaid
 flowchart TD
-    subgraph Presentation ["Presentation Layer (Flutter + Riverpod)"]
-        UI[Dashboard / Strategy Screens]
-        Gauges[Custom Concentric MacroGaugeRing]
-        Cards[DynamicExpenditureCard & WeightTrendCard]
-        Providers[App State & Stream Providers]
+    subgraph Presentation ["Presentation Layer (Flutter 3.29 + Riverpod)"]
+        Nav[ScaffoldWithNavBar • 4 Tabs + Center FAB]
+        LogScreen[FoodLogScreen • Hourly Timeline & Date Ribbon]
+        Dashboard[DashboardScreen • Expenditure & Trend Analytics]
+        Banner[NutritionSummaryBanner • Flame Macro Strip]
+        Gauges[Custom Concentric MacroGaugeRing Canvas]
+        SearchBar[PersistentSearchBar • Floating Docked Bar]
+        ServingSheet[PlateServingSheet & QuickActionsSheet]
     end
 
     subgraph Domain ["Domain Layer (Pure Dart)"]
         TrendAlgo[WeightTrendV2Series Engine]
         ExpAlgo[ExpenditureAlgorithmV3 Engine]
-        Entities[User Profile, Macro Targets, Observations]
+        Entities[User Profile, Macro Targets, Food Items]
     end
 
     subgraph Data ["Data Layer (SQLite & FTS5)"]
         DB[AppDatabase Engine]
-        FTS[FTS5 Full-Text Food Index]
+        FTS[FTS5 Full-Text Search Virtual Table]
         Tables[(Foods, PortionUnits, WeightLogs, DailyFoodLogs)]
     end
 
-    UI --> Providers
-    Cards --> Providers
-    Gauges --> Providers
-    Providers --> TrendAlgo
-    Providers --> ExpAlgo
-    Providers --> DB
+    Nav --> LogScreen
+    Nav --> Dashboard
+    LogScreen --> Banner
+    LogScreen --> SearchBar
+    LogScreen --> ServingSheet
+    Dashboard --> Gauges
+    Dashboard --> TrendAlgo
+    Dashboard --> ExpAlgo
+    LogScreen --> DB
+    Dashboard --> DB
     DB --> FTS
     DB --> Tables
 ```
@@ -163,7 +173,7 @@ flowchart TD
 
 ## 🧪 Verification & Quality Gate
 
-Every release passes automated verification pipelines:
+Every build passes automated verification pipelines:
 
 | Check | Tool | Result |
 |---|---|---|
@@ -171,7 +181,7 @@ Every release passes automated verification pipelines:
 | **Unit & Algorithm Tests** | `flutter test` | **27 / 27 Passed (100%)** |
 | **Code Formatting** | `dart format` | **Clean (80-char wrap)** |
 | **Production Compilation** | `flutter build apk --release` | **Clean exit (code 0)** |
-| **Binary Output** | `app-release.apk` | **76.5 MB (Universal APK)** |
+| **Binary Output** | `app-release.apk` | **76.5 MB (Universal Release APK)** |
 
 ---
 
@@ -190,7 +200,7 @@ flutter pub get
 
 ### 2. Run Tests
 ```bash
-# Run all unit, algorithm, and widget tests
+# Run all 27 unit, algorithm, and widget tests
 flutter test
 
 # Run with code coverage
@@ -217,5 +227,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-<sub>Crafted with clean-room precision and adherence-neutral science.</sub>
+<sub>Crafted with clean-room precision, adherence-neutral science, and deep reverse engineering fidelity.</sub>
 </div>

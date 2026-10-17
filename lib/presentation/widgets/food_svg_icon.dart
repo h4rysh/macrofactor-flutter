@@ -6,16 +6,18 @@ import 'package:macro_factor_app/presentation/theme/app_theme.dart';
 class FoodSvgIcon extends StatelessWidget {
   const FoodSvgIcon({
     super.key,
-    required this.iconSvg,
+    this.iconSvg,
+    String? iconName,
     this.size = 40.0,
-  });
+  }) : resolvedIconSvg = iconSvg ?? iconName ?? 'i10.svg';
 
-  final String iconSvg;
+  final String? iconSvg;
+  final String resolvedIconSvg;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    final assetPath = 'assets/foods/$iconSvg';
+    final assetPath = 'assets/foods/$resolvedIconSvg';
 
     return Container(
       width: size,

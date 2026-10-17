@@ -4,18 +4,22 @@ import 'package:flutter/foundation.dart';
 @immutable
 class PortionUnit {
   const PortionUnit({
-    required this.id,
+    this.id = 0,
     required this.foodId,
     required this.unitName,
-    required this.gramWeight,
+    double? gramWeight,
+    double? gramsPerUnit,
     this.isDefault = false,
-  });
+  }) : gramWeight = gramWeight ?? gramsPerUnit ?? 100.0;
 
   final int id;
   final int foodId;
   final String unitName;
   final double gramWeight;
   final bool isDefault;
+
+  String get name => unitName;
+  double get gramsPerUnit => gramWeight;
 
   @override
   bool operator ==(Object other) =>
@@ -66,6 +70,9 @@ class FoodItem {
   final String source;
   final String aliases;
   final List<PortionUnit> portionUnits;
+
+  String get iconName => iconSvg;
+  String get cuisine => region;
 
   PortionUnit get defaultPortionUnit {
     return portionUnits.firstWhere(
@@ -148,19 +155,37 @@ enum OilModifier {
   const OilModifier(this.label, this.approxCalorieDelta);
   final String label;
   final double approxCalorieDelta;
+
+  static const OilModifier none = OilModifier.standard;
+
+  String get displayName => label;
+  double get additionalCalories => approxCalorieDelta;
+  double get additionalFatGrams => switch (this) {
+        OilModifier.lowOil => -3.3,
+        OilModifier.standard => 0.0,
+        OilModifier.extraGheeOrOil => 5.0,
+      };
 }
 
 /// Calculated nutritional values.
 @immutable
 class NutritionalValues {
   const NutritionalValues({
-    required this.calories,
-    required this.protein,
-    required this.carbs,
-    required this.fat,
-    required this.fiber,
-    required this.totalGrams,
-  });
+    double calories = 0.0,
+    double protein = 0.0,
+    double carbs = 0.0,
+    double fat = 0.0,
+    this.fiber = 0.0,
+    this.totalGrams = 0.0,
+    double? totalCalories,
+    double? totalProtein,
+    double? totalCarbs,
+    double? totalFat,
+    double? totalFiber,
+  })  : calories = totalCalories ?? calories,
+        protein = totalProtein ?? protein,
+        carbs = totalCarbs ?? carbs,
+        fat = totalFat ?? fat;
 
   final double calories;
   final double protein;
@@ -168,6 +193,20 @@ class NutritionalValues {
   final double fat;
   final double fiber;
   final double totalGrams;
+
+  const NutritionalValues.zero()
+      : calories = 0,
+        protein = 0,
+        carbs = 0,
+        fat = 0,
+        fiber = 0,
+        totalGrams = 0;
+
+  double get totalCalories => calories;
+  double get totalProtein => protein;
+  double get totalCarbs => carbs;
+  double get totalFat => fat;
+  double get totalFiber => fiber;
 
   @override
   bool operator ==(Object other) =>
@@ -275,6 +314,37 @@ class FoodLogEntry {
     );
   }
 
+  double get effectiveCalories => calories;
+  double get effectiveProtein => protein;
+  double get effectiveCarbs => carbs;
+  double get effectiveFat => fat;
+  double get effectiveFiber => fiber;
+  double get quantity => servingQuantity;
+  double get grams => gramWeight;
+  FoodItem get food => FoodItem(
+        id: foodId,
+        uuid: 'food_$foodId',
+        name: foodName,
+        category: 'Food',
+        region: 'All',
+        caloriesPer100g:
+            gramWeight > 0 ? (calories / gramWeight) * 100 : calories,
+        proteinPer100g:
+            gramWeight > 0 ? (protein / gramWeight) * 100 : protein,
+        carbsPer100g: gramWeight > 0 ? (carbs / gramWeight) * 100 : carbs,
+        fatPer100g: gramWeight > 0 ? (fat / gramWeight) * 100 : fat,
+        fiberPer100g: gramWeight > 0 ? (fiber / gramWeight) * 100 : fiber,
+        iconSvg: iconSvg,
+        source: 'Catalog',
+        aliases: foodName,
+      );
+  PortionUnit get portionUnit => PortionUnit(
+        id: id ?? 0,
+        foodId: foodId,
+        unitName: unitName,
+        gramWeight: servingQuantity > 0 ? gramWeight / servingQuantity : 100,
+      );
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -299,3 +369,6 @@ class FoodLogEntry {
         oilModifier,
       );
 }
+
+typedef DailyFoodLogEntry = FoodLogEntry;
+typedef DailyNutritionAggregate = NutritionalValues;
