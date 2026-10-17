@@ -6,7 +6,7 @@
 ![Dart](https://img.shields.io/badge/Dart-3.7.0-0175C2?style=for-the-badge&logo=dart&logoColor=white)
 ![Tests](https://img.shields.io/badge/Tests-27%2F27%20Passed-2ea44f?style=for-the-badge&logo=githubactions&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
-![Release](https://img.shields.io/badge/Release-v1.0.0-blueviolet?style=for-the-badge)
+![Release](https://img.shields.io/badge/Release-v1.1.0-blueviolet?style=for-the-badge)
 
 <br/>
 
@@ -14,7 +14,7 @@
 
 <br/>
 
-[📥 **Download Production APK (v1.0.0)**](https://github.com/h4rysh/macrofactor-flutter/releases/download/v1.0.0/app-release.apk) • [🏛️ **Architecture Spec**](docs/ARCHITECTURE.md) • [📐 **Algorithm Formulations**](docs/ALGORITHMS.md)
+[📥 **Download Production APK (v1.1.0)**](https://github.com/h4rysh/macrofactor-flutter/releases/download/v1.1.0/app-release.apk) • [🏛️ **Architecture Spec**](docs/ARCHITECTURE.md) • [📐 **Algorithm Formulations**](docs/ALGORITHMS.md)
 
 </div>
 
