@@ -153,6 +153,10 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
         title: const Text(
           'Search Food',
           style: TextStyle(
@@ -307,37 +311,41 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: AppTheme.cardBorder),
                       ),
-                      child: ListTile(
-                        leading: FoodSvgIcon(
-                          iconName: food.iconName,
-                          size: 32,
-                        ),
-                        title: Text(
-                          food.name,
-                          style: const TextStyle(
-                            fontFamily: 'MacroSans',
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(16),
+                        child: ListTile(
+                          leading: FoodSvgIcon(
+                            iconName: food.iconName,
+                            size: 32,
                           ),
-                        ),
-                        subtitle: Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            '${food.caloriesPer100g.round()} kcal • ${food.proteinPer100g.toStringAsFixed(1)}P • ${food.fatPer100g.toStringAsFixed(1)}F • ${food.carbsPer100g.toStringAsFixed(1)}C per 100g',
+                          title: Text(
+                            food.name,
                             style: const TextStyle(
-                              fontFamily: 'DMSans',
-                              fontSize: 12,
-                              color: AppTheme.textSecondary,
+                              fontFamily: 'MacroSans',
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary,
                             ),
                           ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '${food.caloriesPer100g.round()} kcal • ${food.proteinPer100g.toStringAsFixed(1)}P • ${food.fatPer100g.toStringAsFixed(1)}F • ${food.carbsPer100g.toStringAsFixed(1)}C per 100g',
+                              style: const TextStyle(
+                                fontFamily: 'DMSans',
+                                fontSize: 12,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ),
+                          trailing: const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 14,
+                            color: AppTheme.textMuted,
+                          ),
+                          onTap: () => _openPlateSheet(food),
                         ),
-                        trailing: const Icon(
-                          Icons.arrow_forward_ios_rounded,
-                          size: 14,
-                          color: AppTheme.textMuted,
-                        ),
-                        onTap: () => _openPlateSheet(food),
                       ),
                     );
                   },

@@ -87,6 +87,10 @@ class UserProfile {
     required this.proteinPreference,
     required this.calorieFloor,
     required this.baselineExpenditureKcal,
+    this.customCalories,
+    this.customProteinGrams,
+    this.customCarbsGrams,
+    this.customFatGrams,
   });
 
   final String id;
@@ -102,9 +106,32 @@ class UserProfile {
   final ProteinPreference proteinPreference;
   final double calorieFloor; // Safety floor e.g. 1200 kcal
   final double baselineExpenditureKcal;
+  final double? customCalories;
+  final double? customProteinGrams;
+  final double? customCarbsGrams;
+  final double? customFatGrams;
 
   /// Calculates dynamic daily calorie and macro targets given current Bayesian expenditure.
   MacroTarget calculateTargetMacros(double currentExpenditureKcal) {
+    if (customCalories != null) {
+      final pG = customProteinGrams ??
+          (proteinPreference.gramsPerKg * currentWeightKg).roundToDouble();
+      final fG = customFatGrams ??
+          (currentWeightKg * 0.7)
+              .clamp(customCalories! * 0.25 / 9.0, 150.0)
+              .roundToDouble();
+      final remainingCals = (customCalories! - (pG * 4.0) - (fG * 9.0))
+          .clamp(0.0, double.infinity);
+      final cG = customCarbsGrams ?? (remainingCals / 4.0).roundToDouble();
+
+      return MacroTarget(
+        calories: customCalories!.roundToDouble(),
+        proteinGrams: pG,
+        carbsGrams: cG,
+        fatGrams: fG,
+      );
+    }
+
     // 1 kg body mass delta ~= 7700 kcal
     // Weekly kg change = currentWeightKg * (weeklyRateOfChangePct / 100.0)
     // Daily deficit/surplus = (weeklyKg * 7700) / 7 days = weeklyKg * 1100 kcal
@@ -167,6 +194,11 @@ class UserProfile {
     ProteinPreference? proteinPreference,
     double? calorieFloor,
     double? baselineExpenditureKcal,
+    double? customCalories,
+    double? customProteinGrams,
+    double? customCarbsGrams,
+    double? customFatGrams,
+    bool clearCustom = false,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -184,6 +216,14 @@ class UserProfile {
       calorieFloor: calorieFloor ?? this.calorieFloor,
       baselineExpenditureKcal:
           baselineExpenditureKcal ?? this.baselineExpenditureKcal,
+      customCalories:
+          clearCustom ? null : (customCalories ?? this.customCalories),
+      customProteinGrams:
+          clearCustom ? null : (customProteinGrams ?? this.customProteinGrams),
+      customCarbsGrams:
+          clearCustom ? null : (customCarbsGrams ?? this.customCarbsGrams),
+      customFatGrams:
+          clearCustom ? null : (customFatGrams ?? this.customFatGrams),
     );
   }
 }

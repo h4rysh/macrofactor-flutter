@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'dashboard_screen.dart';
 import 'food_log_screen.dart';
+import 'more_screen.dart';
 import 'quick_actions_sheet.dart';
 import 'strategy_screen.dart';
 
@@ -25,7 +26,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
     DashboardScreen(),
     FoodLogScreen(),
     StrategyScreen(),
-    _MorePlaceholderScreen(),
+    MoreScreen(),
   ];
 
   @override
@@ -135,94 +136,6 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MorePlaceholderScreen extends StatelessWidget {
-  const _MorePlaceholderScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: const Text('More'),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          _buildSettingsTile(
-            icon: Icons.account_circle_outlined,
-            title: 'Profile & Targets',
-            subtitle: 'Caloric balance, height, weight',
-          ),
-          _buildSettingsTile(
-            icon: Icons.restaurant_outlined,
-            title: 'Food Log Settings',
-            subtitle: 'Timeline display, portion preferences',
-          ),
-          _buildSettingsTile(
-            icon: Icons.monitor_weight_outlined,
-            title: 'Expenditure & Weight Settings',
-            subtitle: 'Algorithm sensitivity, noise envelope scale',
-          ),
-          _buildSettingsTile(
-            icon: Icons.download_rounded,
-            title: 'Data Export',
-            subtitle: 'Export logs to CSV/JSON',
-          ),
-          _buildSettingsTile(
-            icon: Icons.info_outline_rounded,
-            title: 'About MacroFactor (Indian Edition)',
-            subtitle: 'v1.1.0 • Clean-Room Adherence-Neutral',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSettingsTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppTheme.cardBorder.withAlpha(80)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: ListTile(
-          leading: Icon(icon, color: AppTheme.activeBlue),
-          title: Text(
-            title,
-            style: const TextStyle(
-              fontFamily: 'MacroSans',
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
-            ),
-          ),
-          subtitle: Text(
-            subtitle,
-            style: const TextStyle(
-              fontFamily: 'DMSans',
-              fontSize: 12,
-              color: AppTheme.textSecondary,
-            ),
-          ),
-          trailing: const Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 14,
-            color: AppTheme.textMuted,
-          ),
-          onTap: () {},
         ),
       ),
     );

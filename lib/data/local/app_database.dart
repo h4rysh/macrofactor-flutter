@@ -60,7 +60,11 @@ class AppDatabase {
         weekly_rate REAL NOT NULL,
         protein_preference TEXT NOT NULL,
         calorie_floor REAL NOT NULL,
-        baseline_expenditure REAL NOT NULL
+        baseline_expenditure REAL NOT NULL,
+        custom_calories REAL,
+        custom_protein REAL,
+        custom_carbs REAL,
+        custom_fat REAL
       );
 
       CREATE TABLE IF NOT EXISTS expenditure_history (
@@ -70,7 +74,26 @@ class AppDatabase {
         variance REAL NOT NULL,
         confidence REAL NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
+      );
     ''');
+
+    // Safe migrations for custom macro columns if user_profile previously existed
+    try {
+      _db.execute('ALTER TABLE user_profile ADD COLUMN custom_calories REAL;');
+    } catch (_) {}
+    try {
+      _db.execute('ALTER TABLE user_profile ADD COLUMN custom_protein REAL;');
+    } catch (_) {}
+    try {
+      _db.execute('ALTER TABLE user_profile ADD COLUMN custom_carbs REAL;');
+    } catch (_) {}
+    try {
+      _db.execute('ALTER TABLE user_profile ADD COLUMN custom_fat REAL;');
+    } catch (_) {}
   }
 
   /// Searches the pre-indexed Indian & international food database using FTS5 with prefix matching.
@@ -146,6 +169,94 @@ class AppDatabase {
   /// Alias for getPortionUnitsForFood.
   List<PortionUnit> getPortionUnits(int foodId) =>
       getPortionUnitsForFood(foodId);
+
+  /// Inserts a FoodItem into the database and updates FTS index.
+  void insertFood(FoodItem food) {
+    final stmt = _db.prepare('''
+      INSERT INTO foods (
+        id, uuid, name, category, region, calories, protein, carbs,
+        fat, fiber, icon_svg, source, aliases
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        category = excluded.category,
+        region = excluded.region,
+        calories = excluded.calories,
+        protein = excluded.protein,
+        carbs = excluded.carbs,
+        fat = excluded.fat,
+        fiber = excluded.fiber,
+        icon_svg = excluded.icon_svg,
+        source = excluded.source,
+        aliases = excluded.aliases;
+    ''');
+    stmt.execute([
+      food.id,
+      food.uuid,
+      food.name,
+      food.category,
+      food.region,
+      food.caloriesPer100g,
+      food.proteinPer100g,
+      food.carbsPer100g,
+      food.fatPer100g,
+      food.fiberPer100g,
+      food.iconSvg,
+      food.source,
+      food.aliases,
+    ]);
+    stmt.dispose();
+
+    try {
+      final ftsStmt = _db.prepare('''
+        INSERT INTO foods_fts (rowid, name, aliases, category)
+        VALUES (?, ?, ?, ?);
+      ''');
+      ftsStmt.execute([food.id, food.name, food.aliases, food.category]);
+      ftsStmt.dispose();
+    } catch (_) {}
+  }
+
+  /// Inserts a portion unit for a food item.
+  void insertPortionUnit(PortionUnit unit) {
+    final stmt = _db.prepare('''
+      INSERT INTO portion_units (id, food_id, unit_name, gram_weight, is_default)
+      VALUES (?, ?, ?, ?, ?);
+    ''');
+    stmt.execute([
+      unit.id,
+      unit.foodId,
+      unit.unitName,
+      unit.gramWeight,
+      unit.isDefault ? 1 : 0,
+    ]);
+    stmt.dispose();
+  }
+
+  /// Convenience method to insert scale weight from DateTime.
+  void insertScaleWeight(DateTime date, double weightKg, [String? note]) {
+    final dateStr =
+        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+    insertWeightLog(dateStr, weightKg, note);
+  }
+
+  /// Gets scale weights within a date range (YYYY-MM-DD inclusive).
+  List<ScaleWeightEntry> getScaleWeights(String startDate, String endDate) {
+    final stmt = _db.prepare('''
+      SELECT date, scale_weight, note FROM weight_logs
+      WHERE date >= ? AND date <= ?
+      ORDER BY date ASC;
+    ''');
+    final result = stmt.select([startDate, endDate]);
+    stmt.dispose();
+    return result.map((row) {
+      return ScaleWeightEntry(
+        date: DateTime.parse(row['date'] as String),
+        weightKg: (row['scale_weight'] as num).toDouble(),
+        note: row['note'] as String?,
+      );
+    }).toList();
+  }
 
   FoodItem _mapFoodRow(Row row) {
     final foodId = row['id'] as int;
@@ -304,8 +415,9 @@ class AppDatabase {
       INSERT INTO user_profile (
         id, name, current_weight, target_weight, height_cm, age,
         is_male, goal_type, program_mode, weekly_rate,
-        protein_preference, calorie_floor, baseline_expenditure
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        protein_preference, calorie_floor, baseline_expenditure,
+        custom_calories, custom_protein, custom_carbs, custom_fat
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         current_weight = excluded.current_weight,
@@ -318,7 +430,11 @@ class AppDatabase {
         weekly_rate = excluded.weekly_rate,
         protein_preference = excluded.protein_preference,
         calorie_floor = excluded.calorie_floor,
-        baseline_expenditure = excluded.baseline_expenditure;
+        baseline_expenditure = excluded.baseline_expenditure,
+        custom_calories = excluded.custom_calories,
+        custom_protein = excluded.custom_protein,
+        custom_carbs = excluded.custom_carbs,
+        custom_fat = excluded.custom_fat;
     ''');
 
     stmt.execute([
@@ -335,6 +451,10 @@ class AppDatabase {
       profile.proteinPreference.name,
       profile.calorieFloor,
       profile.baselineExpenditureKcal,
+      profile.customCalories,
+      profile.customProteinGrams,
+      profile.customCarbsGrams,
+      profile.customFatGrams,
     ]);
     stmt.dispose();
   }
@@ -363,7 +483,84 @@ class AppDatabase {
           .firstWhere((p) => p.name == row['protein_preference']),
       calorieFloor: (row['calorie_floor'] as num).toDouble(),
       baselineExpenditureKcal: (row['baseline_expenditure'] as num).toDouble(),
+      customCalories: (row['custom_calories'] as num?)?.toDouble(),
+      customProteinGrams: (row['custom_protein'] as num?)?.toDouble(),
+      customCarbsGrams: (row['custom_carbs'] as num?)?.toDouble(),
+      customFatGrams: (row['custom_fat'] as num?)?.toDouble(),
     );
+  }
+
+  /// Retrieves a key-value setting or returns defaultValue.
+  String getSetting(String key, String defaultValue) {
+    try {
+      final stmt =
+          _db.prepare('SELECT value FROM app_settings WHERE key = ? LIMIT 1;');
+      final result = stmt.select([key]);
+      stmt.dispose();
+      if (result.isEmpty) return defaultValue;
+      return result.first['value'] as String;
+    } catch (_) {
+      return defaultValue;
+    }
+  }
+
+  /// Sets or updates a key-value setting.
+  void setSetting(String key, String value) {
+    final stmt = _db.prepare('''
+      INSERT INTO app_settings (key, value)
+      VALUES (?, ?)
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+    ''');
+    stmt.execute([key, value]);
+    stmt.dispose();
+  }
+
+  /// Retrieves all logged food entries across all dates for export/backup.
+  List<FoodLogEntry> getAllFoodLogs() {
+    final stmt = _db.prepare('''
+      SELECT * FROM food_logs ORDER BY date DESC, logged_at DESC;
+    ''');
+    final result = stmt.select();
+    stmt.dispose();
+
+    return result.map((row) {
+      return FoodLogEntry(
+        id: row['id'] as int,
+        date: row['date'] as String,
+        mealType: MealType.values.firstWhere(
+          (m) => m.name == row['meal_type'],
+          orElse: () => MealType.lunch,
+        ),
+        foodId: row['food_id'] as int,
+        foodName: row['food_name'] as String,
+        servingQuantity: (row['serving_quantity'] as num).toDouble(),
+        unitName: row['unit_name'] as String,
+        gramWeight: (row['gram_weight'] as num).toDouble(),
+        calories: (row['calories'] as num).toDouble(),
+        protein: (row['protein'] as num).toDouble(),
+        carbs: (row['carbs'] as num).toDouble(),
+        fat: (row['fat'] as num).toDouble(),
+        fiber: (row['fiber'] as num).toDouble(),
+        oilModifier: OilModifier.values.firstWhere(
+          (o) => o.name == row['oil_modifier'],
+          orElse: () => OilModifier.standard,
+        ),
+        loggedAt: DateTime.parse(row['logged_at'] as String),
+        iconSvg: row['icon_svg'] as String,
+      );
+    }).toList();
+  }
+
+  /// Returns total count of indexed foods in the master database.
+  int getFoodCount() {
+    try {
+      final stmt = _db.prepare('SELECT COUNT(*) as count FROM foods;');
+      final result = stmt.select();
+      stmt.dispose();
+      return (result.first['count'] as num).toInt();
+    } catch (_) {
+      return 0;
+    }
   }
 
   /// Closes and disposes the database handle.
