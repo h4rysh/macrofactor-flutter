@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:macro_factor_app/domain/models/user_account.dart';
+import 'package:macro_factor_app/presentation/providers/app_providers.dart';
 import 'package:macro_factor_app/presentation/screens/about_screen.dart';
+import 'package:macro_factor_app/presentation/screens/account_profile_screen.dart';
 import 'package:macro_factor_app/presentation/screens/data_export_screen.dart';
 import 'package:macro_factor_app/presentation/screens/expenditure_settings_screen.dart';
 import 'package:macro_factor_app/presentation/screens/food_log_settings_screen.dart';
@@ -7,14 +11,17 @@ import 'package:macro_factor_app/presentation/screens/goal_questionnaire_sheet.d
 import 'package:macro_factor_app/presentation/screens/profile_targets_screen.dart';
 import 'package:macro_factor_app/presentation/theme/app_theme.dart';
 import 'package:macro_factor_app/presentation/widgets/apple_tactile_card.dart';
+import 'package:macro_factor_app/presentation/widgets/profile_avatar_button.dart';
 
 /// Hub screen for the "More" bottom navigation destination.
 /// Provides access to user profile, nutrition settings, expenditure engine tuning, data export, and app provenance.
-class MoreScreen extends StatelessWidget {
+class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final user = ref.watch(currentUserProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -23,6 +30,8 @@ class MoreScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
+          _buildAccountCard(context, user),
+          const SizedBox(height: 12),
           // Featured Apple Tactile Card: Interactive Goal & Preference Questionnaire
           AppleBouncy(
             onTap: () => GoalQuestionnaireSheet.show(context),
@@ -124,10 +133,116 @@ class MoreScreen extends StatelessWidget {
             icon: Icons.info_outline_rounded,
             iconColor: AppTheme.textSecondary,
             title: 'About MacroFactor (Indian Edition)',
-            subtitle: 'v1.3.0 • Clean-Room Adherence-Neutral',
+            subtitle: 'v1.4.0 • Clean-Room Adherence-Neutral',
             destination: const AboutScreen(),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAccountCard(BuildContext context, UserAccount? user) {
+    final isSignedIn = user != null && user.isAuthenticated;
+    final displayName = isSignedIn && user.displayName.trim().isNotEmpty
+        ? user.displayName.trim()
+        : 'Guest Athlete';
+    final subtitle = isSignedIn && user.email.trim().isNotEmpty
+        ? user.email.trim()
+        : 'Sign in with Google to sync workouts & scale data';
+
+    return AppleBouncy(
+      key: const Key('more_account_card'),
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const AccountProfileScreen(),
+          ),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppTheme.cardSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.cardBorder),
+        ),
+        child: Row(
+          children: [
+            ProfileAvatarButton(
+              user: user,
+              size: 46,
+              onTap: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const AccountProfileScreen(),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          displayName,
+                          style: const TextStyle(
+                            fontFamily: 'MacroSans',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (isSignedIn && user.healthConnectEnabled) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.activeBlue.withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Text(
+                            'SYNC ACTIVE',
+                            style: TextStyle(
+                              fontFamily: 'DMSans',
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.activeBlue,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      fontFamily: 'DMSans',
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: AppTheme.textMuted,
+            ),
+          ],
+        ),
       ),
     );
   }

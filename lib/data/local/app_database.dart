@@ -5,7 +5,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
 import 'package:macro_factor_app/domain/models/food_models.dart';
+import 'package:macro_factor_app/domain/models/user_account.dart';
 import 'package:macro_factor_app/domain/models/user_profile.dart';
+import 'package:macro_factor_app/domain/models/workout_session.dart';
 
 /// Local high-performance SQLite database for MacroFactor clean-room engine.
 class AppDatabase {
@@ -79,21 +81,35 @@ class AppDatabase {
         key TEXT PRIMARY KEY,
         value TEXT NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS workout_sessions (
+        id TEXT PRIMARY KEY, source TEXT NOT NULL, title TEXT NOT NULL,
+        start_time TEXT NOT NULL, end_time TEXT NOT NULL,
+        duration_minutes INTEGER NOT NULL, calories_burned REAL NOT NULL,
+        notes TEXT, created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_workout_sessions_start_time ON workout_sessions(start_time);
+      CREATE INDEX IF NOT EXISTS idx_workout_sessions_source ON workout_sessions(source);
+
+      CREATE TABLE IF NOT EXISTS user_account_session (
+        id TEXT PRIMARY KEY, google_user_id TEXT NOT NULL,
+        display_name TEXT NOT NULL, email TEXT NOT NULL, photo_url TEXT,
+        health_connect_enabled INTEGER NOT NULL DEFAULT 0,
+        last_health_sync_time TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+      );
     ''');
 
     // Safe migrations for custom macro columns if user_profile previously existed
-    try {
-      _db.execute('ALTER TABLE user_profile ADD COLUMN custom_calories REAL;');
-    } catch (_) {}
-    try {
-      _db.execute('ALTER TABLE user_profile ADD COLUMN custom_protein REAL;');
-    } catch (_) {}
-    try {
-      _db.execute('ALTER TABLE user_profile ADD COLUMN custom_carbs REAL;');
-    } catch (_) {}
-    try {
-      _db.execute('ALTER TABLE user_profile ADD COLUMN custom_fat REAL;');
-    } catch (_) {}
+    for (final col in [
+      'custom_calories',
+      'custom_protein',
+      'custom_carbs',
+      'custom_fat'
+    ]) {
+      try {
+        _db.execute('ALTER TABLE user_profile ADD COLUMN $col REAL;');
+      } catch (_) {}
+    }
   }
 
   /// Searches the pre-indexed Indian & international food database using FTS5 with prefix matching.
@@ -561,6 +577,148 @@ class AppDatabase {
     } catch (_) {
       return 0;
     }
+  }
+
+  // ==========================================
+  // User Account Session Management
+  // ==========================================
+
+  /// Saves or updates the active user account session in SQLite.
+  void saveAccountSession(UserAccount session) {
+    final stmt = _db.prepare(
+      'INSERT INTO user_account_session (id, google_user_id, display_name, email, photo_url, health_connect_enabled, last_health_sync_time, created_at, updated_at) '
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) '
+      'ON CONFLICT(id) DO UPDATE SET google_user_id = excluded.google_user_id, display_name = excluded.display_name, email = excluded.email, photo_url = excluded.photo_url, health_connect_enabled = excluded.health_connect_enabled, last_health_sync_time = excluded.last_health_sync_time, updated_at = excluded.updated_at;',
+    );
+    stmt.execute([
+      session.id,
+      session.googleUserId,
+      session.displayName,
+      session.email,
+      session.photoUrl,
+      session.healthConnectEnabled ? 1 : 0,
+      session.lastHealthSyncTime?.toIso8601String(),
+      session.createdAt.toIso8601String(),
+      session.updatedAt.toIso8601String(),
+    ]);
+    stmt.dispose();
+  }
+
+  /// Retrieves the active user account session, or null if unauthenticated.
+  UserAccount? getAccountSession() {
+    final stmt = _db.prepare(
+      'SELECT id, google_user_id, display_name, email, photo_url, health_connect_enabled, last_health_sync_time, created_at, updated_at FROM user_account_session LIMIT 1;',
+    );
+    final result = stmt.select();
+    stmt.dispose();
+    if (result.isEmpty) return null;
+
+    final row = result.first;
+    return UserAccount(
+      id: row['id'] as String,
+      googleUserId: row['google_user_id'] as String,
+      displayName: row['display_name'] as String,
+      email: row['email'] as String,
+      photoUrl: row['photo_url'] as String?,
+      healthConnectEnabled: (row['health_connect_enabled'] as int) == 1,
+      lastHealthSyncTime: row['last_health_sync_time'] != null
+          ? DateTime.tryParse(row['last_health_sync_time'] as String)
+          : null,
+      createdAt: DateTime.tryParse(row['created_at'] as String? ?? '') ??
+          DateTime.now(),
+      updatedAt: DateTime.tryParse(row['updated_at'] as String? ?? '') ??
+          DateTime.now(),
+      isAuthenticated: (row['google_user_id'] as String).isNotEmpty,
+    );
+  }
+
+  /// Clears the active user account session upon sign-out.
+  void clearAccountSession() {
+    final stmt = _db.prepare('DELETE FROM user_account_session;');
+    stmt.execute();
+    stmt.dispose();
+  }
+
+  // ==========================================
+  // Workout Sessions & Training History
+  // ==========================================
+
+  /// Inserts or updates a list of workout sessions within an atomic transaction.
+  void insertWorkoutSessions(List<WorkoutSession> sessions) {
+    if (sessions.isEmpty) return;
+    final stmt = _db.prepare(
+      'INSERT INTO workout_sessions (id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at) '
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) '
+      'ON CONFLICT(id) DO UPDATE SET source = excluded.source, title = excluded.title, start_time = excluded.start_time, end_time = excluded.end_time, duration_minutes = excluded.duration_minutes, calories_burned = excluded.calories_burned, notes = excluded.notes;',
+    );
+
+    _db.execute('BEGIN TRANSACTION;');
+    try {
+      for (final session in sessions) {
+        stmt.execute([
+          session.id,
+          session.source,
+          session.title,
+          session.startTime.toIso8601String(),
+          session.endTime.toIso8601String(),
+          session.durationMinutes,
+          session.caloriesBurned,
+          session.notes,
+          session.createdAt.toIso8601String(),
+        ]);
+      }
+      _db.execute('COMMIT;');
+    } catch (_) {
+      _db.execute('ROLLBACK;');
+      rethrow;
+    } finally {
+      stmt.dispose();
+    }
+  }
+
+  /// Retrieves all workout sessions ordered chronologically descending (newest first).
+  List<WorkoutSession> getAllWorkoutSessions() {
+    final stmt = _db.prepare(
+      'SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at FROM workout_sessions ORDER BY start_time DESC;',
+    );
+    final result = stmt.select();
+    stmt.dispose();
+    return result.map(_mapWorkoutSessionRow).toList();
+  }
+
+  /// Retrieves workout sessions whose start_time is between [start] and [end] (inclusive).
+  List<WorkoutSession> getWorkoutSessionsInRange(DateTime start, DateTime end) {
+    final stmt = _db.prepare(
+      'SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at FROM workout_sessions WHERE start_time >= ? AND start_time <= ? ORDER BY start_time DESC;',
+    );
+    final result =
+        stmt.select([start.toIso8601String(), end.toIso8601String()]);
+    stmt.dispose();
+    return result.map(_mapWorkoutSessionRow).toList();
+  }
+
+  /// Deletes a workout session by its identifier (String or int).
+  void deleteWorkoutSession(dynamic id) {
+    final stmt = _db.prepare('DELETE FROM workout_sessions WHERE id = ?;');
+    stmt.execute([id.toString()]);
+    stmt.dispose();
+  }
+
+  /// Private helper mapping a SQLite row to a WorkoutSession entity.
+  WorkoutSession _mapWorkoutSessionRow(Row row) {
+    return WorkoutSession(
+      id: row['id'] as String,
+      source: row['source'] as String? ?? WorkoutSource.healthConnect,
+      title: row['title'] as String? ?? 'Workout',
+      startTime: DateTime.parse(row['start_time'] as String),
+      endTime: DateTime.parse(row['end_time'] as String),
+      durationMinutes: (row['duration_minutes'] as num).toInt(),
+      caloriesBurned: (row['calories_burned'] as num).toDouble(),
+      notes: row['notes'] as String?,
+      createdAt: row['created_at'] != null
+          ? DateTime.parse(row['created_at'] as String)
+          : DateTime.now(),
+    );
   }
 
   /// Closes and disposes the database handle.

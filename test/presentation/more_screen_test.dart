@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:macro_factor_app/data/local/app_database.dart';
+import 'package:macro_factor_app/domain/models/user_account.dart';
 import 'package:macro_factor_app/domain/models/user_profile.dart';
 import 'package:macro_factor_app/presentation/providers/app_providers.dart';
 import 'package:macro_factor_app/presentation/screens/more_screen.dart';
@@ -10,6 +11,7 @@ import 'package:macro_factor_app/presentation/screens/food_log_settings_screen.d
 import 'package:macro_factor_app/presentation/screens/expenditure_settings_screen.dart';
 import 'package:macro_factor_app/presentation/screens/data_export_screen.dart';
 import 'package:macro_factor_app/presentation/screens/about_screen.dart';
+import 'package:macro_factor_app/presentation/screens/account_profile_screen.dart';
 
 void main() {
   late AppDatabase db;
@@ -22,10 +24,12 @@ void main() {
     db.close();
   });
 
-  Widget buildTestableWidget(Widget child) {
+  Widget buildTestableWidget(Widget child, {UserAccount? initialUser}) {
     return ProviderScope(
       overrides: [
         databaseProvider.overrideWithValue(db),
+        if (initialUser != null)
+          currentUserProvider.overrideWith((ref) => initialUser),
       ],
       child: MaterialApp(
         home: child,
@@ -207,6 +211,101 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(MoreScreen), findsOneWidget);
+    });
+
+    testWidgets(
+        'more_account_card renders at top and navigates to AccountProfileScreen',
+        (tester) async {
+      configureViewport(tester);
+      await tester.pumpWidget(buildTestableWidget(const MoreScreen()));
+      await tester.pumpAndSettle();
+
+      // Account card should be rendered
+      expect(find.byKey(const Key('more_account_card')), findsOneWidget);
+      expect(find.text('Guest Athlete'), findsOneWidget);
+      expect(
+        find.text('Sign in with Google to sync workouts & scale data'),
+        findsOneWidget,
+      );
+
+      // Tap account card
+      await tester.tap(find.byKey(const Key('more_account_card')));
+      await tester.pumpAndSettle();
+
+      // Should navigate to AccountProfileScreen
+      expect(find.byType(AccountProfileScreen), findsOneWidget);
+      expect(find.byKey(const Key('profile_back_btn')), findsOneWidget);
+
+      // Pop back to MoreScreen
+      await tester.tap(find.byKey(const Key('profile_back_btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(MoreScreen), findsOneWidget);
+    });
+
+    testWidgets(
+        'more_account_card correctly defaults unauthenticated user with non-empty displayName to Guest Athlete',
+        (tester) async {
+      configureViewport(tester);
+      final now = DateTime.now();
+      final unauthenticatedCustomNameUser = UserAccount(
+        id: 'guest_custom',
+        googleUserId: '',
+        displayName: 'Local Runner',
+        email: 'local@example.com',
+        photoUrl: null,
+        createdAt: now,
+        updatedAt: now,
+        isAuthenticated: false,
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(
+          const MoreScreen(),
+          initialUser: unauthenticatedCustomNameUser,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('more_account_card')), findsOneWidget);
+      expect(find.text('Guest Athlete'), findsOneWidget);
+      expect(find.text('Local Runner'), findsNothing);
+      expect(
+        find.text('Sign in with Google to sync workouts & scale data'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('more_account_card renders user details when authenticated',
+        (tester) async {
+      configureViewport(tester);
+      final now = DateTime.now();
+      final authenticatedUser = UserAccount(
+        id: 'google_123',
+        googleUserId: 'sub_12345',
+        displayName: 'Sarah Connor',
+        email: 'sarah@example.com',
+        photoUrl: 'https://example.com/avatar.jpg',
+        createdAt: now,
+        updatedAt: now,
+        isAuthenticated: true,
+        healthConnectEnabled: true,
+      );
+      await tester.pumpWidget(
+        buildTestableWidget(
+          const MoreScreen(),
+          initialUser: authenticatedUser,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('more_account_card')), findsOneWidget);
+      expect(find.text('Sarah Connor'), findsOneWidget);
+      expect(find.text('sarah@example.com'), findsOneWidget);
+      expect(find.text('SYNC ACTIVE'), findsOneWidget);
+      expect(
+        find.text('Sign in with Google to sync workouts & scale data'),
+        findsNothing,
+      );
     });
   });
 }

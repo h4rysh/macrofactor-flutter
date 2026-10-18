@@ -6,7 +6,9 @@ import '../theme/app_theme.dart';
 import '../widgets/apple_tactile_card.dart';
 import '../widgets/expenditure_card.dart';
 import '../widgets/macro_gauge_ring.dart';
+import '../widgets/profile_avatar_button.dart';
 import '../widgets/weight_trend_card.dart';
+import 'account_profile_screen.dart';
 import 'food_search_screen.dart';
 import 'goal_questionnaire_sheet.dart';
 import 'quick_actions_sheet.dart';
@@ -35,6 +37,7 @@ class DashboardScreen extends ConsumerWidget {
     final macroTarget = ref.watch(dailyMacroTargetProvider);
     final expenditureState = ref.watch(expenditureStateProvider);
     final latestTrendPoint = ref.watch(latestTrendWeightProvider);
+    final currentUser = ref.watch(currentUserProvider);
 
     final energyBalanceKcal =
         (dailyNutrition.calories - expenditureState.expenditureKcal).round();
@@ -114,6 +117,20 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                             onPressed: onNavigateToStrategy,
                           ),
+                        const SizedBox(width: 6),
+                        // Profile Avatar Action (36x36 Circular AppleBouncy)
+                        ProfileAvatarButton(
+                          key: const Key('dashboard_profile_avatar_btn'),
+                          user: currentUser,
+                          size: 36,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute<void>(
+                                builder: (_) => const AccountProfileScreen(),
+                              ),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   ],

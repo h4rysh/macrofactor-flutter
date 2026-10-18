@@ -55,6 +55,8 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
           const SizedBox(height: 16),
           _buildTimelineDisplayCard(),
           const SizedBox(height: 16),
+          _buildHealthConnectSyncCard(),
+          const SizedBox(height: 16),
           _buildCultureContextCard(),
           const SizedBox(height: 32),
         ],
@@ -354,6 +356,126 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
                 );
               },
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHealthConnectSyncCard() {
+    final syncState = ref.watch(healthConnectSyncProvider);
+
+    return Container(
+      key: const Key('settings_health_connect_card'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppTheme.activeBlue.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.sync_rounded,
+                  color: AppTheme.activeBlue,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Text(
+                  'Health Connect Sync',
+                  style: TextStyle(
+                    fontFamily: 'MacroSans',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+              ),
+              if (syncState.isSyncing)
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(AppTheme.activeBlue),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Synchronize workout sessions and smart scale weigh-ins automatically or on demand.',
+            style: TextStyle(
+              fontFamily: 'DMSans',
+              fontSize: 12,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Last synced: ${syncState.formattedLastSync}',
+                key: const Key('settings_last_sync_text'),
+                style: const TextStyle(
+                  fontFamily: 'DMSans',
+                  fontSize: 12,
+                  color: AppTheme.textMuted,
+                ),
+              ),
+              ElevatedButton.icon(
+                key: const Key('settings_sync_now_btn'),
+                onPressed: syncState.isSyncing
+                    ? null
+                    : () {
+                        ref.read(healthConnectSyncProvider.notifier).syncNow();
+                      },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.activeBlue,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppTheme.cardElevated,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                icon: syncState.isSyncing
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.white),
+                        ),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 16),
+                label: Text(
+                  syncState.isSyncing ? 'Syncing...' : 'Sync Now',
+                  style: const TextStyle(
+                    fontFamily: 'DMSans',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
