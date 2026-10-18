@@ -10,6 +10,7 @@ void main() {
 
   setUp(() {
     db = AppDatabase.inMemory();
+    db.setSetting('onboarding_completed', 'true');
   });
 
   tearDown(() {
@@ -119,7 +120,7 @@ void main() {
     // Verify Strategy screen is displayed
     expect(find.text('Coaching & Strategy'), findsOneWidget);
     expect(find.text('ADHERENCE-NEUTRAL COACHING'), findsOneWidget);
-    expect(find.text('PROJECTED DAILY TARGETS'), findsOneWidget);
-    expect(find.text('APPLY PROGRAM TARGETS'), findsOneWidget);
+    expect(find.text('kcal / day avg'), findsOneWidget);
+    expect(find.text('PROTEIN'), findsOneWidget);
   });
 }

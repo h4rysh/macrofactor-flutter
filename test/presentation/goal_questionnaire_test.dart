@@ -12,6 +12,7 @@ void main() {
 
   setUp(() {
     db = AppDatabase.inMemory();
+    db.setSetting('onboarding_completed', 'true');
   });
 
   tearDown(() {

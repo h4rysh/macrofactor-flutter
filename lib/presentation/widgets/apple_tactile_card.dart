@@ -193,3 +193,40 @@ class AppleBadge extends StatelessWidget {
     );
   }
 }
+
+/// Tactile interactive card combining AppleBouncy spring feedback with subtle surface styling.
+class AppleTactileCard extends StatelessWidget {
+  const AppleTactileCard({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.backgroundColor,
+    this.borderRadius = 18.0,
+    this.border,
+    this.padding = const EdgeInsets.all(16),
+  });
+
+  final Widget child;
+  final VoidCallback? onTap;
+  final Color? backgroundColor;
+  final double borderRadius;
+  final BoxBorder? border;
+  final EdgeInsetsGeometry padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppleBouncy(
+      onTap: onTap,
+      child: Container(
+        padding: padding,
+        decoration: BoxDecoration(
+          color: backgroundColor ?? AppTheme.cardSurface,
+          borderRadius: BorderRadius.circular(borderRadius),
+          border: border ?? Border.all(color: AppTheme.cardBorder),
+        ),
+        child: child,
+      ),
+    );
+  }
+}
+

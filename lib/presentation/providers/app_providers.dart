@@ -5,9 +5,11 @@ import 'package:macro_factor_app/domain/algorithms/expenditure_algorithm_v3.dart
 import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
 import 'package:macro_factor_app/domain/models/food_models.dart';
 import 'package:macro_factor_app/domain/models/user_profile.dart';
+import 'package:macro_factor_app/presentation/providers/strategy_providers.dart';
 
 export 'auth_providers.dart';
 export 'health_sync_providers.dart';
+export 'strategy_providers.dart';
 export 'workout_providers.dart';
 
 /// Database singleton provider, overridden in main() or tests.
@@ -259,11 +261,10 @@ final expenditureStateProvider = Provider<ExpenditureState>((ref) {
   return tracker.currentState;
 });
 
-/// Target daily calories and macronutrient breakdown.
+/// Target daily calories and macronutrient breakdown for the selected date.
+/// Automatically reflects 7-day program day-shifting (workout vs rest) when active.
 final dailyMacroTargetProvider = Provider<MacroTarget>((ref) {
-  final profile = ref.watch(userProfileProvider);
-  final expenditureState = ref.watch(expenditureStateProvider);
-  return profile.calculateTargetMacros(expenditureState.expenditureKcal);
+  return ref.watch(dayMacroTargetForSelectedDateProvider);
 });
 
 /// Backwards compatible alias for dailyMacroTargetProvider

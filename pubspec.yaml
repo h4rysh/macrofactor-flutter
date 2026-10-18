@@ -2,7 +2,7 @@ name: macro_factor_app
 description: "MacroFactor Clean-Room Reconstruction with HealthifyMe-grade Indian Food Database."
 publish_to: 'none'
 
-version: 1.4.2+7
+version: 1.5.0+8
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -40,6 +40,7 @@ dependencies:
   # Utilities
   intl: ^0.19.0
   uuid: ^4.4.0
+  meta: ^1.11.0
 
 dev_dependencies:
   flutter_test:

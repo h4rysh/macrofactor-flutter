@@ -15,6 +15,9 @@ class AppDatabase {
 
   final Database _db;
 
+  /// Underlying raw SQLite database instance.
+  Database get rawDb => _db;
+
   /// Initializes user-specific logging tables if they don't already exist.
   void initUserTables() {
     _db.execute('''
@@ -97,6 +100,19 @@ class AppDatabase {
         health_connect_enabled INTEGER NOT NULL DEFAULT 0,
         last_health_sync_time TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
       );
+
+      CREATE TABLE IF NOT EXISTS coaching_check_ins (
+        id TEXT PRIMARY KEY,
+        check_in_date TEXT NOT NULL,
+        previous_calories REAL NOT NULL,
+        recommended_calories REAL NOT NULL,
+        expenditure_kcal REAL NOT NULL,
+        weight_trend_kg REAL NOT NULL,
+        is_accepted INTEGER NOT NULL DEFAULT 0,
+        status_note TEXT,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_coaching_check_ins_date ON coaching_check_ins(check_in_date);
     ''');
 
     // Safe migrations for custom macro columns if user_profile previously existed
@@ -732,33 +748,16 @@ class AppDatabase {
     final appDb = AppDatabase(rawDb);
     rawDb.execute('''
       CREATE TABLE IF NOT EXISTS foods (
-        id INTEGER PRIMARY KEY,
-        uuid TEXT NOT NULL,
-        name TEXT NOT NULL,
-        category TEXT NOT NULL,
-        region TEXT NOT NULL,
-        calories REAL NOT NULL,
-        protein REAL NOT NULL,
-        carbs REAL NOT NULL,
-        fat REAL NOT NULL,
-        fiber REAL NOT NULL,
-        icon_svg TEXT NOT NULL,
-        source TEXT NOT NULL,
-        aliases TEXT
+        id INTEGER PRIMARY KEY, uuid TEXT NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL,
+        region TEXT NOT NULL, calories REAL NOT NULL, protein REAL NOT NULL, carbs REAL NOT NULL,
+        fat REAL NOT NULL, fiber REAL NOT NULL, icon_svg TEXT NOT NULL, source TEXT NOT NULL, aliases TEXT
       );
       CREATE TABLE IF NOT EXISTS portion_units (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        food_id INTEGER NOT NULL,
-        unit_name TEXT NOT NULL,
-        gram_weight REAL NOT NULL,
-        is_default INTEGER NOT NULL DEFAULT 0
+        id INTEGER PRIMARY KEY AUTOINCREMENT, food_id INTEGER NOT NULL, unit_name TEXT NOT NULL,
+        gram_weight REAL NOT NULL, is_default INTEGER NOT NULL DEFAULT 0
       );
       CREATE VIRTUAL TABLE IF NOT EXISTS foods_fts USING fts5(
-        name,
-        aliases,
-        category,
-        content='foods',
-        content_rowid='id'
+        name, aliases, category, content='foods', content_rowid='id'
       );
     ''');
     appDb.initUserTables();

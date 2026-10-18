@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:macro_factor_app/data/local/app_database.dart';
 import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/screens/scaffold_with_nav_bar.dart';
+import 'package:macro_factor_app/presentation/screens/onboarding/onboarding_coordinator.dart';
 import 'package:macro_factor_app/presentation/theme/app_theme.dart';
 
 void main() async {
@@ -29,7 +29,8 @@ class MacroFactorApp extends StatelessWidget {
       title: 'MacroFactor',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: const ScaffoldWithNavBar(),
+      home: const OnboardingCoordinator(),
     );
   }
 }
+
