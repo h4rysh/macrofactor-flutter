@@ -1,30 +1,30 @@
 {
   "project_info": {
-    "project_number": "549709756313",
-    "project_id": "macrofactor-app-harrish",
-    "storage_bucket": "macrofactor-app-harrish.firebasestorage.app"
+    "project_number": "000000000000",
+    "project_id": "macrofactor-app-template",
+    "storage_bucket": "macrofactor-app-template.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:549709756313:android:0bccee59a5124febc50508",
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
         "android_client_info": {
           "package_name": "com.antigravity.macro_factor_app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "549709756313-0bccee59a5124febc50508.apps.googleusercontent.com",
+          "client_id": "000000000000-sampleoauthclientid.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.antigravity.macro_factor_app",
-            "certificate_hash": "9d1d3cff4039a82e2931a3732b1bb4a05b2690de"
+            "certificate_hash": "0000000000000000000000000000000000000000"
           }
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCpuxdYRsVyQ7kXVpiKpdF709vtaf03oK4"
+          "current_key": "REPLACE_WITH_YOUR_FIREBASE_API_KEY"
         }
       ],
       "services": {

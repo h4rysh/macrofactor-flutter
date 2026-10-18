@@ -5,6 +5,13 @@ plugins {
     id("com.google.gms.google-services")
 }
 
+// Automatically populate google-services.json from template for CI or fresh checkouts
+val googleServicesFile = file("google-services.json")
+val googleServicesTemplate = file("google-services.json.example")
+if (!googleServicesFile.exists() && googleServicesTemplate.exists()) {
+    googleServicesTemplate.copyTo(googleServicesFile)
+}
+
 android {
     namespace = "com.antigravity.macro_factor_app"
     compileSdk = flutter.compileSdkVersion

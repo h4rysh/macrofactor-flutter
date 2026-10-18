@@ -15,9 +15,14 @@ jobs:
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.29.0'
           channel: 'stable'
           cache: true
+
+      - name: Setup Google Services configuration
+        run: |
+          if [ ! -f android/app/google-services.json ]; then
+            cp android/app/google-services.json.example android/app/google-services.json
+          fi
 
       - name: Install dependencies
         run: flutter pub get

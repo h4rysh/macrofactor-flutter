@@ -46,3 +46,7 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# Google Services & Firebase credentials
+android/app/google-services.json
+!android/app/google-services.json.example
