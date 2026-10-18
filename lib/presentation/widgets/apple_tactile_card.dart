@@ -33,22 +33,19 @@ class AppleBouncy extends StatefulWidget {
 class _AppleBouncyState extends State<AppleBouncy> {
   bool _isPressed = false;
 
-  void _onPointerDown(PointerDownEvent event) {
+  void _handleTapDown(TapDownDetails details) {
     if (widget.onTap != null) {
-      if (widget.enableHaptics) {
-        HapticFeedback.selectionClick();
-      }
       setState(() => _isPressed = true);
     }
   }
 
-  void _onPointerUp(PointerUpEvent event) {
+  void _handleTapUp(TapUpDetails details) {
     if (_isPressed) {
       setState(() => _isPressed = false);
     }
   }
 
-  void _onPointerCancel(PointerCancelEvent event) {
+  void _handleTapCancel() {
     if (_isPressed) {
       setState(() => _isPressed = false);
     }
@@ -65,20 +62,17 @@ class _AppleBouncyState extends State<AppleBouncy> {
   Widget build(BuildContext context) {
     final enabled = widget.onTap != null;
 
-    return Listener(
-      onPointerDown: enabled ? _onPointerDown : null,
-      onPointerUp: enabled ? _onPointerUp : null,
-      onPointerCancel: enabled ? _onPointerCancel : null,
+    return GestureDetector(
+      onTapDown: enabled ? _handleTapDown : null,
+      onTapUp: enabled ? _handleTapUp : null,
+      onTapCancel: enabled ? _handleTapCancel : null,
+      onTap: enabled ? _handleTap : null,
       behavior: widget.behavior,
-      child: GestureDetector(
-        onTap: enabled ? _handleTap : null,
-        behavior: widget.behavior,
-        child: AnimatedScale(
-          scale: _isPressed ? widget.scaleDown : 1.0,
-          duration: widget.duration,
-          curve: widget.curve,
-          child: widget.child,
-        ),
+      child: AnimatedScale(
+        scale: _isPressed ? widget.scaleDown : 1.0,
+        duration: widget.duration,
+        curve: widget.curve,
+        child: widget.child,
       ),
     );
   }
@@ -203,7 +197,10 @@ class AppleTactileCard extends StatelessWidget {
     this.backgroundColor,
     this.borderRadius = 18.0,
     this.border,
+    this.borderColor,
     this.padding = const EdgeInsets.all(16),
+    this.margin,
+    this.blur = 0.0,
   });
 
   final Widget child;
@@ -211,22 +208,49 @@ class AppleTactileCard extends StatelessWidget {
   final Color? backgroundColor;
   final double borderRadius;
   final BoxBorder? border;
+  final Color? borderColor;
   final EdgeInsetsGeometry padding;
+  final EdgeInsetsGeometry? margin;
+  final double blur;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveBorder = border ??
+        Border.all(
+          color: borderColor ?? AppTheme.cardBorder,
+          width: 0.8,
+        );
+
+    Widget content = Container(
+      padding: padding,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? AppTheme.cardSurface,
+        borderRadius: BorderRadius.circular(borderRadius),
+        border: effectiveBorder,
+      ),
+      child: child,
+    );
+
+    if (blur > 0) {
+      content = ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
+          child: content,
+        ),
+      );
+    }
+
+    if (margin != null) {
+      content = Padding(
+        padding: margin!,
+        child: content,
+      );
+    }
+
     return AppleBouncy(
       onTap: onTap,
-      child: Container(
-        padding: padding,
-        decoration: BoxDecoration(
-          color: backgroundColor ?? AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(borderRadius),
-          border: border ?? Border.all(color: AppTheme.cardBorder),
-        ),
-        child: child,
-      ),
+      child: content,
     );
   }
 }
-

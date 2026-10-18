@@ -207,7 +207,8 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
             LinearProgressIndicator(
               value: (_currentStep + 1) / _totalSteps,
               backgroundColor: AppTheme.cardBorder,
-              valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.calories),
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(AppTheme.calories),
               minHeight: 3,
             ),
             const SizedBox(height: 8),
@@ -380,7 +381,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           ),
         ),
         const SizedBox(height: 24),
-
         WizardSelectionCard(
           title: 'Fat Loss',
           subtitle: 'Sustainable deficit protecting lean muscle tissue.',
@@ -393,10 +393,10 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           }),
         ),
         const SizedBox(height: 12),
-
         WizardSelectionCard(
           title: 'Maintenance',
-          subtitle: 'Eat at your true dynamic expenditure without weight change.',
+          subtitle:
+              'Eat at your true dynamic expenditure without weight change.',
           icon: Icons.balance_rounded,
           accentColor: AppTheme.expenditure,
           selected: _goalType == GoalType.maintenance,
@@ -406,7 +406,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           }),
         ),
         const SizedBox(height: 12),
-
         WizardSelectionCard(
           title: 'Muscle Gain',
           subtitle: 'Lean mass accrual with controlled energetic surplus.',
@@ -419,7 +418,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           }),
         ),
         const SizedBox(height: 28),
-
         if (_goalType != GoalType.maintenance) ...[
           WizardSliderTile(
             title: 'Target Weekly Rate',
@@ -474,7 +472,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           ),
         ),
         const SizedBox(height: 24),
-
         WizardSelectionCard(
           title: 'Coached (Recommended)',
           subtitle:
@@ -485,7 +482,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           onTap: () => setState(() => _programMode = ProgramMode.coached),
         ),
         const SizedBox(height: 12),
-
         WizardSelectionCard(
           title: 'Collaborative',
           subtitle:
@@ -496,7 +492,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           onTap: () => setState(() => _programMode = ProgramMode.collaborative),
         ),
         const SizedBox(height: 12),
-
         WizardSelectionCard(
           title: 'Manual',
           subtitle:
@@ -534,7 +529,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           ),
         ),
         const SizedBox(height: 20),
-
         for (final style in MacroProgramStyle.values) ...[
           WizardSelectionCard(
             title: style.displayName,
@@ -546,7 +540,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           ),
           const SizedBox(height: 10),
         ],
-
         const SizedBox(height: 20),
         const Text(
           'Dietary Habit (Indian Nutrition)',
@@ -617,7 +610,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           ),
         ),
         const SizedBox(height: 20),
-
         for (final alloc in DayAllocationType.values) ...[
           WizardSelectionCard(
             title: alloc.displayName,
@@ -629,7 +621,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           ),
           const SizedBox(height: 10),
         ],
-
         if (_allocationType == DayAllocationType.shiftedWorkout) ...[
           const SizedBox(height: 20),
           const Text(
@@ -661,14 +652,11 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
                   width: 42,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: isWorkout
-                        ? AppTheme.calories
-                        : AppTheme.cardSurface,
+                    color: isWorkout ? AppTheme.calories : AppTheme.cardSurface,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isWorkout
-                          ? AppTheme.calories
-                          : AppTheme.cardBorder,
+                      color:
+                          isWorkout ? AppTheme.calories : AppTheme.cardBorder,
                       width: 1.5,
                     ),
                   ),

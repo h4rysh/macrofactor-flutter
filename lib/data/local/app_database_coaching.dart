@@ -69,8 +69,7 @@ extension AppDatabaseCoachingExtension on AppDatabase {
         id: row['id'] as String,
         checkInDate: DateTime.parse(row['check_in_date'] as String),
         previousCalories: (row['previous_calories'] as num).toDouble(),
-        recommendedCalories:
-            (row['recommended_calories'] as num).toDouble(),
+        recommendedCalories: (row['recommended_calories'] as num).toDouble(),
         expenditureKcal: (row['expenditure_kcal'] as num).toDouble(),
         weightTrendKg: (row['weight_trend_kg'] as num).toDouble(),
         isAccepted: (row['is_accepted'] as int) == 1,

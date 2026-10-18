@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/user_profile.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
-import '../widgets/apple_tactile_card.dart';
+import '../widgets/animated_primitives.dart';
 import '../widgets/strategy/checkin_history_sheet.dart';
 import '../widgets/strategy/coaching_checkin_card.dart';
 import '../widgets/strategy/macro_program_hero_card.dart';
@@ -60,48 +61,66 @@ class StrategyScreen extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // 1. Adherence-Neutral Guarantee Banner
-            _buildAdherenceNeutralCard(),
+            AppleStaggeredEntrance(
+              index: 0,
+              child: _buildAdherenceNeutralCard(),
+            ),
             const SizedBox(height: 16),
 
             // 2. Coaching Check-In Status Card
-            const CoachingCheckinCard(),
+            const AppleStaggeredEntrance(
+              index: 1,
+              child: CoachingCheckinCard(),
+            ),
             const SizedBox(height: 16),
 
             // 3. Active Program Hero Card
-            const MacroProgramHeroCard(),
+            const AppleStaggeredEntrance(
+              index: 2,
+              child: MacroProgramHeroCard(),
+            ),
             const SizedBox(height: 16),
 
             // 4. 7-Day Day Shifting Distribution Chart
-            const SevenDayDistributionChart(),
+            const AppleStaggeredEntrance(
+              index: 3,
+              child: SevenDayDistributionChart(),
+            ),
             const SizedBox(height: 16),
 
             // 5. Program Mode Quick Switch Card
-            _buildProgramModeCard(context, ref, program.mode),
+            AppleStaggeredEntrance(
+              index: 4,
+              child: _buildProgramModeCard(context, ref, program.mode),
+            ),
             const SizedBox(height: 16),
 
             // 6. Strategy Action Buttons
-            AppleTactileCard(
-              onTap: () => _openSetupWizard(context),
-              backgroundColor: AppTheme.calories,
-              borderRadius: 16,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.auto_fix_high_rounded,
-                      color: Colors.white, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    'REFIGURE PROGRAM STRATEGY',
-                    style: TextStyle(
-                      fontFamily: 'MacroSans',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                      letterSpacing: 0.8,
+            AppleStaggeredEntrance(
+              index: 5,
+              child: AppleTactileCard(
+                onTap: () => _openSetupWizard(context),
+                backgroundColor: AppTheme.calories,
+                borderRadius: 16,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.auto_fix_high_rounded,
+                        color: Colors.white, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'REFIGURE PROGRAM STRATEGY',
+                      style: TextStyle(
+                        fontFamily: 'MacroSans',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                        letterSpacing: 0.8,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 32),
@@ -112,16 +131,11 @@ class StrategyScreen extends ConsumerWidget {
   }
 
   Widget _buildAdherenceNeutralCard() {
-    return Container(
+    return AppleTactileCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: AppTheme.expenditure.withValues(alpha: 0.3),
-          width: 1,
-        ),
-      ),
+      borderRadius: 18,
+      backgroundColor: AppTheme.cardSurface,
+      borderColor: AppTheme.expenditure.withValues(alpha: 0.3),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -256,8 +270,10 @@ class StrategyScreen extends ConsumerWidget {
     required bool isSelected,
   }) {
     return Expanded(
-      child: InkWell(
+      child: AppleBouncy(
+        scaleDown: 0.94,
         onTap: () {
+          HapticFeedback.selectionClick();
           final program = ref.read(weeklyMacroProgramProvider);
           final updatedProgram = program.copyWith(mode: mode);
           ref
@@ -269,18 +285,28 @@ class StrategyScreen extends ConsumerWidget {
                 profile.copyWith(programMode: mode),
               );
         },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppTheme.calories.withValues(alpha: 0.15)
+                ? AppTheme.calories.withValues(alpha: 0.16)
                 : AppTheme.cardElevated,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected ? AppTheme.calories : Colors.transparent,
               width: 1.5,
             ),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppTheme.calories.withValues(alpha: 0.25),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
           ),
           alignment: Alignment.center,
           child: Text(

@@ -111,7 +111,8 @@ class CheckinHistorySheet extends ConsumerWidget {
                       final item = history[index];
                       final dateStr =
                           DateFormat('MMM d, yyyy').format(item.checkInDate);
-                      final delta = item.recommendedCalories - item.previousCalories;
+                      final delta =
+                          item.recommendedCalories - item.previousCalories;
                       final isSurplus = delta > 0;
 
                       return Container(
@@ -148,7 +149,9 @@ class CheckinHistorySheet extends ConsumerWidget {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
-                                    item.isAccepted ? 'Accepted' : 'Kept Current',
+                                    item.isAccepted
+                                        ? 'Accepted'
+                                        : 'Kept Current',
                                     style: TextStyle(
                                       fontFamily: 'MacroSans',
                                       fontSize: 11,

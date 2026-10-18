@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
+import 'animated_primitives.dart';
 
 /// Signature MacroFactor Horizontal Date Carousel Ribbon.
 /// Renders the `< Today >` header and the circular day badges.
@@ -60,13 +62,17 @@ class DateCarouselRibbon extends StatelessWidget {
                     color: AppTheme.textSecondary,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    onPressed: () => onDateSelected(
-                      selectedDate.subtract(const Duration(days: 1)),
-                    ),
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      onDateSelected(
+                        selectedDate.subtract(const Duration(days: 1)),
+                      );
+                    },
                   ),
                   const SizedBox(width: 6),
                   GestureDetector(
                     onTap: () async {
+                      HapticFeedback.selectionClick();
                       final picked = await showDatePicker(
                         context: context,
                         initialDate: selectedDate,
@@ -114,9 +120,12 @@ class DateCarouselRibbon extends StatelessWidget {
                     color: AppTheme.textSecondary,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    onPressed: () => onDateSelected(
-                      selectedDate.add(const Duration(days: 1)),
-                    ),
+                    onPressed: () {
+                      HapticFeedback.selectionClick();
+                      onDateSelected(
+                        selectedDate.add(const Duration(days: 1)),
+                      );
+                    },
                   ),
                 ],
               ),
@@ -138,15 +147,22 @@ class DateCarouselRibbon extends StatelessWidget {
                   DateFormat('E').format(day)[0]; // 'M', 'T', 'W'...
               final dayNumber = day.day.toString();
 
-              return GestureDetector(
-                onTap: () => onDateSelected(day),
-                child: Container(
+              return AppleBouncy(
+                scaleDown: 0.94,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onDateSelected(day);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOutCubic,
                   margin: const EdgeInsets.symmetric(horizontal: 6),
                   width: 44,
                   height: 56,
                   decoration: BoxDecoration(
-                    color:
-                        isSelected ? AppTheme.cardElevated : Colors.transparent,
+                    color: isSelected
+                        ? AppTheme.activeBlue.withValues(alpha: 0.16)
+                        : Colors.transparent,
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(
                       color: isSelected
@@ -154,7 +170,7 @@ class DateCarouselRibbon extends StatelessWidget {
                           : (isToday
                               ? AppTheme.cardBorder
                               : Colors.transparent),
-                      width: isSelected ? 2.2 : 1.0,
+                      width: isSelected ? 2.0 : 1.0,
                     ),
                   ),
                   child: Column(

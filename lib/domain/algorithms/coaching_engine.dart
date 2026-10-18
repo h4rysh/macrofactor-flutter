@@ -90,10 +90,12 @@ class CoachingEngine {
         proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
         // Fat: ~28% of calories, floor 0.7 g/kg
         final fatCalories = calories * 0.28;
-        fatGrams = (weightKg * 0.7).clamp(fatCalories / 9.0, 180.0).roundToDouble();
+        fatGrams =
+            (weightKg * 0.7).clamp(fatCalories / 9.0, 180.0).roundToDouble();
         // Carbs: remaining calories
-        final remainingCals = (calories - (proteinGrams * 4.0) - (fatGrams * 9.0))
-            .clamp(0.0, double.infinity);
+        final remainingCals =
+            (calories - (proteinGrams * 4.0) - (fatGrams * 9.0))
+                .clamp(0.0, double.infinity);
         carbsGrams = (remainingCals / 4.0).roundToDouble();
         break;
 
@@ -101,9 +103,11 @@ class CoachingEngine {
         proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
         // Fat minimized to ~18% of calories, floor 0.5 g/kg
         final fatCalories = calories * 0.18;
-        fatGrams = (weightKg * 0.5).clamp(fatCalories / 9.0, 120.0).roundToDouble();
-        final remainingCals = (calories - (proteinGrams * 4.0) - (fatGrams * 9.0))
-            .clamp(0.0, double.infinity);
+        fatGrams =
+            (weightKg * 0.5).clamp(fatCalories / 9.0, 120.0).roundToDouble();
+        final remainingCals =
+            (calories - (proteinGrams * 4.0) - (fatGrams * 9.0))
+                .clamp(0.0, double.infinity);
         carbsGrams = (remainingCals / 4.0).roundToDouble();
         break;
 
@@ -113,8 +117,9 @@ class CoachingEngine {
         final carbCals = calories * 0.20;
         carbsGrams = (carbCals / 4.0).clamp(40.0, 140.0).roundToDouble();
         // Fat takes up the remaining calories
-        final remainingCals = (calories - (proteinGrams * 4.0) - (carbsGrams * 4.0))
-            .clamp(0.0, double.infinity);
+        final remainingCals =
+            (calories - (proteinGrams * 4.0) - (carbsGrams * 4.0))
+                .clamp(0.0, double.infinity);
         fatGrams = (remainingCals / 9.0).roundToDouble();
         break;
 
@@ -123,8 +128,9 @@ class CoachingEngine {
         // Strict carb ceiling: 30g - 45g net carbs
         carbsGrams = (calories * 0.05 / 4.0).clamp(25.0, 45.0).roundToDouble();
         // Fat takes ~75-80% of calories
-        final remainingCals = (calories - (proteinGrams * 4.0) - (carbsGrams * 4.0))
-            .clamp(0.0, double.infinity);
+        final remainingCals =
+            (calories - (proteinGrams * 4.0) - (carbsGrams * 4.0))
+                .clamp(0.0, double.infinity);
         fatGrams = (remainingCals / 9.0).roundToDouble();
         break;
 
@@ -134,9 +140,11 @@ class CoachingEngine {
         proteinGrams = (elevatedFactor * weightKg).roundToDouble();
         // Fat: ~25% of calories
         final fatCalories = calories * 0.25;
-        fatGrams = (weightKg * 0.6).clamp(fatCalories / 9.0, 160.0).roundToDouble();
-        final remainingCals = (calories - (proteinGrams * 4.0) - (fatGrams * 9.0))
-            .clamp(0.0, double.infinity);
+        fatGrams =
+            (weightKg * 0.6).clamp(fatCalories / 9.0, 160.0).roundToDouble();
+        final remainingCals =
+            (calories - (proteinGrams * 4.0) - (fatGrams * 9.0))
+                .clamp(0.0, double.infinity);
         carbsGrams = (remainingCals / 4.0).roundToDouble();
         break;
     }
@@ -196,7 +204,8 @@ class CoachingEngine {
           final restDayReduction = totalWorkoutSurplus / numRestDays;
 
           final workoutCals = (dailyAvgCalories + workoutBoost).roundToDouble();
-          final restCals = (dailyAvgCalories - restDayReduction).roundToDouble();
+          final restCals =
+              (dailyAvgCalories - restDayReduction).roundToDouble();
 
           // Apply and ensure conservation by absorbing rounding in Sunday
           double assignedSum = 0.0;
@@ -209,8 +218,8 @@ class CoachingEngine {
 
           // Adjust Sunday so sum exactly equals totalWeeklyBudget
           final delta = totalWeeklyBudget - assignedSum;
-          dayCaloriesMap[7] = ((dayCaloriesMap[7] ?? dailyAvgCalories) + delta)
-              .roundToDouble();
+          dayCaloriesMap[7] =
+              ((dayCaloriesMap[7] ?? dailyAvgCalories) + delta).roundToDouble();
         }
         break;
 
@@ -223,9 +232,11 @@ class CoachingEngine {
 
         for (int day = 1; day <= 7; day++) {
           if (weekendDays.contains(day)) {
-            dayCaloriesMap[day] = (dailyAvgCalories + weekendBoost).roundToDouble();
+            dayCaloriesMap[day] =
+                (dailyAvgCalories + weekendBoost).roundToDouble();
           } else {
-            dayCaloriesMap[day] = (dailyAvgCalories - weekdayReduction).roundToDouble();
+            dayCaloriesMap[day] =
+                (dailyAvgCalories - weekdayReduction).roundToDouble();
           }
         }
         break;
@@ -292,7 +303,8 @@ class CoachingEngine {
       profile: profile,
       expenditureKcal: currentExpenditureKcal,
     );
-    final calorieDelta = newAverageCalories - currentProgram.dailyAverageCalories;
+    final calorieDelta =
+        newAverageCalories - currentProgram.dailyAverageCalories;
 
     String insight;
     if (calorieDelta.abs() < 15.0) {

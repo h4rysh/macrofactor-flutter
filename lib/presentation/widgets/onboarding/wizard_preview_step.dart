@@ -155,7 +155,8 @@ class WizardPreviewStep extends StatelessWidget {
             WizardMacroBadge(text: 'Style: ${programStyle.displayName}'),
             WizardMacroBadge(text: 'Mode: ${programMode.displayName}'),
             WizardMacroBadge(
-                text: 'Diet: ${dietaryPref.replaceAll('_', ' ').toUpperCase()}'),
+                text:
+                    'Diet: ${dietaryPref.replaceAll('_', ' ').toUpperCase()}'),
           ],
         ),
       ],

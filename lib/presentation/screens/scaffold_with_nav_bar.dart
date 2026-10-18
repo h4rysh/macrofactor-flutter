@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import '../widgets/app_lifecycle_sync_observer.dart';
 import '../widgets/apple_tactile_card.dart';
@@ -11,6 +12,8 @@ import 'strategy_screen.dart';
 
 /// Authentic MacroFactor 5-destination Scaffold with Center Action Button.
 /// Matches `src/ui/scaffold_with_nav_bar/scaffold_with_nav_bar_view.dart`.
+/// Elevated with Apple Liquid Glass frosted dock, animated tab indicator pill,
+/// and responsive spring micro-interactions.
 class ScaffoldWithNavBar extends StatefulWidget {
   const ScaffoldWithNavBar({super.key});
 
@@ -32,6 +35,13 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
     MoreScreen(),
   ];
 
+  void _onTabSelected(int index) {
+    if (_currentIndex != index) {
+      HapticFeedback.selectionClick();
+      setState(() => _currentIndex = index);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AppLifecycleSyncObserver(
@@ -43,17 +53,27 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: AppTheme.surface.withValues(alpha: 0.92),
-            border: const Border(
-              top: BorderSide(color: AppTheme.cardBorder, width: 0.8),
+            color: AppTheme.surface.withValues(alpha: 0.88),
+            border: Border(
+              top: BorderSide(
+                color: Colors.white.withValues(alpha: 0.08),
+                width: 0.8,
+              ),
             ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x33000000),
+                blurRadius: 20,
+                offset: Offset(0, -4),
+              ),
+            ],
           ),
           child: ClipRect(
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: SafeArea(
                 child: SizedBox(
-                  height: 64,
+                  height: 66,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
@@ -71,29 +91,51 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                         label: 'Food Log',
                       ),
 
-                      // 3. Center Floating Action Button (+) Matching log_revamp.png
-                      AppleBouncy(
-                        child: GestureDetector(
-                          key: const Key('center_action_fab'),
-                          onTap: () => QuickActionsSheet.show(context),
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Color(0x33000000),
-                                  blurRadius: 12,
-                                  offset: Offset(0, 4),
+                      // 3. Center Floating Action Button (+) with specular glow
+                      Expanded(
+                        child: Center(
+                          child: Semantics(
+                            button: true,
+                            label: 'Open quick actions menu',
+                            child: AppleBouncy(
+                              onTap: () {
+                                QuickActionsSheet.show(context);
+                              },
+                              child: Container(
+                                key: const Key('center_action_fab'),
+                                width: 50,
+                                height: 50,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                  gradient: const LinearGradient(
+                                    colors: [
+                                      Colors.white,
+                                      Color(0xFFE2E4EB),
+                                    ],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          Colors.white.withValues(alpha: 0.22),
+                                      blurRadius: 14,
+                                      spreadRadius: 1,
+                                    ),
+                                    const BoxShadow(
+                                      color: Color(0x55000000),
+                                      blurRadius: 12,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.add_rounded,
-                              color: Color(0xFF141418),
-                              size: 28,
+                                child: const Icon(
+                                  Icons.add_rounded,
+                                  color: Color(0xFF141418),
+                                  size: 30,
+                                ),
+                              ),
                             ),
                           ),
                         ),
@@ -133,22 +175,44 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
 
     return Expanded(
       child: AppleBouncy(
-        onTap: () => setState(() => _currentIndex = index),
-        child: Container(
-          color: Colors.transparent,
+        onTap: () => _onTabSelected(index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppTheme.activeBlue.withValues(alpha: 0.12)
+                : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected
+                  ? AppTheme.activeBlue.withValues(alpha: 0.25)
+                  : Colors.transparent,
+              width: 0.8,
+            ),
+          ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: color, size: 22),
+              AnimatedScale(
+                scale: isSelected ? 1.08 : 1.0,
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                child: Icon(icon, color: color, size: 21),
+              ),
               const SizedBox(height: 3),
-              Text(
-                label,
+              AnimatedDefaultTextStyle(
+                duration: const Duration(milliseconds: 200),
                 style: TextStyle(
                   fontFamily: 'MacroSans',
                   fontSize: 10,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
                   color: color,
+                  letterSpacing: isSelected ? 0.2 : 0.0,
                 ),
+                child: Text(label),
               ),
             ],
           ),

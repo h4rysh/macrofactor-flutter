@@ -25,9 +25,8 @@ class WizardSelectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppleTactileCard(
       onTap: onTap,
-      backgroundColor: selected
-          ? accentColor.withValues(alpha: 0.12)
-          : AppTheme.cardSurface,
+      backgroundColor:
+          selected ? accentColor.withValues(alpha: 0.12) : AppTheme.cardSurface,
       border: Border.all(
         color: selected ? accentColor : AppTheme.cardBorder,
         width: selected ? 1.5 : 1,

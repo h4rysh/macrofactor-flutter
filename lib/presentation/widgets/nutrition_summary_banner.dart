@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../domain/models/food_models.dart';
 import '../../domain/models/user_profile.dart';
 import '../theme/app_theme.dart';
+import 'animated_primitives.dart';
 
 /// Authentic MacroFactor Nutrition Summary Banner right below the Date Carousel.
 /// Shows consumed vs target for Calories, Protein (P), Fat (F), and Carbs (C).
@@ -27,14 +28,9 @@ class NutritionSummaryBanner extends StatelessWidget {
         ? (consumed.totalCarbs / targets.targetCarbsGrams).clamp(0.0, 1.0)
         : 0.0;
 
-    return Container(
+    return AppleTactileCard(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.cardBorder, width: 0.8),
-      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -180,23 +176,13 @@ class NutritionSummaryBanner extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 2),
-        Container(
+        const SizedBox(height: 3),
+        SizedBox(
           width: 46,
-          height: 2.5,
-          decoration: BoxDecoration(
-            color: AppTheme.cardElevated,
-            borderRadius: BorderRadius.circular(2),
-          ),
-          alignment: Alignment.centerLeft,
-          child: FractionallySizedBox(
-            widthFactor: progress.clamp(0.0, 1.0),
-            child: Container(
-              decoration: BoxDecoration(
-                color: color,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+          child: AnimatedMacroBar(
+            ratio: progress,
+            color: color,
+            height: 3.0,
           ),
         ),
       ],

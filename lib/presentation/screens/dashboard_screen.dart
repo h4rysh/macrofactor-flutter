@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
-import '../widgets/apple_tactile_card.dart';
+import '../widgets/animated_primitives.dart';
 import '../widgets/expenditure_card.dart';
 import '../widgets/macro_gauge_ring.dart';
 import '../widgets/profile_avatar_button.dart';
@@ -145,152 +145,171 @@ class DashboardScreen extends ConsumerWidget {
                 delegate: SliverChildListDelegate(
                   [
                     // Top Interactive Direction Banner (Apple Tactile)
-                    AppleBouncy(
-                      onTap: () => GoalQuestionnaireSheet.show(context),
-                      child: Container(
-                        key: const Key('dashboard_goal_banner'),
-                        margin: const EdgeInsets.only(bottom: 14),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 14),
-                        decoration: BoxDecoration(
-                          color: AppTheme.activeBlue.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: AppTheme.activeBlue.withValues(alpha: 0.25),
-                            width: 0.9,
+                    AppleStaggeredEntrance(
+                      index: 0,
+                      child: AppleBouncy(
+                        onTap: () => GoalQuestionnaireSheet.show(context),
+                        child: Container(
+                          key: const Key('dashboard_goal_banner'),
+                          margin: const EdgeInsets.only(bottom: 14),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
+                          decoration: BoxDecoration(
+                            color: AppTheme.activeBlue.withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color:
+                                  AppTheme.activeBlue.withValues(alpha: 0.25),
+                              width: 0.9,
+                            ),
                           ),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(9),
-                              decoration: BoxDecoration(
-                                color:
-                                    AppTheme.activeBlue.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(12),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(9),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.activeBlue
+                                      .withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: const Icon(
+                                  Icons.auto_awesome_rounded,
+                                  color: AppTheme.activeBlue,
+                                  size: 22,
+                                ),
                               ),
-                              child: const Icon(
-                                Icons.auto_awesome_rounded,
-                                color: AppTheme.activeBlue,
-                                size: 22,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Text(
-                                        'ADAPTIVE SETUP',
-                                        style: TextStyle(
-                                          fontFamily: 'MacroSans',
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppTheme.activeBlue,
-                                          letterSpacing: 0.8,
+                              const SizedBox(width: 12),
+                              const Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Row(
+                                      children: [
+                                        Text(
+                                          'ADAPTIVE SETUP',
+                                          style: TextStyle(
+                                            fontFamily: 'MacroSans',
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppTheme.activeBlue,
+                                            letterSpacing: 0.8,
+                                          ),
                                         ),
+                                      ],
+                                    ),
+                                    SizedBox(height: 2),
+                                    Text(
+                                      'Personalize Your Goal & Diet',
+                                      style: TextStyle(
+                                        fontFamily: 'MacroSans',
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w800,
+                                        color: AppTheme.textPrimary,
                                       ),
-                                    ],
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'Personalize Your Goal & Diet',
-                                    style: TextStyle(
-                                      fontFamily: 'MacroSans',
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppTheme.textPrimary,
                                     ),
-                                  ),
-                                  SizedBox(height: 2),
-                                  Text(
-                                    'Tailor rate, Indian staples, and protein strategy in 6 steps',
-                                    style: TextStyle(
-                                      fontFamily: 'DMSans',
-                                      fontSize: 11,
-                                      color: AppTheme.textSecondary,
+                                    SizedBox(height: 2),
+                                    Text(
+                                      'Tailor rate, Indian staples, and protein strategy in 6 steps',
+                                      style: TextStyle(
+                                        fontFamily: 'DMSans',
+                                        fontSize: 11,
+                                        color: AppTheme.textSecondary,
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 14,
-                              color: AppTheme.activeBlue,
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.arrow_forward_ios_rounded,
+                                size: 14,
+                                color: AppTheme.activeBlue,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
 
                     // A. Nutrition Focus Tile: Macro Gauge Ring (Calories + P/F/C breakdown)
-                    MacroGaugeRing(
-                      consumed: dailyNutrition,
-                      targets: macroTarget,
+                    AppleStaggeredEntrance(
+                      index: 1,
+                      child: MacroGaugeRing(
+                        consumed: dailyNutrition,
+                        targets: macroTarget,
+                      ),
                     ),
                     const SizedBox(height: 14),
 
                     // Quick Action Strip
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildActionPill(
-                            icon: Icons.add_rounded,
-                            label: 'Log Food',
-                            color: AppTheme.activeBlue,
-                            onTap: () {
-                              if (onNavigateToFoodLog != null) {
-                                onNavigateToFoodLog!();
-                              } else {
-                                Navigator.push(
-                                  context,
-                                  FoodSearchScreen.route(),
-                                );
-                              }
-                            },
+                    AppleStaggeredEntrance(
+                      index: 2,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _buildActionPill(
+                              icon: Icons.add_rounded,
+                              label: 'Log Food',
+                              color: AppTheme.activeBlue,
+                              onTap: () {
+                                if (onNavigateToFoodLog != null) {
+                                  onNavigateToFoodLog!();
+                                } else {
+                                  Navigator.push(
+                                    context,
+                                    FoodSearchScreen.route(),
+                                  );
+                                }
+                              },
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildActionPill(
-                            icon: Icons.monitor_weight_outlined,
-                            label: 'Log Weight',
-                            color: AppTheme.trendWeight,
-                            onTap: () => WeightLogModal.show(context),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildActionPill(
+                              icon: Icons.monitor_weight_outlined,
+                              label: 'Log Weight',
+                              color: AppTheme.trendWeight,
+                              onTap: () => WeightLogModal.show(context),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: _buildActionPill(
-                            icon: Icons.bolt_rounded,
-                            label: 'Quick Add',
-                            color: AppTheme.calories,
-                            onTap: () => QuickActionsSheet.show(context),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _buildActionPill(
+                              icon: Icons.bolt_rounded,
+                              label: 'Quick Add',
+                              color: AppTheme.calories,
+                              onTap: () => QuickActionsSheet.show(context),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
 
                     // B. Dynamic Bayesian Energy Expenditure V3
-                    DynamicExpenditureCard(
-                      expenditureState: expenditureState,
+                    AppleStaggeredEntrance(
+                      index: 3,
+                      child: DynamicExpenditureCard(
+                        expenditureState: expenditureState,
+                      ),
                     ),
                     const SizedBox(height: 14),
 
                     // C. Smoothed Weight Trend V2 Card
-                    WeightTrendCard(
-                      latestTrendPoint: latestTrendPoint,
-                      onLogWeightTap: () => WeightLogModal.show(context),
+                    AppleStaggeredEntrance(
+                      index: 4,
+                      child: WeightTrendCard(
+                        latestTrendPoint: latestTrendPoint,
+                        onLogWeightTap: () => WeightLogModal.show(context),
+                      ),
                     ),
                     const SizedBox(height: 14),
 
                     // D. Energy Balance Tile
-                    _buildEnergyBalanceCard(energyBalanceKcal),
+                    AppleStaggeredEntrance(
+                      index: 5,
+                      child: _buildEnergyBalanceCard(energyBalanceKcal),
+                    ),
                     const SizedBox(height: 80),
                   ],
                 ),
@@ -349,13 +368,10 @@ class DashboardScreen extends ConsumerWidget {
     final absBalance = energyBalanceKcal.abs();
     final badgeColor = isDeficit ? AppTheme.activeBlue : AppTheme.warning;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.cardBorder, width: 0.8),
-      ),
+    return AppleTactileCard(
+      padding: const EdgeInsets.all(18),
+      borderRadius: 18,
+      backgroundColor: AppTheme.cardSurface.withValues(alpha: 0.85),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -373,10 +389,15 @@ class DashboardScreen extends ConsumerWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                 decoration: BoxDecoration(
-                  color: badgeColor.withAlpha(30),
-                  borderRadius: BorderRadius.circular(6),
+                  color: badgeColor.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: badgeColor.withValues(alpha: 0.35),
+                    width: 0.8,
+                  ),
                 ),
                 child: Text(
                   isDeficit ? 'DEFICIT' : 'SURPLUS',
@@ -391,16 +412,17 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(
-                '${isDeficit ? '-' : '+'}$absBalance',
+              AnimatedCountText(
+                value: absBalance.toDouble(),
+                prefix: isDeficit ? '-' : '+',
                 style: TextStyle(
                   fontFamily: 'MacroSans',
-                  fontSize: 28,
+                  fontSize: 30,
                   fontWeight: FontWeight.w900,
                   color: isDeficit ? AppTheme.activeBlue : AppTheme.warning,
                   letterSpacing: -0.5,
@@ -418,7 +440,7 @@ class DashboardScreen extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 5),
           Text(
             isDeficit
                 ? 'Your daily net caloric deficit is driving body fat loss according to your plan.'

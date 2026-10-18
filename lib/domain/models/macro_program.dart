@@ -4,10 +4,12 @@ import 'package:macro_factor_app/domain/models/user_profile.dart';
 /// Macronutrient distribution philosophy based on MacroFactor reverse-engineered styles.
 enum MacroProgramStyle {
   balanced('Balanced', 'Moderate balance of carbs and healthy fats.'),
-  lowFat('Low Fat', 'Maximizes carbohydrates for endurance & training glycogen.'),
+  lowFat(
+      'Low Fat', 'Maximizes carbohydrates for endurance & training glycogen.'),
   lowCarb('Low Carb', 'Reduces carbs to 20-25% while elevating dietary fats.'),
   keto('Ketogenic', 'Strict net carb restriction (<50g) with high fat intake.'),
-  highProtein('High Protein', 'Elevated protein (2.4-2.8 g/kg) for aggressive deficits.');
+  highProtein('High Protein',
+      'Elevated protein (2.4-2.8 g/kg) for aggressive deficits.');
 
   const MacroProgramStyle(this.displayName, this.description);
   final String displayName;
@@ -17,8 +19,10 @@ enum MacroProgramStyle {
 /// Day-to-day calorie allocation and shifting across the week.
 enum DayAllocationType {
   even('Even', 'Identical calories and macros every day.'),
-  shiftedWorkout('Workout Shifted', 'Higher calories & carbs on training days, lower on rest days.'),
-  weekendShift('Weekend Boost', 'Higher calories Friday-Sunday for social dining & flexibility.'),
+  shiftedWorkout('Workout Shifted',
+      'Higher calories & carbs on training days, lower on rest days.'),
+  weekendShift('Weekend Boost',
+      'Higher calories Friday-Sunday for social dining & flexibility.'),
   custom('Custom', 'User-defined daily caloric targets.');
 
   const DayAllocationType(this.displayName, this.description);
@@ -39,7 +43,8 @@ class DayMacroTarget {
     required this.fatGrams,
   });
 
-  final int dayOfWeek; // 1 = Monday, 7 = Sunday (matching DateTime.monday..sunday)
+  final int
+      dayOfWeek; // 1 = Monday, 7 = Sunday (matching DateTime.monday..sunday)
   final String dayName; // 'Mon', 'Tue', etc.
   final bool isWorkoutDay;
   final double calories;
@@ -217,8 +222,7 @@ class WeeklyMacroProgram {
                 ?.map((e) => (e as num).toInt())
                 .toSet() ??
             const {1, 3, 5},
-        dailyAverageCalories:
-            (json['dailyAverageCalories'] as num).toDouble(),
+        dailyAverageCalories: (json['dailyAverageCalories'] as num).toDouble(),
         days: (json['days'] as List<dynamic>)
             .map((e) => DayMacroTarget.fromJson(e as Map<String, dynamic>))
             .toList(),
@@ -272,8 +276,7 @@ class CoachingCheckIn {
         id: json['id'] as String,
         checkInDate: DateTime.parse(json['checkInDate'] as String),
         previousCalories: (json['previousCalories'] as num).toDouble(),
-        recommendedCalories:
-            (json['recommendedCalories'] as num).toDouble(),
+        recommendedCalories: (json['recommendedCalories'] as num).toDouble(),
         expenditureKcal: (json['expenditureKcal'] as num).toDouble(),
         weightTrendKg: (json['weightTrendKg'] as num).toDouble(),
         isAccepted: (json['isAccepted'] as bool?) ?? false,
