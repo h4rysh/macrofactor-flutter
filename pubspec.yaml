@@ -2,7 +2,7 @@ name: macro_factor_app
 description: "MacroFactor Clean-Room Reconstruction with HealthifyMe-grade Indian Food Database."
 publish_to: 'none'
 
-version: 1.4.0+5
+version: 1.4.1+6
 
 environment:
   sdk: '>=3.2.0 <4.0.0'

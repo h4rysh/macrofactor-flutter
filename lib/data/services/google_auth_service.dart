@@ -22,12 +22,16 @@ class GoogleAuthServiceImpl implements AuthService {
       'https://www.googleapis.com/auth/userinfo.profile',
     ],
     String? clientId,
-    String? serverClientId,
+    String? serverClientId = const String.fromEnvironment(
+      'GOOGLE_SERVER_CLIENT_ID',
+      defaultValue: '',
+    ),
   }) : _googleSignIn = googleSignIn ??
             GoogleSignIn(
               scopes: scopes,
               clientId: clientId,
-              serverClientId: serverClientId,
+              serverClientId:
+                  serverClientId?.isNotEmpty == true ? serverClientId : null,
             );
 
   final GoogleSignIn _googleSignIn;
@@ -106,7 +110,18 @@ class GoogleAuthServiceImpl implements AuthService {
           'Network error during Google Sign-In. Please check your connection.',
         );
       }
-      throw Exception('Google Sign-In failed: ${e.message ?? e.code}');
+      final msg = e.message ?? '';
+      final code = e.code;
+      if (code == '10' ||
+          code.contains('10') ||
+          msg.contains('10') ||
+          msg.contains('DEVELOPER_ERROR')) {
+        throw Exception(
+          'Google Play Services configuration error (Code 10: DEVELOPER_ERROR). '
+          'Please ensure the Google Sign-In provider is enabled in Firebase Console.',
+        );
+      }
+      throw Exception('Google Sign-In failed: ${msg.isNotEmpty ? msg : code}');
     } catch (e) {
       if (e is Exception) rethrow;
       throw Exception('Google Sign-In failed: $e');

@@ -215,5 +215,31 @@ void main() {
       notifier.clearError();
       expect(container.read(authNotifierProvider), isA<AuthUnauthenticated>());
     });
+
+    test(
+        'signInWithDemoAthlete sets state to AuthAuthenticated and caches session to SQLite',
+        () async {
+      final notifier = container.read(authNotifierProvider.notifier);
+
+      expect(container.read(authNotifierProvider), isA<AuthUnauthenticated>());
+
+      await notifier.signInWithDemoAthlete(
+        displayName: 'Special Athlete',
+        email: 'special.athlete@macrofactor.local',
+      );
+
+      final state = container.read(authNotifierProvider);
+      expect(state, isA<AuthAuthenticated>());
+      expect(state.isAuthenticated, isTrue);
+      expect(state.displayName, equals('Special Athlete'));
+      expect(state.email, equals('special.athlete@macrofactor.local'));
+      expect(container.read(isAuthenticatedProvider), isTrue);
+
+      final dbAccount = appDb.getAccountSession();
+      expect(dbAccount, isNotNull);
+      expect(dbAccount!.displayName, equals('Special Athlete'));
+      expect(dbAccount.email, equals('special.athlete@macrofactor.local'));
+      expect(dbAccount.healthConnectEnabled, isTrue);
+    });
   });
 }

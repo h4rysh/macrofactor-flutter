@@ -124,7 +124,7 @@ class AboutScreen extends StatelessWidget {
               border: Border.all(color: AppTheme.cardBorder),
             ),
             child: const Text(
-              'v1.4.0 • Build 2026.10',
+              'v1.4.1 • Build 2026.10',
               style: TextStyle(
                 fontFamily: 'DMSans',
                 fontSize: 11,

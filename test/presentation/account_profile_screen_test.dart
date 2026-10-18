@@ -217,5 +217,27 @@ void main() {
 
       expect(syncAdapter.fetchWorkoutsCalled, isTrue);
     });
+
+    testWidgets(
+        'tapping Continue with Demo Athlete Profile button logs in as Demo Athlete',
+        (tester) async {
+      configureViewport(tester);
+
+      await tester.pumpWidget(buildTestableWidget());
+      await tester.pumpAndSettle();
+
+      // Guest athlete initially visible
+      expect(find.text('Guest Athlete'), findsOneWidget);
+      expect(find.byKey(const Key('profile_demo_sign_in_btn')), findsOneWidget);
+
+      // Tap Demo Athlete button
+      await tester.tap(find.byKey(const Key('profile_demo_sign_in_btn')));
+      await tester.pumpAndSettle();
+
+      // Should now be signed in with Demo Athlete profile
+      expect(find.text('Athlete (Demo)'), findsOneWidget);
+      expect(find.text('athlete.demo@macrofactor.local'), findsOneWidget);
+      expect(find.byKey(const Key('profile_sign_out_btn')), findsOneWidget);
+    });
   });
 }

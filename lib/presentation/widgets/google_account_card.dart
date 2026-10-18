@@ -68,6 +68,67 @@ class GoogleAccountCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 16),
+          if (authState is AuthError) ...[
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppTheme.calories.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: AppTheme.calories.withValues(alpha: 0.35),
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        color: AppTheme.calories,
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Google Sign-In Alert',
+                          style: TextStyle(
+                            fontFamily: 'MacroSans',
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.calories,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.close_rounded,
+                          size: 16,
+                          color: AppTheme.calories,
+                        ),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () => ref
+                            .read(authNotifierProvider.notifier)
+                            .clearError(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    authState.message,
+                    style: const TextStyle(
+                      fontFamily: 'DMSans',
+                      fontSize: 11,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
           _buildAuthButton(context, ref, user, isLoading),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
@@ -246,54 +307,108 @@ class GoogleAccountCard extends ConsumerWidget {
       );
     }
 
-    return AppleBouncy(
-      onTap: isLoading
-          ? null
-          : () {
-              ref.read(authNotifierProvider.notifier).signInWithGoogle();
-            },
-      child: Container(
-        key: const Key('profile_sign_in_btn'),
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 11),
-        decoration: BoxDecoration(
-          color: AppTheme.activeBlue,
-          borderRadius: BorderRadius.circular(12),
+    return Column(
+      children: [
+        AppleBouncy(
+          onTap: isLoading
+              ? null
+              : () {
+                  ref.read(authNotifierProvider.notifier).signInWithGoogle();
+                },
+          child: Container(
+            key: const Key('profile_sign_in_btn'),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 11),
+            decoration: BoxDecoration(
+              color: AppTheme.activeBlue,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isLoading)
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                else ...[
+                  const Icon(Icons.login_rounded,
+                      size: 18, color: Colors.white),
+                  const SizedBox(width: 8),
+                  const Flexible(
+                    child: Text(
+                      'Sign in with Google',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'MacroSans',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ),
-        alignment: Alignment.center,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (isLoading)
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
+        const SizedBox(height: 8),
+        AppleBouncy(
+          onTap: isLoading
+              ? null
+              : () {
+                  ref
+                      .read(authNotifierProvider.notifier)
+                      .signInWithDemoAthlete();
+                },
+          child: Container(
+            key: const Key('profile_demo_sign_in_btn'),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: AppTheme.cardElevated,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.cardBorder,
+                width: 1,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.fitness_center_rounded,
+                  size: 16,
+                  color: AppTheme.activeBlue,
                 ),
-              )
-            else ...[
-              const Icon(Icons.login_rounded, size: 18, color: Colors.white),
-              const SizedBox(width: 8),
-              const Flexible(
-                child: Text(
-                  'Sign in with Google',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'MacroSans',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.white,
+                SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'Continue with Demo Athlete Profile',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'MacroSans',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ],
+              ],
+            ),
+          ),
         ),
-      ),
+      ],
     );
   }
 }

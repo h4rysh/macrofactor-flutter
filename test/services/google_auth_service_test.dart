@@ -316,6 +316,29 @@ void main() {
         ),
       );
     });
+
+    test(
+        'signInWithGoogle maps error 10 / DEVELOPER_ERROR to actionable Firebase configuration message',
+        () async {
+      fakePlatform.platformExceptionToThrow = PlatformException(
+        code: '10',
+        message: 'DEVELOPER_ERROR',
+      );
+
+      expect(
+        () => authService.signInWithGoogle(),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            allOf(
+              contains('DEVELOPER_ERROR'),
+              contains('Firebase Console'),
+            ),
+          ),
+        ),
+      );
+    });
   });
 
   group('Display Name Fallback Logic', () {

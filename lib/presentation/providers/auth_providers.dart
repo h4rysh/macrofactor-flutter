@@ -152,6 +152,28 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Authenticates using a high-fidelity Demo Athlete profile.
+  ///
+  /// Useful for local testing and physical device verification when external
+  /// cloud OAuth services or consent screens are not yet published.
+  Future<void> signInWithDemoAthlete({
+    String displayName = 'Athlete (Demo)',
+    String email = 'athlete.demo@macrofactor.local',
+  }) async {
+    final demoUser = UserAccount.fromGoogle(
+      id: 'active_session',
+      googleUserId: 'demo_athlete_001',
+      displayName: displayName,
+      email: email,
+      photoUrl: null,
+      healthConnectEnabled: true,
+    );
+    try {
+      _db.saveAccountSession(demoUser);
+    } catch (_) {}
+    state = AuthAuthenticated(demoUser);
+  }
+
   /// Non-destructive sign-out: clears active user account session only.
   /// Preserves all local food logs, scale weights, and workout records.
   Future<void> signOut() async {
