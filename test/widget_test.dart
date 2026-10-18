@@ -5,7 +5,8 @@ import 'package:macro_factor_app/main.dart';
 import 'package:macro_factor_app/presentation/providers/app_providers.dart';
 
 void main() {
-  testWidgets('App root initializes without errors and routes to Welcome on fresh launch',
+  testWidgets(
+      'App root initializes without errors and routes to Welcome on fresh launch',
       (WidgetTester tester) async {
     final db = AppDatabase.inMemory();
 
@@ -48,4 +49,3 @@ void main() {
     db.close();
   });
 }
-
