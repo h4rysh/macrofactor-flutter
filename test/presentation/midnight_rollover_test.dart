@@ -4,8 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
 import 'package:macro_factor_app/domain/models/user_account.dart';
 import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/providers/auth_providers.dart';
-import 'package:macro_factor_app/presentation/providers/health_sync_providers.dart';
 import 'package:macro_factor_app/presentation/widgets/app_lifecycle_sync_observer.dart';
 
 import 'package:sqlite3/sqlite3.dart';
@@ -46,7 +44,7 @@ class _FakeHealthSyncNotifier extends HealthSyncNotifier {
   Future<void> checkAvailabilityAndPermissions() async {}
 
   @override
-  Future<void> triggerSync({String? triggerReason}) async {}
+  Future<bool> syncNow({int trailingDays = 30}) async => true;
 }
 
 void main() {
