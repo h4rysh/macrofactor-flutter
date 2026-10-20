@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/presentation/providers/auth_providers.dart';
-import 'package:macro_factor_app/presentation/providers/health_sync_providers.dart';
+import 'package:intl/intl.dart';
+import 'package:macro_factor_app/presentation/providers/app_providers.dart';
 
 /// Configurable app lifecycle observer that triggers quiet background
 /// synchronization with Google Health Connect upon app launch and app resume.
@@ -56,6 +56,7 @@ class _AppLifecycleSyncObserverState
     // Initial launch auto-sync: triggered immediately after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        _checkDateRollover();
         unawaited(triggerSync(reason: 'launch'));
       }
     });
@@ -70,7 +71,16 @@ class _AppLifecycleSyncObserverState
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
+      _checkDateRollover();
       unawaited(triggerSync(reason: 'resume'));
+    }
+  }
+
+  void _checkDateRollover() {
+    final todayStr = DateFormat('yyyy-MM-dd').format(_currentTime);
+    final selectedDate = ref.read(selectedDateProvider);
+    if (selectedDate != todayStr) {
+      ref.read(selectedDateProvider.notifier).state = todayStr;
     }
   }
 

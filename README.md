@@ -5,9 +5,9 @@
 ![Flutter](https://img.shields.io/badge/Flutter-3.29+-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.7+-0175C2?style=for-the-badge&logo=dart&logoColor=white)
 ![CI](https://img.shields.io/github/actions/workflow/status/h4rysh/macrofactor-flutter/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=white&label=CI)
-![Tests](https://img.shields.io/badge/Tests-313%2F313%20Passed-2ea44f?style=for-the-badge&logo=githubactions&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-320%2B%20Passing-2ea44f?style=for-the-badge&logo=githubactions&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
-![Release](https://img.shields.io/badge/Release-v1.6.0-blueviolet?style=for-the-badge)
+![Release](https://img.shields.io/badge/Release-v1.7.0-blueviolet?style=for-the-badge)
 
 <br/>
 
@@ -15,9 +15,40 @@
 
 <br/>
 
-[📥 **Download Production APK (v1.6.0)**](https://github.com/h4rysh/macrofactor-flutter/releases/download/v1.6.0/app-release.apk) • [🏷️ **Releases & Changelog**](https://github.com/h4rysh/macrofactor-flutter/releases) • [📐 **Algorithm Formulations**](#-mathematical-formulations) • [🏛️ **Architecture Spec**](#️-system-architecture)
+[📥 **Download Production APK (v1.7.0)**](https://github.com/h4rysh/macrofactor-flutter/releases/download/v1.7.0/app-release.apk) • [🏷️ **Releases & Changelog**](https://github.com/h4rysh/macrofactor-flutter/releases) • [📐 **Mathematical Formulations**](#-mathematical-formulations) • [🏛️ **System Architecture**](#️-system-architecture) • [🚀 **Quick Start**](#-quick-start--development)
 
 </div>
+
+---
+
+## 📑 Table of Contents
+
+- [✨ Core Capabilities & Highlights](#-core-capabilities--highlights)
+- [📱 Visual & UX Reconstruction (Liquid Glass & Apple HIG)](#-visual--ux-reconstruction-liquid-glass--apple-hig)
+- [🧠 Philosophy: Adherence-Neutral Nutrition](#-philosophy-adherence-neutral-nutrition)
+- [🎯 MacroFactor Strategy Coaching Engine & 7-Day Shifting](#-macrofactor-strategy-coaching-engine--7-day-shifting)
+- [🚀 First-Launch Onboarding & Interactive Goal Direction](#-first-launch-onboarding--interactive-goal-direction)
+- [🏋️ Google Sign-In, Health Connect & Hevy Sync](#️-google-sign-in-health-connect--hevy-sync)
+- [🍛 HealthifyMe-Grade Indian Food Database](#-healthifyme-grade-indian-food-database)
+- [📐 Mathematical Formulations](#-mathematical-formulations)
+- [🏛️ System Architecture](#️-system-architecture)
+- [🗄️ Database Schema & Storage Architecture](#️-database-schema--storage-architecture)
+- [🧪 Verification & Quality Gates](#-verification--quality-gates)
+- [🚀 Quick Start & Development](#-quick-start--development)
+- [📄 License & Disclaimers](#-license--disclaimers)
+
+---
+
+## ✨ Core Capabilities & Highlights
+
+| Feature Area | Implementation Highlights |
+|---|---|
+| **🎨 Apple HIG Motion & Glass** | Authentic Obsidian OLED Dark palette (`#0B0B0E`), frosted `BackdropFilter` docks (sigma 18–20), `AppleBouncy` tactile micro-interactions, `AnimatedCountText` numerical odometer tweens, and `MacroGaugeRing` concentric radial progress sweep. |
+| **🧠 Adherence-Neutral Coaching** | Mathematical calibration without red warning flags or calorie guilt. 3 Coaching Modes (Coached, Collaborative, Manual), 5 Macronutrient Styles (Balanced, Low Fat, Low Carb, Ketogenic, High Protein), and 7-day calorie shifting with strict energy conservation. |
+| **🚀 First-Launch Onboarding** | Interactive 6-step goal direction wizard (`OnboardingCoordinator`, `WelcomeScreen`, `StrategySetupWizard`, `AuthGateScreen`) with adaptive pacing, Indian dietary preferences, and instant target activation. |
+| **🏋️ Wearable & Training Sync** | Google OAuth Sign-In with 100% offline SQLite session caching, Android Health Connect sync importing Hevy workout sessions (`ExerciseSessionRecord`), body weight sync with conflict protection, and an Account Profile training dashboard. |
+| **🍛 2,500+ Indian Food Items** | Embedded SQLite FTS5 full-text search curated from ICMR-NIN IFCT tables, native Indian portion units (*katori*, *roti*, *ladle*, *cups*), and a 1-tap cooking oil modifier (+½ tsp, +1 tsp, +1 tbsp oil/ghee). |
+| **📈 Dynamic Metabolic Filtering** | Bidirectional zero-phase EMA weight trend smoothing with dynamic $\Delta t$ interval scaling and Bayesian Kalman filter (V3) state estimation for Total Daily Energy Expenditure (TDEE). |
 
 ---
 
@@ -32,13 +63,13 @@ Hairline Borders:  #26262E  (1px translucent micro-dividers)
 Macro Accents:     🔥 #FF5722 Cal  •  🍗 #FB923C Protein  •  🥑 #FACC15 Fat  •  🌾 #38BDF8 Carbs  •  ⚡ #0055E1 Expenditure
 ```
 
-### Apple HIG Tactile Motion & Liquid Glass Surfaces (v1.6.0)
-- 🪟 **Liquid Glass Frosted Docks**: `BackdropFilter` gaussian blurs (sigma 18–20) paired with specular translucent highlight borders on `PersistentSearchBar` and `ScaffoldWithNavBar`.
+### Apple HIG Tactile Motion & Liquid Glass Surfaces
+- 🪟 **Liquid Glass Frosted Docks**: Gaussian blurs (`BackdropFilter` sigma 18–20) paired with specular translucent highlight borders on `PersistentSearchBar` and `ScaffoldWithNavBar`.
 - ⚡ **Odometer Number Tweens (`AnimatedCountText`)**: Numerical count-ups for calories and macronutrients powered by `Curves.easeOutCubic`.
 - 🌊 **Staggered Page Reveals (`AppleStaggeredEntrance`)**: Cascading slide-fade reveals on page loads across Dashboard, Strategy, and More screens.
 - 🎯 **Tactile Micro-Interactions (`AppleBouncy`)**: Zero-delay spring scale-down on tap that participates directly in Flutter's gesture arena (`onTapDown`, `onTapUp`, `onTapCancel`), preventing false triggers or stickiness in scrollable views.
 - ⭕ **Animated Macro Gauge Ring (`MacroGaugeRing`)**: Concentric radial progress sweep, over-target accent arcs, and centered calorie odometers.
-- ⏱️ **Boot to Food Log**: Default startup launches directly into the hourly food timeline (Index 1) with quick return to Dashboard.
+- ⏱️ **Boot to Food Log**: Default startup launches directly into the hourly food timeline with instant navigation back to the Dashboard.
 
 ---
 
@@ -90,6 +121,30 @@ $$\sum_{d=1}^7 \text{Calories}_d = 7 \times \text{DailyAverageCalories}$$
 
 Day-shifted macro targets reactively propagate from `dayMacroTargetForSelectedDateProvider` directly to the active Dashboard!
 
+### 4. Robust Macro Solver Guardrails
+- **Minimum Carbohydrate Safety Floor**: Guarantees $\ge 20\text{g}$ carbohydrates even on high-protein, low-calorie diets to prevent metabolic hypoglycemia.
+- **High-Calorie Bounds Scaling**: Expands upper bounds on protein (1,000g), carbohydrates (2,000g), and fat (1,000g), preventing premature clipping bugs at 5,800+ kcal athlete regimens.
+- **Residual Energy Balancer**: Automatically balances residual calories from integer rounding within $\pm 2\text{ kcal}$.
+
+---
+
+## 🚀 First-Launch Onboarding & Interactive Goal Direction
+
+To ensure every user begins with a personalized, calibrated metabolic baseline, the application features an interactive onboarding flow and dynamic goal questionnaire:
+
+### Multi-Step Onboarding Architecture
+- **`WelcomeScreen`**: Introduces MacroFactor's adherence-neutral philosophy and clean-room science with smooth slide-fade animations.
+- **`StrategySetupWizard`**: Guides users through baseline biometric entry (height, weight, biological sex, age) and expenditure estimation.
+- **`AuthGateScreen`**: Offers Google OAuth Sign-In or one-tap local Guest Mode, ensuring 100% offline sovereignty.
+
+### Interactive 6-Step Goal Questionnaire Sheet
+1. **Goal Selection**: Fat Loss, Maintenance, or Muscle Gain with physiological guidance.
+2. **Activity & Expenditure**: Baseline multiplier calculation accounting for daily occupation and structured training.
+3. **Adaptive Pacing**: Safe weekly rate of change slider bounded by health recommendations (0.25% to 1.0% body weight/week).
+4. **Indian Dietary Preferences**: Vegetarian, Eggetarian, Non-Vegetarian, Halal, or Jain options with customized protein suggestions.
+5. **Protein Strategy**: Protein target selection ranging from standard RDA to athletic hypertrophy tiers ($1.6\text{--}2.7\text{ g/kg}$).
+6. **Summary & Activation**: Real-time preview of daily calories and macros with instant auto-save to Riverpod state and SQLite.
+
 ---
 
 ## 🏋️ Google Sign-In, Health Connect & Hevy Sync
@@ -100,10 +155,18 @@ Day-shifted macro targets reactively propagate from `dayMacroTargetForSelectedDa
 - **Demo Athlete Mode**: Instant one-tap evaluation profile with pre-seeded metabolic logs and Hevy workout data.
 
 ### Google Health Connect Integration
-- **Background Sync**: Quietly synchronizes on app launch and app resume.
+- **Background Sync**: Quietly synchronizes on app launch and app resume via `AppLifecycleSyncObserver`.
 - **Manual Sync**: Dedicated "Sync Now" button inside Settings to avoid UI clutter.
 - **Hevy Workout Import**: Automatically ingests `ExerciseSessionRecord` events logged by Hevy in Health Connect, tracking session title, duration, active calories burned, and timestamps.
-- **Smart Scale Ingestion**: Automatically reads scale weight recordings into the local `scale_weights` table.
+- **Smart Scale Ingestion with Conflict Protection**: Automatically reads scale weight recordings into the local `scale_weights` table. A conditional SQLite conflict policy ensures background syncs never overwrite user-entered manual weigh-ins:
+  ```sql
+  ON CONFLICT(date) DO UPDATE SET
+    scale_weight = excluded.scale_weight,
+    note = excluded.note,
+    source = excluded.source,
+    logged_at = excluded.logged_at
+  WHERE weight_logs.source != 'manual' OR excluded.source = 'manual';
+  ```
 
 ### Account Profile & Training Dashboard
 - Total workouts synced from Hevy.
@@ -122,6 +185,7 @@ Day-shifted macro targets reactively propagate from `dayMacroTargetForSelectedDa
 - Authentic regional cuisine coverage:
   - **South Indian**: Dosa, Idli, Medu Vada, Sambar, Rasam, Pongal, Appam, Avial, Poriyal, Chettinad Chicken, Fish Curry.
   - **North Indian**: Paneer Butter Masala, Dal Makhani, Rajma, Chole, Palak Paneer, Roti, Naan, Paratha, Biryani, Pulao.
+  - **Snacks & Street Food**: Samosa, Dhokla, Pani Puri, Bhel Puri, Pav Bhaji, Kathi Roll.
 - Native portion units: *Katori (150 ml)*, *Roti / Chapati (count)*, *Dosa / Idli (piece)*, *Ladle (60 ml)*, *Grams*, *Cups*.
 
 ### 1-Tap Cooking Oil Modifier
@@ -171,7 +235,7 @@ $$\text{Flux Clamp}: \quad \Delta x_k = \text{clamp}(\hat{x}_k - \hat{x}_{k-1}, 
 ```mermaid
 flowchart TD
     subgraph Presentation ["Presentation Layer (Flutter + Riverpod)"]
-        Nav["ScaffoldWithNavBar (Frosted Dock + Center Action FAB)"]
+        Nav["ScaffoldWithNavBar (Frosted Dock + Glowing Action FAB)"]
         Dashboard["DashboardScreen (Staggered Cards + Odometers)"]
         FoodLog["FoodLogScreen (Hourly Timeline & Date Ribbon)"]
         Strategy["StrategyScreen (Coaching Hero, 7-Day Shifting, Check-ins)"]
@@ -198,6 +262,7 @@ flowchart TD
 
     subgraph Data ["Data Layer (SQLite & External Services)"]
         DB[("AppDatabase (Drift SQLite)")]
+        DBSchema["DatabaseSchema (Modular DDL & Indexes)"]
         FTS[("FTS5 Full-Text Food Catalog")]
         GoogleAuth["GoogleAuthService (OAuth 2.0)"]
         HealthSync["HealthConnectSyncAdapter (Health Connect API)"]
@@ -215,8 +280,28 @@ flowchart TD
     
     Domain --> Models
     Data --> DB
+    DB --> DBSchema
     DB --> FTS
     Data --> GoogleAuth & HealthSync
+```
+
+---
+
+## 🗄️ Database Schema & Storage Architecture
+
+The local database is engineered with **Drift & SQLite3** under a strict **offline-first sovereignty** principle, with schema statements decoupled into [`database_schema.dart`](lib/data/local/database_schema.dart):
+
+```
+app_database.sqlite
+ ├── user_profiles          (Biometrics, calorie floor, goal pace)
+ ├── app_settings           (Key-value configuration & preferences)
+ ├── weight_logs            (Scale weights with source tracking: manual vs health_connect)
+ ├── food_logs              (Logged foods grouped by date, hour, meal slot, and oil modifier)
+ ├── food_catalog           (Embedded ICMR-NIN IFCT food items with FTS5 virtual search)
+ ├── workout_sessions       (Hevy exercise sessions synced from Health Connect)
+ ├── user_account_session   (Cached Google profile, avatar, and token state)
+ ├── macro_programs         (Active coaching plans, styles, and shifting targets)
+ └── coaching_checkins      (Weekly metabolic adjustment history)
 ```
 
 ---
@@ -228,11 +313,11 @@ Every commit passes automated local verification and GitHub Actions CI pipelines
 | Check | Tool / Standard | Result |
 |---|---|---|
 | **Static Code Analysis** | `flutter analyze` | **0 issues found** (Clean) |
-| **Automated Test Suite** | `flutter test` | **313 / 313 Passed (100% Green)** |
+| **Automated Test Suite** | `flutter test` | **320+ Passing Unit, Widget & E2E Tests** |
 | **Code Formatting** | `dart format .` | **Enforced in CI (`--set-exit-if-changed .`)** |
 | **Modularity Ceiling** | Architectural Rule | **100% of files strictly $\le 800$ lines** |
-| **Android Release Build** | `flutter build apk --release` | **Clean exit (`app-release.apk`, 83.8 MB)** |
-| **CI Automation** | GitHub Actions (`Flutter CI`) | **All 10 steps green** |
+| **Android Release Build** | `flutter build apk --release` | **Clean exit (`app-release.apk`)** |
+| **CI Automation** | GitHub Actions (`Flutter CI`) | **All CI workflow steps green** |
 
 ---
 
@@ -257,7 +342,7 @@ dart format --output=none --set-exit-if-changed .
 # Run static analysis
 flutter analyze
 
-# Run all 313 unit, widget, and E2E journey tests
+# Run unit, widget, and E2E journey tests
 flutter test
 
 # Run with test coverage report
@@ -277,9 +362,11 @@ The compiled release binary is output to `build/app/outputs/flutter-apk/app-rele
 
 ---
 
-## 📄 License
+## 📄 License & Disclaimers
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+> **Disclaimer**: This is an independent, clean-room research and educational reconstruction created to explore adherence-neutral nutrition science and authentic Flutter engineering. MacroFactor is a registered trademark of Stronger By Science Technologies LLC.
 
 <div align="center">
 <sub>Crafted with clean-room precision, adherence-neutral science, and deep reverse engineering fidelity.</sub>

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:meta/meta.dart';
 import 'package:macro_factor_app/domain/models/macro_program.dart';
 import 'package:macro_factor_app/domain/models/user_profile.dart';
@@ -82,79 +83,109 @@ class CoachingEngine {
   }) {
     double proteinGrams;
     double fatGrams;
-    double carbsGrams;
+    double carbsGrams = 0.0;
+
+    // Physiological floors
+    final double minProteinGrams = math.max(30.0, weightKg * 1.0);
+    final double minFatGrams = math.max(20.0, weightKg * 0.4);
+    final double minCarbsGrams = switch (style) {
+      MacroProgramStyle.keto => 20.0,
+      MacroProgramStyle.lowCarb => 30.0,
+      _ => math.max(20.0, (calories * 0.10) / 4.0),
+    };
 
     switch (style) {
       case MacroProgramStyle.balanced:
         // Protein: standard tier (1.6 - 2.4 g/kg)
         proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
-        // Fat: ~28% of calories, floor 0.7 g/kg
+        // Fat: ~28% of calories
         final fatCalories = calories * 0.28;
-        fatGrams =
-            (weightKg * 0.7).clamp(fatCalories / 9.0, 180.0).roundToDouble();
-        // Carbs: remaining calories
-        final remainingCals =
-            (calories - (proteinGrams * 4.0) - (fatGrams * 9.0))
-                .clamp(0.0, double.infinity);
-        carbsGrams = (remainingCals / 4.0).roundToDouble();
+        fatGrams = (fatCalories / 9.0).roundToDouble();
         break;
 
       case MacroProgramStyle.lowFat:
         proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
-        // Fat minimized to ~18% of calories, floor 0.5 g/kg
+        // Fat minimized to ~18% of calories
         final fatCalories = calories * 0.18;
-        fatGrams =
-            (weightKg * 0.5).clamp(fatCalories / 9.0, 120.0).roundToDouble();
-        final remainingCals =
-            (calories - (proteinGrams * 4.0) - (fatGrams * 9.0))
-                .clamp(0.0, double.infinity);
-        carbsGrams = (remainingCals / 4.0).roundToDouble();
+        fatGrams = (fatCalories / 9.0).roundToDouble();
         break;
 
       case MacroProgramStyle.lowCarb:
         proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
-        // Carbs restricted to 20% of calories or ~100g ceiling
+        // Carbs restricted to 20% of calories or 40-140g
         final carbCals = calories * 0.20;
         carbsGrams = (carbCals / 4.0).clamp(40.0, 140.0).roundToDouble();
-        // Fat takes up the remaining calories
-        final remainingCals =
-            (calories - (proteinGrams * 4.0) - (carbsGrams * 4.0))
-                .clamp(0.0, double.infinity);
-        fatGrams = (remainingCals / 9.0).roundToDouble();
+        final remForFat = calories - (proteinGrams * 4.0) - (carbsGrams * 4.0);
+        fatGrams = (remForFat / 9.0).roundToDouble();
         break;
 
       case MacroProgramStyle.keto:
         proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
-        // Strict carb ceiling: 30g - 45g net carbs
+        // Strict carb ceiling: 25g - 45g net carbs
         carbsGrams = (calories * 0.05 / 4.0).clamp(25.0, 45.0).roundToDouble();
-        // Fat takes ~75-80% of calories
-        final remainingCals =
-            (calories - (proteinGrams * 4.0) - (carbsGrams * 4.0))
-                .clamp(0.0, double.infinity);
-        fatGrams = (remainingCals / 9.0).roundToDouble();
+        final remForFat = calories - (proteinGrams * 4.0) - (carbsGrams * 4.0);
+        fatGrams = (remForFat / 9.0).roundToDouble();
         break;
 
       case MacroProgramStyle.highProtein:
         // Elevated protein: 2.4 - 2.8 g/kg
         final elevatedFactor = (proteinPref.gramsPerKg * 1.25).clamp(2.4, 2.8);
         proteinGrams = (elevatedFactor * weightKg).roundToDouble();
-        // Fat: ~25% of calories
         final fatCalories = calories * 0.25;
-        fatGrams =
-            (weightKg * 0.6).clamp(fatCalories / 9.0, 160.0).roundToDouble();
-        final remainingCals =
-            (calories - (proteinGrams * 4.0) - (fatGrams * 9.0))
-                .clamp(0.0, double.infinity);
-        carbsGrams = (remainingCals / 4.0).roundToDouble();
+        fatGrams = (fatCalories / 9.0).roundToDouble();
         break;
+    }
+
+    if (style == MacroProgramStyle.keto || style == MacroProgramStyle.lowCarb) {
+      final maxAvailableForProtein =
+          calories - (carbsGrams * 4.0) - (minFatGrams * 9.0);
+      if (proteinGrams * 4.0 > maxAvailableForProtein) {
+        proteinGrams = math.max(
+          minProteinGrams,
+          (maxAvailableForProtein / 4.0).roundToDouble(),
+        );
+        final remForFat = calories - (proteinGrams * 4.0) - (carbsGrams * 4.0);
+        fatGrams = math.max(minFatGrams, (remForFat / 9.0).roundToDouble());
+      }
+      final remForCarbs = calories - (proteinGrams * 4.0) - (fatGrams * 9.0);
+      carbsGrams = math.max(0.0, (remForCarbs / 4.0).roundToDouble());
+    } else {
+      final maxAvailableForProteinFat = calories - (minCarbsGrams * 4.0);
+      final currentProteinFatCals = (proteinGrams * 4.0) + (fatGrams * 9.0);
+
+      if (currentProteinFatCals > maxAvailableForProteinFat) {
+        final minProteinCals = minProteinGrams * 4.0;
+        final minFatCals = minFatGrams * 9.0;
+        final baseFloorCals = minProteinCals + minFatCals;
+
+        if (maxAvailableForProteinFat <= baseFloorCals) {
+          final scale =
+              (maxAvailableForProteinFat / baseFloorCals).clamp(0.4, 1.0);
+          proteinGrams =
+              math.max(30.0, (minProteinGrams * scale).roundToDouble());
+          fatGrams = math.max(20.0, (minFatGrams * scale).roundToDouble());
+        } else {
+          final excess = currentProteinFatCals - baseFloorCals;
+          final allowedSurplus = maxAvailableForProteinFat - baseFloorCals;
+          final scale = (allowedSurplus / excess).clamp(0.0, 1.0);
+          proteinGrams =
+              (minProteinGrams + (proteinGrams - minProteinGrams) * scale)
+                  .roundToDouble();
+          fatGrams =
+              (minFatGrams + (fatGrams - minFatGrams) * scale).roundToDouble();
+        }
+      }
+
+      final remForCarbs = calories - (proteinGrams * 4.0) - (fatGrams * 9.0);
+      carbsGrams = math.max(0.0, (remForCarbs / 4.0).roundToDouble());
     }
 
     // Safety checks against negative values
     return MacroTarget(
       calories: calories.roundToDouble(),
-      proteinGrams: proteinGrams.clamp(30.0, 400.0),
-      carbsGrams: carbsGrams.clamp(0.0, 1000.0),
-      fatGrams: fatGrams.clamp(20.0, 300.0),
+      proteinGrams: proteinGrams.clamp(30.0, 1000.0),
+      carbsGrams: carbsGrams.clamp(0.0, 2000.0),
+      fatGrams: fatGrams.clamp(20.0, 1000.0),
     );
   }
 

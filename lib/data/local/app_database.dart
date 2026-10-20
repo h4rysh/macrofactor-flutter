@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
+import 'package:macro_factor_app/data/local/database_schema.dart';
 import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
 import 'package:macro_factor_app/domain/models/food_models.dart';
 import 'package:macro_factor_app/domain/models/user_account.dart';
@@ -20,100 +21,16 @@ class AppDatabase {
 
   /// Initializes user-specific logging tables if they don't already exist.
   void initUserTables() {
-    _db.execute('''
-      CREATE TABLE IF NOT EXISTS food_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL,
-        meal_type TEXT NOT NULL,
-        food_id INTEGER NOT NULL,
-        food_name TEXT NOT NULL,
-        serving_quantity REAL NOT NULL,
-        unit_name TEXT NOT NULL,
-        gram_weight REAL NOT NULL,
-        calories REAL NOT NULL,
-        protein REAL NOT NULL,
-        carbs REAL NOT NULL,
-        fat REAL NOT NULL,
-        fiber REAL NOT NULL,
-        oil_modifier TEXT NOT NULL,
-        logged_at TEXT NOT NULL,
-        icon_svg TEXT NOT NULL
+    for (final sql in DatabaseSchema.allCreateStatements) {
+      _db.execute(sql);
+    }
+
+    // Safe migration for weight_logs source column
+    try {
+      _db.execute(
+        "ALTER TABLE weight_logs ADD COLUMN source TEXT NOT NULL DEFAULT 'manual';",
       );
-
-      CREATE INDEX IF NOT EXISTS idx_food_logs_date ON food_logs(date);
-
-      CREATE TABLE IF NOT EXISTS weight_logs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        date TEXT NOT NULL UNIQUE,
-        scale_weight REAL NOT NULL,
-        note TEXT,
-        logged_at TEXT NOT NULL
-      );
-
-      CREATE INDEX IF NOT EXISTS idx_weight_logs_date ON weight_logs(date);
-
-      CREATE TABLE IF NOT EXISTS user_profile (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        current_weight REAL NOT NULL,
-        target_weight REAL NOT NULL,
-        height_cm REAL NOT NULL,
-        age INTEGER NOT NULL,
-        is_male INTEGER NOT NULL,
-        goal_type TEXT NOT NULL,
-        program_mode TEXT NOT NULL,
-        weekly_rate REAL NOT NULL,
-        protein_preference TEXT NOT NULL,
-        calorie_floor REAL NOT NULL,
-        baseline_expenditure REAL NOT NULL,
-        custom_calories REAL,
-        custom_protein REAL,
-        custom_carbs REAL,
-        custom_fat REAL
-      );
-
-      CREATE TABLE IF NOT EXISTS expenditure_history (
-        date TEXT PRIMARY KEY,
-        expenditure_kcal REAL NOT NULL,
-        trend_weight_kg REAL NOT NULL,
-        variance REAL NOT NULL,
-        confidence REAL NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS app_settings (
-        key TEXT PRIMARY KEY,
-        value TEXT NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS workout_sessions (
-        id TEXT PRIMARY KEY, source TEXT NOT NULL, title TEXT NOT NULL,
-        start_time TEXT NOT NULL, end_time TEXT NOT NULL,
-        duration_minutes INTEGER NOT NULL, calories_burned REAL NOT NULL,
-        notes TEXT, created_at TEXT NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS idx_workout_sessions_start_time ON workout_sessions(start_time);
-      CREATE INDEX IF NOT EXISTS idx_workout_sessions_source ON workout_sessions(source);
-
-      CREATE TABLE IF NOT EXISTS user_account_session (
-        id TEXT PRIMARY KEY, google_user_id TEXT NOT NULL,
-        display_name TEXT NOT NULL, email TEXT NOT NULL, photo_url TEXT,
-        health_connect_enabled INTEGER NOT NULL DEFAULT 0,
-        last_health_sync_time TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
-      );
-
-      CREATE TABLE IF NOT EXISTS coaching_check_ins (
-        id TEXT PRIMARY KEY,
-        check_in_date TEXT NOT NULL,
-        previous_calories REAL NOT NULL,
-        recommended_calories REAL NOT NULL,
-        expenditure_kcal REAL NOT NULL,
-        weight_trend_kg REAL NOT NULL,
-        is_accepted INTEGER NOT NULL DEFAULT 0,
-        status_note TEXT,
-        created_at TEXT NOT NULL
-      );
-      CREATE INDEX IF NOT EXISTS idx_coaching_check_ins_date ON coaching_check_ins(check_in_date);
-    ''');
+    } catch (_) {}
 
     // Safe migrations for custom macro columns if user_profile previously existed
     for (final col in [
@@ -387,24 +304,37 @@ class AppDatabase {
     stmt.dispose();
   }
 
-  /// Logs or updates scale weight for a given date.
-  void insertWeightLog(String date, double scaleWeight, String? note) {
+  /// Logs or updates scale weight for a given date with source sovereignty.
+  void insertWeightLog(
+    String date,
+    double scaleWeight,
+    String? note, {
+    String source = 'manual',
+  }) {
     final stmt = _db.prepare('''
-      INSERT INTO weight_logs (date, scale_weight, note, logged_at)
-      VALUES (?, ?, ?, ?)
+      INSERT INTO weight_logs (date, scale_weight, note, source, logged_at)
+      VALUES (?, ?, ?, ?, ?)
       ON CONFLICT(date) DO UPDATE SET
         scale_weight = excluded.scale_weight,
         note = excluded.note,
-        logged_at = excluded.logged_at;
+        source = excluded.source,
+        logged_at = excluded.logged_at
+      WHERE weight_logs.source != 'manual' OR excluded.source = 'manual';
     ''');
-    stmt.execute([date, scaleWeight, note, DateTime.now().toIso8601String()]);
+    stmt.execute([
+      date,
+      scaleWeight,
+      note,
+      source,
+      DateTime.now().toIso8601String(),
+    ]);
     stmt.dispose();
   }
 
   /// Retrieves all weight logs chronologically.
   List<ScaleWeightEntry> getAllWeightLogs() {
     final stmt = _db.prepare('''
-      SELECT date, scale_weight, note FROM weight_logs ORDER BY date ASC;
+      SELECT date, scale_weight, note, source FROM weight_logs ORDER BY date ASC;
     ''');
     final result = stmt.select();
     stmt.dispose();
@@ -414,6 +344,7 @@ class AppDatabase {
         date: DateTime.parse(row['date'] as String),
         weightKg: (row['scale_weight'] as num).toDouble(),
         note: row['note'] as String?,
+        source: row['source'] as String? ?? 'manual',
       );
     }).toList();
   }
@@ -421,7 +352,7 @@ class AppDatabase {
   /// Gets scale weight log for a specific date.
   ScaleWeightEntry? getWeightLogForDate(String date) {
     final stmt = _db.prepare('''
-      SELECT date, scale_weight, note FROM weight_logs WHERE date = ? LIMIT 1;
+      SELECT date, scale_weight, note, source FROM weight_logs WHERE date = ? LIMIT 1;
     ''');
     final result = stmt.select([date]);
     stmt.dispose();
@@ -431,7 +362,27 @@ class AppDatabase {
       date: DateTime.parse(row['date'] as String),
       weightKg: (row['scale_weight'] as num).toDouble(),
       note: row['note'] as String?,
+      source: row['source'] as String? ?? 'manual',
     );
+  }
+
+  /// Returns total logged calories mapped by date string 'YYYY-MM-DD'.
+  Map<String, double> getDailyCalorieTotals() {
+    final stmt = _db.prepare('''
+      SELECT date, SUM(calories) as total_cals
+      FROM food_logs
+      GROUP BY date;
+    ''');
+    final result = stmt.select();
+    stmt.dispose();
+
+    final map = <String, double>{};
+    for (final row in result) {
+      final date = row['date'] as String;
+      final cals = (row['total_cals'] as num?)?.toDouble() ?? 0.0;
+      map[date] = cals;
+    }
+    return map;
   }
 
   /// Deletes weight log by id or date.

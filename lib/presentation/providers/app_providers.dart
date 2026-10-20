@@ -235,27 +235,36 @@ final expenditureStateProvider = Provider<ExpenditureState>((ref) {
     return tracker.currentState;
   }
 
-  // Iterate chronologically through observations
+  // Iterate chronologically through observations, distributing multi-day trend slopes
   for (int i = 1; i < trendSeries.length; i++) {
     final prevPoint = trendSeries[i - 1];
     final currPoint = trendSeries[i];
-    final dateStr = DateFormat('yyyy-MM-dd').format(currPoint.date);
 
-    final dayLogs = db.getFoodLogsForDate(dateStr);
-    final dayCalories =
-        dayLogs.fold<double>(0.0, (acc, item) => acc + item.calories);
+    final deltaDays = currPoint.date.difference(prevPoint.date).inDays;
+    final stepDays = deltaDays > 0 ? deltaDays : 1;
+    final dailyDeltaKg =
+        (currPoint.trendWeightKg - prevPoint.trendWeightKg) / stepDays;
 
-    final isLogged =
-        dayCalories > 500.0; // Adherence neutrality: only count logged days
+    for (int dayOffset = 1; dayOffset <= stepDays; dayOffset++) {
+      final obsDate = prevPoint.date.add(Duration(days: dayOffset));
+      final dateStr = DateFormat('yyyy-MM-dd').format(obsDate);
 
-    final observation = DailyEnergyObservation(
-      date: currPoint.date,
-      loggedIntakeKcal: isLogged ? dayCalories : 0.0,
-      trendWeightDeltaKg: currPoint.trendWeightKg - prevPoint.trendWeightKg,
-      isFullyLogged: isLogged,
-    );
+      final dayLogs = db.getFoodLogsForDate(dateStr);
+      final dayCalories =
+          dayLogs.fold<double>(0.0, (acc, item) => acc + item.calories);
 
-    tracker.updateDaily(observation);
+      final isLogged =
+          dayCalories > 500.0; // Adherence neutrality: only count logged days
+
+      final observation = DailyEnergyObservation(
+        date: obsDate,
+        loggedIntakeKcal: isLogged ? dayCalories : 0.0,
+        trendWeightDeltaKg: dailyDeltaKg,
+        isFullyLogged: isLogged,
+      );
+
+      tracker.updateDaily(observation);
+    }
   }
 
   return tracker.currentState;

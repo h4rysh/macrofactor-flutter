@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 
 /// Portion unit for a food item (e.g. "Standard Piece (40g)", "Katori (150g)", "Grams").
@@ -98,37 +99,27 @@ class FoodItem {
     final totalGrams = quantity * unit.gramWeight;
     final ratio = totalGrams / 100.0;
 
-    double baseCalories = caloriesPer100g * ratio;
-    double baseProtein = proteinPer100g * ratio;
-    double baseCarbs = carbsPer100g * ratio;
-    double baseFat = fatPer100g * ratio;
-    double baseFiber = fiberPer100g * ratio;
+    final baseCalories = math.max(0.0, caloriesPer100g * ratio);
+    final baseProtein = math.max(0.0, proteinPer100g * ratio);
+    final baseCarbs = math.max(0.0, carbsPer100g * ratio);
+    final baseFat = math.max(0.0, fatPer100g * ratio);
+    final baseFiber = math.max(0.0, fiberPer100g * ratio);
 
-    // Apply oil modifier
-    switch (oilModifier) {
-      case OilModifier.lowOil:
-        // Homestyle: -15% fat, minimum 0
-        final fatDeduction = baseFat * 0.15;
-        baseFat = (baseFat - fatDeduction).clamp(0.0, double.infinity);
-        baseCalories =
-            (baseCalories - (fatDeduction * 9.0)).clamp(0.0, double.infinity);
-        break;
-      case OilModifier.standard:
-        // Standard recipe
-        break;
-      case OilModifier.extraGheeOrOil:
-        // Restaurant / Desi Ghee tadka: +5g fat per serving (+45 kcal)
-        final fatAddition = 5.0 * quantity;
-        baseFat += fatAddition;
-        baseCalories += fatAddition * 9.0;
-        break;
-    }
+    // Apply oil modifier scaled proportionally by quantity and clamped at 0
+    final adjustedCalories = math.max(
+      0.0,
+      baseCalories + (oilModifier.additionalCalories * quantity),
+    );
+    final adjustedFat = math.max(
+      0.0,
+      baseFat + (oilModifier.additionalFatGrams * quantity),
+    );
 
     return NutritionalValues(
-      calories: baseCalories,
+      calories: adjustedCalories,
       protein: baseProtein,
       carbs: baseCarbs,
-      fat: baseFat,
+      fat: adjustedFat,
       fiber: baseFiber,
       totalGrams: totalGrams,
     );
@@ -148,23 +139,23 @@ class FoodItem {
 
 /// Cooking oil modification level for authentic Indian meals.
 enum OilModifier {
-  lowOil('Homestyle (Low Oil)', -30.0),
-  standard('Standard Recipe', 0.0),
-  extraGheeOrOil('Desi Ghee / Restaurant', 45.0);
+  lowOil('Low Oil (-30 kcal)', -30.0, -3.3),
+  standard('Standard Recipe (0 kcal)', 0.0, 0.0),
+  halfTsp('+½ tsp Oil (+22.5 kcal)', 22.5, 2.5),
+  oneTsp('+1 tsp Oil (+45 kcal)', 45.0, 5.0),
+  oneTbsp('+1 tbsp Oil (+120 kcal)', 120.0, 13.5);
 
-  const OilModifier(this.label, this.approxCalorieDelta);
+  const OilModifier(this.label, this.approxCalorieDelta, this.approxFatGrams);
   final String label;
   final double approxCalorieDelta;
+  final double approxFatGrams;
 
   static const OilModifier none = OilModifier.standard;
+  static const OilModifier extraGheeOrOil = OilModifier.oneTsp;
 
   String get displayName => label;
   double get additionalCalories => approxCalorieDelta;
-  double get additionalFatGrams => switch (this) {
-        OilModifier.lowOil => -3.3,
-        OilModifier.standard => 0.0,
-        OilModifier.extraGheeOrOil => 5.0,
-      };
+  double get additionalFatGrams => approxFatGrams;
 }
 
 /// Calculated nutritional values.

@@ -155,7 +155,7 @@ class MoreScreen extends ConsumerWidget {
               icon: Icons.info_outline_rounded,
               iconColor: AppTheme.textSecondary,
               title: 'About MacroFactor (Indian Edition)',
-              subtitle: 'v1.5.0 • Clean-Room Adherence-Neutral',
+              subtitle: 'v1.7.0 • Clean-Room Adherence-Neutral',
               destination: const AboutScreen(),
             ),
           ),

@@ -1,0 +1,70 @@
+name: Release APK
+
+on:
+  push:
+    branches: [ main ]
+    tags: [ 'v*' ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Setup Google Services configuration
+        run: |
+          if [ ! -f android/app/google-services.json ]; then
+            cp android/app/google-services.json.example android/app/google-services.json
+          fi
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Android Release APK
+        run: flutter build apk --release
+
+      - name: Extract Release Version
+        id: version
+        run: |
+          RAW_VERSION=$(grep '^version:' pubspec.yaml | awk '{print $2}' | cut -d'+' -f1)
+          echo "tag=v${RAW_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: "Release ${{ steps.version.outputs.tag }}: Metabolic Engine Hardening, Source Sovereignty & Macro Solver Guardrails"
+          files: build/app/outputs/flutter-apk/app-release.apk
+          generate_release_notes: true
+          body: |
+            ## 🚀 Highlights in ${{ steps.version.outputs.tag }}
+
+            ### 🧠 Metabolic & Coaching Engine Hardening
+            - **Sparse Weigh-In Expenditure Distribution**: Distributes multi-day weight trend slopes across intermediate calendar days in `expenditureStateProvider`, preventing TDEE drift when weigh-ins occur every 3–7 days.
+            - **Bidirectional Weight Trend V2 Endpoint Stability**: Initializes the backward EMA smoothing pass at `forwardTrends.last` rather than raw weight, eliminating 50% endpoint jumps on single-day water retention outliers.
+            - **Physiological Macro Solver Guardrails**: Enforces minimum carbohydrate ($\ge 20\text{g}$), protein ($\ge 30\text{g}$), and fat ($\ge 20\text{g}$) safety floors with proportional surplus scaling and expanded high-calorie athlete bounds (up to 6,500+ kcal).
+
+            ### 🗄️ Data Layer & Lifecycle Enhancements
+            - **Weight Log Source Sovereignty**: Adds `source` tracking (`manual` vs `health_connect`) with a conditional `ON CONFLICT` policy so background Health Connect syncs never overwrite manual weigh-ins.
+            - **Modular SQLite Schema**: Extracts all table DDL and index definitions into `DatabaseSchema` (`lib/data/local/database_schema.dart`).
+            - **Granular Cooking Oil Modifiers**: Expands `OilModifier` tiers (`lowOil`, `standard`, `halfTsp`, `oneTsp`, `oneTbsp`) with proportional quantity scaling and non-negative clamping.
+            - **Midnight Date Rollover**: Automatically advances `selectedDateProvider` on app launch and resume (`AppLifecycleState.resumed`) when midnight passes.
+
+            ### 🧪 Quality & Test Suite
+            - Added 6 new regression test suites (320+ total passing tests across unit, widget, and E2E suites).

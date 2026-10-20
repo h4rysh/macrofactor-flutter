@@ -16,11 +16,13 @@ class ScaleWeightEntry {
     required this.date,
     required this.weightKg,
     this.note,
+    this.source = 'manual',
   });
 
   final DateTime date;
   final double weightKg;
   final String? note;
+  final String source;
 
   @override
   bool operator ==(Object other) =>
@@ -29,10 +31,11 @@ class ScaleWeightEntry {
           runtimeType == other.runtimeType &&
           date == other.date &&
           weightKg == other.weightKg &&
-          note == other.note;
+          note == other.note &&
+          source == other.source;
 
   @override
-  int get hashCode => Object.hash(date, weightKg, note);
+  int get hashCode => Object.hash(date, weightKg, note, source);
 }
 
 /// A processed trend weight point with biological noise envelope.
@@ -137,11 +140,11 @@ class WeightTrendV2Series {
     List<double> finalTrends;
     if (bidirectional && sorted.length > 1) {
       final backwardTrends = List<double>.filled(sorted.length, 0.0);
-      double backTrend = sorted.last.weightKg;
+      double backTrend = forwardTrends.last;
 
       for (int i = sorted.length - 1; i >= 0; i--) {
         if (i == sorted.length - 1) {
-          backTrend = sorted.last.weightKg;
+          backTrend = forwardTrends.last;
         } else {
           final nextDate = sorted[i + 1].date;
           final deltaDays =
