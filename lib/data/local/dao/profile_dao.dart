@@ -188,5 +188,12 @@ class ProfileDao {
     _db.execute('DELETE FROM day_completions;');
     _db.execute('DELETE FROM app_settings;');
     _db.execute('DELETE FROM user_account_session;');
+    try {
+      _db.execute(
+        "DELETE FROM sqlite_sequence WHERE name IN ('food_logs', 'weight_logs');",
+      );
+    } on Object {
+      // Ignore if sqlite_sequence does not exist or has no matching records
+    }
   }
 }

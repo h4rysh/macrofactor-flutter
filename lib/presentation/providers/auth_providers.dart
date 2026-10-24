@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/data/repositories/firebase_auth_repository.dart';
@@ -105,7 +106,7 @@ final class AuthError extends AuthState {
 
 /// Notifier managing authentication lifecycle, offline session persistence, and credential providers.
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier(this._db, Object authRepoOrService)
+  AuthNotifier(this._db, Object authRepoOrService, [this._ref])
       : _authRepo = authRepoOrService is AuthRepository
             ? authRepoOrService
             : _AuthServiceAdapter(authRepoOrService as AuthService),
@@ -113,6 +114,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
   final AppDatabase _db;
   final AuthRepository _authRepo;
+  final Ref? _ref;
 
   /// Loads cached session from SQLite on app startup.
   static AuthState _loadInitialState(AppDatabase db) {
@@ -276,7 +278,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthLoading(user: currentUser);
     try {
       await _authRepo.deleteAccount(password: password);
-      _db.clearAccountSession();
+      _db.clearAllData();
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.clear();
+      } on Object {
+        // Ignore SharedPreferences clearing failures in test/headless environments
+      }
+      _invalidateUserDataProviders();
       state = AuthUnauthenticated();
       return true;
     } catch (e) {
@@ -288,6 +297,21 @@ class AuthNotifier extends StateNotifier<AuthState> {
             cleanMessage.isEmpty ? 'Account deletion failed' : cleanMessage,
       );
       return false;
+    }
+  }
+
+  void _invalidateUserDataProviders() {
+    final ref = _ref;
+    if (ref == null) return;
+    try {
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(dayCompletionsProvider);
+      ref.invalidate(foodLogsRevisionProvider);
+      ref.invalidate(selectedDateProvider);
+      ref.invalidate(weightLogsProvider);
+      ref.invalidate(workoutSessionsProvider);
+    } on Object {
+      // Ignore provider invalidation errors in headless environments
     }
   }
 
@@ -486,7 +510,7 @@ final authNotifierProvider =
     StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final db = ref.watch(databaseProvider);
   final authRepo = ref.watch(authRepositoryProvider);
-  return AuthNotifier(db, authRepo);
+  return AuthNotifier(db, authRepo, ref);
 });
 
 /// Convenience provider returning the active [UserAccount].

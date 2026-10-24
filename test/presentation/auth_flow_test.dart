@@ -65,6 +65,14 @@ void main() {
           find.byKey(const Key('auth_email_input')), 'kavita@sique.test');
       await tester.enterText(
           find.byKey(const Key('auth_password_input')), 'securepass123');
+      if (find
+          .byKey(const Key('auth_confirm_password_input'))
+          .evaluate()
+          .isNotEmpty) {
+        await tester.enterText(
+            find.byKey(const Key('auth_confirm_password_input')),
+            'securepass123');
+      }
       await tester.pumpAndSettle();
 
       // Submit
@@ -180,7 +188,9 @@ void main() {
           find.byKey(const Key('delete_account_password_input')),
           'password123');
       await tester.tap(find.byKey(const Key('delete_account_confirm_btn')));
-      await tester.pumpAndSettle();
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pump(const Duration(milliseconds: 300));
 
       // User session should be wiped from SQLite
       expect(db.getAccountSession(), isNull);

@@ -368,7 +368,7 @@ void main() {
         expect(authService.signInCalls, 1);
         expect(find.text('Adversarial Athlete'), findsOneWidget);
         expect(find.text('adv@athlete.com'), findsOneWidget);
-        expect(find.text('Connected'), findsOneWidget);
+        expect(find.text('Google Account'), findsOneWidget);
         expect(find.byKey(const Key('profile_sign_out_btn')), findsOneWidget);
         expect(find.byKey(const Key('profile_sign_in_btn')), findsNothing);
 

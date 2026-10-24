@@ -162,6 +162,7 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
     try {
       final available = await _adapter.isAvailable();
       final perms = available && await _adapter.hasPermissions();
+      if (!mounted) return;
       state = state.copyWith(
         isAvailable: available,
         hasPermissions: perms,
@@ -187,12 +188,14 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
   Future<bool> requestPermissions() async {
     try {
       final granted = await _adapter.requestPermissions();
+      if (!mounted) return false;
       state = state.copyWith(hasPermissions: granted);
       if (granted) {
         _ref?.read(authNotifierProvider.notifier).setHealthConnectEnabled(true);
       }
       return granted;
     } catch (e) {
+      if (!mounted) return false;
       state = state.copyWith(
         status: HealthSyncStatus.error,
         errorMessage: 'Failed to request permissions: ${e.toString()}',

@@ -55,16 +55,7 @@ class GoogleAccountCard extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 6),
-                    AppleBadge(
-                      label: user.isAuthenticated ? 'Connected' : 'Guest Mode',
-                      color: user.isAuthenticated
-                          ? AppTheme.success
-                          : AppTheme.warning,
-                      icon: user.isAuthenticated
-                          ? Icons.check_circle_rounded
-                          : Icons.cloud_off_rounded,
-                    ),
+                    _buildAuthProviderBadge(user),
                   ],
                 ),
               ),
@@ -583,6 +574,31 @@ class GoogleAccountCard extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAuthProviderBadge(UserAccount user) {
+    if (!user.isAuthenticated || user.authProvider == AuthProviderType.guest) {
+      return const AppleBadge(
+        key: Key('profile_auth_provider_badge'),
+        label: 'Guest Mode',
+        color: AppTheme.warning,
+        icon: Icons.cloud_off_rounded,
+      );
+    }
+    if (user.authProvider == AuthProviderType.google) {
+      return const AppleBadge(
+        key: Key('profile_auth_provider_badge'),
+        label: 'Google Account',
+        color: AppTheme.activeBlue,
+        icon: Icons.g_mobiledata_rounded,
+      );
+    }
+    return const AppleBadge(
+      key: Key('profile_auth_provider_badge'),
+      label: 'Email Account',
+      color: AppTheme.success,
+      icon: Icons.mark_email_read_rounded,
     );
   }
 }

@@ -109,8 +109,8 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
           children: [
             Text(
               isEmail
-                  ? 'Permanently delete your account (${widget.user.email}). This cannot be undone. Enter your password to confirm:'
-                  : 'Permanently delete your account (${widget.user.displayName}). You may be prompted to re-authenticate with Google.',
+                  ? 'Permanently delete your account (${widget.user.email}). All local workout, nutrition, and weight data will be permanently wiped. This cannot be undone. Enter your password to confirm:'
+                  : 'Permanently delete your account (${widget.user.displayName}). All local workout, nutrition, and weight data will be permanently wiped. This cannot be undone. You may be prompted to re-authenticate with Google.',
               style: const TextStyle(
                 fontFamily: 'DMSans',
                 fontSize: 14,
@@ -169,6 +169,7 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
       ),
       actions: [
         TextButton(
+          key: const Key('delete_account_cancel_btn'),
           onPressed: _isLoading ? null : () => Navigator.of(context).pop(false),
           child: const Text('Cancel'),
         ),

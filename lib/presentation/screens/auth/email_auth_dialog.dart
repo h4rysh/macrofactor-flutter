@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/presentation/providers/auth_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/auth_legal_footer.dart';
 
 /// Modal dialog providing Email/Password Sign-In, Sign-Up, and Password Reset.
 class EmailAuthDialog extends ConsumerStatefulWidget {
@@ -28,6 +29,7 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
 
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
 
   bool _obscurePassword = true;
@@ -39,12 +41,23 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     _nameController.dispose();
     super.dispose();
   }
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+
+    if (_mode == _AuthMode.signUp &&
+        _passwordController.text != _confirmPasswordController.text) {
+      setState(() {
+        _statusMessage = 'Passwords do not match';
+        _isSuccessMessage = false;
+        _isLoading = false;
+      });
+      return;
+    }
 
     setState(() {
       _isLoading = true;
@@ -203,7 +216,9 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
                       if (v == null || v.trim().isEmpty) {
                         return 'Email is required';
                       }
-                      if (!v.contains('@') || !v.contains('.')) {
+                      final emailRegex = RegExp(
+                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                      if (!emailRegex.hasMatch(v.trim())) {
                         return 'Invalid email address';
                       }
                       return null;
@@ -254,6 +269,33 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
                             borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
+                    if (_mode == _AuthMode.signUp) ...[
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        key: const Key('auth_confirm_password_input'),
+                        controller: _confirmPasswordController,
+                        obscureText: _obscurePassword,
+                        style: const TextStyle(color: AppTheme.textPrimary),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Please confirm your password';
+                          }
+                          if (v != _passwordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Confirm Password',
+                          prefixIcon: const Icon(Icons.lock_reset_rounded,
+                              color: AppTheme.textSecondary),
+                          filled: true,
+                          fillColor: AppTheme.cardElevated,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                    ],
                   ],
                   const SizedBox(height: 20),
                   ElevatedButton(
@@ -335,6 +377,8 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
                       ),
                     ),
                   ],
+                  const SizedBox(height: 16),
+                  const AuthLegalFooter(),
                 ],
               ),
             ),
