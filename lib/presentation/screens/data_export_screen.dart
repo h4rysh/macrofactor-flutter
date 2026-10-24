@@ -2,8 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
 
 /// Screen for exporting user nutrition logs and weight observations to JSON or CSV.
 /// Shows database statistics and reinforces local-only data privacy.
@@ -64,7 +64,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     const encoder = JsonEncoder.withIndent('  ');
     return encoder.convert({
       'exportDate': DateTime.now().toIso8601String(),
-      'app': 'MacroFactor Indian Edition',
+      'app': 'Sique',
       'totalEntries': list.length,
       'entries': list,
     });

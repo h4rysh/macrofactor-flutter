@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/domain/models/workout_session.dart';
 
 void main() {
   group('AppDatabase Workout Sessions DAO Tests', () {

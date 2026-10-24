@@ -1,6 +1,16 @@
 import 'package:flutter/foundation.dart';
 
-/// Represents a persistent user account with Google Identity and Health Connect synchronization metadata.
+/// Discrete authentication provider identities.
+enum AuthProviderType {
+  email('password'),
+  google('google.com'),
+  guest('guest');
+
+  const AuthProviderType(this.providerId);
+  final String providerId;
+}
+
+/// Represents a persistent user account with authentication and Health Connect synchronization metadata.
 @immutable
 class UserAccount {
   const UserAccount({
@@ -14,21 +24,22 @@ class UserAccount {
     required this.createdAt,
     required this.updatedAt,
     this.isAuthenticated = true,
+    this.authProvider = AuthProviderType.google,
   });
 
   /// Unique session or user ID (e.g. 'active_session' for the singleton device session).
   final String id;
 
-  /// Google OAuth Subject identifier.
+  /// Provider subject/UID identifier.
   final String googleUserId;
 
-  /// User's display name from Google profile or custom preference.
+  /// User's display name.
   final String displayName;
 
-  /// User's email address from Google profile.
+  /// User's email address.
   final String email;
 
-  /// URL to the user's Google profile photo.
+  /// URL to the user's profile photo.
   final String? photoUrl;
 
   /// Whether synchronization with Google Health Connect is active.
@@ -43,8 +54,11 @@ class UserAccount {
   /// When this account record was last updated.
   final DateTime updatedAt;
 
-  /// Whether this user is an authenticated Google user (false for guest mode).
+  /// Whether this user is an authenticated user (false for guest mode).
   final bool isAuthenticated;
+
+  /// Authentication identity provider type.
+  final AuthProviderType authProvider;
 
   /// Pre-configured guest user for unauthenticated mode.
   static final UserAccount guest = UserAccount(
@@ -58,6 +72,7 @@ class UserAccount {
     createdAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
     updatedAt: DateTime.fromMillisecondsSinceEpoch(0, isUtc: true),
     isAuthenticated: false,
+    authProvider: AuthProviderType.guest,
   );
 
   /// Factory for creating an authenticated UserAccount from Google OAuth details.
@@ -136,6 +151,7 @@ class UserAccount {
     DateTime? createdAt,
     DateTime? updatedAt,
     bool? isAuthenticated,
+    AuthProviderType? authProvider,
     bool clearPhotoUrl = false,
     bool clearLastSyncTime = false,
   }) {
@@ -152,6 +168,7 @@ class UserAccount {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       isAuthenticated: isAuthenticated ?? this.isAuthenticated,
+      authProvider: authProvider ?? this.authProvider,
     );
   }
 

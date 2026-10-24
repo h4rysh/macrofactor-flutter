@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:macro_factor_app/domain/algorithms/expenditure_algorithm_v3.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/animated_primitives.dart';
+import 'package:sique/domain/algorithms/expenditure_kalman_v4.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/animated_primitives.dart';
 
 /// Dynamic Expenditure widget displaying Bayesian metabolic rate and confidence.
 class DynamicExpenditureCard extends StatelessWidget {

@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 import 'package:meta/meta.dart';
-import 'package:macro_factor_app/domain/models/macro_program.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
+import 'package:sique/domain/models/macro_program.dart';
+import 'package:sique/domain/models/user_profile.dart';
 
 /// Recommendation payload generated during a coaching check-in.
 @immutable
@@ -27,7 +27,7 @@ class CheckInRecommendation {
   final WeeklyMacroProgram suggestedProgram;
 }
 
-/// Core reverse-engineered coaching engine for MacroFactor.
+/// Core reverse-engineered coaching engine for Sique.
 /// Implements program styles, day shifting (with weekly energy conservation),
 /// and algorithmic weekly metabolic check-in recalculations.
 class CoachingEngine {
@@ -180,12 +180,55 @@ class CoachingEngine {
       carbsGrams = math.max(0.0, (remForCarbs / 4.0).roundToDouble());
     }
 
-    // Safety checks against negative values
+    final targetCals = calories.roundToDouble();
+    var p = proteinGrams.clamp(30.0, 1000.0).roundToDouble();
+    var f = fatGrams.clamp(20.0, 1000.0).roundToDouble();
+    var c = carbsGrams.clamp(0.0, 2000.0).roundToDouble();
+
+    // Reconcile integer macro targets so that |4P + 9F + 4C - calories| <= 2.0 kcal
+    // (while respecting P >= 30, F >= 20, C >= 0).
+    // Adjust carbohydrate grams (or fat grams if carbs would be negative)
+    // by the residual difference divided by 4 (or 9).
+    var residual = targetCals - ((p * 4.0) + (f * 9.0) + (c * 4.0));
+    if (residual.abs() > 2.0) {
+      final carbAdjustment = (residual / 4.0).roundToDouble();
+      if (c + carbAdjustment >= 0.0) {
+        c += carbAdjustment;
+      } else {
+        // Carbs would be negative: clamp carbs to 0 and adjust fat with residual
+        c = 0.0;
+        residual = targetCals - ((p * 4.0) + (f * 9.0));
+        final fatAdjustment = (residual / 9.0).roundToDouble();
+        f = math.max(20.0, f + fatAdjustment);
+      }
+    }
+
+    // Guard pass to ensure |4P + 9F + 4C - calories| <= 2.0 kcal
+    int guardIterations = 0;
+    while (((p * 4.0) + (f * 9.0) + (c * 4.0) - targetCals).abs() > 2.0 &&
+        guardIterations < 20) {
+      guardIterations++;
+      final diff = targetCals - ((p * 4.0) + (f * 9.0) + (c * 4.0));
+      if (diff > 2.0) {
+        c += 1.0;
+      } else if (diff < -2.0) {
+        if (c >= 1.0) {
+          c -= 1.0;
+        } else if (f > 20.0) {
+          f -= 1.0;
+        } else if (p > 30.0) {
+          p -= 1.0;
+        } else {
+          break;
+        }
+      }
+    }
+
     return MacroTarget(
-      calories: calories.roundToDouble(),
-      proteinGrams: proteinGrams.clamp(30.0, 1000.0),
-      carbsGrams: carbsGrams.clamp(0.0, 2000.0),
-      fatGrams: fatGrams.clamp(20.0, 1000.0),
+      calories: targetCals,
+      proteinGrams: p,
+      carbsGrams: c,
+      fatGrams: f,
     );
   }
 
@@ -225,18 +268,32 @@ class CoachingEngine {
         if (numWorkoutDays == 0 || numWorkoutDays == 7) {
           // If all days or no days are workouts, shift is meaningless -> even
           for (int day = 1; day <= 7; day++) {
-            dayCaloriesMap[day] = dailyAvgCalories;
+            dayCaloriesMap[day] =
+                math.max(profile.calorieFloor, dailyAvgCalories);
           }
         } else {
           final numRestDays = 7 - numWorkoutDays;
-          // Workout day surplus: +200 kcal or ~10% of daily calories
-          final workoutBoost = (dailyAvgCalories * 0.09).clamp(150.0, 300.0);
-          final totalWorkoutSurplus = workoutBoost * numWorkoutDays;
-          final restDayReduction = totalWorkoutSurplus / numRestDays;
+          final maxRestReduction =
+              math.max(0.0, dailyAvgCalories - profile.calorieFloor);
+          var workoutBoost = (dailyAvgCalories * 0.09).clamp(150.0, 300.0);
+          var totalWorkoutSurplus = workoutBoost * numWorkoutDays;
+          var restDayReduction = totalWorkoutSurplus / numRestDays;
 
-          final workoutCals = (dailyAvgCalories + workoutBoost).roundToDouble();
-          final restCals =
-              (dailyAvgCalories - restDayReduction).roundToDouble();
+          if (restDayReduction > maxRestReduction) {
+            restDayReduction = maxRestReduction;
+            workoutBoost = numWorkoutDays > 0
+                ? (restDayReduction * numRestDays) / numWorkoutDays
+                : 0.0;
+          }
+
+          final workoutCals = math.max(
+            profile.calorieFloor,
+            (dailyAvgCalories + workoutBoost).roundToDouble(),
+          );
+          final restCals = math.max(
+            profile.calorieFloor,
+            (dailyAvgCalories - restDayReduction).roundToDouble(),
+          );
 
           // Apply and ensure conservation by absorbing rounding in Sunday
           double assignedSum = 0.0;
@@ -247,34 +304,85 @@ class CoachingEngine {
             assignedSum += cals;
           }
 
-          // Adjust Sunday so sum exactly equals totalWeeklyBudget
+          // Adjust Sunday so sum exactly equals totalWeeklyBudget, strictly respecting floor
           final delta = totalWeeklyBudget - assignedSum;
-          dayCaloriesMap[7] =
+          final sundayTarget =
               ((dayCaloriesMap[7] ?? dailyAvgCalories) + delta).roundToDouble();
+          if (sundayTarget >= profile.calorieFloor) {
+            dayCaloriesMap[7] = sundayTarget;
+          } else {
+            dayCaloriesMap[7] = profile.calorieFloor;
+            var remainingDeficit = profile.calorieFloor - sundayTarget;
+            // Redistribute remaining deficit across non-floor days (from Sat down to Mon)
+            for (int day = 6; day >= 1 && remainingDeficit > 0; day--) {
+              final current = dayCaloriesMap[day] ?? dailyAvgCalories;
+              final canReduce = current - profile.calorieFloor;
+              if (canReduce > 0) {
+                final reduction = math.min(canReduce, remainingDeficit);
+                dayCaloriesMap[day] = (current - reduction).roundToDouble();
+                remainingDeficit -= reduction;
+              }
+            }
+          }
         }
         break;
 
       case DayAllocationType.weekendShift:
         // Friday (5), Saturday (6), Sunday (7) get +220 kcal
         const weekendDays = {5, 6, 7};
-        const weekendBoost = 220.0;
-        const totalWeekendSurplus = weekendBoost * 3.0; // 660 kcal
-        const weekdayReduction = totalWeekendSurplus / 4.0; // 165 kcal
+        final maxWeekdayReduction =
+            math.max(0.0, dailyAvgCalories - profile.calorieFloor);
+        var weekendBoost = 220.0;
+        var totalWeekendSurplus = weekendBoost * 3.0; // 660 kcal
+        var weekdayReduction = totalWeekendSurplus / 4.0; // 165 kcal
 
+        if (weekdayReduction > maxWeekdayReduction) {
+          weekdayReduction = maxWeekdayReduction;
+          weekendBoost = (weekdayReduction * 4.0) / 3.0;
+        }
+
+        double assignedWeekendSum = 0.0;
         for (int day = 1; day <= 7; day++) {
           if (weekendDays.contains(day)) {
-            dayCaloriesMap[day] =
-                (dailyAvgCalories + weekendBoost).roundToDouble();
+            dayCaloriesMap[day] = math.max(
+              profile.calorieFloor,
+              (dailyAvgCalories + weekendBoost).roundToDouble(),
+            );
           } else {
-            dayCaloriesMap[day] =
-                (dailyAvgCalories - weekdayReduction).roundToDouble();
+            dayCaloriesMap[day] = math.max(
+              profile.calorieFloor,
+              (dailyAvgCalories - weekdayReduction).roundToDouble(),
+            );
+          }
+          assignedWeekendSum += dayCaloriesMap[day]!;
+        }
+
+        // Adjust Sunday so sum exactly equals totalWeeklyBudget, strictly respecting floor
+        final weekendDelta = totalWeeklyBudget - assignedWeekendSum;
+        final sundayWeekendTarget =
+            ((dayCaloriesMap[7] ?? dailyAvgCalories) + weekendDelta)
+                .roundToDouble();
+        if (sundayWeekendTarget >= profile.calorieFloor) {
+          dayCaloriesMap[7] = sundayWeekendTarget;
+        } else {
+          dayCaloriesMap[7] = profile.calorieFloor;
+          var remainingDeficit = profile.calorieFloor - sundayWeekendTarget;
+          for (int day = 6; day >= 1 && remainingDeficit > 0; day--) {
+            final current = dayCaloriesMap[day] ?? dailyAvgCalories;
+            final canReduce = current - profile.calorieFloor;
+            if (canReduce > 0) {
+              final reduction = math.min(canReduce, remainingDeficit);
+              dayCaloriesMap[day] = (current - reduction).roundToDouble();
+              remainingDeficit -= reduction;
+            }
           }
         }
         break;
 
       case DayAllocationType.custom:
         for (int day = 1; day <= 7; day++) {
-          dayCaloriesMap[day] = dailyAvgCalories;
+          dayCaloriesMap[day] =
+              math.max(profile.calorieFloor, dailyAvgCalories);
         }
         break;
     }
@@ -282,7 +390,8 @@ class CoachingEngine {
     // Build the 7 DayMacroTargets
     for (int day = 1; day <= 7; day++) {
       final isWorkout = workoutDays.contains(day);
-      final cals = dayCaloriesMap[day] ?? dailyAvgCalories;
+      final cals = math.max(
+          profile.calorieFloor, dayCaloriesMap[day] ?? dailyAvgCalories);
       final macros = computeDayMacros(
         calories: cals,
         weightKg: profile.currentWeightKg,

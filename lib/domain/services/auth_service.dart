@@ -1,4 +1,4 @@
-import 'package:macro_factor_app/domain/models/user_account.dart';
+import 'package:sique/domain/models/user_account.dart';
 
 /// Contract for authentication operations and Google Identity integration.
 abstract interface class AuthService {

@@ -14,8 +14,7 @@ import 'goal_questionnaire_sheet.dart';
 import 'quick_actions_sheet.dart';
 import 'weight_log_modal.dart';
 
-/// Authentic MacroFactor Dashboard Screen (Insights & Analytics Hub).
-/// Matches `package:macrofactor/src/ui/dashboard/dashboard_view.dart`.
+/// Authentic Sique Dashboard Screen (Insights & Analytics Hub).
 /// Displays Focus Tile (Macro Gauge Ring), Live Bayesian Expenditure V3,
 /// Smoothed Weight Trend V2, and Energy Balance cards.
 class DashboardScreen extends ConsumerWidget {

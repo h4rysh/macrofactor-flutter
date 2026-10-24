@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/domain/algorithms/coaching_engine.dart';
-import 'package:macro_factor_app/domain/models/macro_program.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
+import 'package:sique/domain/algorithms/coaching_engine.dart';
+import 'package:sique/domain/models/macro_program.dart';
+import 'package:sique/domain/models/user_profile.dart';
 
 void main() {
   group('Issue 6 Regression: Macro Target Budget & Clamp Crash', () {

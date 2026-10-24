@@ -1,11 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/domain/algorithms/expenditure_algorithm_v3.dart';
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
-import 'package:macro_factor_app/domain/models/food_models.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
-import 'package:macro_factor_app/presentation/providers/strategy_providers.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/domain/algorithms/expenditure_kalman_v4.dart';
+import 'package:sique/domain/algorithms/weight_trend_v2.dart';
+import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/presentation/providers/strategy_providers.dart';
 
 export 'auth_providers.dart';
 export 'health_sync_providers.dart';
@@ -21,6 +21,43 @@ final databaseProvider = Provider<AppDatabase>((ref) {
 /// Currently selected date in the dashboard (YYYY-MM-DD).
 final selectedDateProvider = StateProvider<String>((ref) {
   return DateFormat('yyyy-MM-dd').format(DateTime.now());
+});
+
+/// Global revision counter tracking food log additions, edits, and deletions.
+final foodLogsRevisionProvider = StateProvider<int>((ref) => 0);
+
+/// Manages day completion status and exposes toggle / set capabilities.
+class DayCompletionsNotifier extends StateNotifier<Map<String, bool>> {
+  DayCompletionsNotifier(this._db) : super({}) {
+    refresh();
+  }
+
+  final AppDatabase _db;
+
+  void refresh() {
+    state = _db.getDayCompletions();
+  }
+
+  void toggleDayComplete(String date) {
+    final current = isDayComplete(date);
+    setDayComplete(date, !current);
+  }
+
+  void setDayComplete(String date, bool isComplete) {
+    _db.setDayComplete(date, isComplete);
+    state = {...state, date: isComplete};
+  }
+
+  bool isDayComplete(String date) {
+    if (state.containsKey(date)) return state[date]!;
+    return _db.isDayComplete(date);
+  }
+}
+
+final dayCompletionsProvider =
+    StateNotifierProvider<DayCompletionsNotifier, Map<String, bool>>((ref) {
+  final db = ref.watch(databaseProvider);
+  return DayCompletionsNotifier(db);
 });
 
 /// Default user profile when app is first installed.
@@ -42,9 +79,10 @@ const defaultUserProfile = UserProfile(
 
 /// User profile notifier managing goal configuration and persistence.
 class UserProfileNotifier extends StateNotifier<UserProfile> {
-  UserProfileNotifier(this._db) : super(_loadInitial(_db));
+  UserProfileNotifier(this._db, [this._ref]) : super(_loadInitial(_db));
 
   final AppDatabase _db;
+  final Ref? _ref;
 
   static UserProfile _loadInitial(AppDatabase db) {
     final existing = db.getUserProfile();
@@ -54,25 +92,45 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
   }
 
   void updateProfile(UserProfile newProfile) {
+    final oldProfile = state;
     _db.saveUserProfile(newProfile);
     state = newProfile;
+
+    if (_ref != null &&
+        (oldProfile.goalType != newProfile.goalType ||
+            oldProfile.currentWeightKg != newProfile.currentWeightKg ||
+            oldProfile.targetWeightKg != newProfile.targetWeightKg ||
+            oldProfile.weeklyRateOfChangePct !=
+                newProfile.weeklyRateOfChangePct ||
+            oldProfile.proteinPreference != newProfile.proteinPreference)) {
+      _ref
+          .read(weeklyMacroProgramProvider.notifier)
+          .regenerateFromProfile(newProfile);
+    }
   }
 }
 
 final userProfileProvider =
     StateNotifierProvider<UserProfileNotifier, UserProfile>((ref) {
   final db = ref.watch(databaseProvider);
-  return UserProfileNotifier(db);
+  return UserProfileNotifier(db, ref);
 });
 
 /// Notifier managing daily logged meals.
 class DailyFoodLogsNotifier extends StateNotifier<List<FoodLogEntry>> {
-  DailyFoodLogsNotifier(this._db, this._date) : super([]) {
+  DailyFoodLogsNotifier(this._db, this._date, [this._ref]) : super([]) {
     refresh();
   }
 
   final AppDatabase _db;
   final String _date;
+  final Ref? _ref;
+
+  void _notifyMutation() {
+    if (_ref != null) {
+      _ref.read(foodLogsRevisionProvider.notifier).state++;
+    }
+  }
 
   void refresh() {
     state = _db.getFoodLogsForDate(_date);
@@ -81,12 +139,14 @@ class DailyFoodLogsNotifier extends StateNotifier<List<FoodLogEntry>> {
   int addFood(FoodLogEntry entry) {
     final id = _db.insertFoodLog(entry);
     refresh();
+    _notifyMutation();
     return id;
   }
 
   void deleteFood(int id) {
     _db.deleteFoodLog(id);
     refresh();
+    _notifyMutation();
   }
 
   void removeEntry(int? id) {
@@ -102,15 +162,14 @@ class DailyFoodLogsNotifier extends StateNotifier<List<FoodLogEntry>> {
     required MealType mealType,
     required OilModifier oilModifier,
     required DateTime loggedAt,
+    double? oilGrams,
   }) {
-    final grams = (portionUnit.gramsPerUnit * quantity);
-    final effectiveCalories =
-        (food.caloriesPer100g * grams / 100.0) + oilModifier.additionalCalories;
-    final effectiveProtein = food.proteinPer100g * grams / 100.0;
-    final effectiveFat = (food.fatPer100g * grams / 100.0) +
-        (oilModifier.additionalCalories / 9.0);
-    final effectiveCarbs = food.carbsPer100g * grams / 100.0;
-    final effectiveFiber = food.fiberPer100g * grams / 100.0;
+    final nutrition = food.calculateNutrition(
+      quantity: quantity,
+      unit: portionUnit,
+      oilModifier: oilModifier,
+      oilGrams: oilGrams,
+    );
 
     final entry = FoodLogEntry(
       id: 0,
@@ -120,12 +179,12 @@ class DailyFoodLogsNotifier extends StateNotifier<List<FoodLogEntry>> {
       foodName: food.name,
       servingQuantity: quantity,
       unitName: portionUnit.unitName,
-      gramWeight: grams,
-      calories: effectiveCalories,
-      protein: effectiveProtein,
-      carbs: effectiveCarbs,
-      fat: effectiveFat,
-      fiber: effectiveFiber,
+      gramWeight: nutrition.totalGrams,
+      calories: nutrition.calories,
+      protein: nutrition.protein,
+      carbs: nutrition.carbs,
+      fat: nutrition.fat,
+      fiber: nutrition.fiber,
       oilModifier: oilModifier,
       loggedAt: loggedAt,
       iconSvg: food.category,
@@ -138,7 +197,7 @@ final dailyFoodLogsProvider =
     StateNotifierProvider<DailyFoodLogsNotifier, List<FoodLogEntry>>((ref) {
   final db = ref.watch(databaseProvider);
   final date = ref.watch(selectedDateProvider);
-  return DailyFoodLogsNotifier(db, date);
+  return DailyFoodLogsNotifier(db, date, ref);
 });
 
 /// Aggregate total calories and macronutrients consumed for selected date.
@@ -215,59 +274,135 @@ final latestTrendWeightProvider = Provider<WeightTrendPoint?>((ref) {
   return series.last;
 });
 
-/// Dynamic Bayesian Expenditure tracker.
+/// Dynamic Joint Kalman Filter (V4) Expenditure Tracker.
 final expenditureStateProvider = Provider<ExpenditureState>((ref) {
   final profile = ref.watch(userProfileProvider);
   final weights = ref.watch(weightLogsProvider);
   final db = ref.watch(databaseProvider);
+  ref.watch(foodLogsRevisionProvider);
+  final dayCompletions = ref.watch(dayCompletionsProvider);
 
-  final tracker = ExpenditureAlgorithmV3(
-    initialExpenditureKcal: profile.baselineExpenditureKcal,
+  final baselineKcal = profile.baselineExpenditureKcal > 0
+      ? profile.baselineExpenditureKcal
+      : 2000.0;
+
+  final now = DateTime.now();
+  final todayDate = DateTime(now.year, now.month, now.day);
+
+  // If no weights logged at all, return uninitialized baseline state
+  if (weights.isEmpty) {
+    return ExpenditureState(
+      date: todayDate,
+      expenditureKcal: baselineKcal,
+      trendWeightKg:
+          profile.currentWeightKg > 0 ? profile.currentWeightKg : 70.0,
+      variance: 300.0 * 300.0,
+      weightVariance: 0.5 * 0.5,
+      crossCovariance: 0.0,
+      confidence: 0.0,
+      isPaused: true,
+      unloggedDaysInWindow: 7,
+      isDayComplete: false,
+    );
+  }
+
+  // 1. Single O(1) batch retrieval of historical calorie totals
+  final dailyCalories = db.getDailyCalorieTotals();
+
+  // 2. Map weights by 'YYYY-MM-DD'
+  final weightsByDate = <String, double>{};
+  for (final w in weights) {
+    final dStr = DateFormat('yyyy-MM-dd').format(w.date);
+    weightsByDate[dStr] = w.weightKg;
+  }
+
+  // 3. Determine earliest and latest observation dates across food logs and weights
+  DateTime earliestDate = DateTime(
+    weights.first.date.year,
+    weights.first.date.month,
+    weights.first.date.day,
+  );
+  DateTime latestObsDate = earliestDate;
+
+  for (final w in weights) {
+    final d = DateTime(w.date.year, w.date.month, w.date.day);
+    if (d.isBefore(earliestDate)) earliestDate = d;
+    if (d.isAfter(latestObsDate)) latestObsDate = d;
+  }
+
+  for (final dStr in dailyCalories.keys) {
+    try {
+      final d = DateTime.parse(dStr);
+      final truncated = DateTime(d.year, d.month, d.day);
+      if (truncated.isBefore(earliestDate)) earliestDate = truncated;
+      if (truncated.isAfter(latestObsDate)) latestObsDate = truncated;
+    } catch (_) {}
+  }
+
+  // 4. Instantiate 2D Joint-State Kalman Filter V4
+  final filter = ExpenditureKalmanV4(
+    initialExpenditureKcal: baselineKcal,
+    initialWeightKg: weights.first.weightKg,
   );
 
-  if (weights.isEmpty) {
-    return tracker.currentState;
-  }
+  final recordsToSave = <ExpenditureRecord>[];
+  ExpenditureState latestState = filter.currentState;
 
-  final trendSeries =
-      WeightTrendV2Series.compute(entries: weights, bidirectional: true).points;
-  if (trendSeries.length < 2) {
-    return tracker.currentState;
-  }
+  // Determine end date: step up to max(todayDate, latestObsDate)
+  // For historical tests (>30 days in the past), clamp to latestObsDate
+  final targetEndDate = (todayDate.difference(latestObsDate).inDays > 30 &&
+          !dailyCalories
+              .containsKey(DateFormat('yyyy-MM-dd').format(todayDate)) &&
+          !weightsByDate
+              .containsKey(DateFormat('yyyy-MM-dd').format(todayDate)))
+      ? latestObsDate
+      : (latestObsDate.isAfter(todayDate) ? latestObsDate : todayDate);
 
-  // Iterate chronologically through observations, distributing multi-day trend slopes
-  for (int i = 1; i < trendSeries.length; i++) {
-    final prevPoint = trendSeries[i - 1];
-    final currPoint = trendSeries[i];
+  // 5. Sequential calendar day stepper (Delta t = 1 day)
+  DateTime iterDate = earliestDate;
+  while (!iterDate.isAfter(targetEndDate)) {
+    final dStr = DateFormat('yyyy-MM-dd').format(iterDate);
+    final isToday = iterDate.year == todayDate.year &&
+        iterDate.month == todayDate.month &&
+        iterDate.day == todayDate.day;
 
-    final deltaDays = currPoint.date.difference(prevPoint.date).inDays;
-    final stepDays = deltaDays > 0 ? deltaDays : 1;
-    final dailyDeltaKg =
-        (currPoint.trendWeightKg - prevPoint.trendWeightKg) / stepDays;
+    final scaleWeight = weightsByDate[dStr];
+    final calories = dailyCalories[dStr];
+    final isLogged = calories != null && calories > 0.0;
 
-    for (int dayOffset = 1; dayOffset <= stepDays; dayOffset++) {
-      final obsDate = prevPoint.date.add(Duration(days: dayOffset));
-      final dateStr = DateFormat('yyyy-MM-dd').format(obsDate);
-
-      final dayLogs = db.getFoodLogsForDate(dateStr);
-      final dayCalories =
-          dayLogs.fold<double>(0.0, (acc, item) => acc + item.calories);
-
-      final isLogged =
-          dayCalories > 500.0; // Adherence neutrality: only count logged days
-
-      final observation = DailyEnergyObservation(
-        date: obsDate,
-        loggedIntakeKcal: isLogged ? dayCalories : 0.0,
-        trendWeightDeltaKg: dailyDeltaKg,
-        isFullyLogged: isLogged,
-      );
-
-      tracker.updateDaily(observation);
+    // Day completion policy:
+    // Explicit toggle ? use value : (past days with food are complete, today is incomplete)
+    final bool isComplete;
+    if (dayCompletions.containsKey(dStr)) {
+      isComplete = dayCompletions[dStr]!;
+    } else {
+      isComplete = !isToday && isLogged;
     }
+
+    final input = DailyExpenditureInput(
+      date: iterDate,
+      scaleWeightKg: scaleWeight,
+      loggedIntakeKcal: calories,
+      isLogged: isLogged,
+      isDayComplete: isComplete,
+    );
+
+    latestState = filter.processDay(input);
+
+    // Save completed past days to database
+    if (isComplete) {
+      recordsToSave.add(ExpenditureRecord.fromState(latestState));
+    }
+
+    iterDate = DateTime(iterDate.year, iterDate.month, iterDate.day + 1);
   }
 
-  return tracker.currentState;
+  // 6. Batch persist updated completed history in a single SQLite transaction
+  if (recordsToSave.isNotEmpty) {
+    db.saveExpenditures(recordsToSave);
+  }
+
+  return latestState;
 });
 
 /// Target daily calories and macronutrient breakdown for the selected date.

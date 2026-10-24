@@ -10,7 +10,7 @@ import '../widgets/timeline_hour_slot.dart';
 import 'food_search_screen.dart';
 import 'plate_serving_sheet.dart';
 
-/// Authentic MacroFactor Food Log Screen (v5+ Experience).
+/// Authentic Sique Food Log Screen (v5+ Experience).
 /// Houses the Date Carousel, Nutrition Summary, and Hourly Timeline.
 class FoodLogScreen extends ConsumerStatefulWidget {
   const FoodLogScreen({super.key});

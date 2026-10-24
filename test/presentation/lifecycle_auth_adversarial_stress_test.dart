@@ -9,14 +9,14 @@ import 'package:google_sign_in/google_sign_in.dart';
 // ignore: depend_on_referenced_packages
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
 import 'package:sqlite3/sqlite3.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/data/services/google_auth_service.dart';
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
-import 'package:macro_factor_app/domain/services/health_sync_adapter.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/widgets/app_lifecycle_sync_observer.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/data/services/google_auth_service.dart';
+import 'package:sique/domain/algorithms/weight_trend_v2.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/domain/models/workout_session.dart';
+import 'package:sique/domain/services/health_sync_adapter.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/widgets/app_lifecycle_sync_observer.dart';
 
 /// Configurable platform fake for Google Sign-In adversarial scenarios.
 class _AdversarialGoogleSignInPlatform extends GoogleSignInPlatform {
@@ -563,7 +563,7 @@ void main() {
       final hugeString = 'X' * 5000;
       fakeGooglePlatform.userData = GoogleSignInUserData(
         id: 'unicode_uid_⚡_9999',
-        email: 'hyper.athlete@macrofactor.test',
+        email: 'hyper.athlete@sique.test',
         displayName: '🏋️‍♂️ Coach Ultra $hugeString 🚀',
         photoUrl:
             'https://images.unsplash.com/photo-test?param=1&data=<script>',
@@ -581,7 +581,7 @@ void main() {
         () async {
       fakeGooglePlatform.userData = GoogleSignInUserData(
         id: 'concurrent_user_1',
-        email: 'concurrent@macrofactor.test',
+        email: 'concurrent@sique.test',
         displayName: 'Concurrent Athlete',
       );
 
@@ -595,7 +595,7 @@ void main() {
       expect(results.length, equals(30));
       for (final user in results) {
         expect(user, isNotNull);
-        expect(user!.email, equals('concurrent@macrofactor.test'));
+        expect(user!.email, equals('concurrent@sique.test'));
         expect(user.googleUserId, equals('concurrent_user_1'));
       }
     });
@@ -605,7 +605,7 @@ void main() {
         () async {
       fakeGooglePlatform.userData = GoogleSignInUserData(
         id: 'race_user_1',
-        email: 'race@macrofactor.test',
+        email: 'race@sique.test',
         displayName: 'Race User',
       );
       fakeGooglePlatform.simulatedDelay = const Duration(milliseconds: 5);
@@ -632,7 +632,7 @@ void main() {
 
       fakeGooglePlatform.userData = GoogleSignInUserData(
         id: 'persist_user_1',
-        email: 'persist@macrofactor.test',
+        email: 'persist@sique.test',
         displayName: 'Persist User',
       );
 

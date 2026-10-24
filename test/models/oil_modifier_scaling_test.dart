@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/domain/models/food_models.dart';
+import 'package:sique/domain/models/food_models.dart';
 
 void main() {
   group('Issue 9 Regression: Oil Modifier Scaling & Non-negative Clamping', () {
@@ -81,6 +81,43 @@ void main() {
 
       expect(OilModifier.oneTbsp.additionalCalories, equals(120.0));
       expect(OilModifier.oneTbsp.additionalFatGrams, equals(13.5));
+    });
+
+    test('oilGrams parameter scales linearly and clamps negative values to 0',
+        () {
+      // Base nutrition for 1 roti: 35g -> calories = 260 * 0.35 = 91 kcal, fat = 3 * 0.35 = 1.05g
+      final base = food.calculateNutrition(
+        quantity: 1.0,
+        unit: food.portionUnits.first,
+      );
+
+      // Add 5g oil: +5g fat, +45 kcal
+      final with5gOil = food.calculateNutrition(
+        quantity: 1.0,
+        unit: food.portionUnits.first,
+        oilGrams: 5.0,
+      );
+      expect(with5gOil.fat, closeTo(base.fat + 5.0, 0.01));
+      expect(with5gOil.calories, closeTo(base.calories + 45.0, 0.01));
+
+      // Scaling by quantity = 2.0 with oilGrams = 5.0 -> +10g fat, +90 kcal added
+      final twoWith5gOil = food.calculateNutrition(
+        quantity: 2.0,
+        unit: food.portionUnits.first,
+        oilGrams: 5.0,
+      );
+      expect(twoWith5gOil.fat, closeTo((base.fat * 2.0) + 10.0, 0.01));
+      expect(
+          twoWith5gOil.calories, closeTo((base.calories * 2.0) + 90.0, 0.01));
+
+      // Negative oilGrams clamped to 0
+      final negativeOil = food.calculateNutrition(
+        quantity: 1.0,
+        unit: food.portionUnits.first,
+        oilGrams: -10.0,
+      );
+      expect(negativeOil.fat, equals(base.fat));
+      expect(negativeOil.calories, equals(base.calories));
     });
   });
 }

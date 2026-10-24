@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
+import 'package:sique/domain/algorithms/weight_trend_v2.dart';
 
 void main() {
   group('WeightTrendV2Series Algorithm Tests', () {

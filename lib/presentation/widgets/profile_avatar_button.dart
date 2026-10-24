@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 
 /// 36x36 (or customizable) circular profile avatar button with AppleBouncy tactile feedback.
 /// Displays user photo if available, user initial if authenticated, or guest person icon.

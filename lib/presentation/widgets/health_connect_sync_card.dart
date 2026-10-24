@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/presentation/providers/health_sync_providers.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/presentation/providers/health_sync_providers.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 
 /// Section 6: Health Connect Sync Card with telemetry, last-synced time,
 /// and "Sync Now" button (Key('profile_sync_now_btn')).

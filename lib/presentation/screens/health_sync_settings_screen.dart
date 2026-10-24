@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/presentation/providers/health_sync_providers.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/providers/health_sync_providers.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
 
 /// Dedicated settings and diagnostics screen for Health Connect synchronization.
 class HealthSyncSettingsScreen extends ConsumerWidget {

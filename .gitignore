@@ -10,6 +10,7 @@
 .history
 .svn/
 .swiftpm/
+**/swiftpm/
 migrate_working_dir/
 
 # IntelliJ related
@@ -26,6 +27,10 @@ migrate_working_dir/
 # Flutter/Dart/Pub related
 **/doc/api/
 **/ios/Flutter/.last_build_id
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/ephemeral/
+macos/Flutter/ephemeral/
 .dart_tool/
 .flutter-plugins-dependencies
 .pub-cache/
@@ -50,3 +55,6 @@ app.*.map.json
 # Google Services & Firebase credentials
 android/app/google-services.json
 !android/app/google-services.json.example
+
+# Reference material
+docs/reference/

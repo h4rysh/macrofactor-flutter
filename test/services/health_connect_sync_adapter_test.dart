@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:health/health.dart';
-import 'package:macro_factor_app/data/services/health_connect_sync_adapter.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
+import 'package:sique/data/services/health_connect_sync_adapter.dart';
+import 'package:sique/domain/models/workout_session.dart';
 
 /// Test double extending [Health] to stub native Google Health Connect behavior.
 class FakeHealth extends Health {
@@ -456,6 +456,7 @@ void main() {
       expect(entry.date, equals(timestamp));
       expect(entry.weightKg, equals(82.45));
       expect(entry.note, contains('Withings Smart Scale'));
+      expect(entry.source, equals('health_connect'));
     });
 
     test('handles exceptions during weight retrieval gracefully', () async {

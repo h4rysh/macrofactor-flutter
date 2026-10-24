@@ -1,4 +1,4 @@
-package com.antigravity.macro_factor_app
+package com.h4rysh.sique
 
 import io.flutter.embedding.android.FlutterFragmentActivity
 

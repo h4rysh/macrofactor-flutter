@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
+import 'package:sique/domain/models/workout_session.dart';
 
 void main() {
   group('WorkoutSession Domain Model Tests', () {

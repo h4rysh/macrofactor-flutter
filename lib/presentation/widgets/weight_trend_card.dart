@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/animated_primitives.dart';
+import 'package:sique/domain/algorithms/weight_trend_v2.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/animated_primitives.dart';
 
 /// Weight Trend Card displaying smoothed trend weight vs raw scale observation
 /// and water-weight noise range.

@@ -320,6 +320,10 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                   separatorBuilder: (_, __) => const SizedBox(height: 8),
                   itemBuilder: (context, index) {
                     final food = _searchResults[index];
+                    final defaultNutrition = food.calculateNutrition(
+                      quantity: 1.0,
+                      unit: food.defaultPortionUnit,
+                    );
                     return AppleBouncy(
                       scaleDown: 0.98,
                       onTap: () => _openPlateSheet(food),
@@ -363,22 +367,22 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                                     children: [
                                       AppleBadge(
                                         label:
-                                            '${food.caloriesPer100g.round()} kcal',
+                                            '${defaultNutrition.calories.round()} kcal',
                                         color: AppTheme.calories,
                                       ),
                                       AppleBadge(
                                         label:
-                                            '${food.proteinPer100g.toStringAsFixed(1)}P',
+                                            '${defaultNutrition.protein.toStringAsFixed(1)}P',
                                         color: AppTheme.protein,
                                       ),
                                       AppleBadge(
                                         label:
-                                            '${food.fatPer100g.toStringAsFixed(1)}F',
+                                            '${defaultNutrition.fat.toStringAsFixed(1)}F',
                                         color: AppTheme.fat,
                                       ),
                                       AppleBadge(
                                         label:
-                                            '${food.carbsPer100g.toStringAsFixed(1)}C',
+                                            '${defaultNutrition.carbs.toStringAsFixed(1)}C',
                                         color: AppTheme.carbs,
                                       ),
                                     ],

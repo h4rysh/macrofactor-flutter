@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
-import 'package:macro_factor_app/domain/models/workout_stats.dart';
+import 'package:sique/domain/models/workout_session.dart';
+import 'package:sique/domain/models/workout_stats.dart';
 
 void main() {
   group('WorkoutStats Domain Model & Calculation Tests', () {

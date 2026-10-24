@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
+import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
 
 /// Screen for viewing and configuring the Bayesian Expenditure engine and Weight Trend smoother.
 class ExpenditureSettingsScreen extends ConsumerStatefulWidget {
@@ -183,8 +184,8 @@ class _ExpenditureSettingsScreenState
     );
   }
 
-  Widget _buildBaselineSettingCard(dynamic profile) {
-    final baseline = profile.baselineExpenditureKcal as double;
+  Widget _buildBaselineSettingCard(UserProfile profile) {
+    final baseline = profile.baselineExpenditureKcal;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -271,7 +272,7 @@ class _ExpenditureSettingsScreenState
   Widget _buildSensitivityCard() {
     final modes = [
       {'name': 'Conservative', 'desc': 'Dampened updates, lower variance.'},
-      {'name': 'Standard', 'desc': 'Authentic MacroFactor Kalman response.'},
+      {'name': 'Standard', 'desc': 'Authentic Sique Kalman response.'},
       {
         'name': 'Dynamic',
         'desc': 'Fast tracking for rapid training cycle shifts.'
@@ -397,7 +398,7 @@ class _ExpenditureSettingsScreenState
           ),
           SizedBox(height: 10),
           Text(
-            'Unlike legacy trackers that punish you with red alerts or arbitrary calorie drops when you overshoot targets, MacroFactor treats your body as a thermodynamic system:\n\n'
+            'Unlike legacy trackers that punish you with red alerts or arbitrary calorie drops when you overshoot targets, Sique treats your body as a thermodynamic system:\n\n'
             '• Overeating does not decrease your expenditure.\n'
             '• Missing days (<500 kcal logged) are excluded from Bayesian updates to prevent false metabolic drop-offs.\n'
             '• A hard ±150 kcal daily clamp prevents erratic spikes from temporary water weight or sodium retention.',

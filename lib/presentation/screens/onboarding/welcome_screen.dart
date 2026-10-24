@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:macro_factor_app/presentation/screens/onboarding/auth_gate_screen.dart';
-import 'package:macro_factor_app/presentation/screens/onboarding/strategy_setup_wizard.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/presentation/screens/onboarding/auth_gate_screen.dart';
+import 'package:sique/presentation/screens/onboarding/onboarding_flow_screen.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 
-/// First-launch Welcome Screen introducing MacroFactor's Adherence-Neutral philosophy.
+/// First-launch Welcome Screen introducing Sique's Adherence-Neutral philosophy.
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 
@@ -51,7 +51,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   const Text(
-                    'MACROFACTOR',
+                    'SIQUE',
                     style: TextStyle(
                       fontFamily: 'MacroSans',
                       fontSize: 20,
@@ -78,7 +78,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               const Text(
-                'MacroFactor reverse-engineers your metabolism and dynamically adapts your targets — no matter what you eat.',
+                'Sique reverse-engineers your metabolism and dynamically adapts your targets — no matter what you eat.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontFamily: 'MacroSans',
@@ -125,7 +125,7 @@ class WelcomeScreen extends StatelessWidget {
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const StrategySetupWizard(),
+                      builder: (_) => const OnboardingFlowScreen(),
                     ),
                   );
                 },

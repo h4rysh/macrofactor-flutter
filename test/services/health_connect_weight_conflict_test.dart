@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/domain/models/scale_weight_entry.dart';
 
 void main() {
   group('Issue 4 Regression: Weight Source & Conflict Resolution', () {
@@ -69,6 +70,51 @@ void main() {
       final userLog = db.getWeightLogForDate(date);
       expect(userLog!.weightKg, equals(72.4));
       expect(userLog.note, equals('Manual override'));
+    });
+
+    test(
+        'Multiple same-day readings are averaged and tagged with health_connect source',
+        () {
+      const dateStr = '2026-10-19';
+      // Simulate multiple readings within the same day in UTC
+      final entry1 = ScaleWeightEntry(
+        date: DateTime.parse('2026-10-19T06:00:00Z'),
+        weightKg: 74.0,
+        note: 'Morning',
+      );
+      final entry2 = ScaleWeightEntry(
+        date: DateTime.parse('2026-10-19T18:00:00Z'),
+        weightKg: 75.0,
+        note: 'Evening',
+      );
+
+      final weights = [entry1, entry2];
+      final avgWeight = weights.map((e) => e.weightKg).reduce((a, b) => a + b) /
+          weights.length;
+
+      db.insertWeightLog(
+        dateStr,
+        avgWeight,
+        'Morning, Evening',
+        source: 'health_connect',
+      );
+
+      final log = db.getWeightLogForDate(dateStr);
+      expect(log, isNotNull);
+      expect(log!.weightKg, equals(74.5));
+      expect(log.note, equals('Morning, Evening'));
+
+      // Verify that subsequent manual entry still overrides
+      db.insertWeightLog(dateStr, 74.2, 'True morning manual',
+          source: 'manual');
+      final overridden = db.getWeightLogForDate(dateStr);
+      expect(overridden!.weightKg, equals(74.2));
+
+      // And subsequent health_connect sync cannot overwrite manual
+      db.insertWeightLog(dateStr, 76.0, 'Late auto sync',
+          source: 'health_connect');
+      final preserved = db.getWeightLogForDate(dateStr);
+      expect(preserved!.weightKg, equals(74.2));
     });
   });
 }

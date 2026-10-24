@@ -4,7 +4,7 @@ import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import 'animated_primitives.dart';
 
-/// Signature MacroFactor Horizontal Date Carousel Ribbon.
+/// Signature Sique Horizontal Date Carousel Ribbon.
 /// Renders the `< Today >` header and the circular day badges.
 class DateCarouselRibbon extends StatelessWidget {
   const DateCarouselRibbon({
@@ -46,7 +46,7 @@ class DateCarouselRibbon extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Authentic MacroFactor Top Navigation Bar:
+        // Authentic Sique Top Navigation Bar:
         // [ ≡ ]          < Today ▾ >          [ ☰ ]
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),

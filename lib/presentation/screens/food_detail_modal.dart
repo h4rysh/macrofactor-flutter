@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/domain/models/food_models.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/food_svg_icon.dart';
+import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/food_svg_icon.dart';
 
 /// Modal bottom sheet allowing portion selection, 1-tap oil modifier, and instant food logging.
 class FoodDetailModal extends ConsumerStatefulWidget {
@@ -40,11 +41,50 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
   late PortionUnit _selectedUnit;
   double _quantity = 1.0;
   OilModifier _oilModifier = OilModifier.standard;
+  late TextEditingController _quantityController;
+  late FocusNode _quantityFocusNode;
 
   @override
   void initState() {
     super.initState();
     _selectedUnit = widget.food.defaultPortionUnit;
+    _quantityController = TextEditingController(
+      text: _formatQuantity(_quantity),
+    );
+    _quantityFocusNode = FocusNode();
+    _quantityFocusNode.addListener(() {
+      if (!_quantityFocusNode.hasFocus) {
+        final parsed = double.tryParse(_quantityController.text);
+        if (parsed == null || parsed <= 0) {
+          _quantityController.text = _formatQuantity(_quantity);
+        } else {
+          _quantity = parsed;
+          _quantityController.text = _formatQuantity(_quantity);
+        }
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _quantityFocusNode.dispose();
+    _quantityController.dispose();
+    super.dispose();
+  }
+
+  String _formatQuantity(double q) {
+    return q.truncateToDouble() == q
+        ? q.toInt().toString()
+        : q.toStringAsFixed(1);
+  }
+
+  void _setQuantity(double newQ) {
+    if (newQ > 0) {
+      setState(() {
+        _quantity = (newQ * 100).roundToDouble() / 100.0;
+        _quantityController.text = _formatQuantity(_quantity);
+      });
+    }
   }
 
   @override
@@ -204,8 +244,11 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
                 children: [
                   IconButton.filledTonal(
                     onPressed: () {
-                      if (_quantity > 0.5) {
-                        setState(() => _quantity -= 0.5);
+                      final current =
+                          double.tryParse(_quantityController.text) ??
+                              _quantity;
+                      if (current > 0.5) {
+                        _setQuantity(current - 0.5);
                       }
                     },
                     icon: const Icon(Icons.remove, size: 16),
@@ -215,22 +258,47 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
                     ),
                   ),
                   Container(
-                    constraints: const BoxConstraints(minWidth: 48),
+                    constraints: const BoxConstraints(minWidth: 54),
                     alignment: Alignment.center,
-                    child: Text(
-                      _quantity.toStringAsFixed(
-                          _quantity.truncateToDouble() == _quantity ? 0 : 1),
-                      style: const TextStyle(
-                        fontFamily: 'MacroSans',
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.textPrimary,
+                    child: SizedBox(
+                      width: 54,
+                      child: TextFormField(
+                        focusNode: _quantityFocusNode,
+                        controller: _quantityController,
+                        keyboardType: const TextInputType.numberWithOptions(
+                            decimal: true),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontFamily: 'MacroSans',
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.textPrimary,
+                        ),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d*')),
+                        ],
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          contentPadding:
+                              EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                          border: InputBorder.none,
+                        ),
+                        onChanged: (val) {
+                          final parsed = double.tryParse(val);
+                          if (parsed != null && parsed > 0) {
+                            setState(() => _quantity = parsed);
+                          }
+                        },
                       ),
                     ),
                   ),
                   IconButton.filledTonal(
                     onPressed: () {
-                      setState(() => _quantity += 0.5);
+                      final current =
+                          double.tryParse(_quantityController.text) ??
+                              _quantity;
+                      _setQuantity(current + 0.5);
                     },
                     icon: const Icon(Icons.add, size: 16),
                     style: IconButton.styleFrom(
@@ -347,26 +415,22 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
             height: 52,
             child: ElevatedButton(
               onPressed: () {
-                final date = ref.read(selectedDateProvider);
-                final entry = FoodLogEntry(
-                  date: date,
-                  mealType: widget.mealType,
-                  foodId: widget.food.id,
-                  foodName: widget.food.name,
-                  servingQuantity: _quantity,
-                  unitName: _selectedUnit.unitName,
-                  gramWeight: nutrition.totalGrams,
-                  calories: nutrition.calories,
-                  protein: nutrition.protein,
-                  carbs: nutrition.carbs,
-                  fat: nutrition.fat,
-                  fiber: nutrition.fiber,
-                  oilModifier: _oilModifier,
-                  loggedAt: DateTime.now(),
-                  iconSvg: widget.food.iconSvg,
-                );
+                final dateStr = ref.read(selectedDateProvider);
+                final now = DateTime.now();
+                final parsedDate = DateTime.tryParse(dateStr);
+                final loggedAt = parsedDate != null
+                    ? DateTime(parsedDate.year, parsedDate.month,
+                        parsedDate.day, now.hour, now.minute, now.second)
+                    : now;
 
-                ref.read(dailyFoodLogsProvider.notifier).addFood(entry);
+                ref.read(dailyFoodLogsProvider.notifier).addEntry(
+                      food: widget.food,
+                      portionUnit: _selectedUnit,
+                      quantity: _quantity,
+                      mealType: widget.mealType,
+                      oilModifier: _oilModifier,
+                      loggedAt: loggedAt,
+                    );
                 Navigator.of(context).pop();
 
                 ScaffoldMessenger.of(context).showSnackBar(

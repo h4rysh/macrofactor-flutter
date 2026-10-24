@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/screens/about_screen.dart';
-import 'package:macro_factor_app/presentation/screens/account_profile_screen.dart';
-import 'package:macro_factor_app/presentation/screens/data_export_screen.dart';
-import 'package:macro_factor_app/presentation/screens/expenditure_settings_screen.dart';
-import 'package:macro_factor_app/presentation/screens/food_log_settings_screen.dart';
-import 'package:macro_factor_app/presentation/screens/goal_questionnaire_sheet.dart';
-import 'package:macro_factor_app/presentation/screens/profile_targets_screen.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/animated_primitives.dart';
-import 'package:macro_factor_app/presentation/widgets/profile_avatar_button.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/screens/about_screen.dart';
+import 'package:sique/presentation/screens/account_profile_screen.dart';
+import 'package:sique/presentation/screens/data_export_screen.dart';
+import 'package:sique/presentation/screens/expenditure_settings_screen.dart';
+import 'package:sique/presentation/screens/food_log_settings_screen.dart';
+import 'package:sique/presentation/screens/goal_questionnaire_sheet.dart';
+import 'package:sique/presentation/screens/profile_targets_screen.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/animated_primitives.dart';
+import 'package:sique/presentation/widgets/profile_avatar_button.dart';
 
 /// Hub screen for the "More" bottom navigation destination.
 /// Provides access to user profile, nutrition settings, expenditure engine tuning, data export, and app provenance.
@@ -154,7 +154,7 @@ class MoreScreen extends ConsumerWidget {
               context: context,
               icon: Icons.info_outline_rounded,
               iconColor: AppTheme.textSecondary,
-              title: 'About MacroFactor (Indian Edition)',
+              title: 'About Sique',
               subtitle: 'v1.7.0 • Clean-Room Adherence-Neutral',
               destination: const AboutScreen(),
             ),

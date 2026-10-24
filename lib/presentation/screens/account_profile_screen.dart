@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/presentation/providers/auth_providers.dart';
-import 'package:macro_factor_app/presentation/providers/health_sync_providers.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/google_account_card.dart';
-import 'package:macro_factor_app/presentation/widgets/health_connect_sync_card.dart';
-import 'package:macro_factor_app/presentation/widgets/physical_stats_summary_card.dart';
-import 'package:macro_factor_app/presentation/widgets/recent_workout_card.dart';
-import 'package:macro_factor_app/presentation/widgets/workout_consistency_tracker.dart';
-import 'package:macro_factor_app/presentation/widgets/workout_stats_hero_grid.dart';
+import 'package:sique/presentation/providers/auth_providers.dart';
+import 'package:sique/presentation/providers/health_sync_providers.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/google_account_card.dart';
+import 'package:sique/presentation/widgets/health_connect_sync_card.dart';
+import 'package:sique/presentation/widgets/physical_stats_summary_card.dart';
+import 'package:sique/presentation/widgets/recent_workout_card.dart';
+import 'package:sique/presentation/widgets/workout_consistency_tracker.dart';
+import 'package:sique/presentation/widgets/workout_stats_hero_grid.dart';
 
 /// Complete Account & Hevy Training Profile Screen.
 /// Composes 6 modular widgets into an Apple Obsidian Dark scroll view.

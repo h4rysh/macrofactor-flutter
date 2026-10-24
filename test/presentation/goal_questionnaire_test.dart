@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
-import 'package:macro_factor_app/main.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/main.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 
 void main() {
   late AppDatabase db;
@@ -24,7 +24,7 @@ void main() {
       overrides: [
         databaseProvider.overrideWithValue(db),
       ],
-      child: child ?? const MacroFactorApp(),
+      child: child ?? const SiqueApp(),
     );
   }
 

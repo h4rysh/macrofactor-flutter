@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/screens/profile_targets_screen.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/screens/profile_targets_screen.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 
 /// Section 5: Physical Stats & Targets overview card.
 class PhysicalStatsSummaryCard extends ConsumerWidget {

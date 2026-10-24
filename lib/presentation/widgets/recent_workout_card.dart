@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
-import 'package:macro_factor_app/presentation/providers/workout_providers.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/domain/models/workout_session.dart';
+import 'package:sique/presentation/providers/workout_providers.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 
 /// Section 4: Recent Hevy Workouts Feed container.
 class RecentWorkoutsFeed extends ConsumerWidget {

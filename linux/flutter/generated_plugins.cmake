@@ -3,7 +3,6 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  rive_common
   sqlite3_flutter_libs
 )
 

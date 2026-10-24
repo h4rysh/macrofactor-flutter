@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/data/services/mock_auth_service.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
+import 'package:sique/data/services/mock_auth_service.dart';
+import 'package:sique/domain/models/user_account.dart';
 
 void main() {
   group('MockAuthService Test Suite', () {

@@ -1,4 +1,4 @@
-# Adherence-Neutral Algorithmic Specifications
+# Sique Algorithmic Specifications & Mathematical Foundations
 
 ## 1. Weight Trend V2 (`lib/domain/algorithms/weight_trend_v2.dart`)
 
@@ -26,35 +26,40 @@ Daily scale weight reflects acute fluid shifts (sodium intake, carbohydrate glyc
 
 ---
 
-## 2. Dynamic Expenditure Algorithm V3 (`lib/domain/algorithms/expenditure_algorithm_v3.dart`)
+## 2. Joint-State Kalman Expenditure Filter V4 (`lib/domain/algorithms/expenditure_kalman_v4.dart`)
 
-### Thermodynamic Energy Balance Model
-The human body obeys the First Law of Thermodynamics:
-$$\text{Rate of Tissue Change} = \text{Energy Intake} - \text{Total Daily Energy Expenditure (TDEE)}$$
+### State-Space Formulation
+Sique models human metabolic adaptation using a 2D joint state vector combining true underlying weight $W_t$ (kg) and daily metabolic expenditure $E_t$ (kcal/day):
+$$x_t = \begin{bmatrix} W_t \\ E_t \end{bmatrix}$$
 
-Assuming tissue energy density $\kappa = 7700\text{ kcal/kg}$, an observed change in trend weight $\Delta w_k$ over interval $\Delta t$ days yields an empirical expenditure observation:
-$$z_k = C_k - \kappa \cdot \frac{\Delta w_k}{\Delta t}$$
+### Thermodynamic Process Transition
+$$\begin{bmatrix} W_{t+1} \\ E_{t+1} \end{bmatrix} = \begin{bmatrix} 1 & -\frac{\Delta t}{7700} \\ 0 & 1 \end{bmatrix} \begin{bmatrix} W_t \\ E_t \end{bmatrix} + \begin{bmatrix} \frac{\Delta t \cdot I_t}{7700} \\ 0 \end{bmatrix} + w_t$$
+Where:
+- $I_t$ is caloric energy intake (kcal/day)
+- $7700\text{ kcal/kg}$ represents the human tissue energy density constant
+- Process covariance $Q$:
+  $$Q = \begin{bmatrix} Q_W & 0 \\ 0 & Q_E \end{bmatrix} = \begin{bmatrix} 0.04^2 & 0 \\ 0 & 10^2 \end{bmatrix}$$
 
-### 1D Bayesian Kalman Filter Formulation
+### Measurement Model & Huber-Clipped Innovation
+When scale weight $z_t$ is observed:
+$$y_t = z_t - H x_{t|t-1}, \quad H = [1 \quad 0]$$
+$$S_t = H P_{t|t-1} H^T + R, \quad R = 0.6^2\text{ kg}^2$$
+To reject biological fluid spikes (e.g. sodium or water retention), innovation $y_t$ is robustly Huber-clipped at $3\sigma = 3\sqrt{S_t}$:
+$$\tilde{y}_t = \text{clamp}(y_t, -3\sqrt{S_t}, 3\sqrt{S_t})$$
 
-#### 1. State Prediction
-$$\hat{x}_{k|k-1} = \hat{x}_{k-1}$$
-$$P_{k|k-1} = P_{k-1} + Q_k$$
-Where $Q_k$ is the process noise variance representing metabolic adaptation ($\approx 1500\text{ kcal}^2/\text{day}$).
+### Unlogged Day Handling & Regularity Guard
+- When a day lacks food logging, caloric intake is imputed using the 14-day rolling mean intake $\bar{I}_{14}$.
+- Process noise on weight is augmented during unlogged days by $((0.15 \times \bar{I}_{14})/7700)^2$.
+- If more than 3 of the last 7 days are unlogged, metabolic updates are automatically paused until logging resumes.
 
-#### 2. Measurement Variance Adaptation ($R_k$)
-Measurement noise is scaled dynamically based on weight variance $\sigma_{\Delta w}^2$ and logging regularity:
-$$R_k = R_{\text{base}} \cdot \left(1 + \frac{\sigma_{\Delta w}^2}{\sigma_0^2}\right) \cdot (1 + \Delta t_{\text{gap}})$$
-If the user's scale weight fluctuated wildly, $R_k$ increases, causing the Kalman gain to drop and preventing the expenditure from over-reacting.
+---
 
-#### 3. Kalman Gain Computation
-$$K_k = \frac{P_{k|k-1}}{P_{k|k-1} + R_k}$$
+## 3. Coaching Engine & 7-Day Energy Conservation (`lib/domain/algorithms/coaching_engine.dart`)
 
-#### 4. Posterior State & Covariance Update
-$$\hat{x}_k^{\text{raw}} = \hat{x}_{k|k-1} + K_k (z_k - \hat{x}_{k|k-1})$$
-$$P_k = (1 - K_k) P_{k|k-1}$$
+### Daily Energy Deficit / Surplus
+$$\Delta \text{Energy} = -\text{currentWeightKg} \times \left(\frac{|\text{weeklyRatePct}|}{100}\right) \times \frac{7700}{7} = -\text{weeklyKgDelta} \times 1100\text{ kcal}$$
 
-#### 5. Daily Flux Clamping
-To prevent sudden spikes in caloric recommendations:
-$$\Delta x_k = \text{clamp}\left(\hat{x}_k^{\text{raw}} - \hat{x}_{k-1}, -150\text{ kcal}, +150\text{ kcal}\right)$$
-$$\hat{x}_k = \hat{x}_{k-1} + \Delta x_k$$
+### Strict Weekly Calorie Conservation
+$$\sum_{d=1}^{7} \text{Calories}_d = 7 \times \text{DailyAverageCalories}$$
+- On shifted workout days, workout days receive $+9\%$ energy ($\approx 150 - 300\text{ kcal}$), balanced across rest days.
+- Every day strictly respects the user's physiological `calorieFloor`.

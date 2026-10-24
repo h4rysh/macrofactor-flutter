@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/domain/services/auth_service.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/domain/services/auth_service.dart';
 
 /// Production implementation of [AuthService] leveraging `google_sign_in: ^6.2.2`.
 ///

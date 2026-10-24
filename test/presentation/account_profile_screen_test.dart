@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
-import 'package:macro_factor_app/domain/services/auth_service.dart';
-import 'package:macro_factor_app/domain/services/health_sync_adapter.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/screens/account_profile_screen.dart';
-import 'package:macro_factor_app/presentation/widgets/google_account_card.dart';
-import 'package:macro_factor_app/presentation/widgets/health_connect_sync_card.dart';
-import 'package:macro_factor_app/presentation/widgets/physical_stats_summary_card.dart';
-import 'package:macro_factor_app/presentation/widgets/recent_workout_card.dart';
-import 'package:macro_factor_app/presentation/widgets/workout_consistency_tracker.dart';
-import 'package:macro_factor_app/presentation/widgets/workout_stats_hero_grid.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/domain/algorithms/weight_trend_v2.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/domain/models/workout_session.dart';
+import 'package:sique/domain/services/auth_service.dart';
+import 'package:sique/domain/services/health_sync_adapter.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/screens/account_profile_screen.dart';
+import 'package:sique/presentation/widgets/google_account_card.dart';
+import 'package:sique/presentation/widgets/health_connect_sync_card.dart';
+import 'package:sique/presentation/widgets/physical_stats_summary_card.dart';
+import 'package:sique/presentation/widgets/recent_workout_card.dart';
+import 'package:sique/presentation/widgets/workout_consistency_tracker.dart';
+import 'package:sique/presentation/widgets/workout_stats_hero_grid.dart';
 
 class FakeAuthService implements AuthService {
   FakeAuthService({this.currentUser});
@@ -236,7 +236,7 @@ void main() {
 
       // Should now be signed in with Demo Athlete profile
       expect(find.text('Athlete (Demo)'), findsOneWidget);
-      expect(find.text('athlete.demo@macrofactor.local'), findsOneWidget);
+      expect(find.text('athlete.demo@sique.local'), findsOneWidget);
       expect(find.byKey(const Key('profile_sign_out_btn')), findsOneWidget);
     });
   });

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
 
 /// Screen for configuring Food Log preferences and defaults.
 /// Automatically persists each configuration change directly to the database.

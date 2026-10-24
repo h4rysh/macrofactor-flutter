@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/presentation/providers/auth_providers.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/presentation/providers/auth_providers.dart';
+import 'package:sique/presentation/screens/auth/change_password_dialog.dart';
+import 'package:sique/presentation/screens/auth/delete_account_dialog.dart';
+import 'package:sique/presentation/screens/auth/email_auth_dialog.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 
 /// Section 1: Google Account Card displaying user info and auth controls.
 class GoogleAccountCard extends ConsumerWidget {
@@ -224,95 +227,202 @@ class GoogleAccountCard extends ConsumerWidget {
 
   Widget _buildAuthButton(
       BuildContext context, WidgetRef ref, UserAccount user, bool isLoading) {
+    final authRepo = ref.watch(authRepositoryProvider);
+    final isConfigured = authRepo.isConfigured;
+
     if (user.isAuthenticated) {
-      return AppleBouncy(
-        onTap: isLoading
-            ? null
-            : () async {
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    backgroundColor: AppTheme.cardSurface,
-                    title: const Text('Sign Out',
-                        style: TextStyle(color: AppTheme.textPrimary)),
-                    content: const Text(
-                      'Are you sure you want to sign out? All your local workout logs and nutrition data will remain intact.',
-                      style: TextStyle(color: AppTheme.textSecondary),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Sign Out',
-                            style: TextStyle(color: AppTheme.calories)),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirm == true) {
-                  ref.read(authNotifierProvider.notifier).signOut();
-                }
-              },
-        child: Container(
-          key: const Key('profile_sign_out_btn'),
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 11),
-          decoration: BoxDecoration(
-            color: AppTheme.calories.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-                color: AppTheme.calories.withValues(alpha: 0.4), width: 1),
-          ),
-          alignment: Alignment.center,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (isLoading)
-                const SizedBox(
-                  width: 16,
-                  height: 16,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2,
-                    color: AppTheme.calories,
-                  ),
-                )
-              else ...[
-                const Icon(
-                  Icons.logout_rounded,
-                  size: 18,
-                  color: AppTheme.calories,
+      final isEmailUser = user.authProvider == AuthProviderType.email;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (isEmailUser) ...[
+            AppleBouncy(
+              onTap:
+                  isLoading ? null : () => ChangePasswordDialog.show(context),
+              child: Container(
+                key: const Key('profile_change_password_btn'),
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 11),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardElevated,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: AppTheme.cardBorder, width: 1),
                 ),
-                const SizedBox(width: 8),
-                const Flexible(
-                  child: Text(
-                    'Sign Out',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontFamily: 'MacroSans',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
+                alignment: Alignment.center,
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.key_rounded,
+                        size: 16, color: AppTheme.activeBlue),
+                    SizedBox(width: 8),
+                    Text(
+                      'Change Password',
+                      style: TextStyle(
+                        fontFamily: 'MacroSans',
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          AppleBouncy(
+            onTap: isLoading
+                ? null
+                : () async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: AppTheme.cardSurface,
+                        title: const Text('Sign Out',
+                            style: TextStyle(color: AppTheme.textPrimary)),
+                        content: const Text(
+                          'Are you sure you want to sign out? All your local workout logs and nutrition data will remain intact.',
+                          style: TextStyle(color: AppTheme.textSecondary),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx, true),
+                            child: const Text('Sign Out',
+                                style: TextStyle(color: AppTheme.calories)),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      ref.read(authNotifierProvider.notifier).signOut();
+                    }
+                  },
+            child: Container(
+              key: const Key('profile_sign_out_btn'),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 11),
+              decoration: BoxDecoration(
+                color: AppTheme.calories.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                    color: AppTheme.calories.withValues(alpha: 0.4), width: 1),
+              ),
+              alignment: Alignment.center,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (isLoading)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.calories,
+                      ),
+                    )
+                  else ...[
+                    const Icon(
+                      Icons.logout_rounded,
+                      size: 18,
                       color: AppTheme.calories,
                     ),
-                  ),
-                ),
-              ],
-            ],
+                    const SizedBox(width: 8),
+                    const Flexible(
+                      child: Text(
+                        'Sign Out',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontFamily: 'MacroSans',
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.calories,
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ),
-        ),
+          const SizedBox(height: 8),
+          Center(
+            child: TextButton(
+              key: const Key('profile_delete_account_btn'),
+              onPressed: isLoading
+                  ? null
+                  : () => DeleteAccountDialog.show(context, user: user),
+              child: const Text(
+                'Delete Account',
+                style: TextStyle(
+                  fontFamily: 'DMSans',
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                  decoration: TextDecoration.underline,
+                ),
+              ),
+            ),
+          ),
+        ],
       );
     }
 
     return Column(
       children: [
+        if (!isConfigured) ...[
+          Container(
+            key: const Key('firebase_unconfigured_banner'),
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.warning.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.warning.withValues(alpha: 0.4),
+                width: 1,
+              ),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.info_outline_rounded,
+                    color: AppTheme.warning, size: 18),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Sign-in unavailable: Firebase not configured',
+                    style: TextStyle(
+                      fontFamily: 'MacroSans',
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.warning,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         AppleBouncy(
           onTap: isLoading
               ? null
               : () {
+                  if (!isConfigured) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Sign-in unavailable: Firebase not configured'),
+                        backgroundColor: AppTheme.warning,
+                      ),
+                    );
+                    return;
+                  }
                   ref.read(authNotifierProvider.notifier).signInWithGoogle();
                 },
           child: Container(
@@ -320,8 +430,11 @@ class GoogleAccountCard extends ConsumerWidget {
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 11),
             decoration: BoxDecoration(
-              color: AppTheme.activeBlue,
+              color: isConfigured ? AppTheme.activeBlue : AppTheme.cardElevated,
               borderRadius: BorderRadius.circular(12),
+              border: isConfigured
+                  ? null
+                  : Border.all(color: AppTheme.cardBorder, width: 1),
             ),
             alignment: Alignment.center,
             child: Row(
@@ -338,10 +451,12 @@ class GoogleAccountCard extends ConsumerWidget {
                     ),
                   )
                 else ...[
-                  const Icon(Icons.login_rounded,
-                      size: 18, color: Colors.white),
+                  Icon(Icons.login_rounded,
+                      size: 18,
+                      color:
+                          isConfigured ? Colors.white : AppTheme.textSecondary),
                   const SizedBox(width: 8),
-                  const Flexible(
+                  Flexible(
                     child: Text(
                       'Sign in with Google',
                       maxLines: 1,
@@ -350,11 +465,70 @@ class GoogleAccountCard extends ConsumerWidget {
                         fontFamily: 'MacroSans',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: isConfigured
+                            ? Colors.white
+                            : AppTheme.textSecondary,
                       ),
                     ),
                   ),
                 ],
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        AppleBouncy(
+          onTap: isLoading
+              ? null
+              : () {
+                  if (!isConfigured) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                            'Sign-in unavailable: Firebase not configured'),
+                        backgroundColor: AppTheme.warning,
+                      ),
+                    );
+                    return;
+                  }
+                  EmailAuthDialog.show(context);
+                },
+          child: Container(
+            key: const Key('profile_email_sign_in_btn'),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            decoration: BoxDecoration(
+              color: AppTheme.cardElevated,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: AppTheme.cardBorder,
+                width: 1,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.email_outlined,
+                  size: 16,
+                  color: AppTheme.textPrimary,
+                ),
+                SizedBox(width: 8),
+                Flexible(
+                  child: Text(
+                    'Sign in or Register with Email',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontFamily: 'MacroSans',
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ),
               ],
             ),
           ),

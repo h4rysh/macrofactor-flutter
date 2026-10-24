@@ -1,702 +1,165 @@
 import 'dart:io';
-import 'package:flutter/services.dart';
+
+import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sique/data/local/dao/food_dao.dart';
+import 'package:sique/data/local/dao/profile_dao.dart';
+import 'package:sique/data/local/dao/weight_dao.dart';
+import 'package:sique/data/local/dao/workout_dao.dart';
+import 'package:sique/data/local/database_migrations.dart';
+import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/scale_weight_entry.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/domain/models/workout_session.dart';
 import 'package:sqlite3/sqlite3.dart';
-import 'package:macro_factor_app/data/local/database_schema.dart';
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
-import 'package:macro_factor_app/domain/models/food_models.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
 
-/// Local high-performance SQLite database for MacroFactor clean-room engine.
+export 'app_database_coaching.dart';
+export 'app_database_expenditure.dart';
+export 'dao/food_dao.dart';
+export 'dao/profile_dao.dart';
+export 'dao/weight_dao.dart';
+export 'dao/workout_dao.dart';
+export 'database_migrations.dart';
+export 'database_schema.dart';
+
+/// Local high-performance SQLite database facade delegating to specialized DAOs.
 class AppDatabase {
-  AppDatabase(this._db);
+  AppDatabase(this._db, {bool isInMemory = false})
+      : foodDao = FoodDao(_db),
+        weightDao = WeightDao(_db),
+        profileDao = ProfileDao(_db),
+        workoutDao = WorkoutDao(_db) {
+    DatabaseMigrations.initializeAndMigrate(_db, isInMemory: isInMemory);
+  }
 
   final Database _db;
+  final FoodDao foodDao;
+  final WeightDao weightDao;
+  final ProfileDao profileDao;
+  final WorkoutDao workoutDao;
 
-  /// Underlying raw SQLite database instance.
+  /// Underlying raw sqlite3 database handle for low-level or test operations.
   Database get rawDb => _db;
 
-  /// Initializes user-specific logging tables if they don't already exist.
+  /// Legacy initializer - retained for compatibility.
   void initUserTables() {
-    for (final sql in DatabaseSchema.allCreateStatements) {
-      _db.execute(sql);
-    }
-
-    // Safe migration for weight_logs source column
-    try {
-      _db.execute(
-        "ALTER TABLE weight_logs ADD COLUMN source TEXT NOT NULL DEFAULT 'manual';",
-      );
-    } catch (_) {}
-
-    // Safe migrations for custom macro columns if user_profile previously existed
-    for (final col in [
-      'custom_calories',
-      'custom_protein',
-      'custom_carbs',
-      'custom_fat'
-    ]) {
-      try {
-        _db.execute('ALTER TABLE user_profile ADD COLUMN $col REAL;');
-      } catch (_) {}
-    }
+    DatabaseMigrations.initializeAndMigrate(_db, isInMemory: true);
   }
 
-  /// Searches the pre-indexed Indian & international food database using FTS5 with prefix matching.
-  List<FoodItem> searchFoods(String query, {int limit = 30}) {
-    final sanitized =
-        query.replaceAll(RegExp(r'''['"*\(\)\-\+\:]'''), ' ').trim();
-    if (sanitized.isEmpty) {
-      final stmt = _db.prepare('''
-        SELECT * FROM foods LIMIT ?;
-      ''');
-      final result = stmt.select([limit]);
-      stmt.dispose();
-      return result.map(_mapFoodRow).toList();
-    }
+  // ==========================================
+  // Food & Portion Forwarding Methods
+  // ==========================================
 
-    try {
-      final ftsQuery = '$sanitized*';
-      final stmt = _db.prepare('''
-        SELECT f.* FROM foods f
-        JOIN foods_fts fts ON f.id = fts.rowid
-        WHERE foods_fts MATCH ?
-        LIMIT ?;
-      ''');
-      final result = stmt.select([ftsQuery, limit]);
-      stmt.dispose();
+  List<FoodItem> searchFoods(String query, {int limit = 30}) =>
+      foodDao.searchFoods(query, limit: limit);
 
-      if (result.isNotEmpty) {
-        return result.map(_mapFoodRow).toList();
-      }
-    } catch (_) {
-      // Fallback to LIKE if FTS expression error
-    }
+  FoodItem? getFoodById(int id) => foodDao.getFoodById(id);
 
-    final likePattern = '%$sanitized%';
-    final fallbackStmt = _db.prepare('''
-      SELECT * FROM foods
-      WHERE name LIKE ? OR aliases LIKE ? OR category LIKE ?
-      LIMIT ?;
-    ''');
-    final fallbackResult =
-        fallbackStmt.select([likePattern, likePattern, likePattern, limit]);
-    fallbackStmt.dispose();
-    return fallbackResult.map(_mapFoodRow).toList();
-  }
+  List<PortionUnit> getPortionUnitsForFood(int foodId) =>
+      foodDao.getPortionUnitsForFood(foodId);
 
-  /// Gets a specific food item by its ID, with its full suite of portion units.
-  FoodItem? getFoodById(int id) {
-    final stmt = _db.prepare('SELECT * FROM foods WHERE id = ? LIMIT 1;');
-    final result = stmt.select([id]);
-    stmt.dispose();
-    if (result.isEmpty) return null;
-    return _mapFoodRow(result.first);
-  }
-
-  /// Fetches portion units for a given food.
-  List<PortionUnit> getPortionUnitsForFood(int foodId) {
-    final stmt = _db.prepare('''
-      SELECT * FROM portion_units WHERE food_id = ? ORDER BY is_default DESC, id ASC;
-    ''');
-    final result = stmt.select([foodId]);
-    stmt.dispose();
-    return result.map((row) {
-      return PortionUnit(
-        id: row['id'] as int,
-        foodId: row['food_id'] as int,
-        unitName: row['unit_name'] as String,
-        gramWeight: (row['gram_weight'] as num).toDouble(),
-        isDefault: (row['is_default'] as int) == 1,
-      );
-    }).toList();
-  }
-
-  /// Alias for getPortionUnitsForFood.
   List<PortionUnit> getPortionUnits(int foodId) =>
-      getPortionUnitsForFood(foodId);
+      foodDao.getPortionUnitsForFood(foodId);
 
-  /// Inserts a FoodItem into the database and updates FTS index.
-  void insertFood(FoodItem food) {
-    final stmt = _db.prepare('''
-      INSERT INTO foods (
-        id, uuid, name, category, region, calories, protein, carbs,
-        fat, fiber, icon_svg, source, aliases
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        name = excluded.name,
-        category = excluded.category,
-        region = excluded.region,
-        calories = excluded.calories,
-        protein = excluded.protein,
-        carbs = excluded.carbs,
-        fat = excluded.fat,
-        fiber = excluded.fiber,
-        icon_svg = excluded.icon_svg,
-        source = excluded.source,
-        aliases = excluded.aliases;
-    ''');
-    stmt.execute([
-      food.id,
-      food.uuid,
-      food.name,
-      food.category,
-      food.region,
-      food.caloriesPer100g,
-      food.proteinPer100g,
-      food.carbsPer100g,
-      food.fatPer100g,
-      food.fiberPer100g,
-      food.iconSvg,
-      food.source,
-      food.aliases,
-    ]);
-    stmt.dispose();
+  void insertFood(FoodItem food) => foodDao.insertFood(food);
 
-    try {
-      final ftsStmt = _db.prepare('''
-        INSERT INTO foods_fts (rowid, name, aliases, category)
-        VALUES (?, ?, ?, ?);
-      ''');
-      ftsStmt.execute([food.id, food.name, food.aliases, food.category]);
-      ftsStmt.dispose();
-    } catch (_) {}
-  }
+  void insertPortionUnit(PortionUnit unit) => foodDao.insertPortionUnit(unit);
 
-  /// Inserts a portion unit for a food item.
-  void insertPortionUnit(PortionUnit unit) {
-    final stmt = _db.prepare('''
-      INSERT INTO portion_units (id, food_id, unit_name, gram_weight, is_default)
-      VALUES (?, ?, ?, ?, ?);
-    ''');
-    stmt.execute([
-      unit.id,
-      unit.foodId,
-      unit.unitName,
-      unit.gramWeight,
-      unit.isDefault ? 1 : 0,
-    ]);
-    stmt.dispose();
-  }
+  int insertFoodLog(FoodLogEntry entry) => foodDao.insertFoodLog(entry);
 
-  /// Convenience method to insert scale weight from DateTime.
-  void insertScaleWeight(DateTime date, double weightKg, [String? note]) {
-    final dateStr =
-        '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-    insertWeightLog(dateStr, weightKg, note);
-  }
+  List<FoodLogEntry> getFoodLogsForDate(String date) =>
+      foodDao.getFoodLogsForDate(date);
 
-  /// Gets scale weights within a date range (YYYY-MM-DD inclusive).
-  List<ScaleWeightEntry> getScaleWeights(String startDate, String endDate) {
-    final stmt = _db.prepare('''
-      SELECT date, scale_weight, note FROM weight_logs
-      WHERE date >= ? AND date <= ?
-      ORDER BY date ASC;
-    ''');
-    final result = stmt.select([startDate, endDate]);
-    stmt.dispose();
-    return result.map((row) {
-      return ScaleWeightEntry(
-        date: DateTime.parse(row['date'] as String),
-        weightKg: (row['scale_weight'] as num).toDouble(),
-        note: row['note'] as String?,
-      );
-    }).toList();
-  }
+  void deleteFoodLog(int id) => foodDao.deleteFoodLog(id);
 
-  FoodItem _mapFoodRow(Row row) {
-    final foodId = row['id'] as int;
-    final portionUnits = getPortionUnitsForFood(foodId);
+  List<FoodLogEntry> getAllFoodLogs() => foodDao.getAllFoodLogs();
 
-    return FoodItem(
-      id: foodId,
-      uuid: row['uuid'] as String,
-      name: row['name'] as String,
-      category: row['category'] as String,
-      region: row['region'] as String,
-      caloriesPer100g: (row['calories'] as num).toDouble(),
-      proteinPer100g: (row['protein'] as num).toDouble(),
-      carbsPer100g: (row['carbs'] as num).toDouble(),
-      fatPer100g: (row['fat'] as num).toDouble(),
-      fiberPer100g: (row['fiber'] as num).toDouble(),
-      iconSvg: row['icon_svg'] as String,
-      source: row['source'] as String,
-      aliases: row['aliases'] as String,
-      portionUnits: portionUnits,
-    );
-  }
+  Map<String, double> getDailyCalorieTotals() =>
+      foodDao.getDailyCalorieTotals();
 
-  /// Logs a food entry.
-  int insertFoodLog(FoodLogEntry entry) {
-    final stmt = _db.prepare('''
-      INSERT INTO food_logs (
-        date, meal_type, food_id, food_name, serving_quantity,
-        unit_name, gram_weight, calories, protein, carbs,
-        fat, fiber, oil_modifier, logged_at, icon_svg
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
-    ''');
+  int getFoodCount() => foodDao.getFoodCount();
 
-    stmt.execute([
-      entry.date,
-      entry.mealType.name,
-      entry.foodId,
-      entry.foodName,
-      entry.servingQuantity,
-      entry.unitName,
-      entry.gramWeight,
-      entry.calories,
-      entry.protein,
-      entry.carbs,
-      entry.fat,
-      entry.fiber,
-      entry.oilModifier.name,
-      entry.loggedAt.toIso8601String(),
-      entry.iconSvg,
-    ]);
-    stmt.dispose();
+  // ==========================================
+  // Weight Logging Forwarding Methods
+  // ==========================================
 
-    return _db.lastInsertRowId;
-  }
-
-  /// Retrieves all logged food items for a date (YYYY-MM-DD).
-  List<FoodLogEntry> getFoodLogsForDate(String date) {
-    final stmt = _db.prepare('''
-      SELECT * FROM food_logs WHERE date = ? ORDER BY logged_at ASC, id ASC;
-    ''');
-    final result = stmt.select([date]);
-    stmt.dispose();
-
-    return result.map((row) {
-      return FoodLogEntry(
-        id: row['id'] as int,
-        date: row['date'] as String,
-        mealType: MealType.values.firstWhere(
-          (m) => m.name == row['meal_type'],
-          orElse: () => MealType.lunch,
-        ),
-        foodId: row['food_id'] as int,
-        foodName: row['food_name'] as String,
-        servingQuantity: (row['serving_quantity'] as num).toDouble(),
-        unitName: row['unit_name'] as String,
-        gramWeight: (row['gram_weight'] as num).toDouble(),
-        calories: (row['calories'] as num).toDouble(),
-        protein: (row['protein'] as num).toDouble(),
-        carbs: (row['carbs'] as num).toDouble(),
-        fat: (row['fat'] as num).toDouble(),
-        fiber: (row['fiber'] as num).toDouble(),
-        oilModifier: OilModifier.values.firstWhere(
-          (o) => o.name == row['oil_modifier'],
-          orElse: () => OilModifier.standard,
-        ),
-        loggedAt: DateTime.parse(row['logged_at'] as String),
-        iconSvg: row['icon_svg'] as String,
-      );
-    }).toList();
-  }
-
-  /// Deletes a food log entry by id.
-  void deleteFoodLog(int id) {
-    final stmt = _db.prepare('DELETE FROM food_logs WHERE id = ?;');
-    stmt.execute([id]);
-    stmt.dispose();
-  }
-
-  /// Logs or updates scale weight for a given date with source sovereignty.
   void insertWeightLog(
     String date,
     double scaleWeight,
     String? note, {
     String source = 'manual',
-  }) {
-    final stmt = _db.prepare('''
-      INSERT INTO weight_logs (date, scale_weight, note, source, logged_at)
-      VALUES (?, ?, ?, ?, ?)
-      ON CONFLICT(date) DO UPDATE SET
-        scale_weight = excluded.scale_weight,
-        note = excluded.note,
-        source = excluded.source,
-        logged_at = excluded.logged_at
-      WHERE weight_logs.source != 'manual' OR excluded.source = 'manual';
-    ''');
-    stmt.execute([
-      date,
-      scaleWeight,
-      note,
-      source,
-      DateTime.now().toIso8601String(),
-    ]);
-    stmt.dispose();
-  }
+  }) =>
+      weightDao.insertWeightLog(date, scaleWeight, note, source: source);
 
-  /// Retrieves all weight logs chronologically.
-  List<ScaleWeightEntry> getAllWeightLogs() {
-    final stmt = _db.prepare('''
-      SELECT date, scale_weight, note, source FROM weight_logs ORDER BY date ASC;
-    ''');
-    final result = stmt.select();
-    stmt.dispose();
+  void insertScaleWeight(DateTime date, double weightKg, [String? note]) =>
+      weightDao.insertScaleWeight(date, weightKg, note);
 
-    return result.map((row) {
-      return ScaleWeightEntry(
-        date: DateTime.parse(row['date'] as String),
-        weightKg: (row['scale_weight'] as num).toDouble(),
-        note: row['note'] as String?,
-        source: row['source'] as String? ?? 'manual',
-      );
-    }).toList();
-  }
+  List<ScaleWeightEntry> getScaleWeights(String startDate, String endDate) =>
+      weightDao.getScaleWeights(startDate, endDate);
 
-  /// Gets scale weight log for a specific date.
-  ScaleWeightEntry? getWeightLogForDate(String date) {
-    final stmt = _db.prepare('''
-      SELECT date, scale_weight, note, source FROM weight_logs WHERE date = ? LIMIT 1;
-    ''');
-    final result = stmt.select([date]);
-    stmt.dispose();
-    if (result.isEmpty) return null;
-    final row = result.first;
-    return ScaleWeightEntry(
-      date: DateTime.parse(row['date'] as String),
-      weightKg: (row['scale_weight'] as num).toDouble(),
-      note: row['note'] as String?,
-      source: row['source'] as String? ?? 'manual',
-    );
-  }
+  List<ScaleWeightEntry> getAllWeightLogs() => weightDao.getAllWeightLogs();
 
-  /// Returns total logged calories mapped by date string 'YYYY-MM-DD'.
-  Map<String, double> getDailyCalorieTotals() {
-    final stmt = _db.prepare('''
-      SELECT date, SUM(calories) as total_cals
-      FROM food_logs
-      GROUP BY date;
-    ''');
-    final result = stmt.select();
-    stmt.dispose();
+  ScaleWeightEntry? getWeightLogForDate(String date) =>
+      weightDao.getWeightLogForDate(date);
 
-    final map = <String, double>{};
-    for (final row in result) {
-      final date = row['date'] as String;
-      final cals = (row['total_cals'] as num?)?.toDouble() ?? 0.0;
-      map[date] = cals;
-    }
-    return map;
-  }
+  List<ScaleWeightEntry> getWeightEntries({int limit = 90}) =>
+      weightDao.getWeightEntries(limit: limit);
 
-  /// Deletes weight log by id or date.
-  void deleteWeightLogForDate(String date) {
-    final stmt = _db.prepare('DELETE FROM weight_logs WHERE date = ?;');
-    stmt.execute([date]);
-    stmt.dispose();
-  }
-
-  /// Saves user profile and coaching settings.
-  void saveUserProfile(UserProfile profile) {
-    final stmt = _db.prepare('''
-      INSERT INTO user_profile (
-        id, name, current_weight, target_weight, height_cm, age,
-        is_male, goal_type, program_mode, weekly_rate,
-        protein_preference, calorie_floor, baseline_expenditure,
-        custom_calories, custom_protein, custom_carbs, custom_fat
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        name = excluded.name,
-        current_weight = excluded.current_weight,
-        target_weight = excluded.target_weight,
-        height_cm = excluded.height_cm,
-        age = excluded.age,
-        is_male = excluded.is_male,
-        goal_type = excluded.goal_type,
-        program_mode = excluded.program_mode,
-        weekly_rate = excluded.weekly_rate,
-        protein_preference = excluded.protein_preference,
-        calorie_floor = excluded.calorie_floor,
-        baseline_expenditure = excluded.baseline_expenditure,
-        custom_calories = excluded.custom_calories,
-        custom_protein = excluded.custom_protein,
-        custom_carbs = excluded.custom_carbs,
-        custom_fat = excluded.custom_fat;
-    ''');
-
-    stmt.execute([
-      profile.id,
-      profile.name,
-      profile.currentWeightKg,
-      profile.targetWeightKg,
-      profile.heightCm,
-      profile.age,
-      profile.isMale ? 1 : 0,
-      profile.goalType.name,
-      profile.programMode.name,
-      profile.weeklyRateOfChangePct,
-      profile.proteinPreference.name,
-      profile.calorieFloor,
-      profile.baselineExpenditureKcal,
-      profile.customCalories,
-      profile.customProteinGrams,
-      profile.customCarbsGrams,
-      profile.customFatGrams,
-    ]);
-    stmt.dispose();
-  }
-
-  /// Retrieves user profile or default if none saved.
-  UserProfile? getUserProfile() {
-    final stmt = _db.prepare('SELECT * FROM user_profile LIMIT 1;');
-    final result = stmt.select();
-    stmt.dispose();
-    if (result.isEmpty) return null;
-
-    final row = result.first;
-    return UserProfile(
-      id: row['id'] as String,
-      name: row['name'] as String,
-      currentWeightKg: (row['current_weight'] as num).toDouble(),
-      targetWeightKg: (row['target_weight'] as num).toDouble(),
-      heightCm: (row['height_cm'] as num).toDouble(),
-      age: row['age'] as int,
-      isMale: (row['is_male'] as int) == 1,
-      goalType: GoalType.values.firstWhere((g) => g.name == row['goal_type']),
-      programMode:
-          ProgramMode.values.firstWhere((p) => p.name == row['program_mode']),
-      weeklyRateOfChangePct: (row['weekly_rate'] as num).toDouble(),
-      proteinPreference: ProteinPreference.values
-          .firstWhere((p) => p.name == row['protein_preference']),
-      calorieFloor: (row['calorie_floor'] as num).toDouble(),
-      baselineExpenditureKcal: (row['baseline_expenditure'] as num).toDouble(),
-      customCalories: (row['custom_calories'] as num?)?.toDouble(),
-      customProteinGrams: (row['custom_protein'] as num?)?.toDouble(),
-      customCarbsGrams: (row['custom_carbs'] as num?)?.toDouble(),
-      customFatGrams: (row['custom_fat'] as num?)?.toDouble(),
-    );
-  }
-
-  /// Retrieves a key-value setting or returns defaultValue.
-  String getSetting(String key, String defaultValue) {
-    try {
-      final stmt =
-          _db.prepare('SELECT value FROM app_settings WHERE key = ? LIMIT 1;');
-      final result = stmt.select([key]);
-      stmt.dispose();
-      if (result.isEmpty) return defaultValue;
-      return result.first['value'] as String;
-    } catch (_) {
-      return defaultValue;
-    }
-  }
-
-  /// Sets or updates a key-value setting.
-  void setSetting(String key, String value) {
-    final stmt = _db.prepare('''
-      INSERT INTO app_settings (key, value)
-      VALUES (?, ?)
-      ON CONFLICT(key) DO UPDATE SET value = excluded.value;
-    ''');
-    stmt.execute([key, value]);
-    stmt.dispose();
-  }
-
-  /// Retrieves all logged food entries across all dates for export/backup.
-  List<FoodLogEntry> getAllFoodLogs() {
-    final stmt = _db.prepare('''
-      SELECT * FROM food_logs ORDER BY date DESC, logged_at DESC;
-    ''');
-    final result = stmt.select();
-    stmt.dispose();
-
-    return result.map((row) {
-      return FoodLogEntry(
-        id: row['id'] as int,
-        date: row['date'] as String,
-        mealType: MealType.values.firstWhere(
-          (m) => m.name == row['meal_type'],
-          orElse: () => MealType.lunch,
-        ),
-        foodId: row['food_id'] as int,
-        foodName: row['food_name'] as String,
-        servingQuantity: (row['serving_quantity'] as num).toDouble(),
-        unitName: row['unit_name'] as String,
-        gramWeight: (row['gram_weight'] as num).toDouble(),
-        calories: (row['calories'] as num).toDouble(),
-        protein: (row['protein'] as num).toDouble(),
-        carbs: (row['carbs'] as num).toDouble(),
-        fat: (row['fat'] as num).toDouble(),
-        fiber: (row['fiber'] as num).toDouble(),
-        oilModifier: OilModifier.values.firstWhere(
-          (o) => o.name == row['oil_modifier'],
-          orElse: () => OilModifier.standard,
-        ),
-        loggedAt: DateTime.parse(row['logged_at'] as String),
-        iconSvg: row['icon_svg'] as String,
-      );
-    }).toList();
-  }
-
-  /// Returns total count of indexed foods in the master database.
-  int getFoodCount() {
-    try {
-      final stmt = _db.prepare('SELECT COUNT(*) as count FROM foods;');
-      final result = stmt.select();
-      stmt.dispose();
-      return (result.first['count'] as num).toInt();
-    } catch (_) {
-      return 0;
-    }
-  }
+  void deleteWeightLogForDate(String date) =>
+      weightDao.deleteWeightLogForDate(date);
 
   // ==========================================
-  // User Account Session Management
+  // User Profile & Preferences Forwarding Methods
   // ==========================================
 
-  /// Saves or updates the active user account session in SQLite.
-  void saveAccountSession(UserAccount session) {
-    final stmt = _db.prepare(
-      'INSERT INTO user_account_session (id, google_user_id, display_name, email, photo_url, health_connect_enabled, last_health_sync_time, created_at, updated_at) '
-      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) '
-      'ON CONFLICT(id) DO UPDATE SET google_user_id = excluded.google_user_id, display_name = excluded.display_name, email = excluded.email, photo_url = excluded.photo_url, health_connect_enabled = excluded.health_connect_enabled, last_health_sync_time = excluded.last_health_sync_time, updated_at = excluded.updated_at;',
-    );
-    stmt.execute([
-      session.id,
-      session.googleUserId,
-      session.displayName,
-      session.email,
-      session.photoUrl,
-      session.healthConnectEnabled ? 1 : 0,
-      session.lastHealthSyncTime?.toIso8601String(),
-      session.createdAt.toIso8601String(),
-      session.updatedAt.toIso8601String(),
-    ]);
-    stmt.dispose();
-  }
+  void saveUserProfile(UserProfile profile) =>
+      profileDao.saveUserProfile(profile);
 
-  /// Retrieves the active user account session, or null if unauthenticated.
-  UserAccount? getAccountSession() {
-    final stmt = _db.prepare(
-      'SELECT id, google_user_id, display_name, email, photo_url, health_connect_enabled, last_health_sync_time, created_at, updated_at FROM user_account_session LIMIT 1;',
-    );
-    final result = stmt.select();
-    stmt.dispose();
-    if (result.isEmpty) return null;
+  UserProfile? getUserProfile() => profileDao.getUserProfile();
 
-    final row = result.first;
-    return UserAccount(
-      id: row['id'] as String,
-      googleUserId: row['google_user_id'] as String,
-      displayName: row['display_name'] as String,
-      email: row['email'] as String,
-      photoUrl: row['photo_url'] as String?,
-      healthConnectEnabled: (row['health_connect_enabled'] as int) == 1,
-      lastHealthSyncTime: row['last_health_sync_time'] != null
-          ? DateTime.tryParse(row['last_health_sync_time'] as String)
-          : null,
-      createdAt: DateTime.tryParse(row['created_at'] as String? ?? '') ??
-          DateTime.now(),
-      updatedAt: DateTime.tryParse(row['updated_at'] as String? ?? '') ??
-          DateTime.now(),
-      isAuthenticated: (row['google_user_id'] as String).isNotEmpty,
-    );
-  }
+  String getSetting(String key, String defaultValue) =>
+      profileDao.getSetting(key, defaultValue);
 
-  /// Clears the active user account session upon sign-out.
-  void clearAccountSession() {
-    final stmt = _db.prepare('DELETE FROM user_account_session;');
-    stmt.execute();
-    stmt.dispose();
-  }
+  void setSetting(String key, String value) =>
+      profileDao.setSetting(key, value);
+
+  Map<String, String> getAllSettings() => profileDao.getAllSettings();
+
+  void saveAccountSession(UserAccount session) =>
+      profileDao.saveAccountSession(session);
+
+  UserAccount? getAccountSession() => profileDao.getAccountSession();
+
+  void clearAccountSession() => profileDao.clearAccountSession();
+
+  void clearAllData() => profileDao.clearAllData();
 
   // ==========================================
-  // Workout Sessions & Training History
+  // Workout Sessions Forwarding Methods
   // ==========================================
 
-  /// Inserts or updates a list of workout sessions within an atomic transaction.
-  void insertWorkoutSessions(List<WorkoutSession> sessions) {
-    if (sessions.isEmpty) return;
-    final stmt = _db.prepare(
-      'INSERT INTO workout_sessions (id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at) '
-      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) '
-      'ON CONFLICT(id) DO UPDATE SET source = excluded.source, title = excluded.title, start_time = excluded.start_time, end_time = excluded.end_time, duration_minutes = excluded.duration_minutes, calories_burned = excluded.calories_burned, notes = excluded.notes;',
-    );
+  void insertWorkoutSessions(List<WorkoutSession> sessions) =>
+      workoutDao.insertWorkoutSessions(sessions);
 
-    _db.execute('BEGIN TRANSACTION;');
-    try {
-      for (final session in sessions) {
-        stmt.execute([
-          session.id,
-          session.source,
-          session.title,
-          session.startTime.toIso8601String(),
-          session.endTime.toIso8601String(),
-          session.durationMinutes,
-          session.caloriesBurned,
-          session.notes,
-          session.createdAt.toIso8601String(),
-        ]);
-      }
-      _db.execute('COMMIT;');
-    } catch (_) {
-      _db.execute('ROLLBACK;');
-      rethrow;
-    } finally {
-      stmt.dispose();
-    }
-  }
+  List<WorkoutSession> getAllWorkoutSessions() =>
+      workoutDao.getAllWorkoutSessions();
 
-  /// Retrieves all workout sessions ordered chronologically descending (newest first).
-  List<WorkoutSession> getAllWorkoutSessions() {
-    final stmt = _db.prepare(
-      'SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at FROM workout_sessions ORDER BY start_time DESC;',
-    );
-    final result = stmt.select();
-    stmt.dispose();
-    return result.map(_mapWorkoutSessionRow).toList();
-  }
+  List<WorkoutSession> getWorkoutSessionsInRange(
+          DateTime start, DateTime end) =>
+      workoutDao.getWorkoutSessionsInRange(start, end);
 
-  /// Retrieves workout sessions whose start_time is between [start] and [end] (inclusive).
-  List<WorkoutSession> getWorkoutSessionsInRange(DateTime start, DateTime end) {
-    final stmt = _db.prepare(
-      'SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at FROM workout_sessions WHERE start_time >= ? AND start_time <= ? ORDER BY start_time DESC;',
-    );
-    final result =
-        stmt.select([start.toIso8601String(), end.toIso8601String()]);
-    stmt.dispose();
-    return result.map(_mapWorkoutSessionRow).toList();
-  }
-
-  /// Deletes a workout session by its identifier (String or int).
-  void deleteWorkoutSession(dynamic id) {
-    final stmt = _db.prepare('DELETE FROM workout_sessions WHERE id = ?;');
-    stmt.execute([id.toString()]);
-    stmt.dispose();
-  }
-
-  /// Private helper mapping a SQLite row to a WorkoutSession entity.
-  WorkoutSession _mapWorkoutSessionRow(Row row) {
-    return WorkoutSession(
-      id: row['id'] as String,
-      source: row['source'] as String? ?? WorkoutSource.healthConnect,
-      title: row['title'] as String? ?? 'Workout',
-      startTime: DateTime.parse(row['start_time'] as String),
-      endTime: DateTime.parse(row['end_time'] as String),
-      durationMinutes: (row['duration_minutes'] as num).toInt(),
-      caloriesBurned: (row['calories_burned'] as num).toDouble(),
-      notes: row['notes'] as String?,
-      createdAt: row['created_at'] != null
-          ? DateTime.parse(row['created_at'] as String)
-          : DateTime.now(),
-    );
-  }
+  void deleteWorkoutSession(dynamic id) => workoutDao.deleteWorkoutSession(id);
 
   /// Closes and disposes the database handle.
   void close() {
     _db.dispose();
   }
 
-  /// Creates an in-memory SQLite database instance with food & user schemas for fast, isolated testing.
+  /// Creates an in-memory SQLite database instance with food & user schemas.
   static AppDatabase inMemory() {
     final rawDb = sqlite3.openInMemory();
-    final appDb = AppDatabase(rawDb);
     rawDb.execute('''
       CREATE TABLE IF NOT EXISTS foods (
         id INTEGER PRIMARY KEY, uuid TEXT NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL,
@@ -711,27 +174,32 @@ class AppDatabase {
         name, aliases, category, content='foods', content_rowid='id'
       );
     ''');
-    appDb.initUserTables();
+    final appDb = AppDatabase(rawDb, isInMemory: true);
     return appDb;
   }
 
   /// Opens the application database, bundling foods_master.db if first launch.
   static Future<AppDatabase> open() async {
     final docsDir = await getApplicationDocumentsDirectory();
-    final dbPath = p.join(docsDir.path, 'macrofactor_local.db');
+    final dbPath = p.join(docsDir.path, 'sique_local.db');
     final file = File(dbPath);
 
     if (!await file.exists()) {
-      // Copy pre-compiled foods_master.db asset to documents folder
-      final data = await rootBundle.load('assets/database/foods_master.db');
-      final bytes =
-          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-      await file.writeAsBytes(bytes, flush: true);
+      // Check legacy path first for seamless user data retention
+      final legacyPath = p.join(docsDir.path, 'legacy_local.db');
+      final legacyFile = File(legacyPath);
+      if (await legacyFile.exists()) {
+        await legacyFile.copy(dbPath);
+      } else {
+        final data = await rootBundle.load('assets/database/foods_master.db');
+        final bytes =
+            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+        await file.writeAsBytes(bytes, flush: true);
+      }
     }
 
     final rawDb = sqlite3.open(dbPath);
     final appDb = AppDatabase(rawDb);
-    appDb.initUserTables();
     return appDb;
   }
 }

@@ -5,7 +5,7 @@ import 'apple_tactile_card.dart';
 import 'food_svg_icon.dart';
 import 'timeline_food_card.dart';
 
-/// Hourly slot on the MacroFactor timeline (e.g. 8 AM +, 12 PM +).
+/// Hourly slot on the Sique timeline (e.g. 8 AM +, 12 PM +).
 class TimelineHourSlot extends StatelessWidget {
   const TimelineHourSlot({
     super.key,

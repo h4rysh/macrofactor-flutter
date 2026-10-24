@@ -13,7 +13,7 @@ if (!googleServicesFile.exists() && googleServicesTemplate.exists()) {
 }
 
 android {
-    namespace = "com.antigravity.macro_factor_app"
+    namespace = "com.h4rysh.sique"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -23,8 +23,7 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.antigravity.macro_factor_app"
+        applicationId = "com.h4rysh.sique"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = 26

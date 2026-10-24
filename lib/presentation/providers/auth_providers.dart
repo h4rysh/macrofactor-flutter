@@ -1,20 +1,21 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/data/services/google_auth_service.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/domain/services/auth_service.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/data/repositories/firebase_auth_repository.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/domain/repositories/auth_repository.dart';
+import 'package:sique/domain/services/auth_service.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
 
 /// Sealed state hierarchy representing authentication status.
 @immutable
 sealed class AuthState {
   const AuthState({required this.user});
 
-  /// The active user account (authenticated Google user or UserAccount.guest).
+  /// The active user account (authenticated user or UserAccount.guest).
   final UserAccount user;
 
-  /// Convenience getter indicating whether the user is an authenticated Google user.
+  /// Convenience getter indicating whether the user is an authenticated user.
   bool get isAuthenticated => user.isAuthenticated;
 
   /// Convenience getter for display name.
@@ -59,7 +60,7 @@ final class AuthLoading extends AuthState {
   String toString() => 'AuthLoading(user: ${user.displayName})';
 }
 
-/// Successfully authenticated Google account state.
+/// Successfully authenticated account state.
 final class AuthAuthenticated extends AuthState {
   const AuthAuthenticated(UserAccount user) : super(user: user);
 
@@ -98,12 +99,16 @@ final class AuthError extends AuthState {
       'AuthError(message: "$message", user: ${user.displayName})';
 }
 
-/// Notifier managing authentication lifecycle, offline session persistence, and Google OAuth.
+/// Notifier managing authentication lifecycle, offline session persistence, and credential providers.
 class AuthNotifier extends StateNotifier<AuthState> {
-  AuthNotifier(this._db, this._authService) : super(_loadInitialState(_db));
+  AuthNotifier(this._db, Object authRepoOrService)
+      : _authRepo = authRepoOrService is AuthRepository
+            ? authRepoOrService
+            : _AuthServiceAdapter(authRepoOrService as AuthService),
+        super(_loadInitialState(_db));
 
   final AppDatabase _db;
-  final AuthService _authService;
+  final AuthRepository _authRepo;
 
   /// Loads cached session from SQLite on app startup.
   static AuthState _loadInitialState(AppDatabase db) {
@@ -119,10 +124,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   /// Checks current authentication status silently on startup.
-  /// Preserves SQLite session if offline or silent sign-in fails.
   Future<void> checkCurrentUser() async {
     try {
-      final currentUser = await _authService.getCurrentUser();
+      final currentUser = await _authRepo.getCurrentUser();
       if (currentUser != null) {
         _db.saveAccountSession(currentUser);
         state = AuthAuthenticated(currentUser);
@@ -137,13 +141,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final previousUser = state.user;
     state = AuthLoading(user: previousUser);
     try {
-      final user = await _authService.signInWithGoogle();
+      final user = await _authRepo.signInWithGoogle();
       _db.saveAccountSession(user);
       state = AuthAuthenticated(user);
       return true;
     } catch (e) {
       final cleanMessage =
-          e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
+          e.toString().replaceFirst(RegExp(r'^(Exception|StateError):\s*'), '');
       state = AuthError(
         user: previousUser,
         message: cleanMessage.isEmpty ? 'Google Sign-In failed' : cleanMessage,
@@ -152,21 +156,136 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Authenticates using a high-fidelity Demo Athlete profile.
-  ///
-  /// Useful for local testing and physical device verification when external
-  /// cloud OAuth services or consent screens are not yet published.
+  /// Authenticates using email and password.
+  Future<bool> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) async {
+    final previousUser = state.user;
+    state = AuthLoading(user: previousUser);
+    try {
+      final user = await _authRepo.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      _db.saveAccountSession(user);
+      state = AuthAuthenticated(user);
+      return true;
+    } catch (e) {
+      final cleanMessage = e.toString().replaceFirst(
+          RegExp(r'^(Exception|ArgumentError|StateError):\s*'), '');
+      state = AuthError(
+        user: previousUser,
+        message: cleanMessage.isEmpty ? 'Sign-in failed' : cleanMessage,
+      );
+      return false;
+    }
+  }
+
+  /// Registers a new user account with email and password.
+  Future<bool> signUpWithEmailAndPassword({
+    required String email,
+    required String password,
+    String? displayName,
+  }) async {
+    final previousUser = state.user;
+    state = AuthLoading(user: previousUser);
+    try {
+      final user = await _authRepo.signUpWithEmailAndPassword(
+        email: email,
+        password: password,
+        displayName: displayName,
+      );
+      _db.saveAccountSession(user);
+      state = AuthAuthenticated(user);
+      return true;
+    } catch (e) {
+      final cleanMessage = e.toString().replaceFirst(
+          RegExp(r'^(Exception|ArgumentError|StateError):\s*'), '');
+      state = AuthError(
+        user: previousUser,
+        message: cleanMessage.isEmpty ? 'Registration failed' : cleanMessage,
+      );
+      return false;
+    }
+  }
+
+  /// Dispatches password reset email.
+  Future<bool> sendPasswordResetEmail(String email) async {
+    try {
+      await _authRepo.sendPasswordResetEmail(email);
+      return true;
+    } catch (e) {
+      final cleanMessage = e.toString().replaceFirst(
+          RegExp(r'^(Exception|ArgumentError|StateError):\s*'), '');
+      state = AuthError(
+        user: state.user,
+        message: cleanMessage.isEmpty ? 'Password reset failed' : cleanMessage,
+      );
+      return false;
+    }
+  }
+
+  /// Changes password for email accounts.
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      await _authRepo.changePassword(
+        currentPassword: currentPassword,
+        newPassword: newPassword,
+      );
+      return true;
+    } catch (e) {
+      final cleanMessage = e.toString().replaceFirst(
+          RegExp(r'^(Exception|ArgumentError|StateError|UnsupportedError):\s*'),
+          '');
+      state = AuthError(
+        user: state.user,
+        message: cleanMessage.isEmpty ? 'Password change failed' : cleanMessage,
+      );
+      return false;
+    }
+  }
+
+  /// Permanently deletes account with provider-aware credential check.
+  Future<bool> deleteAccount({String? password}) async {
+    final currentUser = state.user;
+    state = AuthLoading(user: currentUser);
+    try {
+      await _authRepo.deleteAccount(password: password);
+      _db.clearAccountSession();
+      state = AuthUnauthenticated();
+      return true;
+    } catch (e) {
+      final cleanMessage = e.toString().replaceFirst(
+          RegExp(r'^(Exception|ArgumentError|StateError):\s*'), '');
+      state = AuthError(
+        user: currentUser,
+        message:
+            cleanMessage.isEmpty ? 'Account deletion failed' : cleanMessage,
+      );
+      return false;
+    }
+  }
+
+  /// Authenticates using a Demo Athlete profile for local testing.
   Future<void> signInWithDemoAthlete({
     String displayName = 'Athlete (Demo)',
-    String email = 'athlete.demo@macrofactor.local',
+    String email = 'athlete.demo@sique.local',
   }) async {
-    final demoUser = UserAccount.fromGoogle(
+    final demoUser = UserAccount(
       id: 'active_session',
       googleUserId: 'demo_athlete_001',
       displayName: displayName,
       email: email,
       photoUrl: null,
       healthConnectEnabled: true,
+      authProvider: AuthProviderType.google,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+      isAuthenticated: true,
     );
     try {
       _db.saveAccountSession(demoUser);
@@ -174,13 +293,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthAuthenticated(demoUser);
   }
 
+  /// Sets guest mode explicitly.
+  void continueAsGuest() {
+    state = AuthUnauthenticated();
+  }
+
   /// Non-destructive sign-out: clears active user account session only.
-  /// Preserves all local food logs, scale weights, and workout records.
   Future<void> signOut() async {
     final currentUser = state.user;
     state = AuthLoading(user: currentUser);
     try {
-      await _authService.signOut();
+      await _authRepo.signOut();
     } catch (_) {
       // Non-fatal if platform network call fails
     } finally {
@@ -233,25 +356,84 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 }
 
-/// Provider for AuthService abstraction. Defaults to [GoogleAuthServiceImpl] for production authentication.
-final authServiceProvider = Provider<AuthService>((ref) {
-  return GoogleAuthServiceImpl();
+/// Compatibility adapter wrapping legacy [AuthService] into modern [AuthRepository].
+class _AuthServiceAdapter implements AuthRepository {
+  _AuthServiceAdapter(this._service);
+  final AuthService _service;
+
+  @override
+  bool get isConfigured => true;
+
+  @override
+  Stream<UserAccount?> get authStateChanges => const Stream.empty();
+
+  @override
+  Future<UserAccount?> getCurrentUser() => _service.getCurrentUser();
+
+  @override
+  Future<UserAccount> signInWithGoogle() => _service.signInWithGoogle();
+
+  @override
+  Future<void> signOut() => _service.signOut();
+
+  @override
+  Future<UserAccount> signInWithEmailAndPassword({
+    required String email,
+    required String password,
+  }) =>
+      throw UnsupportedError('Email auth not supported by legacy AuthService');
+
+  @override
+  Future<UserAccount> signUpWithEmailAndPassword({
+    required String email,
+    required String password,
+    String? displayName,
+  }) =>
+      throw UnsupportedError('Email auth not supported by legacy AuthService');
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) =>
+      throw UnsupportedError('Reset not supported by legacy AuthService');
+
+  @override
+  Future<void> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) =>
+      throw UnsupportedError(
+          'Change password not supported by legacy AuthService');
+
+  @override
+  Future<void> deleteAccount({String? password}) => _service.signOut();
+}
+
+/// Legacy compatibility provider for tests overriding [AuthService].
+final authServiceProvider = Provider<AuthService?>((ref) => null);
+
+/// Provider for AuthRepository abstraction.
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  final legacyService = ref.watch(authServiceProvider);
+  if (legacyService != null) {
+    return _AuthServiceAdapter(legacyService);
+  }
+  final db = ref.watch(databaseProvider);
+  return FirebaseAuthRepository(db: db);
 });
 
 /// Riverpod StateNotifierProvider for authentication state.
 final authNotifierProvider =
     StateNotifierProvider<AuthNotifier, AuthState>((ref) {
   final db = ref.watch(databaseProvider);
-  final authService = ref.watch(authServiceProvider);
-  return AuthNotifier(db, authService);
+  final authRepo = ref.watch(authRepositoryProvider);
+  return AuthNotifier(db, authRepo);
 });
 
-/// Convenience provider returning the active [UserAccount] (authenticated user or guest).
+/// Convenience provider returning the active [UserAccount].
 final currentUserProvider = Provider<UserAccount>((ref) {
   return ref.watch(authNotifierProvider).user;
 });
 
-/// Convenience boolean provider indicating whether the user is authenticated with Google.
+/// Convenience boolean provider indicating whether the user is authenticated.
 final isAuthenticatedProvider = Provider<bool>((ref) {
   return ref.watch(authNotifierProvider).isAuthenticated;
 });

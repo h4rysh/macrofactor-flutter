@@ -1,30 +1,21 @@
 {
   "project_info": {
-    "project_number": "000000000000",
-    "project_id": "macrofactor-app-template",
-    "storage_bucket": "macrofactor-app-template.firebasestorage.app"
+    "project_number": "603143912752",
+    "project_id": "sique-app-harrish",
+    "storage_bucket": "sique-app-harrish.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "mobilesdk_app_id": "1:603143912752:android:28a6912f9de0e493209cf5",
         "android_client_info": {
-          "package_name": "com.antigravity.macro_factor_app"
+          "package_name": "com.h4rysh.sique"
         }
       },
-      "oauth_client": [
-        {
-          "client_id": "000000000000-sampleoauthclientid.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.antigravity.macro_factor_app",
-            "certificate_hash": "0000000000000000000000000000000000000000"
-          }
-        }
-      ],
+      "oauth_client": [],
       "api_key": [
         {
-          "current_key": "REPLACE_WITH_YOUR_FIREBASE_API_KEY"
+          "current_key": "AIzaSyBn07a0BZqXpZU1Y2wlY6gNy4iP63e4L8o"
         }
       ],
       "services": {

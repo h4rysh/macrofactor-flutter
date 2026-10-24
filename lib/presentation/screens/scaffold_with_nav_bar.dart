@@ -10,7 +10,7 @@ import 'more_screen.dart';
 import 'quick_actions_sheet.dart';
 import 'strategy_screen.dart';
 
-/// Authentic MacroFactor 5-destination Scaffold with Center Action Button.
+/// Authentic Sique 5-destination Scaffold with Center Action Button.
 /// Matches `src/ui/scaffold_with_nav_bar/scaffold_with_nav_bar_view.dart`.
 /// Elevated with Apple Liquid Glass frosted dock, animated tab indicator pill,
 /// and responsive spring micro-interactions.

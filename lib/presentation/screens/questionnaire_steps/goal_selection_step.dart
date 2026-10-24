@@ -42,7 +42,7 @@ class GoalSelectionStep extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         const Text(
-          'MacroFactor tailors caloric targets and protein distributions to your metabolic objective.',
+          'Sique tailors caloric targets and protein distributions to your metabolic objective.',
           style: TextStyle(
             fontFamily: 'DMSans',
             fontSize: 14,

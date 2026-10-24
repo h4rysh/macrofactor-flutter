@@ -4,7 +4,7 @@ import '../../domain/models/user_profile.dart';
 import '../theme/app_theme.dart';
 import 'animated_primitives.dart';
 
-/// Authentic MacroFactor Nutrition Summary Banner right below the Date Carousel.
+/// Authentic Sique Nutrition Summary Banner right below the Date Carousel.
 /// Shows consumed vs target for Calories, Protein (P), Fat (F), and Carbs (C).
 class NutritionSummaryBanner extends StatelessWidget {
   const NutritionSummaryBanner({
@@ -113,7 +113,7 @@ class NutritionSummaryBanner extends StatelessWidget {
 
           const SizedBox(height: 6),
 
-          // Two-dot page indicator matching MacroFactor
+          // Two-dot page indicator matching Sique
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

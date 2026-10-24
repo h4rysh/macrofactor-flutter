@@ -1,4 +1,4 @@
-/// Database schema definitions and DDL scripts for MacroFactor local SQLite storage.
+/// Database schema definitions and DDL scripts for Sique local SQLite storage.
 class DatabaseSchema {
   const DatabaseSchema._();
 
@@ -60,7 +60,14 @@ class DatabaseSchema {
       custom_calories REAL,
       custom_protein REAL,
       custom_carbs REAL,
-      custom_fat REAL
+      custom_fat REAL,
+      diet_type TEXT NOT NULL DEFAULT 'standard',
+      calorie_floor_type TEXT NOT NULL DEFAULT 'standard',
+      lifting_experience TEXT NOT NULL DEFAULT 'beginner',
+      cardio_experience TEXT NOT NULL DEFAULT 'beginner',
+      body_fat_range TEXT,
+      weight_history_max REAL,
+      distribution_mode TEXT NOT NULL DEFAULT 'even'
     );
   ''';
 
@@ -113,7 +120,8 @@ class DatabaseSchema {
       health_connect_enabled INTEGER NOT NULL DEFAULT 0,
       last_health_sync_time TEXT,
       created_at TEXT NOT NULL,
-      updated_at TEXT NOT NULL
+      updated_at TEXT NOT NULL,
+      auth_provider TEXT NOT NULL DEFAULT 'google.com'
     );
   ''';
 
@@ -135,6 +143,18 @@ class DatabaseSchema {
     CREATE INDEX IF NOT EXISTS idx_coaching_check_ins_date ON coaching_check_ins(check_in_date);
   ''';
 
+  static const String createDayCompletionsTable = '''
+    CREATE TABLE IF NOT EXISTS day_completions (
+      date TEXT PRIMARY KEY,
+      is_complete INTEGER NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+  ''';
+
+  static const String createDayCompletionsIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_day_completions_date ON day_completions(date);
+  ''';
+
   static const List<String> allCreateStatements = [
     createFoodLogsTable,
     createFoodLogsIndex,
@@ -149,5 +169,7 @@ class DatabaseSchema {
     createUserAccountSessionTable,
     createCoachingCheckInsTable,
     createCoachingCheckInsIndex,
+    createDayCompletionsTable,
+    createDayCompletionsIndex,
   ];
 }

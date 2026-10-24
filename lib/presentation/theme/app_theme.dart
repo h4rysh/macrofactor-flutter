@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// MacroFactor Clean-Room Design System: Deep Obsidian Dark Mode with Adherence-Neutral Accents.
+/// Sique Clean-Room Design System: Deep Obsidian Dark Mode with Adherence-Neutral Accents.
 class AppTheme {
   AppTheme._();
 
@@ -12,7 +12,7 @@ class AppTheme {
   static const Color cardElevated = Color(0xFF1F1F26); // Pill & Input Surface
   static const Color cardBorder = Color(0xFF26262E); // Subtle Hairline Divider
 
-  // Signature MacroFactor Nutritional Accents (Matching log_revamp.png)
+  // Signature Sique Nutritional Accents (Matching log_revamp.png)
   static const Color calories = Color(0xFFFF5722); // Vibrant Flame Orange
   static const Color protein = Color(0xFFFB923C); // Warm Coral / Peach
   static const Color fat = Color(0xFFFACC15); // Bright Golden Amber
@@ -21,7 +21,7 @@ class AppTheme {
   static const Color trendWeight =
       Color(0xFFC084FC); // Smoothed Lavender / Violet
   static const Color activeBlue =
-      Color(0xFF0055E1); // Authentic MacroFactor Sapphire Blue
+      Color(0xFF0055E1); // Authentic Sique Sapphire Blue
 
   // Neutral Text & Icons
   static const Color textPrimary = Color(0xFFFFFFFF);

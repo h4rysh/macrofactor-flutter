@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/domain/models/macro_program.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/domain/models/macro_program.dart';
 
-/// Extension on [AppDatabase] providing persistence for MacroFactor coaching programs
+/// Extension on [AppDatabase] providing persistence for Sique coaching programs
 /// and weekly metabolic check-in records.
 extension AppDatabaseCoachingExtension on AppDatabase {
   static const String _activeProgramKey = 'active_coaching_program';

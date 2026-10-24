@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/main.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/screens/onboarding/auth_gate_screen.dart';
-import 'package:macro_factor_app/presentation/screens/onboarding/strategy_setup_wizard.dart';
-import 'package:macro_factor_app/presentation/screens/onboarding/welcome_screen.dart';
-import 'package:macro_factor_app/presentation/screens/scaffold_with_nav_bar.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/main.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/screens/onboarding/auth_gate_screen.dart';
+import 'package:sique/presentation/screens/onboarding/onboarding_flow_screen.dart';
+import 'package:sique/presentation/screens/onboarding/welcome_screen.dart';
+import 'package:sique/presentation/screens/scaffold_with_nav_bar.dart';
 
 void main() {
   late AppDatabase db;
@@ -33,14 +33,14 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
         ],
-        child: const MacroFactorApp(),
+        child: const SiqueApp(),
       ),
     );
     await tester.pumpAndSettle();
 
     // Verify WelcomeScreen is displayed
     expect(find.byType(WelcomeScreen), findsOneWidget);
-    expect(find.text('MACROFACTOR'), findsOneWidget);
+    expect(find.text('SIQUE'), findsOneWidget);
     expect(find.text('Smarter Nutrition.\nZero Guilt.'), findsOneWidget);
     expect(find.text('Configure My Strategy'), findsOneWidget);
     expect(find.text('Already have an account? Sign In'), findsOneWidget);
@@ -61,7 +61,7 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
         ],
-        child: const MacroFactorApp(),
+        child: const SiqueApp(),
       ),
     );
     await tester.pumpAndSettle();
@@ -72,7 +72,7 @@ void main() {
   });
 
   testWidgets(
-      'Tapping "Configure My Strategy" on WelcomeScreen navigates to StrategySetupWizard',
+      'Tapping "Configure My Strategy" on WelcomeScreen navigates to OnboardingFlowScreen',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(450, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -84,7 +84,7 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
         ],
-        child: const MacroFactorApp(),
+        child: const SiqueApp(),
       ),
     );
     await tester.pumpAndSettle();
@@ -93,10 +93,10 @@ void main() {
     await tester.tap(find.text('Configure My Strategy'));
     await tester.pumpAndSettle();
 
-    // Verify StrategySetupWizard is open
-    expect(find.byType(StrategySetupWizard), findsOneWidget);
-    expect(find.text('Step 1 of 6'), findsOneWidget);
-    expect(find.text('Tell us about yourself'), findsOneWidget);
+    // Verify OnboardingFlowScreen is open
+    expect(find.byType(OnboardingFlowScreen), findsOneWidget);
+    expect(find.text('Welcome to Sique'), findsOneWidget);
+    expect(find.text('Get Started'), findsOneWidget);
   });
 
   testWidgets(
@@ -112,7 +112,7 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
         ],
-        child: const MacroFactorApp(),
+        child: const SiqueApp(),
       ),
     );
     await tester.pumpAndSettle();

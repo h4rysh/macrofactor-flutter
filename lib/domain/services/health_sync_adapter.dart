@@ -1,5 +1,5 @@
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
+import 'package:sique/domain/algorithms/weight_trend_v2.dart';
+import 'package:sique/domain/models/workout_session.dart';
 
 /// Contract for health data synchronization (Google Health Connect on Android).
 abstract interface class HealthSyncAdapter {

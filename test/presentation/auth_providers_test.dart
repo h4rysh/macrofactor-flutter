@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/data/services/mock_auth_service.dart';
-import 'package:macro_factor_app/domain/models/food_models.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/data/services/mock_auth_service.dart';
+import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/domain/models/workout_session.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
 
 void main() {
   group('Auth Riverpod Providers & State Lifecycle Tests', () {
@@ -225,20 +225,20 @@ void main() {
 
       await notifier.signInWithDemoAthlete(
         displayName: 'Special Athlete',
-        email: 'special.athlete@macrofactor.local',
+        email: 'special.athlete@sique.local',
       );
 
       final state = container.read(authNotifierProvider);
       expect(state, isA<AuthAuthenticated>());
       expect(state.isAuthenticated, isTrue);
       expect(state.displayName, equals('Special Athlete'));
-      expect(state.email, equals('special.athlete@macrofactor.local'));
+      expect(state.email, equals('special.athlete@sique.local'));
       expect(container.read(isAuthenticatedProvider), isTrue);
 
       final dbAccount = appDb.getAccountSession();
       expect(dbAccount, isNotNull);
       expect(dbAccount!.displayName, equals('Special Athlete'));
-      expect(dbAccount.email, equals('special.athlete@macrofactor.local'));
+      expect(dbAccount.email, equals('special.athlete@sique.local'));
       expect(dbAccount.healthConnectEnabled, isTrue);
     });
   });

@@ -1,8 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
-import 'package:macro_factor_app/domain/models/food_models.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
+import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/data/local/app_database.dart';
 
 void main() {
   group('AppDatabase Local Storage & Search Tests', () {

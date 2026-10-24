@@ -1,26 +1,27 @@
-# Architecture & Data Flow Specification
+# Sique Architecture & Data Flow Specification
 
 ## 1. Architectural Philosophy
-The application follows strict **Clean Architecture** with unidirectional data flow powered by **Flutter Riverpod**:
+Sique follows strict **Clean Architecture** with unidirectional data flow powered by **Flutter Riverpod**:
 
 ```
-Presentation (Widgets & Providers)
+Presentation Layer (Widgets, Screens & StateNotifier Providers)
         │
         ▼
-   Domain Layer (Pure Dart: Algorithms & Entities)
+   Domain Layer (Pure Dart: Algorithms, Models & Interfaces)
         ▲
         │
-   Data Layer (Drift SQLite / FTS5 Full-Text Search)
+   Data Layer (SQLite Storage, DAOs, Services & Adapters)
 ```
 
 ### Layer Rules
 1. **Domain Layer (`lib/domain/`)**:
    - Zero dependencies on Flutter UI (`package:flutter`) or persistence packages.
-   - Houses the core mathematical engines: `WeightTrendV2Series` and `ExpenditureAlgorithmV3`.
-   - Immutable data models (`ScaleWeightEntry`, `WeightTrendPoint`, `ExpenditureState`, `DailyEnergyObservation`, `MacroTargets`).
+   - Houses mathematical engines: `WeightTrendV2Series`, `ExpenditureKalmanV4`, and `CoachingEngine`.
+   - Immutable data models (`ScaleWeightEntry`, `WeightTrendPoint`, `ExpenditureState`, `WeeklyMacroProgram`).
+   - Repository interfaces (`AuthRepository`).
 2. **Data Layer (`lib/data/`)**:
-   - Manages SQLite persistence, schema migrations, and full-text search indices via `AppDatabase`.
-   - Embeds the ICMR-NIN IFCT dataset and USDA food master table.
+   - Manages SQLite persistence, schema definitions, and full-text search indices via modular DAOs.
+   - Adapters for external sensors (`HealthConnectSyncAdapter`).
    - Translates raw SQL rows into typed domain entities.
 3. **Presentation Layer (`lib/presentation/`)**:
    - Composed of decoupled widgets, Riverpod state notifiers, and design tokens (`AppTheme`).
@@ -33,93 +34,37 @@ Presentation (Widgets & Providers)
 ```mermaid
 graph TD
     subgraph Data Layer
-        DB[(foods_master.db)]
+        DB[(Local SQLite DB)]
         DBProvider[databaseProvider]
+        AuthRepo[authRepositoryProvider]
     end
 
     subgraph State Providers
         UserProvider[userProfileProvider]
-        WeightProvider[weightLogProvider]
+        WeightProvider[weightLogsProvider]
         FoodLogProvider[dailyFoodLogsProvider]
-        AggProvider[dailyNutritionProvider]
         TrendProvider[weightTrendSeriesProvider]
-        LatestTrend[latestTrendPointProvider]
         ExpProvider[expenditureStateProvider]
-        MacroTargetProvider[macroTargetProvider]
+        WeeklyProgProvider[weeklyMacroProgramProvider]
+        SelectedDate[selectedDateProvider]
+        DayTarget[dayMacroTargetForSelectedDateProvider]
     end
 
-    subgraph UI Consumers
-        Dashboard[DashboardScreen]
-        Gauge[MacroGaugeRing]
-        ExpCard[DynamicExpenditureCard]
-        TrendCard[WeightTrendCard]
-        Strategy[StrategyScreen]
-    end
-
-    DBProvider --> DB
+    DBProvider --> UserProvider
     DBProvider --> WeightProvider
     DBProvider --> FoodLogProvider
-    DBProvider --> UserProvider
-
-    FoodLogProvider --> AggProvider
     WeightProvider --> TrendProvider
-    TrendProvider --> LatestTrend
-
-    AggProvider --> ExpProvider
     TrendProvider --> ExpProvider
-    ExpProvider --> MacroTargetProvider
-    UserProvider --> MacroTargetProvider
-
-    AggProvider --> Gauge
-    MacroTargetProvider --> Gauge
-    ExpProvider --> ExpCard
-    LatestTrend --> TrendCard
-    TrendProvider --> Dashboard
-    MacroTargetProvider --> Strategy
+    FoodLogProvider --> ExpProvider
+    ExpProvider --> WeeklyProgProvider
+    UserProvider --> WeeklyProgProvider
+    WeeklyProgProvider --> DayTarget
+    SelectedDate --> DayTarget
 ```
 
 ---
 
-## 3. Database Schema Design
-
-The SQLite database (`foods_master.db`) implements virtual FTS5 indices for sub-millisecond food queries:
-
-### Virtual Table: `foods_fts`
-```sql
-CREATE VIRTUAL TABLE foods_fts USING fts5(
-    name,
-    category,
-    region,
-    cuisine,
-    aliases,
-    content='foods',
-    content_rowid='id'
-);
-```
-
-### Table: `portion_units`
-Maps natural portion sizes to gram weight multipliers:
-```sql
-CREATE TABLE portion_units (
-    id TEXT PRIMARY KEY,
-    food_id TEXT NOT NULL,
-    unit_name TEXT NOT NULL,
-    grams_per_unit REAL NOT NULL,
-    FOREIGN KEY(food_id) REFERENCES foods(id) ON DELETE CASCADE
-);
-```
-
----
-
-## 4. UI Design System Tokens
-- **Surface**: `#121620` (Pitch background for OLED screens)
-- **Cards**: `#1A1F2C` (Primary card surface)
-- **Elevated Cards**: `#222736`
-- **Border**: `#2D3548`
-- **Text Primary**: `#FFFFFF`
-- **Text Secondary**: `#9CA3AF`
-- **Calories Accent**: `#FF6B00`
-- **Protein Accent**: `#FF4D6D`
-- **Carbs Accent**: `#4361EE`
-- **Fat Accent**: `#F72585`
-- **Trend Weight Accent**: `#00F5D4`
+## 3. Storage & Privacy Guarantees
+- All food records, scale weights, and profile settings are stored strictly in local SQLite.
+- External cloud synchronization of health records is deliberately excluded.
+- Authentication utilizes Firebase Authentication via the abstract `AuthRepository`.

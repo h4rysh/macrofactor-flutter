@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sique/presentation/screens/auth/email_auth_dialog.dart';
 import '../../providers/app_providers.dart';
 import '../../theme/app_theme.dart';
 import '../scaffold_with_nav_bar.dart';
@@ -138,10 +139,50 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
               ),
               const Spacer(flex: 2),
 
+              if (!ref.watch(authRepositoryProvider).isConfigured) ...[
+                Container(
+                  key: const Key('auth_gate_unconfigured_banner'),
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.warning.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.warning.withValues(alpha: 0.4),
+                      width: 1,
+                    ),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.info_outline_rounded,
+                          color: AppTheme.warning, size: 18),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Sign-in unavailable: Firebase not configured',
+                          style: TextStyle(
+                            fontFamily: 'MacroSans',
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.warning,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               // Button 1: Google Sign-In
               AppleTactileCard(
-                onTap: _isLoading ? null : _handleGoogleSignIn,
-                backgroundColor: Colors.white,
+                key: const Key('auth_gate_google_btn'),
+                onTap: (_isLoading ||
+                        !ref.watch(authRepositoryProvider).isConfigured)
+                    ? null
+                    : _handleGoogleSignIn,
+                backgroundColor: ref.watch(authRepositoryProvider).isConfigured
+                    ? Colors.white
+                    : AppTheme.cardElevated,
                 borderRadius: 16,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 child: Row(
@@ -161,23 +202,67 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                       const Icon(Icons.g_mobiledata_rounded,
                           color: Color(0xFF4285F4), size: 28),
                       const SizedBox(width: 8),
-                      const Text(
+                      Text(
                         'Continue with Google',
                         style: TextStyle(
                           fontFamily: 'MacroSans',
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: Colors.black87,
+                          color: ref.watch(authRepositoryProvider).isConfigured
+                              ? Colors.black87
+                              : AppTheme.textSecondary,
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
-              // Button 2: Demo Athlete Profile
+              // Button 2: Email Sign-In / Register
               AppleTactileCard(
+                key: const Key('auth_gate_email_btn'),
+                onTap: (_isLoading ||
+                        !ref.watch(authRepositoryProvider).isConfigured)
+                    ? null
+                    : () => EmailAuthDialog.show(
+                          context,
+                          onSuccess: _finishOnboarding,
+                        ),
+                backgroundColor: AppTheme.cardSurface,
+                borderRadius: 16,
+                border: Border.all(color: AppTheme.cardBorder, width: 1),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.email_outlined,
+                      color: ref.watch(authRepositoryProvider).isConfigured
+                          ? AppTheme.textPrimary
+                          : AppTheme.textSecondary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Continue with Email',
+                      style: TextStyle(
+                        fontFamily: 'MacroSans',
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: ref.watch(authRepositoryProvider).isConfigured
+                            ? AppTheme.textPrimary
+                            : AppTheme.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Button 3: Demo Athlete Profile
+              AppleTactileCard(
+                key: const Key('auth_gate_demo_btn'),
                 onTap: _isLoading ? null : _handleDemoAthlete,
                 backgroundColor: AppTheme.cardSurface,
                 borderRadius: 16,
@@ -201,10 +286,11 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
 
-              // Button 3: Continue as Guest
+              // Button 4: Continue as Guest
               TextButton(
+                key: const Key('auth_gate_guest_btn'),
                 onPressed: _isLoading ? null : _handleContinueAsGuest,
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 14),

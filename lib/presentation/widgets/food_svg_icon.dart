@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
 
 /// Renders a vector food SVG from the extracted asset library with graceful fallback.
 class FoodSvgIcon extends StatelessWidget {

@@ -1,11 +1,11 @@
 import 'dart:math';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/domain/models/food_models.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/domain/models/workout_session.dart';
 
 void main() {
   group('AppDatabase Adversarial Stress & Chaos Test Suite', () {
@@ -452,7 +452,7 @@ void main() {
         id: 'active_session',
         googleUserId: 'google_user_001',
         displayName: 'User One',
-        email: 'user1@macrofactor.test',
+        email: 'user1@sique.test',
         healthConnectEnabled: true,
         createdAt: DateTime(2026, 10, 17),
         updatedAt: DateTime(2026, 10, 17),
@@ -475,7 +475,7 @@ void main() {
         id: 'active_session',
         googleUserId: 'google_user_002',
         displayName: 'User Two',
-        email: 'user2@macrofactor.test',
+        email: 'user2@sique.test',
         healthConnectEnabled: false,
         createdAt: DateTime(2026, 10, 17),
         updatedAt: DateTime(2026, 10, 17),

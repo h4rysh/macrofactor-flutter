@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
+import 'package:sique/domain/models/user_account.dart';
 
 void main() {
   group('UserAccount Domain Model Tests', () {

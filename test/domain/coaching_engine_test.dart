@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/domain/algorithms/coaching_engine.dart';
-import 'package:macro_factor_app/domain/models/macro_program.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
+import 'package:sique/domain/algorithms/coaching_engine.dart';
+import 'package:sique/domain/models/macro_program.dart';
+import 'package:sique/domain/models/user_profile.dart';
 
 void main() {
   group('CoachingEngine - Daily Average Calories Calculation', () {
@@ -341,6 +341,100 @@ void main() {
       expect(recommendation.metabolicInsight, contains('metabolic adaptation'));
       expect(recommendation.suggestedProgram.dailyAverageCalories,
           lessThan(initialProgram.dailyAverageCalories));
+    });
+  });
+
+  group('CoachingEngine - Integer Macro Rounding and Calorie Floor Invariants',
+      () {
+    test(
+        'Macro rounding preserves |4P + 9F + 4C - calories| <= 2.0 kcal across styles and caloric ranges',
+        () {
+      final styles = [
+        MacroProgramStyle.balanced,
+        MacroProgramStyle.lowFat,
+        MacroProgramStyle.lowCarb,
+        MacroProgramStyle.keto,
+        MacroProgramStyle.highProtein,
+      ];
+      final calorieLevels = [
+        1200.0,
+        1450.0,
+        1800.0,
+        2033.0,
+        2450.0,
+        2875.0,
+        3200.0,
+        3500.0
+      ];
+      const weightKg = 72.5;
+
+      for (final style in styles) {
+        for (final cal in calorieLevels) {
+          final target = CoachingEngine.computeDayMacros(
+            calories: cal,
+            weightKg: weightKg,
+            proteinPref: ProteinPreference.high,
+            style: style,
+          );
+
+          final actualKcal = (target.proteinGrams * 4.0) +
+              (target.fatGrams * 9.0) +
+              (target.carbsGrams * 4.0);
+          final diff = (actualKcal - cal).abs();
+
+          expect(diff, lessThanOrEqualTo(2.0),
+              reason:
+                  'Style $style at $cal kcal: diff $diff exceeds 2.0 kcal (P:${target.proteinGrams}, F:${target.fatGrams}, C:${target.carbsGrams})');
+          expect(target.proteinGrams, greaterThanOrEqualTo(30.0));
+          expect(target.fatGrams, greaterThanOrEqualTo(20.0));
+          expect(target.carbsGrams, greaterThanOrEqualTo(0.0));
+        }
+      }
+    });
+
+    test(
+        'All 7 days enforce calorieFloor in shiftedWorkout and weekendShift programs',
+        () {
+      const lowCalProfile = UserProfile(
+        id: 'floor_test_user',
+        name: 'Floor Tester',
+        age: 32,
+        isMale: false,
+        heightCm: 155.0,
+        currentWeightKg: 52.0,
+        targetWeightKg: 48.0,
+        goalType: GoalType.fatLoss,
+        weeklyRateOfChangePct: -1.2,
+        proteinPreference: ProteinPreference.moderate,
+        programMode: ProgramMode.coached,
+        calorieFloor: 1250.0,
+        baselineExpenditureKcal: 1450.0,
+      );
+
+      for (final allocation in [
+        DayAllocationType.shiftedWorkout,
+        DayAllocationType.weekendShift,
+      ]) {
+        final program = CoachingEngine.buildWeeklyProgram(
+          profile: lowCalProfile,
+          expenditureKcal: 1450.0,
+          style: MacroProgramStyle.balanced,
+          allocationType: allocation,
+          workoutDays: const {2, 4, 6}, // Tue, Thu, Sat
+        );
+
+        expect(program.days.length, equals(7));
+        for (final day in program.days) {
+          expect(day.calories, greaterThanOrEqualTo(lowCalProfile.calorieFloor),
+              reason:
+                  'Day ${day.dayOfWeek} (${day.dayName}) calories (${day.calories}) fell below floor (${lowCalProfile.calorieFloor}) for $allocation');
+        }
+
+        // Sunday specifically
+        final sunday = program.days.firstWhere((d) => d.dayOfWeek == 7);
+        expect(
+            sunday.calories, greaterThanOrEqualTo(lowCalProfile.calorieFloor));
+      }
     });
   });
 }

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
+import 'package:sique/domain/algorithms/weight_trend_v2.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
 
 /// Modal bottom sheet for logging scale weight with instant trend weight preview.
 class WeightLogModal extends ConsumerStatefulWidget {

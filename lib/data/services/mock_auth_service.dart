@@ -1,7 +1,7 @@
 import 'dart:async';
 
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/domain/services/auth_service.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/domain/services/auth_service.dart';
 
 /// Deterministic mock implementation of [AuthService] for headless tests and CI.
 class MockAuthService implements AuthService {

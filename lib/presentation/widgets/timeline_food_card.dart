@@ -3,7 +3,7 @@ import '../../domain/models/food_models.dart';
 import '../theme/app_theme.dart';
 import 'food_svg_icon.dart';
 
-/// Food card inside the MacroFactor timeline slot.
+/// Food card inside the Sique timeline slot.
 class TimelineFoodCard extends StatelessWidget {
   const TimelineFoodCard({
     super.key,

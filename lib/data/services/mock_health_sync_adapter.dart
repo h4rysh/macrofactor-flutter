@@ -1,8 +1,8 @@
 import 'dart:async';
 
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
-import 'package:macro_factor_app/domain/services/health_sync_adapter.dart';
+import 'package:sique/domain/algorithms/weight_trend_v2.dart';
+import 'package:sique/domain/models/workout_session.dart';
+import 'package:sique/domain/services/health_sync_adapter.dart';
 
 /// Deterministic mock implementation of [HealthSyncAdapter] for headless tests and CI.
 class MockHealthSyncAdapter implements HealthSyncAdapter {

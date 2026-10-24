@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:macro_factor_app/domain/models/food_models.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
-import 'package:macro_factor_app/presentation/widgets/food_svg_icon.dart';
+import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/food_svg_icon.dart';
 
 /// Meal section for Breakfast, Lunch, Dinner, or Snacks in the food log timeline.
 class MealSection extends StatelessWidget {

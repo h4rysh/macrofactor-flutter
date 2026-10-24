@@ -37,7 +37,7 @@ class PortionUnit {
   int get hashCode => Object.hash(id, foodId, unitName, gramWeight, isDefault);
 }
 
-/// Food item model matching ICMR-NIN IFCT + MacroFactor master catalog.
+/// Food item model matching ICMR-NIN IFCT + Sique master catalog.
 @immutable
 class FoodItem {
   const FoodItem({
@@ -95,6 +95,7 @@ class FoodItem {
     required double quantity,
     required PortionUnit unit,
     OilModifier oilModifier = OilModifier.standard,
+    double? oilGrams,
   }) {
     final totalGrams = quantity * unit.gramWeight;
     final ratio = totalGrams / 100.0;
@@ -105,15 +106,20 @@ class FoodItem {
     final baseFat = math.max(0.0, fatPer100g * ratio);
     final baseFiber = math.max(0.0, fiberPer100g * ratio);
 
-    // Apply oil modifier scaled proportionally by quantity and clamped at 0
-    final adjustedCalories = math.max(
-      0.0,
-      baseCalories + (oilModifier.additionalCalories * quantity),
-    );
-    final adjustedFat = math.max(
-      0.0,
-      baseFat + (oilModifier.additionalFatGrams * quantity),
-    );
+    // Apply oil modifier or explicit oil grams scaled proportionally by quantity and clamped at 0
+    final double addedFat;
+    final double addedCalories;
+    if (oilGrams != null) {
+      final clampedOil = math.max(0.0, oilGrams);
+      addedFat = clampedOil * quantity;
+      addedCalories = addedFat * 9.0;
+    } else {
+      addedFat = oilModifier.additionalFatGrams * quantity;
+      addedCalories = oilModifier.additionalCalories * quantity;
+    }
+
+    final adjustedCalories = math.max(0.0, baseCalories + addedCalories);
+    final adjustedFat = math.max(0.0, baseFat + addedFat);
 
     return NutritionalValues(
       calories: adjustedCalories,

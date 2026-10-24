@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
 
 /// Configurable app lifecycle observer that triggers quiet background
 /// synchronization with Google Health Connect upon app launch and app resume.
@@ -19,6 +19,7 @@ class AppLifecycleSyncObserver extends ConsumerStatefulWidget {
     super.key,
     required this.child,
     this.throttleDuration = const Duration(minutes: 5),
+    this.periodicCheckInterval = const Duration(minutes: 1),
     this.clock,
     this.onSyncTriggered,
   });
@@ -28,6 +29,9 @@ class AppLifecycleSyncObserver extends ConsumerStatefulWidget {
 
   /// Minimum interval required between automated background sync executions.
   final Duration throttleDuration;
+
+  /// Periodic interval to check for midnight date rollover in the foreground.
+  final Duration periodicCheckInterval;
 
   /// Optional clock provider for deterministic time manipulation in tests.
   final DateTime Function()? clock;
@@ -44,6 +48,8 @@ class _AppLifecycleSyncObserverState
     extends ConsumerState<AppLifecycleSyncObserver>
     with WidgetsBindingObserver {
   DateTime? _lastAttemptTime;
+  String? _lastObservedToday;
+  Timer? _rolloverTimer;
 
   DateTime get _currentTime =>
       widget.clock != null ? widget.clock!() : DateTime.now();
@@ -51,7 +57,14 @@ class _AppLifecycleSyncObserverState
   @override
   void initState() {
     super.initState();
+    _lastObservedToday = DateFormat('yyyy-MM-dd').format(_currentTime);
     WidgetsBinding.instance.addObserver(this);
+
+    _rolloverTimer = Timer.periodic(widget.periodicCheckInterval, (_) {
+      if (mounted) {
+        _checkDateRollover();
+      }
+    });
 
     // Initial launch auto-sync: triggered immediately after the first frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -64,6 +77,7 @@ class _AppLifecycleSyncObserverState
 
   @override
   void dispose() {
+    _rolloverTimer?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -78,9 +92,18 @@ class _AppLifecycleSyncObserverState
 
   void _checkDateRollover() {
     final todayStr = DateFormat('yyyy-MM-dd').format(_currentTime);
-    final selectedDate = ref.read(selectedDateProvider);
-    if (selectedDate != todayStr) {
-      ref.read(selectedDateProvider.notifier).state = todayStr;
+    if (_lastObservedToday == null) {
+      _lastObservedToday = todayStr;
+      return;
+    }
+
+    if (todayStr != _lastObservedToday) {
+      final selectedDate = ref.read(selectedDateProvider);
+      // Only advance selectedDate if the user was actively viewing "today"
+      if (selectedDate == _lastObservedToday) {
+        ref.read(selectedDateProvider.notifier).state = todayStr;
+      }
+      _lastObservedToday = todayStr;
     }
   }
 

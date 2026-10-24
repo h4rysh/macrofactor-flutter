@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/screens/account_profile_screen.dart';
-import 'package:macro_factor_app/presentation/screens/dashboard_screen.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/screens/account_profile_screen.dart';
+import 'package:sique/presentation/screens/dashboard_screen.dart';
 
 void main() {
   late AppDatabase db;

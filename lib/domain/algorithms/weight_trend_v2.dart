@@ -85,7 +85,7 @@ class WeightTrendPredictionPoint {
   final double projectedWeightKg;
 }
 
-/// The V2 Weight Trend Filter matching MacroFactor's causal & bidirectional EWMA
+/// The V2 Weight Trend Filter matching Sique's causal & bidirectional EWMA
 /// and biological water-weight noise range envelope.
 class WeightTrendV2Series {
   const WeightTrendV2Series({

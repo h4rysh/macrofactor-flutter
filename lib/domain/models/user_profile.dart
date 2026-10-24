@@ -91,6 +91,13 @@ class UserProfile {
     this.customProteinGrams,
     this.customCarbsGrams,
     this.customFatGrams,
+    this.dietType = 'standard',
+    this.calorieFloorType = 'standard',
+    this.liftingExperience = 'beginner',
+    this.cardioExperience = 'beginner',
+    this.bodyFatRange,
+    this.weightHistoryMax,
+    this.distributionMode = 'even',
   });
 
   final String id;
@@ -110,6 +117,13 @@ class UserProfile {
   final double? customProteinGrams;
   final double? customCarbsGrams;
   final double? customFatGrams;
+  final String dietType;
+  final String calorieFloorType;
+  final String liftingExperience;
+  final String cardioExperience;
+  final String? bodyFatRange;
+  final double? weightHistoryMax;
+  final String distributionMode;
 
   /// Calculates dynamic daily calorie and macro targets given current Bayesian expenditure.
   MacroTarget calculateTargetMacros(double currentExpenditureKcal) {
@@ -198,6 +212,13 @@ class UserProfile {
     double? customProteinGrams,
     double? customCarbsGrams,
     double? customFatGrams,
+    String? dietType,
+    String? calorieFloorType,
+    String? liftingExperience,
+    String? cardioExperience,
+    String? bodyFatRange,
+    double? weightHistoryMax,
+    String? distributionMode,
     bool clearCustom = false,
   }) {
     return UserProfile(
@@ -224,6 +245,13 @@ class UserProfile {
           clearCustom ? null : (customCarbsGrams ?? this.customCarbsGrams),
       customFatGrams:
           clearCustom ? null : (customFatGrams ?? this.customFatGrams),
+      dietType: dietType ?? this.dietType,
+      calorieFloorType: calorieFloorType ?? this.calorieFloorType,
+      liftingExperience: liftingExperience ?? this.liftingExperience,
+      cardioExperience: cardioExperience ?? this.cardioExperience,
+      bodyFatRange: bodyFatRange ?? this.bodyFatRange,
+      weightHistoryMax: weightHistoryMax ?? this.weightHistoryMax,
+      distributionMode: distributionMode ?? this.distributionMode,
     );
   }
 }

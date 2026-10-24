@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/screens/more_screen.dart';
-import 'package:macro_factor_app/presentation/screens/profile_targets_screen.dart';
-import 'package:macro_factor_app/presentation/screens/food_log_settings_screen.dart';
-import 'package:macro_factor_app/presentation/screens/expenditure_settings_screen.dart';
-import 'package:macro_factor_app/presentation/screens/data_export_screen.dart';
-import 'package:macro_factor_app/presentation/screens/about_screen.dart';
-import 'package:macro_factor_app/presentation/screens/account_profile_screen.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/screens/more_screen.dart';
+import 'package:sique/presentation/screens/profile_targets_screen.dart';
+import 'package:sique/presentation/screens/food_log_settings_screen.dart';
+import 'package:sique/presentation/screens/expenditure_settings_screen.dart';
+import 'package:sique/presentation/screens/data_export_screen.dart';
+import 'package:sique/presentation/screens/about_screen.dart';
+import 'package:sique/presentation/screens/account_profile_screen.dart';
 
 void main() {
   late AppDatabase db;
@@ -58,7 +58,7 @@ void main() {
       expect(find.text('Food Log Settings'), findsOneWidget);
       expect(find.text('Expenditure & Weight Settings'), findsOneWidget);
       expect(find.text('Data Export & Diagnostics'), findsOneWidget);
-      expect(find.text('About MacroFactor (Indian Edition)'), findsOneWidget);
+      expect(find.text('About Sique'), findsOneWidget);
     });
 
     testWidgets(
@@ -196,11 +196,11 @@ void main() {
       await tester.pumpWidget(buildTestableWidget(const MoreScreen()));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('About MacroFactor (Indian Edition)'));
+      await tester.tap(find.text('About Sique'));
       await tester.pumpAndSettle();
 
       expect(find.byType(AboutScreen), findsOneWidget);
-      expect(find.text('MacroFactor'), findsOneWidget);
+      expect(find.text('Sique'), findsOneWidget);
       expect(find.text('Indian Edition • Adherence-Neutral'), findsOneWidget);
       expect(find.text('Clean-Room Architecture'), findsOneWidget);
       expect(find.text('ICMR-NIN IFCT 2017 Database'), findsOneWidget);

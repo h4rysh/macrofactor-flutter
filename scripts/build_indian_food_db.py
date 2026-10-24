@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-ETL Pipeline for MacroFactor Clean-Room Indian Food Database.
-Compiles ICMR-NIN IFCT 2017 raw foods and 2,500+ North & South Indian cooked dishes
+ETL Pipeline for Sique Indian Food Database.
+Compiles ICMR-NIN IFCT 2017 raw foods and 500+ North & South Indian cooked dishes
 with traditional serving units (katoris, rotis, pieces, ladles) into an FTS5-indexed SQLite database.
 """
 

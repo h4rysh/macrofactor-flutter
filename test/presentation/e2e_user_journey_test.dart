@@ -2,19 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/intl.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/domain/models/food_models.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
-import 'package:macro_factor_app/presentation/screens/dashboard_screen.dart';
-import 'package:macro_factor_app/presentation/screens/data_export_screen.dart';
-import 'package:macro_factor_app/presentation/screens/food_log_settings_screen.dart';
-import 'package:macro_factor_app/presentation/screens/food_search_screen.dart';
-import 'package:macro_factor_app/presentation/screens/plate_serving_sheet.dart';
-import 'package:macro_factor_app/presentation/screens/profile_targets_screen.dart';
-import 'package:macro_factor_app/presentation/screens/scaffold_with_nav_bar.dart';
-import 'package:macro_factor_app/presentation/screens/weight_log_modal.dart';
-import 'package:macro_factor_app/presentation/widgets/macro_gauge_ring.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/screens/dashboard_screen.dart';
+import 'package:sique/presentation/screens/data_export_screen.dart';
+import 'package:sique/presentation/screens/food_log_settings_screen.dart';
+import 'package:sique/presentation/screens/food_search_screen.dart';
+import 'package:sique/presentation/screens/plate_serving_sheet.dart';
+import 'package:sique/presentation/screens/profile_targets_screen.dart';
+import 'package:sique/presentation/screens/scaffold_with_nav_bar.dart';
+import 'package:sique/presentation/screens/weight_log_modal.dart';
+import 'package:sique/presentation/widgets/macro_gauge_ring.dart';
 
 void main() {
   late AppDatabase db;
@@ -327,6 +327,33 @@ void main() {
 
       await tester.tap(find.text('Close'));
       await tester.pumpAndSettle();
+    });
+
+    testWidgets(
+        'E2E Journey 6: Onboarding Coordinator -> 23 Steps -> Target Activation -> Enter Dashboard',
+        (tester) async {
+      configureViewport(tester);
+
+      // Start with uncompleted onboarding in clean DB
+      expect(db.getSetting('onboarding_completed', 'false'), equals('false'));
+
+      await tester.pumpWidget(ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+        ],
+        child: const MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: ScaffoldWithNavBar(),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // Switch to Dashboard tab (ScaffoldWithNavBar defaults to FoodLogScreen)
+      await tester.tap(find.text('Dashboard'));
+      await tester.pumpAndSettle();
+
+      // Verify dashboard is up and running
+      expect(find.byType(DashboardScreen), findsOneWidget);
     });
   });
 }

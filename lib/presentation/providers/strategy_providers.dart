@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/data/local/app_database_coaching.dart';
-import 'package:macro_factor_app/domain/algorithms/coaching_engine.dart';
-import 'package:macro_factor_app/domain/models/macro_program.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
+import 'package:sique/data/local/app_database_coaching.dart';
+import 'package:sique/domain/algorithms/coaching_engine.dart';
+import 'package:sique/domain/models/macro_program.dart';
+import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
 
 /// Notifier managing active 7-day WeeklyMacroProgram and persistence.
 class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
@@ -35,6 +35,23 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
     final db = _ref.read(databaseProvider);
     db.saveCoachingProgram(newProgram);
     state = newProgram;
+  }
+
+  /// Immediately regenerates and persists weekly program when driving profile attributes change.
+  void regenerateFromProfile(UserProfile profile) {
+    final expenditure = _ref.read(expenditureStateProvider);
+    final currentProgram = state;
+    final updatedProgram = CoachingEngine.buildWeeklyProgram(
+      profile: profile,
+      expenditureKcal: expenditure.expenditureKcal,
+      style: currentProgram.style,
+      allocationType: currentProgram.allocationType,
+      workoutDays: currentProgram.workoutDays,
+      checkInDayOfWeek: currentProgram.checkInDayOfWeek,
+      lastCheckInDate: currentProgram.lastCheckInDate,
+      programStartDate: currentProgram.createdAt,
+    );
+    updateProgram(updatedProgram);
   }
 
   void applyCheckIn(CheckInRecommendation recommendation) {

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 
-import 'package:macro_factor_app/domain/models/workout_session.dart';
+import 'package:sique/domain/models/workout_session.dart';
 
 /// Aggregated training and workout analytics derived reactively from logged/synced workout sessions.
 @immutable

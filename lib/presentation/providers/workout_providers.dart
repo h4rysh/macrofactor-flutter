@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
-import 'package:macro_factor_app/domain/models/workout_stats.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/domain/models/workout_session.dart';
+import 'package:sique/domain/models/workout_stats.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
 
 /// Notifier managing synced and logged workout sessions from SQLite.
 class WorkoutSessionsNotifier extends StateNotifier<List<WorkoutSession>> {

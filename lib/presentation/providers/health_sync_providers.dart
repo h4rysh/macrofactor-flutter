@@ -1,12 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/data/services/health_connect_sync_adapter.dart';
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
-import 'package:macro_factor_app/domain/services/health_sync_adapter.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/data/services/health_connect_sync_adapter.dart';
+import 'package:sique/domain/algorithms/weight_trend_v2.dart';
+import 'package:sique/domain/models/workout_session.dart';
+import 'package:sique/domain/services/health_sync_adapter.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
 
 /// Discrete operational status of Health Connect synchronization.
 enum HealthSyncStatus {
@@ -237,10 +237,32 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
 
       // 2. Persist smart scale weights to SQLite & refresh weightLogsProvider
       if (weights.isNotEmpty) {
+        final Map<String, List<ScaleWeightEntry>> weightsByDate = {};
         for (final entry in weights) {
-          final dateStr = DateFormat('yyyy-MM-dd').format(entry.date);
+          final localDate = entry.date.toLocal();
+          final dateStr = DateFormat('yyyy-MM-dd').format(localDate);
+          weightsByDate.putIfAbsent(dateStr, () => []).add(entry);
+        }
+
+        for (final mapEntry in weightsByDate.entries) {
+          final dateStr = mapEntry.key;
+          final dateWeights = mapEntry.value;
+          final avgWeight =
+              dateWeights.map((e) => e.weightKg).reduce((a, b) => a + b) /
+                  dateWeights.length;
+          final notes = dateWeights
+              .map((e) => e.note)
+              .where((n) => n != null && n.trim().isNotEmpty)
+              .toSet()
+              .join(', ');
+          final note = notes.isNotEmpty ? notes : 'Health Connect';
+
           _db.insertWeightLog(
-              dateStr, entry.weightKg, entry.note ?? 'Health Connect');
+            dateStr,
+            avgWeight,
+            note,
+            source: 'health_connect',
+          );
         }
         _ref?.read(weightLogsProvider.notifier).refresh();
       }

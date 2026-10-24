@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:health/health.dart';
-import 'package:macro_factor_app/data/services/health_connect_sync_adapter.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
+import 'package:sique/data/services/health_connect_sync_adapter.dart';
+import 'package:sique/domain/models/workout_session.dart';
 
 /// Test double simulating Android Health Connect under adversarial conditions.
 class AdversarialFakeHealth extends Health {

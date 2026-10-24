@@ -3,9 +3,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:health/health.dart';
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
-import 'package:macro_factor_app/domain/services/health_sync_adapter.dart';
+import 'package:sique/domain/algorithms/weight_trend_v2.dart';
+import 'package:sique/domain/models/workout_session.dart';
+import 'package:sique/domain/services/health_sync_adapter.dart';
 
 /// Production Health Connect sync adapter for Android.
 ///
@@ -191,6 +191,7 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
             date: point.dateFrom,
             weightKg: weightKg,
             note: note,
+            source: 'health_connect',
           ),
         );
       }

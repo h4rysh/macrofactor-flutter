@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/main.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/main.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
 
 void main() {
   testWidgets(
@@ -15,14 +15,14 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
         ],
-        child: const MacroFactorApp(),
+        child: const SiqueApp(),
       ),
     );
 
     await tester.pumpAndSettle();
 
     // Fresh install routes to WelcomeScreen
-    expect(find.text('MACROFACTOR'), findsOneWidget);
+    expect(find.text('SIQUE'), findsOneWidget);
     expect(find.text('Configure My Strategy'), findsOneWidget);
 
     db.close();
@@ -38,7 +38,7 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
         ],
-        child: const MacroFactorApp(),
+        child: const SiqueApp(),
       ),
     );
 

@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../domain/models/food_models.dart';
 import '../../domain/models/user_profile.dart';
 import '../theme/app_theme.dart';
 import '../widgets/apple_tactile_card.dart';
 import '../widgets/food_svg_icon.dart';
 
-/// Authentic MacroFactor Plate Serving Selector Bottom Sheet.
+/// Authentic Sique Plate Serving Selector Bottom Sheet.
 /// Matches `plate_serving_selector_sheet.dart` & `log_revamp.png` specifications.
 class PlateServingSheet extends StatefulWidget {
   const PlateServingSheet({
@@ -67,6 +68,8 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
   double _quantity = 1.0;
   OilModifier _selectedOil = OilModifier.none;
   late DateTime _loggedAt;
+  late TextEditingController _quantityController;
+  late FocusNode _quantityFocusNode;
 
   @override
   void initState() {
@@ -80,33 +83,55 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
             gramsPerUnit: 1.0,
           );
     _loggedAt = widget.initialLoggedAt;
+    _quantityController = TextEditingController(
+      text: _formatQuantity(_quantity),
+    );
+    _quantityFocusNode = FocusNode();
+    _quantityFocusNode.addListener(() {
+      if (!_quantityFocusNode.hasFocus) {
+        final parsed = double.tryParse(_quantityController.text);
+        if (parsed == null || parsed <= 0) {
+          _quantityController.text = _formatQuantity(_quantity);
+        } else {
+          _quantity = parsed;
+          _quantityController.text = _formatQuantity(_quantity);
+        }
+      }
+    });
   }
 
-  double get _effectiveCalories {
-    final base = (widget.food.caloriesPer100g *
-            (_selectedUnit.gramsPerUnit * _quantity)) /
-        100.0;
-    return base + _selectedOil.additionalCalories;
+  @override
+  void dispose() {
+    _quantityFocusNode.dispose();
+    _quantityController.dispose();
+    super.dispose();
   }
 
-  double get _effectiveProtein {
-    return (widget.food.proteinPer100g *
-            (_selectedUnit.gramsPerUnit * _quantity)) /
-        100.0;
+  String _formatQuantity(double q) {
+    return q.truncateToDouble() == q
+        ? q.toInt().toString()
+        : q.toStringAsFixed(1);
   }
 
-  double get _effectiveFat {
-    final base =
-        (widget.food.fatPer100g * (_selectedUnit.gramsPerUnit * _quantity)) /
-            100.0;
-    return base + _selectedOil.additionalFatGrams;
+  void _setQuantity(double newQ) {
+    if (newQ > 0) {
+      setState(() {
+        _quantity = (newQ * 100).roundToDouble() / 100.0;
+        _quantityController.text = _formatQuantity(_quantity);
+      });
+    }
   }
 
-  double get _effectiveCarbs {
-    return (widget.food.carbsPer100g *
-            (_selectedUnit.gramsPerUnit * _quantity)) /
-        100.0;
-  }
+  NutritionalValues get _nutrition => widget.food.calculateNutrition(
+        quantity: _quantity,
+        unit: _selectedUnit,
+        oilModifier: _selectedOil,
+      );
+
+  double get _effectiveCalories => _nutrition.calories;
+  double get _effectiveProtein => _nutrition.protein;
+  double get _effectiveFat => _nutrition.fat;
+  double get _effectiveCarbs => _nutrition.carbs;
 
   @override
   Widget build(BuildContext context) {
@@ -335,17 +360,21 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                     border: Border.all(color: AppTheme.cardBorder),
                   ),
                   child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       AppleBouncy(
                         scaleDown: 0.88,
                         onTap: () {
-                          if (_quantity > 0.5) {
-                            setState(() => _quantity -= 0.5);
+                          final current =
+                              double.tryParse(_quantityController.text) ??
+                                  _quantity;
+                          if (current > 0.5) {
+                            _setQuantity(current - 0.5);
                           }
                         },
                         child: const Padding(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 12,
+                            horizontal: 10,
                             vertical: 8,
                           ),
                           child: Icon(
@@ -355,23 +384,50 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                           ),
                         ),
                       ),
-                      Text(
-                        _quantity.toStringAsFixed(1),
-                        style: const TextStyle(
-                          fontFamily: 'MacroSans',
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
+                      SizedBox(
+                        width: 58,
+                        child: TextFormField(
+                          key: const Key('plate_serving_numeric_field'),
+                          focusNode: _quantityFocusNode,
+                          controller: _quantityController,
+                          keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontFamily: 'MacroSans',
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                          ),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*')),
+                          ],
+                          decoration: const InputDecoration(
+                            isDense: true,
+                            contentPadding: EdgeInsets.symmetric(
+                                vertical: 4, horizontal: 2),
+                            border: InputBorder.none,
+                          ),
+                          onChanged: (val) {
+                            final parsed = double.tryParse(val);
+                            if (parsed != null && parsed > 0) {
+                              setState(() => _quantity = parsed);
+                            }
+                          },
                         ),
                       ),
                       AppleBouncy(
                         scaleDown: 0.88,
                         onTap: () {
-                          setState(() => _quantity += 0.5);
+                          final current =
+                              double.tryParse(_quantityController.text) ??
+                                  _quantity;
+                          _setQuantity(current + 0.5);
                         },
                         child: const Padding(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 12,
+                            horizontal: 10,
                             vertical: 8,
                           ),
                           child: Icon(

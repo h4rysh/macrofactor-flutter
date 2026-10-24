@@ -4,7 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 // ignore: depend_on_referenced_packages
 import 'package:google_sign_in_platform_interface/google_sign_in_platform_interface.dart';
-import 'package:macro_factor_app/data/services/google_auth_service.dart';
+import 'package:sique/data/services/google_auth_service.dart';
 
 /// Test double extending [GoogleSignInPlatform] to test [GoogleAuthServiceImpl].
 class FakeGoogleSignInPlatform extends GoogleSignInPlatform {
@@ -143,7 +143,7 @@ void main() {
     test('signInSilently returns mapped UserAccount on valid credentials',
         () async {
       fakePlatform.mockUserData = GoogleSignInUserData(
-        email: 'athlete@macrofactor.test',
+        email: 'athlete@sique.test',
         id: 'google-user-12345',
         displayName: 'Sam Athlete',
         photoUrl: 'https://example.com/avatar.jpg',
@@ -154,7 +154,7 @@ void main() {
       expect(user, isNotNull);
       expect(user!.googleUserId, equals('google-user-12345'));
       expect(user.displayName, equals('Sam Athlete'));
-      expect(user.email, equals('athlete@macrofactor.test'));
+      expect(user.email, equals('athlete@sique.test'));
       expect(user.photoUrl, equals('https://example.com/avatar.jpg'));
       expect(user.healthConnectEnabled, isFalse);
     });

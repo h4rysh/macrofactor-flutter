@@ -11,7 +11,7 @@ import '../widgets/strategy/macro_program_hero_card.dart';
 import '../widgets/strategy/seven_day_distribution_chart.dart';
 import 'onboarding/strategy_setup_wizard.dart';
 
-/// Strategy & Coaching Screen reconstructed with MacroFactor's clean-room
+/// Strategy & Coaching Screen reconstructed with Sique's clean-room
 /// adherence-neutral algorithm, 7-day shifting, and Bayesian check-in engine.
 class StrategyScreen extends ConsumerWidget {
   const StrategyScreen({super.key});
@@ -254,9 +254,9 @@ class StrategyScreen extends ConsumerWidget {
   String _modeDescription(ProgramMode mode) {
     switch (mode) {
       case ProgramMode.coached:
-        return 'Fully automated check-ins. MacroFactor optimizes your calories and macro split based on your Bayesian expenditure.';
+        return 'Fully automated check-ins. Sique optimizes your calories and macro split based on your Bayesian expenditure.';
       case ProgramMode.collaborative:
-        return 'Guided partnership. MacroFactor sets the weekly energy budget, and you customize day distribution and macro ratios.';
+        return 'Guided partnership. Sique sets the weekly energy budget, and you customize day distribution and macro ratios.';
       case ProgramMode.manual:
         return 'Total freedom. You set your exact targets while the expenditure engine quietly computes your true metabolic burn.';
     }

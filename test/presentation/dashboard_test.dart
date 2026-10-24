@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/main.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/main.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
 
 void main() {
   late AppDatabase db;
@@ -17,8 +17,7 @@ void main() {
     db.close();
   });
 
-  testWidgets(
-      'MacroFactorApp loads dashboard and renders core adherence-neutral UI',
+  testWidgets('SiqueApp loads dashboard and renders core adherence-neutral UI',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(450, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -30,13 +29,13 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
         ],
-        child: const MacroFactorApp(),
+        child: const SiqueApp(),
       ),
     );
 
     await tester.pumpAndSettle();
 
-    // The app starts on Food Log screen (Index 1) as reconstructed from MacroFactor
+    // The app starts on Food Log screen (Index 1) as reconstructed from Sique
     expect(find.text('Today'), findsOneWidget);
 
     // Switch to Dashboard tab (Index 0)
@@ -78,7 +77,7 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
         ],
-        child: const MacroFactorApp(),
+        child: const SiqueApp(),
       ),
     );
 
@@ -104,13 +103,13 @@ void main() {
         overrides: [
           databaseProvider.overrideWithValue(db),
         ],
-        child: const MacroFactorApp(),
+        child: const SiqueApp(),
       ),
     );
 
     await tester.pumpAndSettle();
 
-    // Strategy icon is Icons.hub_outlined (authentic MacroFactor 3 interconnected nodes)
+    // Strategy icon is Icons.hub_outlined (authentic Sique 3 interconnected nodes)
     final strategyIcon = find.byIcon(Icons.hub_outlined);
     expect(strategyIcon, findsOneWidget);
 

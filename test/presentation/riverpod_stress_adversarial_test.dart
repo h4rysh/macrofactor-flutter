@@ -1,14 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sqlite3/sqlite3.dart';
-import 'package:macro_factor_app/data/local/app_database.dart';
-import 'package:macro_factor_app/data/services/mock_auth_service.dart';
-import 'package:macro_factor_app/data/services/mock_health_sync_adapter.dart';
-import 'package:macro_factor_app/domain/algorithms/weight_trend_v2.dart';
-import 'package:macro_factor_app/domain/models/food_models.dart';
-import 'package:macro_factor_app/domain/models/user_account.dart';
-import 'package:macro_factor_app/domain/models/workout_session.dart';
-import 'package:macro_factor_app/presentation/providers/app_providers.dart';
+import 'package:sique/data/local/app_database.dart';
+import 'package:sique/data/services/mock_auth_service.dart';
+import 'package:sique/data/services/mock_health_sync_adapter.dart';
+import 'package:sique/domain/algorithms/weight_trend_v2.dart';
+import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/user_account.dart';
+import 'package:sique/domain/models/workout_session.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
 
 /// Controllable delayed AuthService to stress-test async race conditions.
 class DelayedMockAuthService extends MockAuthService {

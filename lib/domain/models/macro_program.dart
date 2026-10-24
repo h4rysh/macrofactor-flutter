@@ -1,7 +1,7 @@
 import 'package:meta/meta.dart';
-import 'package:macro_factor_app/domain/models/user_profile.dart';
+import 'package:sique/domain/models/user_profile.dart';
 
-/// Macronutrient distribution philosophy based on MacroFactor reverse-engineered styles.
+/// Macronutrient distribution philosophy based on Sique reverse-engineered styles.
 enum MacroProgramStyle {
   balanced('Balanced', 'Moderate balance of carbs and healthy fats.'),
   lowFat(
@@ -124,7 +124,7 @@ class DayMacroTarget {
       );
 }
 
-/// Complete 7-day Coaching Program matching MacroFactor's reverse-engineered program structure.
+/// Complete 7-day Coaching Program matching Sique's reverse-engineered program structure.
 @immutable
 class WeeklyMacroProgram {
   const WeeklyMacroProgram({

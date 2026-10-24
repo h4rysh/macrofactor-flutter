@@ -373,7 +373,7 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'MacroFactor recommends an adherence-neutral pacing strategy.',
+          'Sique recommends an adherence-neutral pacing strategy.',
           style: TextStyle(
             fontFamily: 'MacroSans',
             fontSize: 14,

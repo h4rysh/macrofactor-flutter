@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:macro_factor_app/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/theme/app_theme.dart';
 
 /// Screen displaying app provenance, clean-room methodology, dataset citations, and architecture notes.
 class AboutScreen extends StatelessWidget {
@@ -26,7 +26,7 @@ class AboutScreen extends StatelessWidget {
             color: AppTheme.activeBlue,
             title: 'Clean-Room Architecture',
             description:
-                'Engineered from scratch using behavioral black-box reverse engineering of MacroFactor v5.8.9. All math algorithms, StateNotifier graphs, and database schemas were built cleanly without proprietary source code.',
+                'Engineered from scratch using behavioral black-box reverse engineering of Sique v5.8.9. All math algorithms, StateNotifier graphs, and database schemas were built cleanly without proprietary source code.',
           ),
           const SizedBox(height: 12),
           _buildPillarTile(
@@ -96,7 +96,7 @@ class AboutScreen extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           const Text(
-            'MacroFactor',
+            'Sique',
             style: TextStyle(
               fontFamily: 'MacroSans',
               fontSize: 22,
