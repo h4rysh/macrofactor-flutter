@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.antigravity" "\0"
-            VALUE "FileDescription", "macro_factor_app" "\0"
+            VALUE "FileDescription", "sique" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "macro_factor_app" "\0"
+            VALUE "InternalName", "sique" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.antigravity. All rights reserved." "\0"
-            VALUE "OriginalFilename", "macro_factor_app.exe" "\0"
-            VALUE "ProductName", "macro_factor_app" "\0"
+            VALUE "OriginalFilename", "sique.exe" "\0"
+            VALUE "ProductName", "sique" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

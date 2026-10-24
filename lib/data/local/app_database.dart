@@ -3,8 +3,10 @@ import 'dart:io';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sique/data/local/dao/expenditure_dao.dart';
 import 'package:sique/data/local/dao/food_dao.dart';
 import 'package:sique/data/local/dao/profile_dao.dart';
+import 'package:sique/data/local/dao/settings_dao.dart';
 import 'package:sique/data/local/dao/weight_dao.dart';
 import 'package:sique/data/local/dao/workout_dao.dart';
 import 'package:sique/data/local/database_migrations.dart';
@@ -17,8 +19,10 @@ import 'package:sqlite3/sqlite3.dart';
 
 export 'app_database_coaching.dart';
 export 'app_database_expenditure.dart';
+export 'dao/expenditure_dao.dart';
 export 'dao/food_dao.dart';
 export 'dao/profile_dao.dart';
+export 'dao/settings_dao.dart';
 export 'dao/weight_dao.dart';
 export 'dao/workout_dao.dart';
 export 'database_migrations.dart';
@@ -30,7 +34,9 @@ class AppDatabase {
       : foodDao = FoodDao(_db),
         weightDao = WeightDao(_db),
         profileDao = ProfileDao(_db),
-        workoutDao = WorkoutDao(_db) {
+        workoutDao = WorkoutDao(_db),
+        expenditureDao = ExpenditureDao(_db),
+        settingsDao = SettingsDao(_db) {
     DatabaseMigrations.initializeAndMigrate(_db, isInMemory: isInMemory);
   }
 
@@ -39,6 +45,8 @@ class AppDatabase {
   final WeightDao weightDao;
   final ProfileDao profileDao;
   final WorkoutDao workoutDao;
+  final ExpenditureDao expenditureDao;
+  final SettingsDao settingsDao;
 
   /// Underlying raw sqlite3 database handle for low-level or test operations.
   Database get rawDb => _db;
@@ -120,12 +128,12 @@ class AppDatabase {
   UserProfile? getUserProfile() => profileDao.getUserProfile();
 
   String getSetting(String key, String defaultValue) =>
-      profileDao.getSetting(key, defaultValue);
+      settingsDao.getSetting(key, defaultValue);
 
   void setSetting(String key, String value) =>
-      profileDao.setSetting(key, value);
+      settingsDao.setSetting(key, value);
 
-  Map<String, String> getAllSettings() => profileDao.getAllSettings();
+  Map<String, String> getAllSettings() => settingsDao.getAllSettings();
 
   void saveAccountSession(UserAccount session) =>
       profileDao.saveAccountSession(session);

@@ -62,7 +62,8 @@ void main() {
         ),
       ];
       mockAdapter.setWeights(twoWeights);
-      var ok = await container.read(healthConnectSyncProvider.notifier).syncNow();
+      var ok =
+          await container.read(healthConnectSyncProvider.notifier).syncNow();
       expect(ok, isTrue);
 
       var log = appDb.getWeightLogForDate(dateStr);
@@ -160,8 +161,10 @@ void main() {
       final utcReading1 = DateTime.utc(2026, 10, 18, 23, 50);
       final utcReading2 = DateTime.utc(2026, 10, 19, 0, 10);
 
-      final localDateStr1 = DateFormat('yyyy-MM-dd').format(utcReading1.toLocal());
-      final localDateStr2 = DateFormat('yyyy-MM-dd').format(utcReading2.toLocal());
+      final localDateStr1 =
+          DateFormat('yyyy-MM-dd').format(utcReading1.toLocal());
+      final localDateStr2 =
+          DateFormat('yyyy-MM-dd').format(utcReading2.toLocal());
 
       final entries = [
         ScaleWeightEntry(
@@ -323,16 +326,23 @@ void main() {
       const day3 = '2026-10-20';
 
       // Day 3 already has a manual entry
-      appDb.insertWeightLog(day3, 65.0, 'Pre-existing manual log', source: 'manual');
+      appDb.insertWeightLog(day3, 65.0, 'Pre-existing manual log',
+          source: 'manual');
 
       // Interleaved readings across 3 days
       final mixedBatch = [
-        ScaleWeightEntry(date: DateTime.parse('$day1 06:30:00'), weightKg: 70.0),
-        ScaleWeightEntry(date: DateTime.parse('$day2 07:00:00'), weightKg: 68.0),
-        ScaleWeightEntry(date: DateTime.parse('$day1 12:00:00'), weightKg: 71.0),
-        ScaleWeightEntry(date: DateTime.parse('$day3 08:00:00'), weightKg: 82.0),
-        ScaleWeightEntry(date: DateTime.parse('$day1 18:30:00'), weightKg: 72.0),
-        ScaleWeightEntry(date: DateTime.parse('$day2 19:30:00'), weightKg: 70.0),
+        ScaleWeightEntry(
+            date: DateTime.parse('$day1 06:30:00'), weightKg: 70.0),
+        ScaleWeightEntry(
+            date: DateTime.parse('$day2 07:00:00'), weightKg: 68.0),
+        ScaleWeightEntry(
+            date: DateTime.parse('$day1 12:00:00'), weightKg: 71.0),
+        ScaleWeightEntry(
+            date: DateTime.parse('$day3 08:00:00'), weightKg: 82.0),
+        ScaleWeightEntry(
+            date: DateTime.parse('$day1 18:30:00'), weightKg: 72.0),
+        ScaleWeightEntry(
+            date: DateTime.parse('$day2 19:30:00'), weightKg: 70.0),
       ];
 
       mockAdapter.setWeights(mixedBatch);
@@ -357,7 +367,8 @@ void main() {
       expect(log3.note, equals('Pre-existing manual log'));
     });
 
-    test('Empty and whitespace-only notes default to "Health Connect"', () async {
+    test('Empty and whitespace-only notes default to "Health Connect"',
+        () async {
       const dateStr = '2026-10-18';
       final blankNotes = [
         ScaleWeightEntry(

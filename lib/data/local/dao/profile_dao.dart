@@ -112,45 +112,6 @@ class ProfileDao {
     );
   }
 
-  /// Retrieves a key-value setting or returns defaultValue.
-  String getSetting(String key, String defaultValue) {
-    try {
-      final stmt =
-          _db.prepare('SELECT value FROM app_settings WHERE key = ? LIMIT 1;');
-      final result = stmt.select([key]);
-      stmt.dispose();
-      if (result.isEmpty) return defaultValue;
-      return result.first['value'] as String;
-    } catch (_) {
-      return defaultValue;
-    }
-  }
-
-  /// Sets or updates a key-value setting.
-  void setSetting(String key, String value) {
-    final stmt = _db.prepare('''
-      INSERT INTO app_settings (key, value)
-      VALUES (?, ?)
-      ON CONFLICT(key) DO UPDATE SET value = excluded.value;
-    ''');
-    stmt.execute([key, value]);
-    stmt.dispose();
-  }
-
-  /// Returns all stored key-value settings.
-  Map<String, String> getAllSettings() {
-    try {
-      final stmt = _db.prepare('SELECT key, value FROM app_settings;');
-      final result = stmt.select();
-      stmt.dispose();
-      return {
-        for (final row in result) row['key'] as String: row['value'] as String
-      };
-    } catch (_) {
-      return {};
-    }
-  }
-
   /// Saves or updates the active user account session in SQLite.
   void saveAccountSession(UserAccount session) {
     final stmt = _db.prepare(
