@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:sique/domain/models/food_models.dart';
 import 'package:sqlite3/common.dart';
 
@@ -32,8 +33,13 @@ class FoodDao {
       if (result.isNotEmpty) {
         return result.map(_mapFoodRow).toList();
       }
-    } catch (_) {
-      // Fall back to LIKE if FTS expression error
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'FTS search failed; falling back to LIKE',
+        name: 'FoodDao',
+        error: e,
+        stackTrace: st,
+      );
     }
 
     final likePattern = '%$sanitized%';
@@ -119,7 +125,14 @@ class FoodDao {
       ''');
       ftsStmt.execute([food.id, food.name, food.aliases, food.category]);
       ftsStmt.dispose();
-    } catch (_) {}
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Failed to insert into foods_fts for food ${food.id}',
+        name: 'FoodDao',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   /// Inserts a portion unit for a food item.
@@ -205,7 +218,13 @@ class FoodDao {
       final result = stmt.select();
       stmt.dispose();
       return (result.first['count'] as num).toInt();
-    } catch (_) {
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Failed to get food count',
+        name: 'FoodDao',
+        error: e,
+        stackTrace: st,
+      );
       return 0;
     }
   }

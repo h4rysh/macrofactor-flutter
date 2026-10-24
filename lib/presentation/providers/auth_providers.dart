@@ -1,5 +1,9 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqlite3/sqlite3.dart';
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/data/repositories/firebase_auth_repository.dart';
 import 'package:sique/domain/models/user_account.dart';
@@ -117,8 +121,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       if (session != null && session.isAuthenticated) {
         return AuthAuthenticated(session);
       }
-    } catch (_) {
-      // Graceful fallback for fresh installs or uninitialized tables
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Failed to read account session from SQLite on startup',
+        name: 'AuthProviders',
+        error: e,
+        stackTrace: st,
+      );
     }
     return AuthUnauthenticated();
   }
@@ -131,8 +140,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
         _db.saveAccountSession(currentUser);
         state = AuthAuthenticated(currentUser);
       }
-    } catch (_) {
-      // Offline mode: preserve cached SQLite session
+    } on PlatformException catch (e, st) {
+      developer.log(
+        'PlatformException checking current user (preserving offline state)',
+        name: 'AuthProviders',
+        error: e,
+        stackTrace: st,
+      );
+    } on Exception catch (e, st) {
+      developer.log(
+        'Exception checking current user (preserving offline state)',
+        name: 'AuthProviders',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 
@@ -289,7 +310,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
     try {
       _db.saveAccountSession(demoUser);
-    } catch (_) {}
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Failed to save demo athlete session to DB',
+        name: 'AuthProviders',
+        error: e,
+        stackTrace: st,
+      );
+    }
     state = AuthAuthenticated(demoUser);
   }
 
@@ -304,12 +332,31 @@ class AuthNotifier extends StateNotifier<AuthState> {
     state = AuthLoading(user: currentUser);
     try {
       await _authRepo.signOut();
-    } catch (_) {
-      // Non-fatal if platform network call fails
+    } on PlatformException catch (e, st) {
+      developer.log(
+        'Platform error during remote signOut',
+        name: 'AuthProviders',
+        error: e,
+        stackTrace: st,
+      );
+    } on Exception catch (e, st) {
+      developer.log(
+        'Error during remote signOut',
+        name: 'AuthProviders',
+        error: e,
+        stackTrace: st,
+      );
     } finally {
       try {
         _db.clearAccountSession();
-      } catch (_) {}
+      } on SqliteException catch (e, st) {
+        developer.log(
+          'Failed to clear SQLite account session during signOut',
+          name: 'AuthProviders',
+          error: e,
+          stackTrace: st,
+        );
+      }
       state = AuthUnauthenticated();
     }
   }
@@ -323,7 +370,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
     try {
       _db.saveAccountSession(updated);
-    } catch (_) {}
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Failed to save updated Health Connect enablement to session DB',
+        name: 'AuthProviders',
+        error: e,
+        stackTrace: st,
+      );
+    }
     if (state is AuthAuthenticated) {
       state = AuthAuthenticated(updated);
     }
@@ -338,7 +392,14 @@ class AuthNotifier extends StateNotifier<AuthState> {
     );
     try {
       _db.saveAccountSession(updated);
-    } catch (_) {}
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Failed to update last health sync timestamp in session DB',
+        name: 'AuthProviders',
+        error: e,
+        stackTrace: st,
+      );
+    }
     if (state is AuthAuthenticated) {
       state = AuthAuthenticated(updated);
     }

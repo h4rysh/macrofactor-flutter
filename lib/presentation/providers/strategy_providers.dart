@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/data/local/app_database_coaching.dart';
 import 'package:sique/domain/algorithms/coaching_engine.dart';
@@ -132,7 +134,13 @@ final dayMacroTargetForSelectedDateProvider = Provider<MacroTarget>((ref) {
   try {
     final date = DateTime.parse(selectedDateStr);
     return program.targetForDate(date).toMacroTarget();
-  } on FormatException catch (_) {
+  } on FormatException catch (e, st) {
+    developer.log(
+      'Invalid selectedDateStr "$selectedDateStr", defaulting to day 1 target',
+      name: 'StrategyProviders',
+      error: e,
+      stackTrace: st,
+    );
     return program.days.first.toMacroTarget();
   }
 });

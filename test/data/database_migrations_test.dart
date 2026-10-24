@@ -1,4 +1,7 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sqlite3/sqlite3.dart';
@@ -142,6 +145,172 @@ void main() {
       expect(retrieved.distributionMode, equals('shiftedWorkout'));
 
       appDb.close();
+    });
+
+    test(
+        'Foreign keys pragma actively enforces referential integrity constraints',
+        () {
+      final rawDb = sqlite3.openInMemory();
+      DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
+
+      // Verify PRAGMA foreign_keys is 1
+      final fkPragma = rawDb.select('PRAGMA foreign_keys;');
+      expect(fkPragma.first.values.first, equals(1));
+
+      // Create test tables with foreign key relationship
+      rawDb.execute('''
+        CREATE TABLE fk_parent (
+          id TEXT PRIMARY KEY,
+          label TEXT NOT NULL
+        );
+        CREATE TABLE fk_child (
+          id TEXT PRIMARY KEY,
+          parent_id TEXT NOT NULL,
+          FOREIGN KEY (parent_id) REFERENCES fk_parent(id) ON DELETE CASCADE
+        );
+      ''');
+
+      rawDb.execute(
+          "INSERT INTO fk_parent (id, label) VALUES ('p1', 'Parent 1');");
+
+      // Valid insert should succeed
+      rawDb
+          .execute("INSERT INTO fk_child (id, parent_id) VALUES ('c1', 'p1');");
+      final childCount =
+          rawDb.select('SELECT COUNT(*) as cnt FROM fk_child;').first['cnt'];
+      expect(childCount, equals(1));
+
+      // Invalid insert referencing non-existent parent must throw SqliteException
+      expect(
+        () => rawDb.execute(
+            "INSERT INTO fk_child (id, parent_id) VALUES ('c2', 'nonexistent');"),
+        throwsA(isA<SqliteException>()),
+      );
+
+      // CASCADE delete: deleting parent deletes child
+      rawDb.execute("DELETE FROM fk_parent WHERE id = 'p1';");
+      final remainingChildren =
+          rawDb.select('SELECT COUNT(*) as cnt FROM fk_child;').first['cnt'];
+      expect(remainingChildren, equals(0));
+
+      rawDb.dispose();
+    });
+
+    test('DatabaseMigrations configures busy_timeout to 5000ms', () {
+      final rawDb = sqlite3.openInMemory();
+      DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
+
+      final result = rawDb.select('PRAGMA busy_timeout;');
+      expect(result.first.values.first, equals(5000));
+
+      rawDb.dispose();
+    });
+
+    test(
+        'File-based database configures journal_mode=WAL and synchronous=NORMAL',
+        () {
+      final tempDir = Directory.systemTemp.createTempSync('sique_test_wal_');
+      final dbPath = p.join(tempDir.path, 'wal_test.db');
+      final fileDb = sqlite3.open(dbPath);
+
+      try {
+        DatabaseMigrations.initializeAndMigrate(fileDb, isInMemory: false);
+
+        final journalMode = fileDb.select('PRAGMA journal_mode;');
+        expect(
+          (journalMode.first.values.first as String).toLowerCase(),
+          equals('wal'),
+        );
+
+        final synchronous = fileDb.select('PRAGMA synchronous;');
+        // SQLite synchronous NORMAL corresponds to value 1
+        expect(synchronous.first.values.first, equals(1));
+      } finally {
+        fileDb.dispose();
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
+      }
+    });
+
+    test('Failed migration rolls back changes and preserves prior user_version',
+        () {
+      final rawDb = sqlite3.openInMemory();
+      DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
+
+      // Current user_version is 2
+      final initialVersion =
+          rawDb.select('PRAGMA user_version;').first.values.first;
+      expect(initialVersion, equals(2));
+
+      // Attempt a failing migration step to version 3
+      expect(
+        () => DatabaseMigrations.runStepForTest(rawDb, 3, (db) {
+          db.execute('CREATE TABLE step3_rollback_table (id INT);');
+          throw Exception('Simulated migration crash');
+        }),
+        throwsA(isA<Exception>()),
+      );
+
+      // Verify user_version remained 2
+      final postFailureVersion =
+          rawDb.select('PRAGMA user_version;').first.values.first;
+      expect(postFailureVersion, equals(2));
+
+      // Verify step3_rollback_table was rolled back and does not exist
+      final checkTable = rawDb.select(
+        "SELECT count(*) as cnt FROM sqlite_master WHERE type='table' AND name='step3_rollback_table';",
+      );
+      expect(checkTable.first['cnt'], equals(0));
+
+      rawDb.dispose();
+    });
+
+    test('Isolated step-by-step v0 -> v1 -> v2 migration ladder', () {
+      final rawDb = sqlite3.openInMemory();
+
+      // Starts at v0
+      final v0 = rawDb.select('PRAGMA user_version;').first.values.first;
+      expect(v0, equals(0));
+
+      // Verify user_profile table does not exist initially
+      final initialTables = rawDb.select(
+        "SELECT count(*) as cnt FROM sqlite_master WHERE type='table' AND name='user_profile';",
+      );
+      expect(initialTables.first['cnt'], equals(0));
+
+      // Apply Step 1
+      DatabaseMigrations.applyStepForTest(rawDb, 1);
+      final v1 = rawDb.select('PRAGMA user_version;').first.values.first;
+      expect(v1, equals(1));
+
+      // Verify user_profile table exists under v1
+      final tableInfoV1 = rawDb.select("PRAGMA table_info('user_profile');");
+      expect(tableInfoV1, isNotEmpty);
+
+      // Apply Step 2
+      DatabaseMigrations.applyStepForTest(rawDb, 2);
+      final v2 = rawDb.select('PRAGMA user_version;').first.values.first;
+      expect(v2, equals(2));
+
+      // Verify diet_type column exists in user_profile
+      final tableInfoV2 = rawDb.select("PRAGMA table_info('user_profile');");
+      final colsV2 = tableInfoV2.map((r) => r['name'] as String).toSet();
+      expect(colsV2.contains('diet_type'), isTrue);
+
+      rawDb.dispose();
+    });
+
+    test('Higher user_version is protected from downgrade overwrite', () {
+      final rawDb = sqlite3.openInMemory();
+      rawDb.execute('PRAGMA user_version = 5;');
+
+      DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
+
+      final versionResult = rawDb.select('PRAGMA user_version;');
+      expect(versionResult.first.values.first, equals(5));
+
+      rawDb.dispose();
     });
   });
 }

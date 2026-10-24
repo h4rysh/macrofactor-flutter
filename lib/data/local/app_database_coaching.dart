@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/domain/models/macro_program.dart';
 
@@ -20,7 +21,21 @@ extension AppDatabaseCoachingExtension on AppDatabase {
     try {
       final map = jsonDecode(jsonStr) as Map<String, dynamic>;
       return WeeklyMacroProgram.fromJson(map);
-    } catch (_) {
+    } on FormatException catch (e, st) {
+      developer.log(
+        'Malformed coaching program JSON',
+        name: 'AppDatabaseCoaching',
+        error: e,
+        stackTrace: st,
+      );
+      return null;
+    } on TypeError catch (e, st) {
+      developer.log(
+        'Coaching program JSON schema mismatch',
+        name: 'AppDatabaseCoaching',
+        error: e,
+        stackTrace: st,
+      );
       return null;
     }
   }

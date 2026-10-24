@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:sique/domain/models/workout_session.dart';
 import 'package:sqlite3/common.dart';
 
@@ -32,7 +33,13 @@ class WorkoutDao {
         ]);
       }
       _db.execute('COMMIT;');
-    } catch (_) {
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Transaction failed during insertWorkoutSessions; executing rollback',
+        name: 'WorkoutDao',
+        error: e,
+        stackTrace: st,
+      );
       _db.execute('ROLLBACK;');
       rethrow;
     } finally {

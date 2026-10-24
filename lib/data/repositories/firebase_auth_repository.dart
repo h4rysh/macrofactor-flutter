@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:developer' as developer;
 
+import 'package:flutter/services.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/domain/models/user_account.dart';
@@ -174,7 +176,21 @@ class FirebaseAuthRepository implements AuthRepository {
     } else if (_currentCachedUser!.authProvider == AuthProviderType.google) {
       try {
         await _googleSignIn.signInSilently();
-      } catch (_) {
+      } on PlatformException catch (e, st) {
+        developer.log(
+          'Silent Google re-auth failed; falling back to interactive sign-in',
+          name: 'FirebaseAuthRepository',
+          error: e,
+          stackTrace: st,
+        );
+        await _googleSignIn.signIn();
+      } on Exception catch (e, st) {
+        developer.log(
+          'Re-auth error; falling back to interactive sign-in',
+          name: 'FirebaseAuthRepository',
+          error: e,
+          stackTrace: st,
+        );
         await _googleSignIn.signIn();
       }
     }
@@ -188,7 +204,21 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<void> signOut() async {
     try {
       await _googleSignIn.signOut();
-    } catch (_) {}
+    } on PlatformException catch (e, st) {
+      developer.log(
+        'PlatformException during GoogleSignIn.signOut',
+        name: 'FirebaseAuthRepository',
+        error: e,
+        stackTrace: st,
+      );
+    } on Exception catch (e, st) {
+      developer.log(
+        'Exception during GoogleSignIn.signOut',
+        name: 'FirebaseAuthRepository',
+        error: e,
+        stackTrace: st,
+      );
+    }
 
     _db.clearAccountSession();
     _currentCachedUser = null;

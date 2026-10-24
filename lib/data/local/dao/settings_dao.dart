@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:sqlite3/common.dart';
 
 /// Data Access Object managing key-value application settings in `app_settings`.
@@ -15,7 +16,13 @@ class SettingsDao {
       stmt.dispose();
       if (result.isEmpty) return defaultValue;
       return result.first['value'] as String;
-    } catch (_) {
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Failed to read setting for key: "$key"',
+        name: 'SettingsDao',
+        error: e,
+        stackTrace: st,
+      );
       return defaultValue;
     }
   }
@@ -40,7 +47,13 @@ class SettingsDao {
       return {
         for (final row in result) row['key'] as String: row['value'] as String
       };
-    } catch (_) {
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Failed to retrieve all settings',
+        name: 'SettingsDao',
+        error: e,
+        stackTrace: st,
+      );
       return {};
     }
   }

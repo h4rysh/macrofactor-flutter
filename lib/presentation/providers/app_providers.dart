@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:sique/data/local/app_database.dart';
@@ -336,7 +338,14 @@ final expenditureStateProvider = Provider<ExpenditureState>((ref) {
       final truncated = DateTime(d.year, d.month, d.day);
       if (truncated.isBefore(earliestDate)) earliestDate = truncated;
       if (truncated.isAfter(latestObsDate)) latestObsDate = truncated;
-    } catch (_) {}
+    } on FormatException catch (e, st) {
+      developer.log(
+        'Invalid date key encountered in dailyCalories: "$dStr"',
+        name: 'AppProviders',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   // 4. Instantiate 2D Joint-State Kalman Filter V4

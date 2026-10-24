@@ -1,4 +1,7 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqlite3/sqlite3.dart';
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/domain/models/workout_session.dart';
 import 'package:sique/domain/models/workout_stats.dart';
@@ -16,7 +19,13 @@ class WorkoutSessionsNotifier extends StateNotifier<List<WorkoutSession>> {
   void refresh() {
     try {
       state = _db.getAllWorkoutSessions();
-    } catch (_) {
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Failed to refresh workout sessions from DB',
+        name: 'WorkoutProviders',
+        error: e,
+        stackTrace: st,
+      );
       state = [];
     }
   }
@@ -44,7 +53,13 @@ class WorkoutSessionsNotifier extends StateNotifier<List<WorkoutSession>> {
   List<WorkoutSession> getSessionsInRange(DateTime start, DateTime end) {
     try {
       return _db.getWorkoutSessionsInRange(start, end);
-    } catch (_) {
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Failed to query workout sessions in range; falling back to in-memory filter',
+        name: 'WorkoutProviders',
+        error: e,
+        stackTrace: st,
+      );
       return state
           .where(
               (s) => !s.startTime.isBefore(start) && !s.startTime.isAfter(end))

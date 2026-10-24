@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:intl/intl.dart';
 import 'package:sique/data/local/app_database_expenditure.dart'
     show ExpenditureRecord;
@@ -62,7 +63,13 @@ class ExpenditureDao {
       }
       stmt.dispose();
       _db.execute('COMMIT;');
-    } catch (e) {
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Transaction failed during saveExpenditures; executing rollback',
+        name: 'ExpenditureDao',
+        error: e,
+        stackTrace: st,
+      );
       _db.execute('ROLLBACK;');
       rethrow;
     }

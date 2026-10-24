@@ -1,5 +1,9 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sqlite3/sqlite3.dart';
 import 'package:intl/intl.dart';
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/data/services/health_connect_sync_adapter.dart';
@@ -142,7 +146,14 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
           hasPermissions: session.healthConnectEnabled,
         );
       }
-    } catch (_) {}
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'Failed to load initial health sync state from session',
+        name: 'HealthSyncProviders',
+        error: e,
+        stackTrace: st,
+      );
+    }
     return const HealthSyncState();
   }
 
@@ -155,7 +166,21 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
         isAvailable: available,
         hasPermissions: perms,
       );
-    } catch (_) {}
+    } on PlatformException catch (e, st) {
+      developer.log(
+        'PlatformException while checking Health Connect availability',
+        name: 'HealthSyncProviders',
+        error: e,
+        stackTrace: st,
+      );
+    } on Exception catch (e, st) {
+      developer.log(
+        'Exception while checking Health Connect availability',
+        name: 'HealthSyncProviders',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   /// Requests required Health Connect permissions from the user.
