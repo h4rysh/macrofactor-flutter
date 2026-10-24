@@ -2,7 +2,7 @@ name: sique
 description: "Sique: Adherence-neutral nutritional coaching with metabolic expenditure modeling."
 publish_to: 'none'
 
-version: 1.7.0+10
+version: 2.0.0+20
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
