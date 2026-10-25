@@ -282,8 +282,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       try {
         final prefs = await SharedPreferences.getInstance();
         await prefs.clear();
-      } on Object {
-        // Ignore SharedPreferences clearing failures in test/headless environments
+      } catch (e, st) {
+        developer.log(
+          'SharedPreferences clear failure',
+          name: 'AuthNotifier',
+          error: e,
+          stackTrace: st,
+        );
       }
       _invalidateUserDataProviders();
       state = AuthUnauthenticated();
@@ -310,8 +315,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
       ref.invalidate(selectedDateProvider);
       ref.invalidate(weightLogsProvider);
       ref.invalidate(workoutSessionsProvider);
-    } on Object {
-      // Ignore provider invalidation errors in headless environments
+    } catch (e, st) {
+      developer.log(
+        'Provider invalidation notice',
+        name: 'AuthNotifier',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 

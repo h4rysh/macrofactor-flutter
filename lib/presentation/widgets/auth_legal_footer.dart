@@ -25,12 +25,13 @@ class AuthLegalFooter extends StatelessWidget {
             '1. Data Collection & Local Storage:\n'
             'All your workout logs, nutritional intake, body weight metrics, and personal health data '
             'are stored locally in an encrypted SQLite database on your device.\n\n'
-            '2. Cloud Synchronization:\n'
-            'When authenticated with Google or Email, data is synchronized securely with Firebase servers. '
-            'We do not sell, rent, or monetize your personal data.\n\n'
+            '2. Cloud Authentication & Local Sovereignty:\n'
+            'When authenticated with Google or Email, credentials are authenticated securely via Firebase Auth. '
+            'Your nutrition entries, weight records, and physical profile remain exclusively on your device in local SQLite. '
+            'We do not upload, sync, or monetize your personal nutrition or health data.\n\n'
             '3. Account Deletion & Data Wipe:\n'
             'You may permanently delete your account at any time from Settings. '
-            'Deleting your account completely purges all local databases and cloud records.',
+            'Deleting your account completely purges your authentication profile and permanently wipes all on-device databases.',
             style: TextStyle(
               fontFamily: 'DMSans',
               fontSize: 13,

@@ -63,6 +63,9 @@ class AppDatabase {
   List<FoodItem> searchFoods(String query, {int limit = 30}) =>
       foodDao.searchFoods(query, limit: limit);
 
+  Future<List<FoodItem>> searchFoodsAsync(String query, {int limit = 30}) =>
+      foodDao.searchFoodsAsync(query, limit: limit);
+
   FoodItem? getFoodById(int id) => foodDao.getFoodById(id);
 
   List<PortionUnit> getPortionUnitsForFood(int foodId) =>
@@ -172,7 +175,8 @@ class AppDatabase {
       CREATE TABLE IF NOT EXISTS foods (
         id INTEGER PRIMARY KEY, uuid TEXT NOT NULL, name TEXT NOT NULL, category TEXT NOT NULL,
         region TEXT NOT NULL, calories REAL NOT NULL, protein REAL NOT NULL, carbs REAL NOT NULL,
-        fat REAL NOT NULL, fiber REAL NOT NULL, icon_svg TEXT NOT NULL, source TEXT NOT NULL, aliases TEXT
+        fat REAL NOT NULL, fiber REAL NOT NULL, icon_svg TEXT NOT NULL, source TEXT NOT NULL, aliases TEXT,
+        is_verified INTEGER NOT NULL DEFAULT 1
       );
       CREATE TABLE IF NOT EXISTS portion_units (
         id INTEGER PRIMARY KEY AUTOINCREMENT, food_id INTEGER NOT NULL, unit_name TEXT NOT NULL,

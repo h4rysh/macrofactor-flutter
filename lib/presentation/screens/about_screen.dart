@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/auth_legal_footer.dart';
 
 /// Screen displaying app provenance, clean-room methodology, dataset citations, and architecture notes.
 class AboutScreen extends StatelessWidget {
@@ -26,7 +27,7 @@ class AboutScreen extends StatelessWidget {
             color: AppTheme.activeBlue,
             title: 'Clean-Room Architecture',
             description:
-                'Engineered from scratch using behavioral black-box reverse engineering of Sique v5.8.9. All math algorithms, StateNotifier graphs, and database schemas were built cleanly without proprietary source code.',
+                'Engineered from scratch using behavioral black-box reverse engineering of athletic macro tracker interfaces. All math algorithms, StateNotifier graphs, and database schemas were built cleanly without proprietary source code.',
           ),
           const SizedBox(height: 12),
           _buildPillarTile(
@@ -42,7 +43,7 @@ class AboutScreen extends StatelessWidget {
             color: AppTheme.fat,
             title: 'ICMR-NIN IFCT 2017 Database',
             description:
-                'Curated with nutritional values from the Indian Council of Medical Research and National Institute of Nutrition (IFCT). Features authentic Indian portions (Katori, Standard Roti, Idli) and cooking oil modifiers.',
+                'Nutritional values are directly sourced and transcribed from the Indian Council of Medical Research and National Institute of Nutrition (ICMR-NIN Indian Food Composition Tables 2017). Features authentic Indian staples and verified macro profiles.',
           ),
           const SizedBox(height: 12),
           _buildPillarTile(
@@ -52,9 +53,77 @@ class AboutScreen extends StatelessWidget {
             description:
                 'All nutrition entries, body weights, and profile settings are stored locally on-device in SQLite. Zero cloud tracking, zero telemetry, and 100% offline functionality.',
           ),
+          const SizedBox(height: 16),
+          _buildLegalSection(context),
           const SizedBox(height: 24),
           _buildFooterCard(),
           const SizedBox(height: 32),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLegalSection(BuildContext context) {
+    return Material(
+      color: AppTheme.cardSurface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: AppTheme.cardBorder),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          ListTile(
+            key: const Key('about_medical_disclaimer_btn'),
+            leading: const Icon(Icons.health_and_safety_outlined,
+                color: AppTheme.activeBlue),
+            title: const Text(
+              'Medical Disclaimer',
+              style: TextStyle(
+                fontFamily: 'MacroSans',
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            subtitle: const Text(
+              'Safety notices, fitness guidelines & liability',
+              style: TextStyle(
+                fontFamily: 'DMSans',
+                fontSize: 12,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: AppTheme.textMuted),
+            onTap: () => AuthLegalFooter.showMedicalDisclaimer(context),
+          ),
+          const Divider(height: 1, indent: 56, color: AppTheme.cardBorder),
+          ListTile(
+            key: const Key('about_privacy_policy_btn'),
+            leading: const Icon(Icons.privacy_tip_outlined,
+                color: AppTheme.activeBlue),
+            title: const Text(
+              'Privacy Policy',
+              style: TextStyle(
+                fontFamily: 'MacroSans',
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            subtitle: const Text(
+              'Local-first storage, authentication & encryption',
+              style: TextStyle(
+                fontFamily: 'DMSans',
+                fontSize: 12,
+                color: AppTheme.textSecondary,
+              ),
+            ),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: AppTheme.textMuted),
+            onTap: () => AuthLegalFooter.showPrivacyPolicy(context),
+          ),
         ],
       ),
     );

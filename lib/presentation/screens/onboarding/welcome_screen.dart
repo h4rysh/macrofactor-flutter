@@ -122,10 +122,17 @@ class WelcomeScreen extends StatelessWidget {
               const SizedBox(height: 16),
               // Primary CTA: Configure Strategy
               AppleTactileCard(
+                key: const Key('welcome_configure_strategy_btn'),
                 onTap: () {
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const OnboardingFlowScreen(),
+                      builder: (_) => AuthGateScreen(
+                        onProceed: () => Navigator.of(context).pushReplacement(
+                          MaterialPageRoute(
+                            builder: (_) => const OnboardingFlowScreen(),
+                          ),
+                        ),
+                      ),
                     ),
                   );
                 },

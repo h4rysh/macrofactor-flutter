@@ -3,9 +3,9 @@ import 'package:sique/presentation/screens/onboarding/widgets/onboarding_step_sc
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 
-/// Step 3: Biological Sex Selection
-class Step03Sex extends StatefulWidget {
-  const Step03Sex({
+/// Step 2: Biological Sex Selection
+class Step02Sex extends StatefulWidget {
+  const Step02Sex({
     super.key,
     required this.initialIsMale,
     required this.onNext,
@@ -15,10 +15,10 @@ class Step03Sex extends StatefulWidget {
   final ValueChanged<bool> onNext;
 
   @override
-  State<Step03Sex> createState() => _Step03SexState();
+  State<Step02Sex> createState() => _Step02SexState();
 }
 
-class _Step03SexState extends State<Step03Sex> {
+class _Step02SexState extends State<Step02Sex> {
   late bool _isMale;
 
   @override
@@ -34,13 +34,13 @@ class _Step03SexState extends State<Step03Sex> {
       subtitle:
           'Required to initialize resting metabolic rate (Mifflin-St Jeor formula).',
       icon: Icons.wc_rounded,
-      continueKey: const Key('step_03_continue_btn'),
+      continueKey: const Key('step_02_continue_btn'),
       onContinue: () => widget.onNext(_isMale),
       child: Column(
         children: [
           const SizedBox(height: 12),
           _SexOptionTile(
-            key: const Key('step_03_male_tile'),
+            key: const Key('step_02_male_tile'),
             title: 'Male',
             icon: Icons.male_rounded,
             isSelected: _isMale,
@@ -48,7 +48,7 @@ class _Step03SexState extends State<Step03Sex> {
           ),
           const SizedBox(height: 16),
           _SexOptionTile(
-            key: const Key('step_03_female_tile'),
+            key: const Key('step_02_female_tile'),
             title: 'Female',
             icon: Icons.female_rounded,
             isSelected: !_isMale,
@@ -99,8 +99,8 @@ class _SexOptionTile extends StatelessWidget {
             title,
             style: TextStyle(
               fontFamily: 'MacroSans',
-              fontSize: 18,
-              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w600,
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
               color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
             ),
           ),

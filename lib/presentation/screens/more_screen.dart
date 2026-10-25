@@ -4,6 +4,7 @@ import 'package:sique/domain/models/user_account.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/screens/about_screen.dart';
 import 'package:sique/presentation/screens/account_profile_screen.dart';
+import 'package:sique/presentation/screens/auth/delete_account_dialog.dart';
 import 'package:sique/presentation/screens/data_export_screen.dart';
 import 'package:sique/presentation/screens/expenditure_settings_screen.dart';
 import 'package:sique/presentation/screens/food_log_settings_screen.dart';
@@ -11,6 +12,7 @@ import 'package:sique/presentation/screens/goal_questionnaire_sheet.dart';
 import 'package:sique/presentation/screens/profile_targets_screen.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/animated_primitives.dart';
+import 'package:sique/presentation/widgets/auth_legal_footer.dart';
 import 'package:sique/presentation/widgets/profile_avatar_button.dart';
 
 /// Hub screen for the "More" bottom navigation destination.
@@ -159,7 +161,149 @@ class MoreScreen extends ConsumerWidget {
               destination: const AboutScreen(),
             ),
           ),
+          const SizedBox(height: 8),
+          AppleStaggeredEntrance(
+            index: 7,
+            child: _buildAttributionAndLegalCard(context),
+          ),
+          const SizedBox(height: 8),
+          AppleStaggeredEntrance(
+            index: 8,
+            child: _buildDeleteDataTile(context, user),
+          ),
+          const SizedBox(height: 24),
         ],
+      ),
+    );
+  }
+
+  Widget _buildAttributionAndLegalCard(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.restaurant_menu_rounded,
+                  size: 16, color: AppTheme.activeBlue),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Nutritional data sourced from ICMR-NIN IFCT 2017 (Indian Food Composition Tables).',
+                  style: TextStyle(
+                    fontFamily: 'DMSans',
+                    fontSize: 12,
+                    color: AppTheme.textSecondary,
+                    height: 1.35,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: AppTheme.cardBorder),
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              TextButton(
+                key: const Key('more_medical_disclaimer_btn'),
+                onPressed: () => AuthLegalFooter.showMedicalDisclaimer(context),
+                child: const Text(
+                  'Medical Disclaimer',
+                  style: TextStyle(
+                    fontFamily: 'DMSans',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.activeBlue,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+              const Text('•', style: TextStyle(color: AppTheme.textMuted)),
+              TextButton(
+                key: const Key('more_privacy_policy_btn'),
+                onPressed: () => AuthLegalFooter.showPrivacyPolicy(context),
+                child: const Text(
+                  'Privacy Policy',
+                  style: TextStyle(
+                    fontFamily: 'DMSans',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.activeBlue,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteDataTile(BuildContext context, UserAccount? user) {
+    return AppleBouncy(
+      key: const Key('more_delete_data_tile'),
+      onTap: () {
+        DeleteAccountDialog.show(
+          context,
+          user: user ?? UserAccount.guest,
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: AppTheme.calories.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: AppTheme.calories.withValues(alpha: 0.3),
+            width: 1,
+          ),
+        ),
+        child: const Row(
+          children: [
+            Icon(Icons.delete_forever_rounded,
+                color: AppTheme.calories, size: 22),
+            SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Delete All My Data',
+                    style: TextStyle(
+                      fontFamily: 'MacroSans',
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.calories,
+                    ),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Permanently wipe local databases and reset account',
+                    style: TextStyle(
+                      fontFamily: 'DMSans',
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.arrow_forward_ios_rounded,
+              size: 14,
+              color: AppTheme.calories,
+            ),
+          ],
+        ),
       ),
     );
   }

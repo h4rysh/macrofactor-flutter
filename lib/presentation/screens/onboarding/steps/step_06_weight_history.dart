@@ -2,30 +2,34 @@ import 'package:flutter/material.dart';
 import 'package:sique/presentation/screens/onboarding/widgets/onboarding_step_scaffold.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
-/// Step 5: Height Input (cm)
-class Step05Height extends StatefulWidget {
-  const Step05Height({
+/// Step 6: Highest Historical Weight (Weight History)
+class Step06WeightHistory extends StatefulWidget {
+  const Step06WeightHistory({
     super.key,
-    required this.initialHeightCm,
+    required this.currentWeightKg,
+    required this.initialMaxWeightKg,
     required this.onNext,
   });
 
-  final double initialHeightCm;
+  final double currentWeightKg;
+  final double initialMaxWeightKg;
   final ValueChanged<double> onNext;
 
   @override
-  State<Step05Height> createState() => _Step05HeightState();
+  State<Step06WeightHistory> createState() => _Step06WeightHistoryState();
 }
 
-class _Step05HeightState extends State<Step05Height> {
-  late double _heightCm;
+class _Step06WeightHistoryState extends State<Step06WeightHistory> {
+  late double _maxWeightKg;
   late final TextEditingController _controller;
 
   @override
   void initState() {
     super.initState();
-    _heightCm = widget.initialHeightCm;
-    _controller = TextEditingController(text: _heightCm.toStringAsFixed(0));
+    _maxWeightKg = widget.initialMaxWeightKg >= widget.currentWeightKg
+        ? widget.initialMaxWeightKg
+        : widget.currentWeightKg;
+    _controller = TextEditingController(text: _maxWeightKg.toStringAsFixed(1));
   }
 
   @override
@@ -34,18 +38,18 @@ class _Step05HeightState extends State<Step05Height> {
     super.dispose();
   }
 
-  bool get _isValid => _heightCm >= 90 && _heightCm <= 250;
+  bool get _isValid => _maxWeightKg >= widget.currentWeightKg;
 
   @override
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
-      title: 'How tall are you?',
+      title: 'Highest Adult Weight',
       subtitle:
-          'Height is factored into BMI, body surface area, and baseline expenditure.',
-      icon: Icons.height_rounded,
-      continueKey: const Key('step_05_continue_btn'),
+          'Informs set-point theory models and post-diet metabolic adaptation expectations.',
+      icon: Icons.history_rounded,
+      continueKey: const Key('step_06_continue_btn'),
       isContinueEnabled: _isValid,
-      onContinue: _isValid ? () => widget.onNext(_heightCm) : null,
+      onContinue: _isValid ? () => widget.onNext(_maxWeightKg) : null,
       child: Column(
         children: [
           const SizedBox(height: 24),
@@ -53,23 +57,23 @@ class _Step05HeightState extends State<Step05Height> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                key: const Key('step_05_decrement_btn'),
+                key: const Key('step_06_decrement_btn'),
                 icon: const Icon(Icons.remove_circle_outline_rounded, size: 36),
                 color: AppTheme.textSecondary,
                 onPressed: () {
-                  if (_heightCm > 90) {
+                  if (_maxWeightKg > widget.currentWeightKg) {
                     setState(() {
-                      _heightCm -= 1;
-                      _controller.text = _heightCm.toStringAsFixed(0);
+                      _maxWeightKg -= 0.5;
+                      _controller.text = _maxWeightKg.toStringAsFixed(1);
                     });
                   }
                 },
               ),
               const SizedBox(width: 20),
               SizedBox(
-                width: 140,
+                width: 160,
                 child: TextFormField(
-                  key: const Key('step_05_height_input'),
+                  key: const Key('step_06_max_weight_input'),
                   controller: _controller,
                   keyboardType:
                       const TextInputType.numberWithOptions(decimal: true),
@@ -84,35 +88,34 @@ class _Step05HeightState extends State<Step05Height> {
                   onChanged: (val) {
                     final parsed = double.tryParse(val);
                     if (parsed != null) {
-                      setState(() => _heightCm = parsed);
+                      setState(() => _maxWeightKg = parsed);
                     }
                   },
                 ),
               ),
               const SizedBox(width: 20),
               IconButton(
-                key: const Key('step_05_increment_btn'),
+                key: const Key('step_06_increment_btn'),
                 icon: const Icon(Icons.add_circle_outline_rounded, size: 36),
                 color: AppTheme.textSecondary,
                 onPressed: () {
-                  if (_heightCm < 250) {
+                  if (_maxWeightKg < 400) {
                     setState(() {
-                      _heightCm += 1;
-                      _controller.text = _heightCm.toStringAsFixed(0);
+                      _maxWeightKg += 0.5;
+                      _controller.text = _maxWeightKg.toStringAsFixed(1);
                     });
                   }
                 },
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           const Text(
-            'centimeters (cm)',
+            'Kilograms (kg)',
             style: TextStyle(
-              fontFamily: 'MacroSans',
-              fontSize: 16,
-              color: AppTheme.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontFamily: 'DMSans',
+              fontSize: 14,
+              color: AppTheme.textMuted,
             ),
           ),
         ],

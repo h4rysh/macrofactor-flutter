@@ -330,7 +330,7 @@ void main() {
     });
 
     testWidgets(
-        'E2E Journey 6: Onboarding Coordinator -> 23 Steps -> Target Activation -> Enter Dashboard',
+        'E2E Journey 6: Onboarding Coordinator -> 24 Steps -> Target Activation -> Enter Dashboard',
         (tester) async {
       configureViewport(tester);
 

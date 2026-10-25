@@ -7,6 +7,7 @@ import 'package:sique/domain/repositories/auth_repository.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/screens/account_profile_screen.dart';
 import 'package:sique/presentation/screens/onboarding/auth_gate_screen.dart';
+import 'package:sique/presentation/screens/onboarding/onboarding_flow_screen.dart';
 import 'package:sqlite3/sqlite3.dart';
 import '../mocks/fake_auth_repository.dart';
 
@@ -213,12 +214,12 @@ void main() {
       expect(find.text('Sign-in unavailable: Firebase not configured'),
           findsOneWidget);
 
-      // Guest navigation still functional
+      // Guest navigation still functional -> enters OnboardingFlowScreen
       expect(find.byKey(const Key('auth_gate_guest_btn')), findsOneWidget);
       await tester.tap(find.byKey(const Key('auth_gate_guest_btn')));
       await tester.pumpAndSettle();
 
-      expect(db.getSetting('onboarding_completed', 'false'), equals('true'));
+      expect(find.byType(OnboardingFlowScreen), findsOneWidget);
     });
   });
 }

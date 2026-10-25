@@ -8,11 +8,35 @@ class FoodDao {
 
   final CommonDatabase _db;
 
-  /// Searches foods using SQLite FTS5 with prefix matching, falling back to LIKE.
+  /// Sanitizes an input search string for SQLite FTS5 by stripping control operators
+  /// and enclosing each search term in double-quotes with wildcard prefix.
+  /// Prevents syntax error crashes with `"`, `*`, `-`, `NEAR`, `AND`, `OR`, `NOT`.
+  static String sanitizeFts5Query(String query) {
+    final cleaned =
+        query.replaceAll(RegExp(r'''["*^~:(){}\[\]+\-?]'''), ' ').trim();
+    if (cleaned.isEmpty) return '';
+
+    final words =
+        cleaned.split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList();
+    if (words.isEmpty) return '';
+
+    return words.map((w) {
+      final safe = w.replaceAll('"', '');
+      return '"$safe"*';
+    }).join(' ');
+  }
+
+  /// Asynchronously searches foods off the main UI thread.
+  Future<List<FoodItem>> searchFoodsAsync(String query,
+      {int limit = 30}) async {
+    return Future<List<FoodItem>>.microtask(
+        () => searchFoods(query, limit: limit));
+  }
+
+  /// Searches foods using SQLite FTS5 with operator escaping and rank ordering, falling back to LIKE.
   List<FoodItem> searchFoods(String query, {int limit = 30}) {
-    final sanitized =
-        query.replaceAll(RegExp(r'''['"*\(\)\-\+\:]'''), ' ').trim();
-    if (sanitized.isEmpty) {
+    final ftsQuery = sanitizeFts5Query(query);
+    if (ftsQuery.isEmpty) {
       final stmt = _db.prepare('SELECT * FROM foods LIMIT ?;');
       final result = stmt.select([limit]);
       stmt.dispose();
@@ -20,11 +44,11 @@ class FoodDao {
     }
 
     try {
-      final ftsQuery = '$sanitized*';
       final stmt = _db.prepare('''
         SELECT f.* FROM foods f
         JOIN foods_fts fts ON f.id = fts.rowid
         WHERE foods_fts MATCH ?
+        ORDER BY fts.rank
         LIMIT ?;
       ''');
       final result = stmt.select([ftsQuery, limit]);
@@ -42,7 +66,9 @@ class FoodDao {
       );
     }
 
-    final likePattern = '%$sanitized%';
+    final rawTokens =
+        query.replaceAll(RegExp(r'''['"*\(\)\-\+\:]'''), ' ').trim();
+    final likePattern = '%$rawTokens%';
     final fallbackStmt = _db.prepare('''
       SELECT * FROM foods
       WHERE name LIKE ? OR aliases LIKE ? OR category LIKE ?
@@ -86,8 +112,8 @@ class FoodDao {
     final stmt = _db.prepare('''
       INSERT INTO foods (
         id, uuid, name, category, region, calories, protein, carbs,
-        fat, fiber, icon_svg, source, aliases
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        fat, fiber, icon_svg, source, aliases, is_verified
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         category = excluded.category,
@@ -99,7 +125,8 @@ class FoodDao {
         fiber = excluded.fiber,
         icon_svg = excluded.icon_svg,
         source = excluded.source,
-        aliases = excluded.aliases;
+        aliases = excluded.aliases,
+        is_verified = excluded.is_verified;
     ''');
     stmt.execute([
       food.id,
@@ -115,6 +142,7 @@ class FoodDao {
       food.iconSvg,
       food.source,
       food.aliases,
+      food.isVerified ? 1 : 0,
     ]);
     stmt.dispose();
 
@@ -249,6 +277,21 @@ class FoodDao {
     final foodId = row['id'] as int;
     final portionUnits = getPortionUnitsForFood(foodId);
 
+    int? rawVerified;
+    try {
+      rawVerified = row['is_verified'] as int?;
+    } catch (e, st) {
+      developer.log(
+        'is_verified column query note',
+        name: 'FoodDao',
+        error: e,
+        stackTrace: st,
+      );
+    }
+    final sourceStr = row['source'] as String? ?? 'ICMR-NIN IFCT 2017';
+    final isVerified =
+        rawVerified != null ? rawVerified == 1 : sourceStr != 'Recipe Estimate';
+
     return FoodItem(
       id: foodId,
       uuid: row['uuid'] as String,
@@ -261,9 +304,10 @@ class FoodDao {
       fatPer100g: (row['fat'] as num).toDouble(),
       fiberPer100g: (row['fiber'] as num).toDouble(),
       iconSvg: row['icon_svg'] as String,
-      source: row['source'] as String,
-      aliases: row['aliases'] as String,
+      source: sourceStr,
+      aliases: row['aliases'] as String? ?? '',
       portionUnits: portionUnits,
+      isVerified: isVerified,
     );
   }
 

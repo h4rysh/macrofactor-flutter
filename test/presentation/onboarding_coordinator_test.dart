@@ -72,7 +72,34 @@ void main() {
   });
 
   testWidgets(
-      'Tapping "Configure My Strategy" on WelcomeScreen navigates to OnboardingFlowScreen',
+      'Partially completed onboarding resumes at saved step after restart',
+      (WidgetTester tester) async {
+    tester.view.physicalSize = const Size(450, 1000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    db.setSetting('onboarding_completed', 'false');
+    db.setSetting('onboarding_step', '4');
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+        ],
+        child: const SiqueApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // Verify OnboardingFlowScreen opened at step index 4 (Step 5 of 24)
+    expect(find.byType(OnboardingFlowScreen), findsOneWidget);
+    expect(find.text('Step 5 of 24'), findsOneWidget);
+    expect(find.byType(WelcomeScreen), findsNothing);
+  });
+
+  testWidgets(
+      'Tapping "Configure My Strategy" on WelcomeScreen navigates to AuthGateScreen, proceeding enters OnboardingFlowScreen',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(450, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -93,10 +120,17 @@ void main() {
     await tester.tap(find.text('Configure My Strategy'));
     await tester.pumpAndSettle();
 
-    // Verify OnboardingFlowScreen is open
+    // Verify AuthGateScreen is displayed
+    expect(find.byType(AuthGateScreen), findsOneWidget);
+    expect(find.text('Account & Cloud Sync'), findsOneWidget);
+
+    // Tap Continue as Guest
+    await tester.tap(find.byKey(const Key('auth_gate_guest_btn')));
+    await tester.pumpAndSettle();
+
+    // Verify OnboardingFlowScreen is open at step 1
     expect(find.byType(OnboardingFlowScreen), findsOneWidget);
-    expect(find.text('Welcome to Sique'), findsOneWidget);
-    expect(find.text('Get Started'), findsOneWidget);
+    expect(find.text('Step 1 of 24'), findsOneWidget);
   });
 
   testWidgets(

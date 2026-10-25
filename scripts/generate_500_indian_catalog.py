@@ -438,11 +438,65 @@ def create_catalog():
 
     # Deduplicate by unique name
     unique_items = {}
+    
+    verified_staple_names = {
+        "Whole Wheat Atta (Raw Chakki Flour)",
+        "Besan (Bengal Gram Flour)",
+        "Maida (Refined Wheat Flour)",
+        "Soya Chunks (Raw / Dry)",
+        "Raw Toor Dal (Pigeon Pea)",
+        "Raw Moong Dal (Split Yellow)",
+        "Raw Chana Dal (Split Chickpeas)",
+        "Raw Rajma (Red Kidney Beans)",
+        "Raw Kabuli Chana (White Chickpeas)",
+        "Peanuts (Roasted, Unsalted)",
+        "Almonds / Badam (Raw)",
+        "Walnuts / Akhrot",
+        "Cashews / Kaju",
+        "Chia Seeds (Raw)",
+        "Flaxseeds (Alsi, Ground)",
+        "Cooked White Rice (Basmati / Sona Masoori)",
+        "Cooked Brown Rice",
+        "Chicken Breast (Grilled / Boiled, Skinless)",
+        "Boiled Egg Whole (Large)",
+        "Egg White Boiled (Large)",
+        "Curd / Plain Dahi (Whole Cow Milk)",
+        "Buffalo Milk Dahi",
+        "Paneer (Fresh Raw Whole Milk)",
+        "Cow Milk (Whole, Boiled)",
+        "Toned Milk (3% Fat)",
+        "Double Toned Milk (1.5% Fat)",
+        "Skimmed Milk (0.5% Fat)",
+        "Desi Ghee (Clarified Butter)",
+        "White Butter (Makhan / Makkhan)",
+        "Banana (Robusta / Cavendish)",
+        "Apple (With Skin)",
+        "Mango (Alphonso / Kesar)",
+        "Papaya (Raw / Ripe)",
+        "Guava (Amrood)",
+        "Pomegranate (Anar Arils)",
+        "Orange / Mosambi (Sweet Lime)",
+        "Watermelon",
+        "Muskmelon (Kharbuja)",
+        "Pineapple",
+        "Grapes (Green / Black)",
+        "Chickoo / Sapota",
+    }
+
     for it in items:
+        is_verified = (
+            it["name"] in verified_staple_names
+            or it["category"] == "Raw Staples & Legumes"
+            or it["category"] == "Fruits & Produce"
+        )
+        it["source"] = "ICMR-NIN IFCT 2017" if is_verified else "Recipe Estimate"
+        it["is_verified"] = is_verified
         unique_items[it["name"]] = it
 
     catalog_list = list(unique_items.values())
-    print(f"Generated {len(catalog_list)} distinct Indian food entries.")
+    verified_count = sum(1 for x in catalog_list if x["is_verified"])
+    estimate_count = len(catalog_list) - verified_count
+    print(f"Generated {len(catalog_list)} distinct Indian food entries ({verified_count} ICMR-NIN IFCT Staples, {estimate_count} Recipe Estimates).")
     return catalog_list
 
 def save_json(catalog):
@@ -473,7 +527,8 @@ def compile_sqlite_db(catalog):
         fiber REAL NOT NULL,
         icon_svg TEXT NOT NULL,
         source TEXT NOT NULL,
-        aliases TEXT NOT NULL
+        aliases TEXT NOT NULL,
+        is_verified INTEGER NOT NULL DEFAULT 1
     );
     """)
 
@@ -510,8 +565,8 @@ def compile_sqlite_db(catalog):
     for food in catalog:
         food_uuid = str(uuid.uuid4())
         cur.execute("""
-        INSERT INTO foods (uuid, name, category, region, calories, protein, carbs, fat, fiber, icon_svg, source, aliases)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO foods (uuid, name, category, region, calories, protein, carbs, fat, fiber, icon_svg, source, aliases, is_verified)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             food_uuid,
             food["name"],
@@ -523,8 +578,9 @@ def compile_sqlite_db(catalog):
             food["f"],
             food["fiber"],
             food["icon"],
-            "ICMR-NIN IFCT 2017",
+            food["source"],
             food["aliases"],
+            1 if food["is_verified"] else 0,
         ))
         food_id = cur.lastrowid
         for unit in food["units"]:

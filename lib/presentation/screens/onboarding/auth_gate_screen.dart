@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/presentation/screens/auth/email_auth_dialog.dart';
+import 'package:sique/presentation/screens/onboarding/onboarding_flow_screen.dart';
 import 'package:sique/presentation/widgets/auth_legal_footer.dart';
 import '../../providers/app_providers.dart';
 import '../../theme/app_theme.dart';
@@ -9,7 +10,9 @@ import '../../widgets/apple_tactile_card.dart';
 
 /// Screen presented after Strategy Questionnaire where users authenticate or continue as guest.
 class AuthGateScreen extends ConsumerStatefulWidget {
-  const AuthGateScreen({super.key});
+  const AuthGateScreen({super.key, this.onProceed});
+
+  final VoidCallback? onProceed;
 
   @override
   ConsumerState<AuthGateScreen> createState() => _AuthGateScreenState();
@@ -18,15 +21,27 @@ class AuthGateScreen extends ConsumerStatefulWidget {
 class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
   bool _isLoading = false;
 
-  void _finishOnboarding() {
+  void _proceed() {
+    if (widget.onProceed != null) {
+      widget.onProceed!();
+      return;
+    }
+
     final db = ref.read(databaseProvider);
-    db.setSetting('onboarding_completed', 'true');
+    final isCompleted =
+        db.getSetting('onboarding_completed', 'false').toLowerCase() == 'true';
 
     if (!mounted) return;
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const ScaffoldWithNavBar()),
-      (route) => false,
-    );
+    if (isCompleted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const ScaffoldWithNavBar()),
+        (route) => false,
+      );
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const OnboardingFlowScreen()),
+      );
+    }
   }
 
   Future<void> _handleGoogleSignIn() async {
@@ -36,7 +51,7 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
           await ref.read(authNotifierProvider.notifier).signInWithGoogle();
       if (!mounted) return;
       if (success) {
-        _finishOnboarding();
+        _proceed();
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -63,14 +78,14 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
     try {
       await ref.read(authNotifierProvider.notifier).signInWithDemoAthlete();
       if (!mounted) return;
-      _finishOnboarding();
+      _proceed();
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _handleContinueAsGuest() {
-    _finishOnboarding();
+    _proceed();
   }
 
   @override
@@ -245,7 +260,7 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                               ? null
                               : () => EmailAuthDialog.show(
                                     context,
-                                    onSuccess: _finishOnboarding,
+                                    onSuccess: _proceed,
                                   ),
                           backgroundColor: AppTheme.cardSurface,
                           borderRadius: 16,

@@ -74,10 +74,11 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     });
   }
 
-  void _performSearch(String query) {
+  Future<void> _performSearch(String query) async {
     setState(() => _isLoading = true);
     final db = ref.read(databaseProvider);
-    var results = db.searchFoods(query, limit: 60);
+    var results = await db.searchFoodsAsync(query, limit: 60);
+    if (!mounted) return;
 
     // Apply active filter
     if (_selectedFilter == FoodFilterType.southIndian) {

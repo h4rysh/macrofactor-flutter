@@ -56,5 +56,11 @@ app.*.map.json
 android/app/google-services.json
 !android/app/google-services.json.example
 
+# Android signing keys & properties
+key.properties
+android/key.properties
+*.jks
+*.keystore
+
 # Reference material
 docs/reference/

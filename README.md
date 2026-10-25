@@ -4,7 +4,7 @@
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.29+-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.7+-0175C2?style=for-the-badge&logo=dart&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-577%20Passing%20(100%25)-2ea44f?style=for-the-badge&logo=githubactions&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-649%20Passing%20(100%25)-2ea44f?style=for-the-badge&logo=githubactions&logoColor=white)
 ![Analysis](https://img.shields.io/badge/Analysis-0%20Issues-brightgreen?style=for-the-badge&logo=dart&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-Clean%20%2B%20Riverpod%202-purple?style=for-the-badge)
 ![Storage](https://img.shields.io/badge/Storage-SQLite%20WAL%20(Local--First)-orange?style=for-the-badge&logo=sqlite&logoColor=white)
@@ -30,7 +30,7 @@
 - [📈 Joint-State Kalman Expenditure Filter V4](#-joint-state-kalman-expenditure-filter-v4)
 - [⚖️ Dual-Pass Weight Trend Smoothing V2](#️-dual-pass-weight-trend-smoothing-v2)
 - [🎯 Dynamic Coaching Engine & 7-Day Shifting](#-dynamic-coaching-engine--7-day-shifting)
-- [📱 23-Step Ethical & Clinical Onboarding](#-23-step-ethical--clinical-onboarding)
+- [📱 24-Step Ethical & Clinical Onboarding](#-24-step-ethical--clinical-onboarding)
 - [🍛 Curated 500+ Indian Food Catalog & Oil Modifiers](#-curated-500-indian-food-catalog--oil-modifiers)
 - [🔒 100% On-Device Data Sovereignty](#-100-on-device-data-sovereignty)
 - [🚀 Quickstart & Local Setup](#-quickstart--local-setup)
@@ -48,8 +48,8 @@
 | **🧠 Metabolic Intelligence** | **Joint-State Kalman Filter V4** estimating true trend weight ($W_t$) and energy expenditure ($E_t$) with Huber $3\sigma$ innovation clipping and 14-day rolling mean intake imputation. |
 | **⚖️ Dynamic Weight Smoothing** | **Dual-Pass EWMA (Causal + Zero-Phase Backward)** with dynamic $\Delta t$ scaling and median absolute deviation biological noise envelopes. |
 | **🎯 Dynamic Coaching** | **Adherence-Neutral 7-Day Shifting**: 5 nutritional styles (Balanced, Low Fat, Low Carb, Keto, High Protein), Even vs Shifted workout day allocation, and instant target propagation without restart. |
-| **📱 Clinical Onboarding** | **23-Step Modular Wizard** with clinical safety guardrails: Age $\ge 18$ validation lock and BMI $\ge 18.5$ aggressive deficit warning. |
-| **🍛 Indian Nutrition Catalog** | **514 Curated Indian Staple Foods** with 887 authentic regional portion units (*katori*, *roti*, *ladle*, *cups*), sub-millisecond SQLite FTS5 search, and 1-tap cooking oil modifiers (+½ tsp, +1 tsp, +1 tbsp). |
+| **📱 Clinical Onboarding** | **24-Step Modular Wizard** with clinical safety guardrails: Age $\ge 18$ validation lock, BMI $\ge 18.5$ aggressive deficit floor, and SQLite step progress persistence. |
+| **🍛 Indian Nutrition Catalog** | **514 Curated Indian Foods** (43 ICMR-NIN IFCT verified staples + 471 recipe estimates) with 887 authentic regional portion units (*katori*, *roti*, *ladle*, *cups*), offline SQLite FTS5 search with BM25 ranking, and 1-tap cooking oil modifiers (+½ tsp, +1 tsp, +1 tbsp). |
 | **🔒 Data Sovereignty** | **100% On-Device SQLite**: All dietary records, body weights, and metabolic states stay strictly local. Zero personal health data transmitted off-device. Instant one-tap total local data wipe. |
 | **🔄 Hardware Synchronization** | **Google Health Connect Bidirectional Sync**: Multi-reading same-day arithmetic averaging, local timezone date grouping (`.toLocal()`), and manual entry conflict protection. |
 | **🎨 Apple HIG UI Design** | **Obsidian OLED Dark Theme** (`#0B0B0E`), frosted liquid glass docks (`BackdropFilter` gaussian blur), tactile `AppleBouncy` feedback, and numerical odometer animations. |
@@ -184,28 +184,31 @@ flowchart LR
 
 ---
 
-## 📱 23-Step Ethical & Clinical Onboarding
+## 📱 24-Step Ethical & Clinical Onboarding
 
-Sique's onboarding flow (`lib/presentation/screens/onboarding/`) guides users through 23 modular, clinical-grade assessment steps:
+Sique's onboarding flow (`lib/presentation/screens/onboarding/`) guides users through 24 modular, clinical-grade assessment steps (<350 lines per step file, with progress saved to SQLite):
 
 ```
-Step 1–12: Basics & Biometrics
+Step 1–13: Basics & Biometrics
   ├── Health Connect sync authorization
   ├── Biological sex, DOB (Age ≥ 18 mandatory lock)
-  ├── Height, Current Weight, Weight History
-  ├── Body fat estimate & training experience
-  └── Baseline Expenditure Estimate (Mifflin-St Jeor formula breakdown)
+  ├── Height (cm / ft-in), Current Weight (kg / lb slider + numeric), Weight History
+  ├── Recent Weight Trend (seeds Kalman prior), Body fat range
+  ├── Exercise frequency, Daily activity, Lifting & Cardio experience
+  └── Baseline TDEE Reveal (Mifflin-St Jeor formula breakdown & custom override)
 
-Step 13–16: Goal Direction
-  ├── Goal Type (Lose, Maintain, Gain)
-  ├── Target Weight (BMI ≥ 18.5 clinical deficit lock)
-  └── Rate of Change & Summary
+Step 14–17: Goal Direction
+  ├── Goal Type (Fat Loss, Maintenance, Muscle Gain)
+  ├── Target Weight (BMI ≥ 18.5 clinical deficit guardrail lock)
+  ├── Pacing Rate (% BW/week, kg/week, monthly equivalent)
+  └── Goal Summary
 
-Step 17–23: Program Architecture
-  ├── Diet Style & Calorie Floor selection
-  ├── Calorie Distribution (Even vs Shifted Workout Days)
-  ├── Protein Preference & Medical Disclaimer acknowledgement
-  └── Active Program Activation -> Enter Dashboard
+Step 18–24: Program Architecture
+  ├── Diet Style (Standard, Keto, Low Fat) & Calorie Floor selection
+  ├── Training days & Calorie Distribution (Even vs Shifted Workout Days)
+  ├── Protein Preference (Moderate, High, Extra High)
+  ├── Medical Disclaimer mandatory acknowledgment checkbox
+  └── Active Program Calibration -> Enter Dashboard
 ```
 
 ---
@@ -214,9 +217,9 @@ Step 17–23: Program Architecture
 
 Sique features an authentic, offline Indian staple nutrition database (`assets/data/indian_food_catalog.json`):
 
-- **514 Curated Indian Foods**: Sourced with ICMR-NIN Indian Food Composition Tables (IFCT) nutritional grounding.
+- **514 Curated Indian Foods**: Sourced with 43 ICMR-NIN IFCT 2017 verified staple foods and 471 standardized recipe estimates (see [docs/CATALOG.md](docs/CATALOG.md)).
 - **887 Regional Portion Units**: Native serving metrics including *katori*, *roti*, *ladle*, *cups*, *pieces*, and grams.
-- **SQLite FTS5 Full-Text Search**: Sub-millisecond offline query execution with prefix matching and operator escaping.
+- **SQLite FTS5 Full-Text Search**: Offline query execution with BM25 relevance ranking (`ORDER BY fts.rank`), operator escaping, and background worker dispatch.
 - **1-Tap Cooking Oil Modifiers**: Adjust nutrition for preparation methods with linear scaling and non-negative clamping:
   - Low Oil: $-50\text{ kcal}$
   - Standard Preparation: Baseline
@@ -268,7 +271,7 @@ flutter run
 
 ## 🧪 Comprehensive Test Suite
 
-Sique is hardened with **577 automated tests** across unit, widget, simulation, and adversarial stress suites:
+Sique is hardened with **649 automated tests** across unit, widget, simulation, and adversarial stress suites:
 
 ```bash
 # Run all tests
@@ -332,7 +335,7 @@ lib/
       ├── observers/           # AppLifecycleSyncObserver (foreground rollover)
       ├── providers/           # Riverpod StateNotifiers & reactive providers
       ├── screens/
-      │    ├── onboarding/     # 23 Modular Onboarding Step Screens (<350 lines each)
+      │    ├── onboarding/     # 24 Modular Onboarding Step Screens (<350 lines each)
       │    └── auth/           # EmailAuthDialog, ChangePasswordDialog
       ├── theme/               # Obsidian dark theme tokens & color semantics
       └── widgets/             # Apple HIG widgets (AppleTactileCard, AppleBouncy, AuthLegalFooter)

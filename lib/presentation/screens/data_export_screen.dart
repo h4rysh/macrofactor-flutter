@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sique/data/utils/csv_sanitizer.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
@@ -76,8 +77,11 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     final buffer = StringBuffer();
     buffer.writeln('Date,Weight_kg,Notes');
     for (final entry in logs) {
-      final safeNote = (entry.note ?? '').replaceAll('"', '""');
-      buffer.writeln('${entry.date},${entry.weightKg},"$safeNote"');
+      final safeDate =
+          CsvSanitizer.sanitize(entry.date.toIso8601String().split('T').first);
+      final safeWeight = entry.weightKg.toString();
+      final safeNote = CsvSanitizer.sanitize(entry.note ?? '');
+      buffer.writeln('$safeDate,$safeWeight,$safeNote');
     }
     return buffer.toString();
   }

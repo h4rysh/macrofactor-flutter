@@ -6,18 +6,18 @@ import 'package:sique/presentation/screens/onboarding/widgets/onboarding_step_sc
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 
-/// Step 22: Health Connect & Device Synchronization Setup
-class Step22HealthConnect extends ConsumerStatefulWidget {
-  const Step22HealthConnect({super.key, required this.onNext});
+/// Step 1: Health Connect & Wearable Hardware Synchronization (Optional)
+class Step01HealthConnect extends ConsumerStatefulWidget {
+  const Step01HealthConnect({super.key, required this.onNext});
 
   final VoidCallback onNext;
 
   @override
-  ConsumerState<Step22HealthConnect> createState() =>
-      _Step22HealthConnectState();
+  ConsumerState<Step01HealthConnect> createState() =>
+      _Step01HealthConnectState();
 }
 
-class _Step22HealthConnectState extends ConsumerState<Step22HealthConnect> {
+class _Step01HealthConnectState extends ConsumerState<Step01HealthConnect> {
   bool _enabled = true;
 
   @override
@@ -25,9 +25,9 @@ class _Step22HealthConnectState extends ConsumerState<Step22HealthConnect> {
     return OnboardingStepScaffold(
       title: 'Health & Hardware Sync',
       subtitle:
-          'Automatically import daily morning weights and training sessions from Health Connect and Hevy.',
+          'Optionally connect Google Health Connect to auto-import body scale weights and training workouts.',
       icon: Icons.sync_rounded,
-      continueKey: const Key('step_22_continue_btn'),
+      continueKey: const Key('step_01_continue_btn'),
       onContinue: () {
         ref
             .read(authNotifierProvider.notifier)
@@ -84,7 +84,7 @@ class _Step22HealthConnectState extends ConsumerState<Step22HealthConnect> {
                 ),
                 const SizedBox(width: 8),
                 Switch.adaptive(
-                  key: const Key('step_22_sync_toggle'),
+                  key: const Key('step_01_sync_toggle'),
                   value: _enabled,
                   activeTrackColor: AppTheme.activeBlue,
                   onChanged: (val) => setState(() => _enabled = val),
@@ -98,22 +98,21 @@ class _Step22HealthConnectState extends ConsumerState<Step22HealthConnect> {
             decoration: BoxDecoration(
               color: AppTheme.cardElevated,
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: AppTheme.cardBorder),
+              border: Border.all(color: AppTheme.cardBorder, width: 1),
             ),
             child: const Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.lock_outline_rounded,
-                    size: 18, color: AppTheme.textSecondary),
+                    color: AppTheme.textMuted, size: 18),
                 SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Your health logs stay strictly on your device in local SQLite storage. Sique never uploads raw biometric health entries to cloud servers.',
+                    'Optional. You can always input your daily weight and training manually.',
                     style: TextStyle(
                       fontFamily: 'DMSans',
                       fontSize: 12,
                       color: AppTheme.textSecondary,
-                      height: 1.35,
+                      height: 1.3,
                     ),
                   ),
                 ),

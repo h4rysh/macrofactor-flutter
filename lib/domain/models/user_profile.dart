@@ -98,6 +98,9 @@ class UserProfile {
     this.bodyFatRange,
     this.weightHistoryMax,
     this.distributionMode = 'even',
+    this.recentWeightTrend = 'stable',
+    this.exerciseFrequency = '1-3',
+    this.dailyActivity = 'moderate',
   });
 
   final String id;
@@ -124,6 +127,9 @@ class UserProfile {
   final String? bodyFatRange;
   final double? weightHistoryMax;
   final String distributionMode;
+  final String recentWeightTrend;
+  final String exerciseFrequency;
+  final String dailyActivity;
 
   /// Calculates dynamic daily calorie and macro targets given current Bayesian expenditure.
   MacroTarget calculateTargetMacros(double currentExpenditureKcal) {
@@ -219,6 +225,9 @@ class UserProfile {
     String? bodyFatRange,
     double? weightHistoryMax,
     String? distributionMode,
+    String? recentWeightTrend,
+    String? exerciseFrequency,
+    String? dailyActivity,
     bool clearCustom = false,
   }) {
     return UserProfile(
@@ -252,6 +261,9 @@ class UserProfile {
       bodyFatRange: bodyFatRange ?? this.bodyFatRange,
       weightHistoryMax: weightHistoryMax ?? this.weightHistoryMax,
       distributionMode: distributionMode ?? this.distributionMode,
+      recentWeightTrend: recentWeightTrend ?? this.recentWeightTrend,
+      exerciseFrequency: exerciseFrequency ?? this.exerciseFrequency,
+      dailyActivity: dailyActivity ?? this.dailyActivity,
     );
   }
 }

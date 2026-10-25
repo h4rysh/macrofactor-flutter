@@ -349,9 +349,14 @@ final expenditureStateProvider = Provider<ExpenditureState>((ref) {
   }
 
   // 4. Instantiate 2D Joint-State Kalman Filter V4
+  final isNotSureTrend =
+      profile.recentWeightTrend.toLowerCase().contains('not') ||
+          profile.recentWeightTrend.toLowerCase().contains('sure');
+  final sigmaE0 = isNotSureTrend ? 450.0 : 300.0;
   final filter = ExpenditureKalmanV4(
     initialExpenditureKcal: baselineKcal,
     initialWeightKg: weights.first.weightKg,
+    sigmaE0: sigmaE0,
   );
 
   final recordsToSave = <ExpenditureRecord>[];

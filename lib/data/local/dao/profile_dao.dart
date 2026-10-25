@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:sique/domain/models/user_account.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sqlite3/common.dart';
@@ -17,8 +19,9 @@ class ProfileDao {
         protein_preference, calorie_floor, baseline_expenditure,
         custom_calories, custom_protein, custom_carbs, custom_fat,
         diet_type, calorie_floor_type, lifting_experience, cardio_experience,
-        body_fat_range, weight_history_max, distribution_mode
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        body_fat_range, weight_history_max, distribution_mode,
+        recent_weight_trend, exercise_frequency, daily_activity
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         name = excluded.name,
         current_weight = excluded.current_weight,
@@ -42,7 +45,10 @@ class ProfileDao {
         cardio_experience = excluded.cardio_experience,
         body_fat_range = excluded.body_fat_range,
         weight_history_max = excluded.weight_history_max,
-        distribution_mode = excluded.distribution_mode;
+        distribution_mode = excluded.distribution_mode,
+        recent_weight_trend = excluded.recent_weight_trend,
+        exercise_frequency = excluded.exercise_frequency,
+        daily_activity = excluded.daily_activity;
     ''');
 
     stmt.execute([
@@ -70,6 +76,9 @@ class ProfileDao {
       profile.bodyFatRange,
       profile.weightHistoryMax,
       profile.distributionMode,
+      profile.recentWeightTrend,
+      profile.exerciseFrequency,
+      profile.dailyActivity,
     ]);
     stmt.dispose();
   }
@@ -109,6 +118,9 @@ class ProfileDao {
       bodyFatRange: row['body_fat_range'] as String?,
       weightHistoryMax: (row['weight_history_max'] as num?)?.toDouble(),
       distributionMode: row['distribution_mode'] as String? ?? 'even',
+      recentWeightTrend: row['recent_weight_trend'] as String? ?? 'stable',
+      exerciseFrequency: row['exercise_frequency'] as String? ?? '1-3',
+      dailyActivity: row['daily_activity'] as String? ?? 'moderate',
     );
   }
 
@@ -192,8 +204,13 @@ class ProfileDao {
       _db.execute(
         "DELETE FROM sqlite_sequence WHERE name IN ('food_logs', 'weight_logs');",
       );
-    } on Object {
-      // Ignore if sqlite_sequence does not exist or has no matching records
+    } on SqliteException catch (e, st) {
+      developer.log(
+        'sqlite_sequence reset omitted or table empty',
+        name: 'ProfileDao',
+        error: e,
+        stackTrace: st,
+      );
     }
   }
 }

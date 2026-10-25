@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:sique/presentation/screens/onboarding/widgets/onboarding_step_scaffold.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
-/// Step 4: Age Input with 18+ Guardrail
-class Step04Age extends StatefulWidget {
-  const Step04Age({
+/// Step 3: Date of Birth & Age Input with Strict 18+ Lock
+class Step03Dob extends StatefulWidget {
+  const Step03Dob({
     super.key,
     required this.initialAge,
     required this.onNext,
@@ -14,10 +14,10 @@ class Step04Age extends StatefulWidget {
   final ValueChanged<int> onNext;
 
   @override
-  State<Step04Age> createState() => _Step04AgeState();
+  State<Step03Dob> createState() => _Step03DobState();
 }
 
-class _Step04AgeState extends State<Step04Age> {
+class _Step03DobState extends State<Step03Dob> {
   late int _age;
   late final TextEditingController _controller;
 
@@ -40,14 +40,15 @@ class _Step04AgeState extends State<Step04Age> {
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
       title: 'How old are you?',
-      subtitle: 'Metabolic expenditure shifts predictably with biological age.',
+      subtitle:
+          'Metabolic expenditure and TDEE shift predictably with biological age.',
       icon: Icons.cake_outlined,
-      continueKey: const Key('step_04_continue_btn'),
+      continueKey: const Key('step_03_continue_btn'),
       isContinueEnabled: _isAdult,
       onContinue: _isAdult ? () => widget.onNext(_age) : null,
       banner: !_isAdult
           ? Container(
-              key: const Key('step_04_age_guardrail_banner'),
+              key: const Key('step_03_age_guardrail_banner'),
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: AppTheme.calories.withValues(alpha: 0.12),
@@ -82,7 +83,7 @@ class _Step04AgeState extends State<Step04Age> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                key: const Key('step_04_decrement_btn'),
+                key: const Key('step_03_decrement_btn'),
                 icon: const Icon(Icons.remove_circle_outline_rounded, size: 36),
                 color: AppTheme.textSecondary,
                 onPressed: () {
@@ -98,15 +99,15 @@ class _Step04AgeState extends State<Step04Age> {
               SizedBox(
                 width: 100,
                 child: TextFormField(
-                  key: const Key('step_04_age_input'),
+                  key: const Key('step_03_age_input'),
                   controller: _controller,
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontFamily: 'MacroSans',
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
-                    color: AppTheme.textPrimary,
+                    color: _isAdult ? AppTheme.textPrimary : AppTheme.calories,
                   ),
                   decoration: const InputDecoration(border: InputBorder.none),
                   onChanged: (val) {
@@ -119,11 +120,11 @@ class _Step04AgeState extends State<Step04Age> {
               ),
               const SizedBox(width: 20),
               IconButton(
-                key: const Key('step_04_increment_btn'),
+                key: const Key('step_03_increment_btn'),
                 icon: const Icon(Icons.add_circle_outline_rounded, size: 36),
                 color: AppTheme.textSecondary,
                 onPressed: () {
-                  if (_age < 120) {
+                  if (_age < 110) {
                     setState(() {
                       _age++;
                       _controller.text = _age.toString();
@@ -133,14 +134,13 @@ class _Step04AgeState extends State<Step04Age> {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           const Text(
-            'years old',
+            'Years Old',
             style: TextStyle(
-              fontFamily: 'MacroSans',
-              fontSize: 16,
-              color: AppTheme.textSecondary,
-              fontWeight: FontWeight.w600,
+              fontFamily: 'DMSans',
+              fontSize: 14,
+              color: AppTheme.textMuted,
             ),
           ),
         ],

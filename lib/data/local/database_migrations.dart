@@ -140,6 +140,18 @@ class DatabaseMigrations {
       db.execute(
           "ALTER TABLE user_profile ADD COLUMN distribution_mode TEXT NOT NULL DEFAULT 'even';");
     }
+    if (!columns.contains('recent_weight_trend')) {
+      db.execute(
+          "ALTER TABLE user_profile ADD COLUMN recent_weight_trend TEXT NOT NULL DEFAULT 'stable';");
+    }
+    if (!columns.contains('exercise_frequency')) {
+      db.execute(
+          "ALTER TABLE user_profile ADD COLUMN exercise_frequency TEXT NOT NULL DEFAULT '1-3';");
+    }
+    if (!columns.contains('daily_activity')) {
+      db.execute(
+          "ALTER TABLE user_profile ADD COLUMN daily_activity TEXT NOT NULL DEFAULT 'moderate';");
+    }
 
     final sessionColumns = _getTableColumns(db, 'user_account_session');
     if (!sessionColumns.contains('auth_provider')) {

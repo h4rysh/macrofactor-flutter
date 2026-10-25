@@ -67,7 +67,10 @@ class DatabaseSchema {
       cardio_experience TEXT NOT NULL DEFAULT 'beginner',
       body_fat_range TEXT,
       weight_history_max REAL,
-      distribution_mode TEXT NOT NULL DEFAULT 'even'
+      distribution_mode TEXT NOT NULL DEFAULT 'even',
+      recent_weight_trend TEXT NOT NULL DEFAULT 'stable',
+      exercise_frequency TEXT NOT NULL DEFAULT '1-3',
+      daily_activity TEXT NOT NULL DEFAULT 'moderate'
     );
   ''';
 

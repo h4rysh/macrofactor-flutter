@@ -55,6 +55,7 @@ class FoodItem {
     required this.source,
     required this.aliases,
     this.portionUnits = const [],
+    this.isVerified = true,
   });
 
   final int id;
@@ -71,6 +72,7 @@ class FoodItem {
   final String source;
   final String aliases;
   final List<PortionUnit> portionUnits;
+  final bool isVerified;
 
   String get iconName => iconSvg;
   String get cuisine => region;

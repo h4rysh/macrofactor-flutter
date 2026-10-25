@@ -168,6 +168,67 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 6),
+                    if (widget.food.isVerified)
+                      Container(
+                        key: const Key('food_verified_badge'),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppTheme.activeBlue.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color:
+                                  AppTheme.activeBlue.withValues(alpha: 0.35)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.verified_outlined,
+                                size: 11, color: AppTheme.activeBlue),
+                            SizedBox(width: 4),
+                            Text(
+                              'ICMR-NIN IFCT Verified',
+                              style: TextStyle(
+                                fontFamily: 'DMSans',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.activeBlue,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      Container(
+                        key: const Key('food_approximate_badge'),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppTheme.expenditure.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                              color:
+                                  AppTheme.expenditure.withValues(alpha: 0.35)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.info_outline,
+                                size: 11, color: AppTheme.expenditure),
+                            SizedBox(width: 4),
+                            Text(
+                              'Approximate values (Recipe Estimate)',
+                              style: TextStyle(
+                                fontFamily: 'DMSans',
+                                fontSize: 10,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.expenditure,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),
