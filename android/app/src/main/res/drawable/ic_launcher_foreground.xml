@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Sique Clean-Room Geometric 'S' Mark Placeholder: Foreground Layer -->
+    <!-- Ambient Depth Glow -->
+    <path
+        android:pathData="M64,35 C64,30 59,28 54,28 C44,28 36,36 36,45 C36,53 42,58 54,61 C66,64 72,69 72,77 C72,86 64,94 54,94 C47,94 42,90 40,85"
+        android:strokeWidth="11"
+        android:strokeColor="#33FF5722"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Primary Flame Orange Geometric Spine (#FF5722) -->
+    <path
+        android:pathData="M64,35 C64,30 59,28 54,28 C44,28 36,36 36,45 C36,53 42,58 54,61 C66,64 72,69 72,77 C72,86 64,94 54,94 C47,94 42,90 40,85"
+        android:strokeWidth="7"
+        android:strokeColor="#FF5722"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+    <!-- Sique Metabolic Apex Terminal Accent (#F43F5E) -->
+    <path
+        android:pathData="M64,35 L64.01,35"
+        android:strokeWidth="7"
+        android:strokeColor="#F43F5E"
+        android:strokeLineCap="round" />
+</vector>

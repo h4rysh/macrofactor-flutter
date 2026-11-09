@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:sique/domain/algorithms/weight_trend_v2.dart';
@@ -160,6 +161,11 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                       controller: _weightController,
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.next,
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*\.?\d*')),
+                      ],
                       autofocus: true,
                       onChanged: (_) => setState(() {}),
                       style: const TextStyle(
@@ -226,6 +232,8 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
             // Note Input
             TextField(
               controller: _noteController,
+              keyboardType: TextInputType.text,
+              textInputAction: TextInputAction.done,
               style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
               decoration: InputDecoration(
                 hintText: 'Note (optional, e.g. morning fasted, post walk)...',

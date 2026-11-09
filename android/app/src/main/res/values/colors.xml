@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Sique Obsidian Launch Background matching AppColors.background (#0B0B0E) -->
+    <color name="launch_background_color">#0B0B0E</color>
+    <!-- Adaptive Icon Background (#0B0B0E) -->
+    <color name="ic_launcher_background">#0B0B0E</color>
+</resources>

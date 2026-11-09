@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sique/presentation/theme/extensions/macro_colors.dart';
 import 'package:sique/presentation/theme/tokens/app_colors.dart';
 import 'package:sique/presentation/theme/tokens/app_radii.dart';
@@ -82,6 +83,15 @@ class AppTheme {
         centerTitle: false,
         titleTextStyle: AppTypography.headlineSmall,
         iconTheme: IconThemeData(color: textPrimary),
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+          systemNavigationBarColor: Colors.transparent,
+          systemNavigationBarIconBrightness: Brightness.light,
+          systemNavigationBarDividerColor: Colors.transparent,
+          systemNavigationBarContrastEnforced: false,
+        ),
       ),
 
       // Card Theme

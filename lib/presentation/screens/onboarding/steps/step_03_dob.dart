@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sique/presentation/screens/onboarding/widgets/onboarding_step_scaffold.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
@@ -102,6 +103,11 @@ class _Step03DobState extends State<Step03Dob> {
                   key: const Key('step_03_age_input'),
                   controller: _controller,
                   keyboardType: TextInputType.number,
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(3),
+                  ],
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 48,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
@@ -632,6 +633,10 @@ class ProfileTargetsScreen extends ConsumerWidget {
         content: TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.done,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+          ],
           autofocus: true,
           style: const TextStyle(color: AppTheme.textPrimary),
           decoration: const InputDecoration(
@@ -677,6 +682,10 @@ class ProfileTargetsScreen extends ConsumerWidget {
         content: TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          textInputAction: TextInputAction.done,
+          inputFormatters: [
+            FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+          ],
           autofocus: true,
           style: const TextStyle(color: AppTheme.textPrimary),
           decoration: const InputDecoration(
@@ -721,7 +730,12 @@ class ProfileTargetsScreen extends ConsumerWidget {
             style: TextStyle(color: AppTheme.textPrimary)),
         content: TextField(
           controller: controller,
-          keyboardType: const TextInputType.numberWithOptions(decimal: false),
+          keyboardType: TextInputType.number,
+          textInputAction: TextInputAction.done,
+          inputFormatters: [
+            FilteringTextInputFormatter.digitsOnly,
+            LengthLimitingTextInputFormatter(3),
+          ],
           autofocus: true,
           style: const TextStyle(color: AppTheme.textPrimary),
           decoration: const InputDecoration(

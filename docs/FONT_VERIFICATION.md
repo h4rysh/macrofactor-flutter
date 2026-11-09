@@ -111,7 +111,6 @@ flutter:
     - assets/fonts/Inter-Bold.ttf
     - assets/fonts/Inter-Black.ttf
     - assets/foods/
-    - assets/animations/
     - assets/metadata/
     - assets/database/
     - assets/data/

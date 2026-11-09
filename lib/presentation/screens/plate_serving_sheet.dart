@@ -7,7 +7,7 @@ import '../widgets/apple_tactile_card.dart';
 import '../widgets/food_svg_icon.dart';
 
 /// Authentic Sique Plate Serving Selector Bottom Sheet.
-/// Matches `plate_serving_selector_sheet.dart` & `log_revamp.png` specifications.
+/// Implements portion sizing, weight calculations, and macro target delta preview.
 class PlateServingSheet extends StatefulWidget {
   const PlateServingSheet({
     super.key,
@@ -406,6 +406,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                           controller: _quantityController,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true),
+                          textInputAction: TextInputAction.done,
                           textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontSize: 16,
@@ -563,7 +564,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
             const Divider(color: AppTheme.cardBorder),
             const SizedBox(height: 16),
 
-            // Impact on Targets Dial Badges (matching log_revamp.png)
+            // Impact on Targets Dial Badges
             const Text(
               'IMPACT ON TARGETS',
               style: TextStyle(

@@ -199,6 +199,7 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
                     controller: _controller,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
+                    textInputAction: TextInputAction.done,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 18,

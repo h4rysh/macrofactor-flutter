@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/presentation/providers/auth_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
@@ -77,6 +78,7 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
           password: password,
         );
         if (success && mounted) {
+          TextInput.finishAutofillContext();
           Navigator.of(context).pop(true);
           widget.onSuccess?.call();
         }
@@ -87,6 +89,7 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
           displayName: name.isNotEmpty ? name : null,
         );
         if (success && mounted) {
+          TextInput.finishAutofillContext();
           Navigator.of(context).pop(true);
           widget.onSuccess?.call();
         }
@@ -133,163 +136,74 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
           padding: const EdgeInsets.all(24.0),
           child: Form(
             key: _formKey,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
+            child: AutofillGroup(
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _mode == _AuthMode.signIn
+                                ? 'Sign In with Email'
+                                : _mode == _AuthMode.signUp
+                                    ? 'Create Sique Account'
+                                    : 'Reset Password',
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Close',
+                          icon: const Icon(Icons.close_rounded,
+                              color: AppTheme.textSecondary),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    if (_statusMessage != null || errorMessage != null)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: _isSuccessMessage
+                              ? AppTheme.success.withValues(alpha: 0.12)
+                              : AppTheme.calories.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: _isSuccessMessage
+                                ? AppTheme.success.withValues(alpha: 0.4)
+                                : AppTheme.calories.withValues(alpha: 0.4),
+                          ),
+                        ),
                         child: Text(
-                          _mode == _AuthMode.signIn
-                              ? 'Sign In with Email'
-                              : _mode == _AuthMode.signUp
-                                  ? 'Create Sique Account'
-                                  : 'Reset Password',
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary,
+                          _statusMessage ?? errorMessage ?? '',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: _isSuccessMessage
+                                ? AppTheme.success
+                                : AppTheme.calories,
                           ),
                         ),
                       ),
-                      IconButton(
-                        tooltip: 'Close',
-                        icon: const Icon(Icons.close_rounded,
-                            color: AppTheme.textSecondary),
-                        onPressed: () => Navigator.of(context).pop(),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  if (_statusMessage != null || errorMessage != null)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: _isSuccessMessage
-                            ? AppTheme.success.withValues(alpha: 0.12)
-                            : AppTheme.calories.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: _isSuccessMessage
-                              ? AppTheme.success.withValues(alpha: 0.4)
-                              : AppTheme.calories.withValues(alpha: 0.4),
-                        ),
-                      ),
-                      child: Text(
-                        _statusMessage ?? errorMessage ?? '',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: _isSuccessMessage
-                              ? AppTheme.success
-                              : AppTheme.calories,
-                        ),
-                      ),
-                    ),
-                  if (_mode == _AuthMode.signUp) ...[
-                    TextFormField(
-                      key: const Key('auth_name_input'),
-                      controller: _nameController,
-                      style: const TextStyle(color: AppTheme.textPrimary),
-                      decoration: InputDecoration(
-                        labelText: 'Display Name',
-                        prefixIcon: const Icon(Icons.person_outline_rounded,
-                            color: AppTheme.textSecondary),
-                        filled: true,
-                        fillColor: AppTheme.cardElevated,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
-                  TextFormField(
-                    key: const Key('auth_email_input'),
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: AppTheme.textPrimary),
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) {
-                        return 'Email is required';
-                      }
-                      final emailRegex = RegExp(
-                          r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
-                      if (!emailRegex.hasMatch(v.trim())) {
-                        return 'Invalid email address';
-                      }
-                      return null;
-                    },
-                    decoration: InputDecoration(
-                      labelText: 'Email Address',
-                      prefixIcon: const Icon(Icons.email_outlined,
-                          color: AppTheme.textSecondary),
-                      filled: true,
-                      fillColor: AppTheme.cardElevated,
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                  ),
-                  if (_mode != _AuthMode.forgotPassword) ...[
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      key: const Key('auth_password_input'),
-                      controller: _passwordController,
-                      obscureText: _obscurePassword,
-                      style: const TextStyle(color: AppTheme.textPrimary),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) {
-                          return 'Password is required';
-                        }
-                        if (v.length < 6) {
-                          return 'Password must be at least 6 characters';
-                        }
-                        return null;
-                      },
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline_rounded,
-                            color: AppTheme.textSecondary),
-                        suffixIcon: IconButton(
-                          tooltip: _obscurePassword
-                              ? 'Show password'
-                              : 'Hide password',
-                          icon: Icon(
-                            _obscurePassword
-                                ? Icons.visibility_off_rounded
-                                : Icons.visibility_rounded,
-                            color: AppTheme.textSecondary,
-                          ),
-                          onPressed: () => setState(
-                              () => _obscurePassword = !_obscurePassword),
-                        ),
-                        filled: true,
-                        fillColor: AppTheme.cardElevated,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
-                    ),
                     if (_mode == _AuthMode.signUp) ...[
-                      const SizedBox(height: 12),
                       TextFormField(
-                        key: const Key('auth_confirm_password_input'),
-                        controller: _confirmPasswordController,
-                        obscureText: _obscurePassword,
+                        key: const Key('auth_name_input'),
+                        controller: _nameController,
+                        keyboardType: TextInputType.name,
+                        textInputAction: TextInputAction.next,
+                        autofillHints: const [AutofillHints.name],
                         style: const TextStyle(color: AppTheme.textPrimary),
-                        validator: (v) {
-                          if (v == null || v.isEmpty) {
-                            return 'Please confirm your password';
-                          }
-                          if (v != _passwordController.text) {
-                            return 'Passwords do not match';
-                          }
-                          return null;
-                        },
                         decoration: InputDecoration(
-                          labelText: 'Confirm Password',
-                          prefixIcon: const Icon(Icons.lock_reset_rounded,
+                          labelText: 'Display Name',
+                          prefixIcon: const Icon(Icons.person_outline_rounded,
                               color: AppTheme.textSecondary),
                           filled: true,
                           fillColor: AppTheme.cardElevated,
@@ -297,90 +211,206 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
                               borderRadius: BorderRadius.circular(12)),
                         ),
                       ),
+                      const SizedBox(height: 12),
                     ],
-                  ],
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    key: const Key('auth_submit_btn'),
-                    onPressed: _isLoading ? null : _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.activeBlue,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                    ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                                strokeWidth: 2, color: Colors.white),
-                          )
-                        : Text(
-                            _mode == _AuthMode.signIn
-                                ? 'Sign In'
-                                : _mode == _AuthMode.signUp
-                                    ? 'Create Account'
-                                    : 'Send Reset Email',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (_mode == _AuthMode.signIn) ...[
-                    Wrap(
-                      alignment: WrapAlignment.spaceBetween,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        TextButton(
-                          key: const Key('auth_switch_to_signup_btn'),
-                          onPressed: () {
-                            ref
-                                .read(authNotifierProvider.notifier)
-                                .clearError();
-                            setState(() {
-                              _mode = _AuthMode.signUp;
-                              _statusMessage = null;
-                            });
-                          },
-                          child: const Text('Create an account'),
-                        ),
-                        TextButton(
-                          key: const Key('auth_switch_to_forgot_btn'),
-                          onPressed: () {
-                            ref
-                                .read(authNotifierProvider.notifier)
-                                .clearError();
-                            setState(() {
-                              _mode = _AuthMode.forgotPassword;
-                              _statusMessage = null;
-                            });
-                          },
-                          child: const Text('Forgot password?'),
-                        ),
-                      ],
-                    ),
-                  ] else ...[
-                    Center(
-                      child: TextButton(
-                        key: const Key('auth_switch_to_signin_btn'),
-                        onPressed: () {
-                          ref.read(authNotifierProvider.notifier).clearError();
-                          setState(() {
-                            _mode = _AuthMode.signIn;
-                            _statusMessage = null;
-                          });
-                        },
-                        child: const Text('Back to Sign In'),
+                    TextFormField(
+                      key: const Key('auth_email_input'),
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: _mode == _AuthMode.forgotPassword
+                          ? TextInputAction.done
+                          : TextInputAction.next,
+                      autofillHints: const [AutofillHints.email],
+                      onFieldSubmitted: _mode == _AuthMode.forgotPassword
+                          ? (_) => _submit()
+                          : null,
+                      style: const TextStyle(color: AppTheme.textPrimary),
+                      validator: (v) {
+                        if (v == null || v.trim().isEmpty) {
+                          return 'Email is required';
+                        }
+                        final emailRegex = RegExp(
+                            r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+                        if (!emailRegex.hasMatch(v.trim())) {
+                          return 'Invalid email address';
+                        }
+                        return null;
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Email Address',
+                        prefixIcon: const Icon(Icons.email_outlined,
+                            color: AppTheme.textSecondary),
+                        filled: true,
+                        fillColor: AppTheme.cardElevated,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
+                    if (_mode != _AuthMode.forgotPassword) ...[
+                      const SizedBox(height: 12),
+                      TextFormField(
+                        key: const Key('auth_password_input'),
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        keyboardType: TextInputType.visiblePassword,
+                        textInputAction: _mode == _AuthMode.signUp
+                            ? TextInputAction.next
+                            : TextInputAction.done,
+                        autofillHints: _mode == _AuthMode.signUp
+                            ? const [AutofillHints.newPassword]
+                            : const [AutofillHints.password],
+                        onFieldSubmitted:
+                            _mode == _AuthMode.signIn ? (_) => _submit() : null,
+                        style: const TextStyle(color: AppTheme.textPrimary),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) {
+                            return 'Password is required';
+                          }
+                          if (v.length < 6) {
+                            return 'Password must be at least 6 characters';
+                          }
+                          return null;
+                        },
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          prefixIcon: const Icon(Icons.lock_outline_rounded,
+                              color: AppTheme.textSecondary),
+                          suffixIcon: IconButton(
+                            tooltip: _obscurePassword
+                                ? 'Show password'
+                                : 'Hide password',
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility_off_rounded
+                                  : Icons.visibility_rounded,
+                              color: AppTheme.textSecondary,
+                            ),
+                            onPressed: () => setState(
+                                () => _obscurePassword = !_obscurePassword),
+                          ),
+                          filled: true,
+                          fillColor: AppTheme.cardElevated,
+                          border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12)),
+                        ),
+                      ),
+                      if (_mode == _AuthMode.signUp) ...[
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          key: const Key('auth_confirm_password_input'),
+                          controller: _confirmPasswordController,
+                          obscureText: _obscurePassword,
+                          keyboardType: TextInputType.visiblePassword,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.newPassword],
+                          onFieldSubmitted: (_) => _submit(),
+                          style: const TextStyle(color: AppTheme.textPrimary),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) {
+                              return 'Please confirm your password';
+                            }
+                            if (v != _passwordController.text) {
+                              return 'Passwords do not match';
+                            }
+                            return null;
+                          },
+                          decoration: InputDecoration(
+                            labelText: 'Confirm Password',
+                            prefixIcon: const Icon(Icons.lock_reset_rounded,
+                                color: AppTheme.textSecondary),
+                            filled: true,
+                            fillColor: AppTheme.cardElevated,
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12)),
+                          ),
+                        ),
+                      ],
+                    ],
+                    const SizedBox(height: 20),
+                    ElevatedButton(
+                      key: const Key('auth_submit_btn'),
+                      onPressed: _isLoading ? null : _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.activeBlue,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                  strokeWidth: 2, color: Colors.white),
+                            )
+                          : Text(
+                              _mode == _AuthMode.signIn
+                                  ? 'Sign In'
+                                  : _mode == _AuthMode.signUp
+                                      ? 'Create Account'
+                                      : 'Send Reset Email',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
+                            ),
+                    ),
+                    const SizedBox(height: 16),
+                    if (_mode == _AuthMode.signIn) ...[
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          TextButton(
+                            key: const Key('auth_switch_to_signup_btn'),
+                            onPressed: () {
+                              ref
+                                  .read(authNotifierProvider.notifier)
+                                  .clearError();
+                              setState(() {
+                                _mode = _AuthMode.signUp;
+                                _statusMessage = null;
+                              });
+                            },
+                            child: const Text('Create an account'),
+                          ),
+                          TextButton(
+                            key: const Key('auth_switch_to_forgot_btn'),
+                            onPressed: () {
+                              ref
+                                  .read(authNotifierProvider.notifier)
+                                  .clearError();
+                              setState(() {
+                                _mode = _AuthMode.forgotPassword;
+                                _statusMessage = null;
+                              });
+                            },
+                            child: const Text('Forgot password?'),
+                          ),
+                        ],
+                      ),
+                    ] else ...[
+                      Center(
+                        child: TextButton(
+                          key: const Key('auth_switch_to_signin_btn'),
+                          onPressed: () {
+                            ref
+                                .read(authNotifierProvider.notifier)
+                                .clearError();
+                            setState(() {
+                              _mode = _AuthMode.signIn;
+                              _statusMessage = null;
+                            });
+                          },
+                          child: const Text('Back to Sign In'),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    const AuthLegalFooter(),
                   ],
-                  const SizedBox(height: 16),
-                  const AuthLegalFooter(),
-                ],
+                ),
               ),
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../providers/strategy_providers.dart';
 import '../../theme/app_theme.dart';
+import '../sique_empty_state.dart';
 
 /// Modal sheet showing historical weekly coaching check-ins.
 class CheckinHistorySheet extends ConsumerWidget {
@@ -67,36 +68,11 @@ class CheckinHistorySheet extends ConsumerWidget {
               const SizedBox(height: 12),
 
               if (history.isEmpty)
-                Container(
-                  padding: const EdgeInsets.symmetric(vertical: 40),
-                  alignment: Alignment.center,
-                  child: const Column(
-                    children: [
-                      Icon(
-                        Icons.history_toggle_off_rounded,
-                        size: 44,
-                        color: AppTheme.textSecondary,
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        'No Check-Ins Yet',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      SizedBox(height: 6),
-                      Text(
-                        'Weekly check-in logs will appear here after your first review.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+                const SiqueEmptyState(
+                  icon: Icons.history_toggle_off_rounded,
+                  title: 'No Check-Ins Yet',
+                  message:
+                      'Weekly check-in logs will appear here after your first review.',
                 )
               else
                 Flexible(

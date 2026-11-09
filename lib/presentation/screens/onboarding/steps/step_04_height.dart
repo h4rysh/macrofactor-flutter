@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sique/presentation/screens/onboarding/widgets/onboarding_step_scaffold.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
@@ -134,6 +135,10 @@ class _Step04HeightState extends State<Step04Height> {
                     controller: _cmController,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
+                    textInputAction: TextInputAction.done,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                    ],
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 48,
@@ -180,6 +185,11 @@ class _Step04HeightState extends State<Step04Height> {
                     key: const Key('step_04_feet_input'),
                     controller: _ftController,
                     keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(2),
+                    ],
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 44,
@@ -204,6 +214,11 @@ class _Step04HeightState extends State<Step04Height> {
                     key: const Key('step_04_inches_input'),
                     controller: _inController,
                     keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(2),
+                    ],
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontSize: 44,

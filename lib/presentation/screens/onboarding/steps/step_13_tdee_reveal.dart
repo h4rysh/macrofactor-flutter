@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:sique/presentation/screens/onboarding/widgets/onboarding_step_scaffold.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
@@ -267,6 +268,11 @@ class _Step13TdeeRevealState extends State<Step13TdeeReveal> {
                     key: const Key('step_13_override_input'),
                     controller: _overrideController,
                     keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.done,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(5),
+                    ],
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,

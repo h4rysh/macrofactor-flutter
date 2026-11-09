@@ -6,6 +6,7 @@ import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/apple_tactile_card.dart';
 import '../widgets/food_svg_icon.dart';
+import '../widgets/sique_empty_state.dart';
 import 'plate_serving_sheet.dart';
 
 enum FoodFilterType {
@@ -177,6 +178,12 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                 child: TextField(
                   controller: _searchController,
                   autofocus: true,
+                  keyboardType: TextInputType.text,
+                  textInputAction: TextInputAction.search,
+                  onSubmitted: (query) {
+                    _performSearch(query);
+                    FocusScope.of(context).unfocus();
+                  },
                   style: const TextStyle(
                     color: AppTheme.textPrimary,
                     fontSize: 16,
@@ -291,26 +298,11 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
               child: CircularProgressIndicator(color: AppTheme.activeBlue),
             )
           : _searchResults.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(
-                        Icons.search_off_rounded,
-                        size: 54,
-                        color: AppTheme.textMuted,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'No foods found for "${_searchController.text}"',
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
+              ? SiqueEmptyState(
+                  icon: Icons.search_off_rounded,
+                  title: 'No foods found',
+                  message:
+                      'No items match "${_searchController.text}". Try a different term or barcode scan.',
                 )
               : ListView.separated(
                   padding: const EdgeInsets.all(16),
