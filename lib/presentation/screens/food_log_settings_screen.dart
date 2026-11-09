@@ -42,6 +42,7 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
       appBar: AppBar(
         title: const Text('Food Log Settings'),
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),

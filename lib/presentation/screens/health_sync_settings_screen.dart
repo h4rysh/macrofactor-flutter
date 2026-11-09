@@ -17,6 +17,7 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
         title: const Text('Health Connect Sync'),
         leading: IconButton(
           key: const Key('health_sync_back_btn'),
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),

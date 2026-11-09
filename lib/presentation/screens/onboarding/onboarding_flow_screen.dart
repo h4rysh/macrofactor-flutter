@@ -252,6 +252,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         elevation: 0,
         leading: IconButton(
           key: const Key('onboarding_back_btn'),
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded,
               size: 20, color: AppTheme.textPrimary),
           onPressed: _previousStep,

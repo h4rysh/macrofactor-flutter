@@ -40,6 +40,7 @@ class _ExpenditureSettingsScreenState
       appBar: AppBar(
         title: const Text('Expenditure & Weight'),
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),

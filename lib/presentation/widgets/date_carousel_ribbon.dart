@@ -68,6 +68,7 @@ class DateCarouselRibbon extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.chevron_left_rounded, size: 26),
                         color: AppTheme.textSecondary,
+                        tooltip: 'Previous day',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () {
@@ -126,6 +127,7 @@ class DateCarouselRibbon extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.chevron_right_rounded, size: 26),
                         color: AppTheme.textSecondary,
+                        tooltip: 'Next day',
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () {

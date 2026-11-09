@@ -90,6 +90,12 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<String>(selectedDateProvider, (prev, next) {
+      if (prev != next) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      }
+    });
+
     final clock = ref.watch(clockProvider);
     final now = clock();
     final selectedDateStr = ref.watch(selectedDateProvider);
@@ -137,6 +143,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                     selectedDate: selectedDate,
                     now: now,
                     onDateSelected: (date) {
+                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
                       ref.read(selectedDateProvider.notifier).state =
                           DateFormat('yyyy-MM-dd').format(date);
                     },
@@ -195,6 +202,23 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                           ref
                               .read(dailyFoodLogsProvider.notifier)
                               .removeEntry(entry.id);
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Removed ${entry.foodName}'),
+                              action: SnackBarAction(
+                                label: 'Undo',
+                                textColor: AppTheme.activeBlue,
+                                onPressed: () {
+                                  ref
+                                      .read(dailyFoodLogsProvider.notifier)
+                                      .restoreEntry(entry);
+                                },
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 4),
+                            ),
+                          );
                         },
                       );
                     },

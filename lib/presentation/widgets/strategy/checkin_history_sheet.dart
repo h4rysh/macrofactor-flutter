@@ -57,6 +57,7 @@ class CheckinHistorySheet extends ConsumerWidget {
                     ),
                   ),
                   IconButton(
+                    tooltip: 'Close',
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded,
                         color: AppTheme.textSecondary),

@@ -190,6 +190,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 IconButton(
+                  tooltip: 'Close',
                   icon: const Icon(Icons.close_rounded, size: 24),
                   color: AppTheme.textSecondary,
                   padding: EdgeInsets.zero,

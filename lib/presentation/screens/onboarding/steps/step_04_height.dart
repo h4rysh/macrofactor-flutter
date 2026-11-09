@@ -112,6 +112,7 @@ class _Step04HeightState extends State<Step04Height> {
               children: [
                 IconButton(
                   key: const Key('step_04_decrement_btn'),
+                  tooltip: 'Decrease height',
                   icon:
                       const Icon(Icons.remove_circle_outline_rounded, size: 36),
                   color: AppTheme.textSecondary,
@@ -154,6 +155,7 @@ class _Step04HeightState extends State<Step04Height> {
                 const SizedBox(width: 16),
                 IconButton(
                   key: const Key('step_04_increment_btn'),
+                  tooltip: 'Increase height',
                   icon: const Icon(Icons.add_circle_outline_rounded, size: 36),
                   color: AppTheme.textSecondary,
                   onPressed: () {

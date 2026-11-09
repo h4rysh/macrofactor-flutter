@@ -98,6 +98,7 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded,
               color: AppTheme.textPrimary, size: 20),
           onPressed: () => Navigator.of(context).pop(),

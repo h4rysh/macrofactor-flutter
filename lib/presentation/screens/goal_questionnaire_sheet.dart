@@ -233,6 +233,7 @@ class _GoalQuestionnaireSheetState
                     if (_currentStep > 0)
                       IconButton(
                         key: const Key('questionnaire_back_btn'),
+                        tooltip: 'Back',
                         icon: const Icon(Icons.arrow_back_ios_new_rounded,
                             size: 18, color: AppTheme.textSecondary),
                         onPressed: _prevStep,
@@ -253,6 +254,7 @@ class _GoalQuestionnaireSheetState
                     ),
                     const Spacer(),
                     IconButton(
+                      tooltip: 'Close',
                       icon: const Icon(Icons.close_rounded,
                           size: 20, color: AppTheme.textSecondary),
                       onPressed: () {

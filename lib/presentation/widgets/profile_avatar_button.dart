@@ -20,33 +20,44 @@ class ProfileAvatarButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isAuthenticated = user?.isAuthenticated ?? false;
+    final label = user != null && user!.displayName.isNotEmpty
+        ? 'Profile: ${user!.displayName}'
+        : 'Profile: Guest user';
 
-    return AppleBouncy(
-      onTap: onTap,
-      scaleDown: 0.92,
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: AppTheme.cardElevated,
-          border: Border.all(
-            color: isAuthenticated
-                ? AppTheme.activeBlue.withValues(alpha: 0.7)
-                : AppTheme.cardBorder,
-            width: 1.5,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: (isAuthenticated ? AppTheme.activeBlue : Colors.black)
-                  .withValues(alpha: 0.2),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+    return Semantics(
+      button: true,
+      label: label,
+      tooltip: 'Profile & Account Settings',
+      child: Tooltip(
+        message: 'Profile & Account Settings',
+        child: AppleBouncy(
+          onTap: onTap,
+          scaleDown: 0.92,
+          child: Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppTheme.cardElevated,
+              border: Border.all(
+                color: isAuthenticated
+                    ? AppTheme.activeBlue.withValues(alpha: 0.7)
+                    : AppTheme.cardBorder,
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (isAuthenticated ? AppTheme.activeBlue : Colors.black)
+                      .withValues(alpha: 0.2),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: ClipOval(
-          child: _buildAvatarContent(context),
+            child: ClipOval(
+              child: _buildAvatarContent(context),
+            ),
+          ),
         ),
       ),
     );

@@ -211,6 +211,43 @@ class FoodDao {
     return _db.lastInsertRowId;
   }
 
+  /// Restores a previously deleted food entry, preserving its original id,
+  /// date, and timestamp.
+  int restoreFoodLog(FoodLogEntry entry) {
+    if (entry.id == null) {
+      return insertFoodLog(entry);
+    }
+    final stmt = _db.prepare('''
+      INSERT OR REPLACE INTO food_logs (
+        id, date, meal_type, food_id, food_name, serving_quantity,
+        unit_name, gram_weight, calories, protein, carbs,
+        fat, fiber, oil_modifier, logged_at, icon_svg
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    ''');
+
+    stmt.execute([
+      entry.id,
+      entry.date,
+      entry.mealType.name,
+      entry.foodId,
+      entry.foodName,
+      entry.servingQuantity,
+      entry.unitName,
+      entry.gramWeight,
+      entry.calories,
+      entry.protein,
+      entry.carbs,
+      entry.fat,
+      entry.fiber,
+      entry.oilModifier.name,
+      entry.loggedAt.toIso8601String(),
+      entry.iconSvg,
+    ]);
+    stmt.dispose();
+
+    return entry.id!;
+  }
+
   /// Retrieves all logged food items for a date (YYYY-MM-DD).
   List<FoodLogEntry> getFoodLogsForDate(String date) {
     final stmt = _db.prepare('''

@@ -171,14 +171,22 @@ class _MacroDonutChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final proteinCal = (proteinGrams * 4.0).round();
+    final carbsCal = (carbsGrams * 4.0).round();
+    final fatCal = (fatGrams * 9.0).round();
     return SizedBox(
       width: 100,
       height: 100,
-      child: CustomPaint(
-        painter: _DonutChartPainter(
-          protein: proteinGrams * 4.0,
-          carbs: carbsGrams * 4.0,
-          fat: fatGrams * 9.0,
+      child: Semantics(
+        label:
+            'Calorie distribution: $proteinCal kcal protein, $carbsCal kcal carbs, $fatCal kcal fat',
+        container: true,
+        child: CustomPaint(
+          painter: _DonutChartPainter(
+            protein: proteinGrams * 4.0,
+            carbs: carbsGrams * 4.0,
+            fat: fatGrams * 9.0,
+          ),
         ),
       ),
     );

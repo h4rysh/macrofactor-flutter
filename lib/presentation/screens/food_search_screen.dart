@@ -156,6 +156,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
       backgroundColor: AppTheme.background,
       appBar: AppBar(
         leading: IconButton(
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -191,6 +192,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                     ),
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
+                            tooltip: 'Clear search',
                             icon: const Icon(
                               Icons.clear_rounded,
                               color: AppTheme.textSecondary,

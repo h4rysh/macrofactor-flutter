@@ -58,6 +58,7 @@ class _Step06WeightHistoryState extends State<Step06WeightHistory> {
             children: [
               IconButton(
                 key: const Key('step_06_decrement_btn'),
+                tooltip: 'Decrease weight',
                 icon: const Icon(Icons.remove_circle_outline_rounded, size: 36),
                 color: AppTheme.textSecondary,
                 onPressed: () {
@@ -95,6 +96,7 @@ class _Step06WeightHistoryState extends State<Step06WeightHistory> {
               const SizedBox(width: 20),
               IconButton(
                 key: const Key('step_06_increment_btn'),
+                tooltip: 'Increase weight',
                 icon: const Icon(Icons.add_circle_outline_rounded, size: 36),
                 color: AppTheme.textSecondary,
                 onPressed: () {

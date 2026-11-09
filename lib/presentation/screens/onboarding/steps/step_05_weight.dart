@@ -102,6 +102,7 @@ class _Step05WeightState extends State<Step05Weight> {
             children: [
               IconButton(
                 key: const Key('step_05_decrement_btn'),
+                tooltip: 'Decrease weight',
                 icon: const Icon(Icons.remove_circle_outline_rounded, size: 36),
                 color: AppTheme.textSecondary,
                 onPressed: () {
@@ -142,6 +143,7 @@ class _Step05WeightState extends State<Step05Weight> {
               const SizedBox(width: 16),
               IconButton(
                 key: const Key('step_05_increment_btn'),
+                tooltip: 'Increase weight',
                 icon: const Icon(Icons.add_circle_outline_rounded, size: 36),
                 color: AppTheme.textSecondary,
                 onPressed: () {

@@ -38,11 +38,11 @@ class AppMotion {
   // ===========================================================================
 
   /// Standard natural acceleration and deceleration.
-  static const Curve standard = Curves.easeInOutCubic;
+  static const Curve standard = Curves.easeInOutCubicEmphasized;
 
   /// Emphasized entrance easing with smooth deceleration.
-  static const Curve emphasized = Curves.easeOutCubic;
+  static const Curve emphasized = Curves.easeInOutCubic;
 
   /// Decelerated easing for quick settle on touch or dismissal.
-  static const Curve decelerated = Curves.easeOut;
+  static const Curve decelerated = Curves.easeOutCubic;
 }

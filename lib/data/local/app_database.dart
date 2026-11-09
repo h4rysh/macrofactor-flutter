@@ -80,6 +80,8 @@ class AppDatabase {
 
   int insertFoodLog(FoodLogEntry entry) => foodDao.insertFoodLog(entry);
 
+  int restoreFoodLog(FoodLogEntry entry) => foodDao.restoreFoodLog(entry);
+
   List<FoodLogEntry> getFoodLogsForDate(String date) =>
       foodDao.getFoodLogsForDate(date);
 

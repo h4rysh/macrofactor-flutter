@@ -62,6 +62,7 @@ class TimelineHourSlot extends StatelessWidget {
               // Time capsule with plus button
               AppleBouncy(
                 scaleDown: 0.94,
+                semanticLabel: 'Add food at ${_formatHour(hour)}',
                 onTap: onAddTap,
                 child: Container(
                   padding:

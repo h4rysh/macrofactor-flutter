@@ -104,6 +104,7 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                       ),
                     ),
                     IconButton(
+                      tooltip: 'Close',
                       icon: const Icon(Icons.close_rounded,
                           color: AppTheme.textSecondary),
                       onPressed: () => Navigator.of(context).pop(),
@@ -142,6 +143,8 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                     prefixIcon: const Icon(Icons.lock_outline_rounded,
                         color: AppTheme.textSecondary),
                     suffixIcon: IconButton(
+                      tooltip:
+                          _obscureCurrent ? 'Show password' : 'Hide password',
                       icon: Icon(
                         _obscureCurrent
                             ? Icons.visibility_off_rounded
@@ -177,6 +180,7 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                     prefixIcon: const Icon(Icons.vpn_key_outlined,
                         color: AppTheme.textSecondary),
                     suffixIcon: IconButton(
+                      tooltip: _obscureNew ? 'Show password' : 'Hide password',
                       icon: Icon(
                         _obscureNew
                             ? Icons.visibility_off_rounded

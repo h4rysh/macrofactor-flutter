@@ -156,6 +156,7 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
                         ),
                       ),
                       IconButton(
+                        tooltip: 'Close',
                         icon: const Icon(Icons.close_rounded,
                             color: AppTheme.textSecondary),
                         onPressed: () => Navigator.of(context).pop(),
@@ -252,6 +253,9 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
                         prefixIcon: const Icon(Icons.lock_outline_rounded,
                             color: AppTheme.textSecondary),
                         suffixIcon: IconButton(
+                          tooltip: _obscurePassword
+                              ? 'Show password'
+                              : 'Hide password',
                           icon: Icon(
                             _obscurePassword
                                 ? Icons.visibility_off_rounded

@@ -49,6 +49,7 @@ class AccountProfileScreen extends ConsumerWidget {
         title: const Text('Account & Profile'),
         leading: IconButton(
           key: const Key('profile_back_btn'),
+          tooltip: 'Back',
           icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
           onPressed: () => Navigator.of(context).pop(),
         ),

@@ -26,122 +26,137 @@ class MacroGaugeRing extends StatelessWidget {
         : 0.0;
     final remainingCalories = (targets.calories - consumed.calories).round();
 
-    return AppleTactileCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(20.0),
-      borderRadius: 22.0,
-      backgroundColor: AppTheme.cardSurface.withValues(alpha: 0.85),
-      child: Column(
-        children: [
-          // Circular Ring Gauge with animated sweep & count-up odometer
-          SizedBox(
-            height: 184,
-            width: 184,
-            child: Stack(
-              alignment: Alignment.center,
+    final semanticsLabel =
+        'Daily Nutrition Gauge. Consumed: ${consumed.calories.round()} of ${targets.calories.round()} kcal. '
+        'Protein: ${consumed.protein.round()}g of ${targets.proteinGrams.round()}g. '
+        'Carbs: ${consumed.carbs.round()}g of ${targets.carbsGrams.round()}g. '
+        'Fat: ${consumed.fat.round()}g of ${targets.fatGrams.round()}g.';
+
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final sweepDuration =
+        disableAnimations ? Duration.zero : const Duration(milliseconds: 950);
+
+    return Semantics(
+      label: semanticsLabel,
+      container: true,
+      child: AppleTactileCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(20.0),
+        borderRadius: 22.0,
+        backgroundColor: AppTheme.cardSurface.withValues(alpha: 0.85),
+        child: Column(
+          children: [
+            // Circular Ring Gauge with animated sweep & count-up odometer
+            SizedBox(
+              height: 184,
+              width: 184,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  TweenAnimationBuilder<double>(
+                    tween: Tween<double>(begin: 0.0, end: calorieRatio),
+                    duration: sweepDuration,
+                    curve: Curves.easeOutCubic,
+                    builder: (context, animatedRatio, child) {
+                      return CustomPaint(
+                        size: const Size(184, 184),
+                        painter: _AnimatedRingPainter(
+                          progress: animatedRatio,
+                          trackColor:
+                              AppTheme.cardBorder.withValues(alpha: 0.7),
+                          progressColor: AppTheme.calories,
+                        ),
+                      );
+                    },
+                  ),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AnimatedCountText(
+                          value: consumed.calories,
+                          style: AppTypography.numericDisplay.copyWith(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.textPrimary,
+                            letterSpacing: -1.0,
+                          ),
+                        ),
+                        Text(
+                          'CALORIES CONSUMED',
+                          style: AppTypography.labelSmall.copyWith(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textSecondary,
+                            letterSpacing: 0.9,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.surface.withValues(alpha: 0.9),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppTheme.cardBorder.withValues(alpha: 0.8),
+                              width: 0.8,
+                            ),
+                          ),
+                          child: Text(
+                            remainingCalories >= 0
+                                ? '$remainingCalories left'
+                                : '+${remainingCalories.abs()} over',
+                            style: AppTypography.numericSmall.copyWith(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: remainingCalories >= 0
+                                  ? AppTheme.calories
+                                  : AppTheme.neutralInfo,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+            // Macro Bars: Protein, Fat, Carbs with animated fill and glowing caps
+            Row(
               children: [
-                TweenAnimationBuilder<double>(
-                  tween: Tween<double>(begin: 0.0, end: calorieRatio),
-                  duration: const Duration(milliseconds: 950),
-                  curve: Curves.easeOutCubic,
-                  builder: (context, animatedRatio, child) {
-                    return CustomPaint(
-                      size: const Size(184, 184),
-                      painter: _AnimatedRingPainter(
-                        progress: animatedRatio,
-                        trackColor: AppTheme.cardBorder.withValues(alpha: 0.7),
-                        progressColor: AppTheme.calories,
-                      ),
-                    );
-                  },
+                Expanded(
+                  child: _AnimatedMacroProgressItem(
+                    label: 'PROTEIN',
+                    consumedGrams: consumed.protein,
+                    targetGrams: targets.proteinGrams,
+                    color: AppTheme.protein,
+                  ),
                 ),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      AnimatedCountText(
-                        value: consumed.calories,
-                        style: AppTypography.numericDisplay.copyWith(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w900,
-                          color: AppTheme.textPrimary,
-                          letterSpacing: -1.0,
-                        ),
-                      ),
-                      Text(
-                        'CALORIES CONSUMED',
-                        style: AppTypography.labelSmall.copyWith(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textSecondary,
-                          letterSpacing: 0.9,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: AppTheme.cardBorder.withValues(alpha: 0.8),
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Text(
-                          remainingCalories >= 0
-                              ? '$remainingCalories left'
-                              : '+${remainingCalories.abs()} over',
-                          style: AppTypography.numericSmall.copyWith(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: remainingCalories >= 0
-                                ? AppTheme.calories
-                                : AppTheme.neutralInfo,
-                          ),
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _AnimatedMacroProgressItem(
+                    label: 'FAT',
+                    consumedGrams: consumed.fat,
+                    targetGrams: targets.fatGrams,
+                    color: AppTheme.fat,
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: _AnimatedMacroProgressItem(
+                    label: 'CARBS',
+                    consumedGrams: consumed.carbs,
+                    targetGrams: targets.carbsGrams,
+                    color: AppTheme.carbs,
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 22),
-          // Macro Bars: Protein, Fat, Carbs with animated fill and glowing caps
-          Row(
-            children: [
-              Expanded(
-                child: _AnimatedMacroProgressItem(
-                  label: 'PROTEIN',
-                  consumedGrams: consumed.protein,
-                  targetGrams: targets.proteinGrams,
-                  color: AppTheme.protein,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: _AnimatedMacroProgressItem(
-                  label: 'FAT',
-                  consumedGrams: consumed.fat,
-                  targetGrams: targets.fatGrams,
-                  color: AppTheme.fat,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: _AnimatedMacroProgressItem(
-                  label: 'CARBS',
-                  consumedGrams: consumed.carbs,
-                  targetGrams: targets.carbsGrams,
-                  color: AppTheme.carbs,
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -83,6 +83,7 @@ class _Step03DobState extends State<Step03Dob> {
             children: [
               IconButton(
                 key: const Key('step_03_decrement_btn'),
+                tooltip: 'Decrease age',
                 icon: const Icon(Icons.remove_circle_outline_rounded, size: 36),
                 color: AppTheme.textSecondary,
                 onPressed: () {
@@ -119,6 +120,7 @@ class _Step03DobState extends State<Step03Dob> {
               const SizedBox(width: 20),
               IconButton(
                 key: const Key('step_03_increment_btn'),
+                tooltip: 'Increase age',
                 icon: const Icon(Icons.add_circle_outline_rounded, size: 36),
                 color: AppTheme.textSecondary,
                 onPressed: () {

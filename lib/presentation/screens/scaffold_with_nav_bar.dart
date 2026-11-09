@@ -46,10 +46,22 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
   Widget build(BuildContext context) {
     return AppLifecycleSyncObserver(
       child: Scaffold(
+        extendBody: true,
         backgroundColor: AppTheme.background,
-        body: IndexedStack(
-          index: _currentIndex,
-          children: _screens,
+        body: AnimatedSwitcher(
+          duration: AppMotion.fast,
+          switchInCurve: AppMotion.decelerated,
+          switchOutCurve: AppMotion.decelerated,
+          transitionBuilder: (child, animation) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+          child: KeyedSubtree(
+            key: ValueKey<int>(_currentIndex),
+            child: _screens[_currentIndex],
+          ),
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
@@ -80,14 +92,16 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                       // 1. Dashboard Tab
                       _buildNavItem(
                         index: 0,
-                        icon: Icons.grid_view_rounded,
+                        icon: Icons.grid_view_outlined,
+                        selectedIcon: Icons.grid_view_rounded,
                         label: 'Dashboard',
                       ),
 
-                      // 2. Food Log Tab (Iconic Apple)
+                      // 2. Food Log Tab
                       _buildNavItem(
                         index: 1,
-                        icon: Icons.apple,
+                        icon: Icons.restaurant_outlined,
+                        selectedIcon: Icons.restaurant,
                         label: 'Food Log',
                       ),
 
@@ -98,6 +112,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                             button: true,
                             label: 'Open quick actions menu',
                             child: AppleBouncy(
+                              semanticLabel: 'Open quick actions menu',
                               onTap: () {
                                 QuickActionsSheet.show(context);
                               },
@@ -145,13 +160,15 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                       _buildNavItem(
                         index: 2,
                         icon: Icons.hub_outlined,
+                        selectedIcon: Icons.hub_rounded,
                         label: 'Strategy',
                       ),
 
                       // 5. More Tab
                       _buildNavItem(
                         index: 3,
-                        icon: Icons.more_horiz_rounded,
+                        icon: Icons.more_horiz_outlined,
+                        selectedIcon: Icons.more_horiz_rounded,
                         label: 'More',
                       ),
                     ],
@@ -168,13 +185,17 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
   Widget _buildNavItem({
     required int index,
     required IconData icon,
+    IconData? selectedIcon,
     required String label,
   }) {
     final isSelected = _currentIndex == index;
     final color = isSelected ? AppTheme.activeBlue : AppTheme.textSecondary;
+    final effectiveIcon =
+        (isSelected && selectedIcon != null) ? selectedIcon : icon;
 
     return Expanded(
       child: AppleBouncy(
+        semanticLabel: label,
         onTap: () => _onTabSelected(index),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
@@ -200,7 +221,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                 scale: isSelected ? 1.08 : 1.0,
                 duration: const Duration(milliseconds: 200),
                 curve: Curves.easeOutCubic,
-                child: Icon(icon, color: color, size: 21),
+                child: Icon(effectiveIcon, color: color, size: 21),
               ),
               const SizedBox(height: 3),
               AnimatedDefaultTextStyle(

@@ -94,6 +94,7 @@ class GoogleAccountCard extends ConsumerWidget {
                         ),
                       ),
                       IconButton(
+                        tooltip: 'Dismiss error',
                         icon: const Icon(
                           Icons.close_rounded,
                           size: 16,

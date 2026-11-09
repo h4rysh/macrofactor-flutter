@@ -164,6 +164,13 @@ class DailyFoodLogsNotifier extends StateNotifier<List<FoodLogEntry>> {
     }
   }
 
+  int restoreEntry(FoodLogEntry entry) {
+    final id = _db.restoreFoodLog(entry);
+    refresh();
+    _notifyMutation();
+    return id;
+  }
+
   int addEntry({
     required FoodItem food,
     required PortionUnit portionUnit,
