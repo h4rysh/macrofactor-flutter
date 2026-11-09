@@ -179,7 +179,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 220),
           curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+          margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
           padding: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
             color: isSelected
@@ -205,14 +205,16 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
               const SizedBox(height: 3),
               AnimatedDefaultTextStyle(
                 duration: const Duration(milliseconds: 200),
-                style: TextStyle(
-                  fontFamily: 'MacroSans',
+                style: AppTypography.labelSmall.copyWith(
                   fontSize: 10,
                   fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
                   color: color,
                   letterSpacing: isSelected ? 0.2 : 0.0,
                 ),
-                child: Text(label),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(label, maxLines: 1),
+                ),
               ),
             ],
           ),

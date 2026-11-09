@@ -107,7 +107,6 @@ class _Step18DietTypeState extends State<Step18DietType> {
                         Text(
                           diet['title'] as String,
                           style: TextStyle(
-                            fontFamily: 'MacroSans',
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: isSelected
@@ -119,7 +118,6 @@ class _Step18DietTypeState extends State<Step18DietType> {
                         Text(
                           diet['desc'] as String,
                           style: const TextStyle(
-                            fontFamily: 'DMSans',
                             fontSize: 12,
                             color: AppTheme.textSecondary,
                           ),

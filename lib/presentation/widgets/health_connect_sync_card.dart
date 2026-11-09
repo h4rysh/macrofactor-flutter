@@ -33,7 +33,6 @@ class HealthConnectSyncCard extends ConsumerWidget {
                   Text(
                     'Google Health Connect',
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -54,7 +53,6 @@ class HealthConnectSyncCard extends ConsumerWidget {
                   const Text(
                     'Last Synced',
                     style: TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 11,
                       color: AppTheme.textSecondary,
                     ),
@@ -64,7 +62,6 @@ class HealthConnectSyncCard extends ConsumerWidget {
                     healthState.formattedLastSync,
                     key: const Key('profile_last_sync_text'),
                     style: const TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -80,7 +77,6 @@ class HealthConnectSyncCard extends ConsumerWidget {
                     const Text(
                       'Synced Telemetry',
                       style: TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 11,
                         color: AppTheme.textSecondary,
                       ),
@@ -89,7 +85,6 @@ class HealthConnectSyncCard extends ConsumerWidget {
                     Text(
                       '${healthState.syncedWorkoutsCount} workouts, ${healthState.syncedWeightsCount} weights',
                       style: const TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textPrimary,
@@ -122,7 +117,6 @@ class HealthConnectSyncCard extends ConsumerWidget {
                     child: Text(
                       healthState.errorMessage!,
                       style: const TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 11,
                         color: AppTheme.calories,
                       ),
@@ -166,7 +160,6 @@ class HealthConnectSyncCard extends ConsumerWidget {
                     const Text(
                       'Synchronizing Health Data...',
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
@@ -182,7 +175,6 @@ class HealthConnectSyncCard extends ConsumerWidget {
                     const Text(
                       'Sync Now',
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,

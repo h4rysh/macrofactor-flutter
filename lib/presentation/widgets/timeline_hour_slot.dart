@@ -77,7 +77,6 @@ class TimelineHourSlot extends StatelessWidget {
                       Text(
                         _formatHour(hour),
                         style: const TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
@@ -101,7 +100,6 @@ class TimelineHourSlot extends StatelessWidget {
                     Text(
                       '${totalCalories.round()} 🔥',
                       style: const TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
@@ -111,7 +109,6 @@ class TimelineHourSlot extends StatelessWidget {
                     Text(
                       '${totalProtein.round()}P',
                       style: const TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.protein,
@@ -121,7 +118,6 @@ class TimelineHourSlot extends StatelessWidget {
                     Text(
                       '${totalFat.round()}F',
                       style: const TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.fat,
@@ -131,7 +127,6 @@ class TimelineHourSlot extends StatelessWidget {
                     Text(
                       '${totalCarbs.round()}C',
                       style: const TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.carbs,

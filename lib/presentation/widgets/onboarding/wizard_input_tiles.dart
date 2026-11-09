@@ -58,7 +58,6 @@ class WizardSelectionCard extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: selected ? accentColor : AppTheme.textPrimary,
@@ -68,7 +67,6 @@ class WizardSelectionCard extends StatelessWidget {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 13,
                     color: AppTheme.textSecondary,
                     height: 1.3,
@@ -118,22 +116,33 @@ class WizardSliderTile extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontFamily: 'MacroSans',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
                 ),
               ),
-              Text(
-                valueText,
-                style: const TextStyle(
-                  fontFamily: 'MacroSans',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.calories,
+              const SizedBox(width: 8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    valueText,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.calories,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -183,25 +192,31 @@ class WizardChoiceChip extends StatelessWidget {
             width: 1.5,
           ),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: selected ? AppTheme.calories : AppTheme.textSecondary,
-              size: 20,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  icon,
+                  color: selected ? AppTheme.calories : AppTheme.textSecondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: selected ? AppTheme.calories : AppTheme.textPrimary,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'MacroSans',
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: selected ? AppTheme.calories : AppTheme.textPrimary,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -237,13 +252,15 @@ class WizardSmallChoiceChip extends StatelessWidget {
             width: 1,
           ),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'MacroSans',
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: selected ? AppTheme.calories : AppTheme.textSecondary,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: selected ? AppTheme.calories : AppTheme.textSecondary,
+            ),
           ),
         ),
       ),
@@ -266,13 +283,15 @@ class WizardMacroBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppTheme.cardBorder, width: 1),
       ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          fontFamily: 'MacroSans',
-          fontSize: 12,
-          fontWeight: FontWeight.w600,
-          color: AppTheme.textSecondary,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: AppTheme.textSecondary,
+          ),
         ),
       ),
     );

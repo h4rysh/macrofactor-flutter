@@ -34,7 +34,6 @@ class WorkoutConsistencyTracker extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimary,
@@ -72,7 +71,6 @@ class WorkoutConsistencyTracker extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                   ),
@@ -86,7 +84,6 @@ class WorkoutConsistencyTracker extends ConsumerWidget {
                   maxLines: 1,
                   textAlign: TextAlign.end,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textMuted,
                   ),
@@ -130,7 +127,6 @@ class WorkoutConsistencyTracker extends ConsumerWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 13,
                   fontWeight:
                       isActive || isToday ? FontWeight.w800 : FontWeight.w500,

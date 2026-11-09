@@ -70,7 +70,6 @@ class Step24ProgramReady extends ConsumerWidget {
                 const Text(
                   'DAILY BASELINE TARGET',
                   style: TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.2,
@@ -81,7 +80,6 @@ class Step24ProgramReady extends ConsumerWidget {
                 Text(
                   '${monday.calories.round()}',
                   style: const TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 50,
                     fontWeight: FontWeight.w900,
                     color: AppTheme.textPrimary,
@@ -92,7 +90,6 @@ class Step24ProgramReady extends ConsumerWidget {
                 const Text(
                   'Calories / day',
                   style: TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 13,
                     color: AppTheme.textSecondary,
                   ),
@@ -146,7 +143,6 @@ class Step24ProgramReady extends ConsumerWidget {
                   child: Text(
                     'Adherence-Neutral: Sique never judges food choices. Log what you actually eat, and the Bayesian Kalman filter will continuously refine your metabolic rate.',
                     style: TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 12,
                       color: AppTheme.textSecondary,
                       height: 1.35,
@@ -264,7 +260,6 @@ class _MacroPill extends StatelessWidget {
         Text(
           '${grams.round()}g',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 16,
             fontWeight: FontWeight.w800,
             color: color,
@@ -274,7 +269,6 @@ class _MacroPill extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontFamily: 'DMSans',
             fontSize: 12,
             color: AppTheme.textSecondary,
           ),

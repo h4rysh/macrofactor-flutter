@@ -38,7 +38,6 @@ class WizardPreviewStep extends StatelessWidget {
         const Text(
           'Your Custom Strategy',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 26,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -48,7 +47,6 @@ class WizardPreviewStep extends StatelessWidget {
         const Text(
           'Algorithmic targets calibrated to your physiology and preferences.',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -71,7 +69,6 @@ class WizardPreviewStep extends StatelessWidget {
                   const Text(
                     'Estimated Burn (TDEE)',
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 14,
                       color: AppTheme.textSecondary,
                     ),
@@ -79,7 +76,6 @@ class WizardPreviewStep extends StatelessWidget {
                   Text(
                     '${tdee.toStringAsFixed(0)} kcal',
                     style: const TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.expenditure,
@@ -94,7 +90,6 @@ class WizardPreviewStep extends StatelessWidget {
                   const Text(
                     'Daily Average Target',
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 14,
                       color: AppTheme.textSecondary,
                     ),
@@ -102,7 +97,6 @@ class WizardPreviewStep extends StatelessWidget {
                   Text(
                     '${previewProgram.dailyAverageCalories.toStringAsFixed(0)} kcal',
                     style: const TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
                       color: AppTheme.calories,
@@ -119,7 +113,6 @@ class WizardPreviewStep extends StatelessWidget {
         const Text(
           'Day-to-Day Distribution',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 16,
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,
@@ -196,7 +189,6 @@ class WizardPreviewStep extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: isWorkout ? AppTheme.calories : AppTheme.textPrimary,
@@ -208,7 +200,6 @@ class WizardPreviewStep extends StatelessWidget {
           Text(
             '${target.calories.toStringAsFixed(0)} kcal',
             style: const TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 20,
               fontWeight: FontWeight.w800,
               color: AppTheme.textPrimary,
@@ -218,7 +209,6 @@ class WizardPreviewStep extends StatelessWidget {
           Text(
             'P: ${target.proteinGrams.toStringAsFixed(0)}g | C: ${target.carbsGrams.toStringAsFixed(0)}g | F: ${target.fatGrams.toStringAsFixed(0)}g',
             style: const TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
             ),

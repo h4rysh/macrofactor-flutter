@@ -58,13 +58,16 @@ class PersistentSearchBar extends StatelessWidget {
                             size: 20,
                           ),
                           SizedBox(width: 8),
-                          Text(
-                            'Search for a food',
-                            style: TextStyle(
-                              fontFamily: 'DMSans',
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppTheme.textSecondary,
+                          Expanded(
+                            child: Text(
+                              'Search for a food',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: AppTheme.textSecondary,
+                              ),
                             ),
                           ),
                         ],

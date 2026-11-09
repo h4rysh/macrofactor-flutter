@@ -101,7 +101,6 @@ class AdaptivePacingStep extends StatelessWidget {
         const Text(
           'RATE OF CHANGE',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 11,
             fontWeight: FontWeight.w800,
             color: AppTheme.activeBlue,
@@ -112,7 +111,6 @@ class AdaptivePacingStep extends StatelessWidget {
         Text(
           heading,
           style: const TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 22,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -123,7 +121,6 @@ class AdaptivePacingStep extends StatelessWidget {
         Text(
           description,
           style: const TextStyle(
-            fontFamily: 'DMSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -148,7 +145,6 @@ class AdaptivePacingStep extends StatelessWidget {
                     const Text(
                       'WEEKLY RATE OF CHANGE',
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textMuted,
@@ -159,7 +155,6 @@ class AdaptivePacingStep extends StatelessWidget {
                     Text(
                       '${weeklyRate >= 0 ? "+" : ""}${weeklyRate.toStringAsFixed(2)}% / week',
                       style: const TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         color: AppTheme.textPrimary,
@@ -181,7 +176,6 @@ class AdaptivePacingStep extends StatelessWidget {
                       ? 'Stable 0.0 kg/wk'
                       : '${weeklyRate < 0 ? "-" : "+"}$weeklyDeltaKg kg/wk',
                   style: const TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.activeBlue,
@@ -227,7 +221,6 @@ class AdaptivePacingStep extends StatelessWidget {
                                 child: Text(
                                   opt['title'] as String,
                                   style: const TextStyle(
-                                    fontFamily: 'MacroSans',
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
                                     color: AppTheme.textPrimary,
@@ -247,7 +240,6 @@ class AdaptivePacingStep extends StatelessWidget {
                           Text(
                             opt['desc'] as String,
                             style: const TextStyle(
-                              fontFamily: 'DMSans',
                               fontSize: 12,
                               color: AppTheme.textSecondary,
                             ),

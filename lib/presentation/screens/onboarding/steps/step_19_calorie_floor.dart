@@ -112,7 +112,6 @@ class _FloorCard extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: isSelected
@@ -124,7 +123,6 @@ class _FloorCard extends StatelessWidget {
                 Text(
                   desc,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                     height: 1.35,

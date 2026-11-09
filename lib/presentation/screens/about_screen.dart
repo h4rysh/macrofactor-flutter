@@ -80,7 +80,6 @@ class AboutScreen extends StatelessWidget {
             title: const Text(
               'Medical Disclaimer',
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textPrimary,
@@ -89,7 +88,6 @@ class AboutScreen extends StatelessWidget {
             subtitle: const Text(
               'Safety notices, fitness guidelines & liability',
               style: TextStyle(
-                fontFamily: 'DMSans',
                 fontSize: 12,
                 color: AppTheme.textSecondary,
               ),
@@ -106,7 +104,6 @@ class AboutScreen extends StatelessWidget {
             title: const Text(
               'Privacy Policy',
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textPrimary,
@@ -115,7 +112,6 @@ class AboutScreen extends StatelessWidget {
             subtitle: const Text(
               'Local-first storage, authentication & encryption',
               style: TextStyle(
-                fontFamily: 'DMSans',
                 fontSize: 12,
                 color: AppTheme.textSecondary,
               ),
@@ -167,7 +163,6 @@ class AboutScreen extends StatelessWidget {
           const Text(
             'Sique',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 22,
               fontWeight: FontWeight.w800,
               color: AppTheme.textPrimary,
@@ -178,7 +173,6 @@ class AboutScreen extends StatelessWidget {
           const Text(
             'Indian Edition • Adherence-Neutral',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppTheme.activeBlue,
@@ -195,7 +189,6 @@ class AboutScreen extends StatelessWidget {
             child: const Text(
               'v2.0.0 • Build 2026.10',
               style: TextStyle(
-                fontFamily: 'DMSans',
                 fontSize: 11,
                 color: AppTheme.textMuted,
               ),
@@ -238,7 +231,6 @@ class AboutScreen extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimary,
@@ -248,7 +240,6 @@ class AboutScreen extends StatelessWidget {
                 Text(
                   description,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                     height: 1.4,
@@ -275,7 +266,6 @@ class AboutScreen extends StatelessWidget {
           Text(
             'MIT Open Source License',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -285,7 +275,6 @@ class AboutScreen extends StatelessWidget {
           Text(
             'Crafted with Flutter & Riverpod. Designed for high-performance athletic macro tracking and evidence-based nutrition.',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 11,
               color: AppTheme.textMuted,
               height: 1.4,

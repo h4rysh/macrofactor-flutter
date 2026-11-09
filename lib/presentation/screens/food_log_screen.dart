@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../domain/models/food_models.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
@@ -20,18 +21,23 @@ class FoodLogScreen extends ConsumerStatefulWidget {
 }
 
 class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
-  DateTime _selectedDate = DateTime.now();
   bool _isCollapsed = false;
+
+  DateTime get _selectedDate {
+    final str = ref.read(selectedDateProvider);
+    return DateTime.tryParse(str) ?? ref.read(clockProvider)();
+  }
 
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
   void _onAddForHour(int hour) {
+    final current = _selectedDate;
     final entryTime = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
+      current.year,
+      current.month,
+      current.day,
       hour,
       0,
     );
@@ -84,13 +90,16 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final clock = ref.watch(clockProvider);
+    final now = clock();
+    final selectedDateStr = ref.watch(selectedDateProvider);
+    final selectedDate = DateTime.tryParse(selectedDateStr) ?? now;
     final allLogs = ref.watch(dailyFoodLogsProvider);
     final macroTargets = ref.watch(macroTargetProvider);
 
     // Filter logs for selected date
-    final dayLogs = allLogs
-        .where((log) => _isSameDay(log.loggedAt, _selectedDate))
-        .toList();
+    final dayLogs =
+        allLogs.where((log) => _isSameDay(log.loggedAt, selectedDate)).toList();
 
     // Compute daily nutrition aggregate for selected date
     final dailyAggregate = dayLogs.fold<DailyNutritionAggregate>(
@@ -125,9 +134,11 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                 // and 7-day circular ribbon (M 12, T 13, W 14...)
                 SliverToBoxAdapter(
                   child: DateCarouselRibbon(
-                    selectedDate: _selectedDate,
+                    selectedDate: selectedDate,
+                    now: now,
                     onDateSelected: (date) {
-                      setState(() => _selectedDate = date);
+                      ref.read(selectedDateProvider.notifier).state =
+                          DateFormat('yyyy-MM-dd').format(date);
                     },
                     leading: IconButton(
                       icon: const Icon(Icons.menu_rounded, size: 24),

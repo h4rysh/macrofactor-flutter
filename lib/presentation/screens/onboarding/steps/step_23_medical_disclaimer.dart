@@ -47,7 +47,6 @@ class _Step23MedicalDisclaimerState extends State<Step23MedicalDisclaimer> {
                     Text(
                       'Medical Disclaimer',
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
@@ -64,7 +63,6 @@ class _Step23MedicalDisclaimerState extends State<Step23MedicalDisclaimer> {
                   '3. Personal Health Responsibility:\n'
                   'If you experience faintness, dizzy spells, severe fatigue, or gastrointestinal distress, discontinue the program and seek immediate medical evaluation.',
                   style: TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                     height: 1.45,
@@ -100,7 +98,6 @@ class _Step23MedicalDisclaimerState extends State<Step23MedicalDisclaimer> {
                   child: Text(
                     'I have read, understood, and agree to the Health & Medical Disclaimer.',
                     style: TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimary,

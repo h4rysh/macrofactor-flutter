@@ -115,9 +115,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.cardSurface,
-        title: Text(title,
-            style: const TextStyle(
-                fontFamily: 'MacroSans', color: AppTheme.textPrimary)),
+        title: Text(title, style: const TextStyle(color: AppTheme.textPrimary)),
         content: SizedBox(
           width: double.maxFinite,
           height: 320,
@@ -125,7 +123,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             child: Text(
               content.isEmpty ? 'No entries found.' : content,
               style: const TextStyle(
-                fontFamily: 'DMSans',
                 fontSize: 12,
                 color: AppTheme.textSecondary,
               ),
@@ -218,7 +215,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           const Text(
             'Local Storage Diagnostics',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -276,7 +272,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           Text(
             label,
             style: const TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 11,
               color: AppTheme.textSecondary,
             ),
@@ -286,7 +281,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           Text(
             value,
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 16,
               fontWeight: FontWeight.w800,
               color: color,
@@ -328,7 +322,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                     Text(
                       title,
                       style: const TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
@@ -337,7 +330,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                     Text(
                       countLabel,
                       style: TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         color: color,
@@ -352,7 +344,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           Text(
             subtitle,
             style: const TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
               height: 1.35,
@@ -415,7 +406,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             child: Text(
               'Zero Tracking • Local-First Architecture\nYour health and nutrition data never leaves your device. All calculations, database tables, and algorithm filters operate 100% offline via local SQLite.',
               style: TextStyle(
-                fontFamily: 'DMSans',
                 fontSize: 12,
                 color: AppTheme.textSecondary,
                 height: 1.4,

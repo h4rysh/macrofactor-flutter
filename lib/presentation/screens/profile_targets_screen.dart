@@ -60,28 +60,38 @@ class ProfileTargetsScreen extends ConsumerWidget {
               const Icon(Icons.fitness_center_rounded,
                   size: 20, color: AppTheme.activeBlue),
               const SizedBox(width: 8),
-              const Text(
-                'Physical Stats',
-                style: TextStyle(
-                  fontFamily: 'MacroSans',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+              const Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Physical Stats',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
                 ),
               ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardElevated,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${profile.age} yrs • ${profile.isMale ? "Male" : "Female"}',
-                  style: const TextStyle(
-                    fontFamily: 'DMSans',
-                    fontSize: 12,
-                    color: AppTheme.textSecondary,
+              const SizedBox(width: 8),
+              Flexible(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardElevated,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '${profile.age} yrs • ${profile.isMale ? "Male" : "Female"}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -137,25 +147,29 @@ class ProfileTargetsScreen extends ConsumerWidget {
         ),
         child: Column(
           children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontFamily: 'DMSans',
-                fontSize: 11,
-                color: AppTheme.textSecondary,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.textSecondary,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
-            Text(
-              value,
-              style: const TextStyle(
-                fontFamily: 'MacroSans',
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                value,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
             ),
           ],
         ),
@@ -178,7 +192,6 @@ class ProfileTargetsScreen extends ConsumerWidget {
           const Text(
             'Goal & Strategy',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -197,15 +210,18 @@ class ProfileTargetsScreen extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
                   child: ChoiceChip(
-                    label: Text(
-                      name,
-                      style: TextStyle(
-                        fontFamily: 'DMSans',
-                        fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color:
-                            isSelected ? Colors.white : AppTheme.textSecondary,
+                    label: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        name,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected
+                              ? Colors.white
+                              : AppTheme.textSecondary,
+                        ),
                       ),
                     ),
                     selected: isSelected,
@@ -232,21 +248,32 @@ class ProfileTargetsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Weekly Rate of Change',
-                style: TextStyle(
-                  fontFamily: 'DMSans',
-                  fontSize: 13,
-                  color: AppTheme.textSecondary,
+              const Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Weekly Rate of Change',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
                 ),
               ),
-              Text(
-                '${profile.weeklyRateOfChangePct >= 0 ? "+" : ""}${profile.weeklyRateOfChangePct.toStringAsFixed(2)}% / wk',
-                style: const TextStyle(
-                  fontFamily: 'MacroSans',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.trendWeight,
+              const SizedBox(width: 8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '${profile.weeklyRateOfChangePct >= 0 ? "+" : ""}${profile.weeklyRateOfChangePct.toStringAsFixed(2)}% / wk',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.trendWeight,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -298,76 +325,91 @@ class ProfileTargetsScreen extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Daily Caloric Target',
-                    style: TextStyle(
-                      fontFamily: 'MacroSans',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Daily Caloric Target',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    isCustom
-                        ? 'Custom Override Active'
-                        : 'Calculated by Expenditure Engine',
-                    style: TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 12,
-                      color: isCustom ? AppTheme.warning : AppTheme.expenditure,
+                    const SizedBox(height: 2),
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        isCustom
+                            ? 'Custom Override Active'
+                            : 'Calculated by Expenditure Engine',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isCustom
+                              ? AppTheme.warning
+                              : AppTheme.expenditure,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              if (isCustom)
+              if (isCustom) ...[
+                const SizedBox(width: 8),
                 TextButton(
                   onPressed: () {
                     ref.read(userProfileProvider.notifier).updateProfile(
                           profile.copyWith(clearCustom: true),
                         );
                   },
-                  child: const Text(
-                    'Reset',
-                    style: TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 12,
-                      color: AppTheme.activeBlue,
-                      fontWeight: FontWeight.w700,
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'Reset',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.activeBlue,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                 ),
+              ],
             ],
           ),
           const SizedBox(height: 16),
           Center(
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(
-                  currentTarget.toStringAsFixed(0),
-                  style: const TextStyle(
-                    fontFamily: 'MacroSans',
-                    fontSize: 36,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.calories,
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.baseline,
+                textBaseline: TextBaseline.alphabetic,
+                children: [
+                  Text(
+                    currentTarget.toStringAsFixed(0),
+                    style: const TextStyle(
+                      fontSize: 36,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.calories,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 4),
-                const Text(
-                  'kcal / day',
-                  style: TextStyle(
-                    fontFamily: 'DMSans',
-                    fontSize: 14,
-                    color: AppTheme.textSecondary,
+                  const SizedBox(width: 4),
+                  const Text(
+                    'kcal / day',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 8),
@@ -393,16 +435,25 @@ class ProfileTargetsScreen extends ConsumerWidget {
           const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('1,200 kcal',
-                  style: TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 11,
-                      color: AppTheme.textMuted)),
-              Text('4,000 kcal',
-                  style: TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 11,
-                      color: AppTheme.textMuted)),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text('1,200 kcal',
+                      style:
+                          TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                ),
+              ),
+              SizedBox(width: 8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text('4,000 kcal',
+                      style:
+                          TextStyle(fontSize: 11, color: AppTheme.textMuted)),
+                ),
+              ),
             ],
           ),
         ],
@@ -425,7 +476,6 @@ class ProfileTargetsScreen extends ConsumerWidget {
           const Text(
             'Protein Target Strategy',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -435,7 +485,6 @@ class ProfileTargetsScreen extends ConsumerWidget {
           const Text(
             'Protein intake protects lean body mass during energy deficits and supports muscle protein synthesis.',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
             ),
@@ -449,7 +498,6 @@ class ProfileTargetsScreen extends ConsumerWidget {
                 label: Text(
                   pref.displayName,
                   style: TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                     color: isSelected ? Colors.white : AppTheme.textSecondary,
@@ -490,7 +538,6 @@ class ProfileTargetsScreen extends ConsumerWidget {
           const Text(
             'Target Macro Breakdown',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -543,23 +590,27 @@ class ProfileTargetsScreen extends ConsumerWidget {
       ),
       child: Column(
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'DMSans',
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: color,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: color,
+              ),
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            grams,
-            style: const TextStyle(
-              fontFamily: 'MacroSans',
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: AppTheme.textPrimary,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              grams,
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textPrimary,
+              ),
             ),
           ),
         ],
@@ -576,8 +627,7 @@ class ProfileTargetsScreen extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.cardSurface,
         title: const Text('Update Current Weight',
-            style: TextStyle(
-                fontFamily: 'MacroSans', color: AppTheme.textPrimary)),
+            style: TextStyle(color: AppTheme.textPrimary)),
         content: TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -622,8 +672,7 @@ class ProfileTargetsScreen extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.cardSurface,
         title: const Text('Update Target Weight',
-            style: TextStyle(
-                fontFamily: 'MacroSans', color: AppTheme.textPrimary)),
+            style: TextStyle(color: AppTheme.textPrimary)),
         content: TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
@@ -668,8 +717,7 @@ class ProfileTargetsScreen extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.cardSurface,
         title: const Text('Update Height',
-            style: TextStyle(
-                fontFamily: 'MacroSans', color: AppTheme.textPrimary)),
+            style: TextStyle(color: AppTheme.textPrimary)),
         content: TextField(
           controller: controller,
           keyboardType: const TextInputType.numberWithOptions(decimal: false),

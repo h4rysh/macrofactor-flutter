@@ -81,7 +81,6 @@ class _Step08BodyFatState extends State<Step08BodyFat> {
                   Text(
                     range,
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: isSelected

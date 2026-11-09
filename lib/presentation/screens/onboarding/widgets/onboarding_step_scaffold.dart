@@ -64,7 +64,6 @@ class OnboardingStepScaffold extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textPrimary,
@@ -77,7 +76,6 @@ class OnboardingStepScaffold extends StatelessWidget {
                 Text(
                   subtitle!,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 14,
                     color: AppTheme.textSecondary,
                     height: 1.4,
@@ -110,7 +108,6 @@ class OnboardingStepScaffold extends StatelessWidget {
                     Text(
                       continueLabel,
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: isContinueEnabled

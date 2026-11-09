@@ -149,7 +149,6 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
                                   ? 'Create Sique Account'
                                   : 'Reset Password',
                           style: const TextStyle(
-                            fontFamily: 'MacroSans',
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary,
@@ -182,7 +181,6 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
                       child: Text(
                         _statusMessage ?? errorMessage ?? '',
                         style: TextStyle(
-                          fontFamily: 'DMSans',
                           fontSize: 12,
                           color: _isSuccessMessage
                               ? AppTheme.success
@@ -321,7 +319,6 @@ class _EmailAuthDialogState extends ConsumerState<EmailAuthDialog> {
                                     ? 'Create Account'
                                     : 'Send Reset Email',
                             style: const TextStyle(
-                              fontFamily: 'MacroSans',
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: Colors.white,

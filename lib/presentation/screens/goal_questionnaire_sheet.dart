@@ -171,7 +171,6 @@ class _GoalQuestionnaireSheetState
               child: Text(
                 'Program calibrated for ${_selectedGoal.displayName}!',
                 style: const TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textPrimary,
@@ -246,7 +245,6 @@ class _GoalQuestionnaireSheetState
                     Text(
                       'Step ${_currentStep + 1} of $_totalSteps',
                       style: const TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textMuted,
@@ -442,7 +440,6 @@ class _GoalQuestionnaireSheetState
               Text(
                 isFinalStep ? 'Activate Custom Program' : 'Continue',
                 style: const TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 15,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,

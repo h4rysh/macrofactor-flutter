@@ -41,7 +41,6 @@ class MealSection extends StatelessWidget {
                     Text(
                       mealType.displayName.toUpperCase(),
                       style: const TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
                         color: AppTheme.textPrimary,
@@ -54,7 +53,6 @@ class MealSection extends StatelessWidget {
                           ? mealType.defaultTime
                           : '$totalCalories kcal • ${totalProtein}g protein',
                       style: const TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                         color: AppTheme.textSecondary,
@@ -131,7 +129,6 @@ class _FoodLogRowItem extends StatelessWidget {
                 Text(
                   entry.foodName,
                   style: const TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.textPrimary,
@@ -145,7 +142,6 @@ class _FoodLogRowItem extends StatelessWidget {
                     Text(
                       '${entry.servingQuantity.toStringAsFixed(entry.servingQuantity.truncateToDouble() == entry.servingQuantity ? 0 : 1)} × ${entry.unitName}',
                       style: const TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 12,
                         color: AppTheme.textSecondary,
                       ),
@@ -166,7 +162,6 @@ class _FoodLogRowItem extends StatelessWidget {
                               ? 'Low Oil'
                               : 'Desi Ghee',
                           style: TextStyle(
-                            fontFamily: 'MacroSans',
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
                             color: entry.oilModifier == OilModifier.lowOil
@@ -187,7 +182,6 @@ class _FoodLogRowItem extends StatelessWidget {
               Text(
                 '${entry.calories.round()} kcal',
                 style: const TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.calories,
@@ -197,7 +191,6 @@ class _FoodLogRowItem extends StatelessWidget {
               Text(
                 '${entry.protein.round()}g P • ${entry.carbs.round()}g C • ${entry.fat.round()}g F',
                 style: const TextStyle(
-                  fontFamily: 'DMSans',
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
                   color: AppTheme.textMuted,

@@ -128,7 +128,6 @@ class _Step13TdeeRevealState extends State<Step13TdeeReveal> {
                 const Text(
                   'INITIAL DAILY TDEE',
                   style: TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.2,
@@ -139,7 +138,6 @@ class _Step13TdeeRevealState extends State<Step13TdeeReveal> {
                 Text(
                   '${_currentTdee.round()}',
                   style: const TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 54,
                     fontWeight: FontWeight.w900,
                     color: AppTheme.textPrimary,
@@ -150,7 +148,6 @@ class _Step13TdeeRevealState extends State<Step13TdeeReveal> {
                 const Text(
                   'kcal / day',
                   style: TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 14,
                     color: AppTheme.textSecondary,
                   ),
@@ -178,7 +175,6 @@ class _Step13TdeeRevealState extends State<Step13TdeeReveal> {
                       child: Text(
                         'How this was calculated',
                         style: TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
@@ -215,7 +211,6 @@ class _Step13TdeeRevealState extends State<Step13TdeeReveal> {
                   const Text(
                     'Note: This baseline serves only as the Kalman filter prior. As you log foods and weights, Sique mathematically discovers your true expenditure.',
                     style: TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 11,
                       color: AppTheme.textMuted,
                       height: 1.35,
@@ -243,7 +238,6 @@ class _Step13TdeeRevealState extends State<Step13TdeeReveal> {
                       child: Text(
                         'Override Baseline TDEE',
                         style: TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
@@ -274,7 +268,6 @@ class _Step13TdeeRevealState extends State<Step13TdeeReveal> {
                     controller: _overrideController,
                     keyboardType: TextInputType.number,
                     style: const TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -320,7 +313,6 @@ class _CalcRow extends StatelessWidget {
           child: Text(
             label,
             style: const TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
             ),
@@ -330,7 +322,6 @@ class _CalcRow extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 13,
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,

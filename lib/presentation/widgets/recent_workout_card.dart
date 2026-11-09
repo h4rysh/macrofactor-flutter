@@ -23,7 +23,6 @@ class RecentWorkoutsFeed extends ConsumerWidget {
             const Text(
               'Recent Workouts',
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.textPrimary,
@@ -32,7 +31,6 @@ class RecentWorkoutsFeed extends ConsumerWidget {
             Text(
               '${workouts.length} total',
               style: const TextStyle(
-                fontFamily: 'DMSans',
                 fontSize: 12,
                 color: AppTheme.textSecondary,
               ),
@@ -81,7 +79,6 @@ class _EmptyWorkoutsCard extends StatelessWidget {
           Text(
             'No workouts synced yet',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 15,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -92,7 +89,6 @@ class _EmptyWorkoutsCard extends StatelessWidget {
             'Workouts logged in Hevy or Google Health Connect will appear here.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
             ),
@@ -133,7 +129,6 @@ class RecentWorkoutCard extends StatelessWidget {
                   child: Text(
                     session.title,
                     style: const TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -150,7 +145,6 @@ class RecentWorkoutCard extends StatelessWidget {
             Text(
               formattedDate,
               style: const TextStyle(
-                fontFamily: 'DMSans',
                 fontSize: 11,
                 color: AppTheme.textMuted,
               ),
@@ -211,7 +205,6 @@ class RecentWorkoutCard extends StatelessWidget {
         Text(
           text,
           style: const TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 12,
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,

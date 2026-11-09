@@ -127,7 +127,6 @@ class _ActivityTile extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: isSelected
@@ -139,7 +138,6 @@ class _ActivityTile extends StatelessWidget {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                     height: 1.35,

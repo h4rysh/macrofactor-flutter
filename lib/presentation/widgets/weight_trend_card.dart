@@ -45,12 +45,11 @@ class WeightTrendCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Flexible(
+                    Flexible(
                       child: Text(
                         'WEIGHT TREND',
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'MacroSans',
+                        style: AppTypography.labelSmall.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.trendWeight,
@@ -73,8 +72,7 @@ class WeightTrendCard extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8)),
-                  textStyle: const TextStyle(
-                    fontFamily: 'MacroSans',
+                  textStyle: AppTypography.labelSmall.copyWith(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -84,66 +82,76 @@ class WeightTrendCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           if (latestTrendPoint == null) ...[
-            const Text(
+            Text(
               'No Scale Entries Yet',
-              style: TextStyle(
-                fontFamily: 'MacroSans',
+              style: AppTypography.headlineSmall.copyWith(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.textPrimary,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Log your morning weight to activate zero-phase trend smoothing.',
-              style: TextStyle(
-                fontFamily: 'DMSans',
+              style: AppTypography.bodySmall.copyWith(
                 fontSize: 12,
                 color: AppTheme.textSecondary,
               ),
             ),
           ] else ...[
             Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                AnimatedCountText(
-                  value: latestTrendPoint!.trendWeightKg,
-                  formatter: (v) => v.toStringAsFixed(1),
-                  style: const TextStyle(
-                    fontFamily: 'MacroSans',
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    color: AppTheme.textPrimary,
-                    letterSpacing: -0.5,
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        AnimatedCountText(
+                          value: latestTrendPoint!.trendWeightKg,
+                          formatter: (v) => v.toStringAsFixed(1),
+                          style: AppTypography.numericLarge.copyWith(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            color: AppTheme.textPrimary,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          'kg trend',
+                          style: AppTypography.bodyMedium.copyWith(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                const SizedBox(width: 6),
-                const Text(
-                  'kg trend',
-                  style: TextStyle(
-                    fontFamily: 'DMSans',
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: AppTheme.textSecondary,
-                  ),
-                ),
-                const Spacer(),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.cardBorder, width: 1),
-                  ),
-                  child: Text(
-                    'Scale: ${latestTrendPoint!.scaleWeightKg.toStringAsFixed(1)} kg',
-                    style: const TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textSecondary,
+                const SizedBox(width: 8),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: AppTheme.cardBorder, width: 1),
+                    ),
+                    child: Text(
+                      'Scale: ${latestTrendPoint!.scaleWeightKg.toStringAsFixed(1)} kg',
+                      style: AppTypography.numericCaption.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ),
                 ),
@@ -160,8 +168,7 @@ class WeightTrendCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   'Water noise range: ${latestTrendPoint!.noiseMinKg.toStringAsFixed(1)} – ${latestTrendPoint!.noiseMaxKg.toStringAsFixed(1)} kg (±1.5%)',
-                  style: const TextStyle(
-                    fontFamily: 'DMSans',
+                  style: AppTypography.numericCaption.copyWith(
                     fontSize: 11,
                     color: AppTheme.textMuted,
                   ),

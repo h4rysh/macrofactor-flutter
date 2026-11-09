@@ -79,216 +79,218 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
         top: 20,
         bottom: MediaQuery.of(context).viewInsets.bottom + 24,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Drag handle
-          Center(
-            child: Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.cardBorder,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'LOG SCALE WEIGHT',
-                style: TextStyle(
-                  fontFamily: 'MacroSans',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textPrimary,
-                  letterSpacing: 0.5,
+      child: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBorder,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              TextButton.icon(
-                onPressed: () async {
-                  final picked = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.parse(_selectedDate),
-                    firstDate: DateTime(2020),
-                    lastDate: DateTime.now().add(const Duration(days: 1)),
-                  );
-                  if (picked != null) {
-                    setState(() {
-                      _selectedDate = DateFormat('yyyy-MM-dd').format(picked);
-                    });
-                  }
-                },
-                icon: const Icon(Icons.calendar_today,
-                    size: 14, color: AppTheme.calories),
-                label: Text(
-                  _selectedDate,
-                  style: const TextStyle(
-                    fontFamily: 'MacroSans',
-                    fontSize: 13,
-                    color: AppTheme.calories,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Numeric Weight Input
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.cardBorder, width: 1),
             ),
-            child: Row(
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Expanded(
-                  child: TextField(
-                    controller: _weightController,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    autofocus: true,
-                    onChanged: (_) => setState(() {}),
-                    style: const TextStyle(
-                      fontFamily: 'MacroSans',
-                      fontSize: 32,
-                      fontWeight: FontWeight.w900,
-                      color: AppTheme.textPrimary,
-                    ),
-                    decoration: const InputDecoration(
-                      hintText: '0.0',
-                      hintStyle: TextStyle(
-                        fontFamily: 'MacroSans',
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.textMuted,
+                const Expanded(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'LOG SCALE WEIGHT',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                        letterSpacing: 0.5,
                       ),
-                      border: InputBorder.none,
                     ),
                   ),
                 ),
-                const Text(
-                  'KG',
-                  style: TextStyle(
-                    fontFamily: 'MacroSans',
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.textSecondary,
+                const SizedBox(width: 8),
+                TextButton.icon(
+                  onPressed: () async {
+                    final picked = await showDatePicker(
+                      context: context,
+                      initialDate: DateTime.parse(_selectedDate),
+                      firstDate: DateTime(2020),
+                      lastDate: DateTime.now().add(const Duration(days: 1)),
+                    );
+                    if (picked != null) {
+                      setState(() {
+                        _selectedDate = DateFormat('yyyy-MM-dd').format(picked);
+                      });
+                    }
+                  },
+                  icon: const Icon(Icons.calendar_today,
+                      size: 14, color: AppTheme.calories),
+                  label: Text(
+                    _selectedDate,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.calories,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-          // Trend Weight Preview Pill
-          if (previewTrendWeight != null)
+            // Numeric Weight Input
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: AppTheme.trendWeight.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                    color: AppTheme.trendWeight.withValues(alpha: 0.4),
-                    width: 1),
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: AppTheme.cardBorder, width: 1),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.auto_graph,
-                      size: 18, color: AppTheme.trendWeight),
-                  const SizedBox(width: 10),
                   Expanded(
-                    child: Text(
-                      'Preview: Resulting Trend Weight will be ${previewTrendWeight.toStringAsFixed(1)} kg',
+                    child: TextField(
+                      controller: _weightController,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      autofocus: true,
+                      onChanged: (_) => setState(() {}),
                       style: const TextStyle(
-                        fontFamily: 'DMSans',
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
                         color: AppTheme.textPrimary,
                       ),
+                      decoration: const InputDecoration(
+                        hintText: '0.0',
+                        hintStyle: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.textMuted,
+                        ),
+                        border: InputBorder.none,
+                      ),
+                    ),
+                  ),
+                  const Text(
+                    'KG',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
-          const SizedBox(height: 14),
+            const SizedBox(height: 12),
 
-          // Note Input
-          TextField(
-            controller: _noteController,
-            style: const TextStyle(
-                fontFamily: 'DMSans',
-                fontSize: 14,
-                color: AppTheme.textPrimary),
-            decoration: InputDecoration(
-              hintText: 'Note (optional, e.g. morning fasted, post walk)...',
-              hintStyle: const TextStyle(
-                  fontFamily: 'DMSans',
-                  fontSize: 13,
-                  color: AppTheme.textMuted),
-              filled: true,
-              fillColor: AppTheme.surface,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.cardBorder),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.cardBorder),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Save Button
-          SizedBox(
-            width: double.infinity,
-            height: 52,
-            child: ElevatedButton(
-              onPressed: parsedWeight != null && parsedWeight > 0
-                  ? () {
-                      final note = _noteController.text.trim();
-                      ref.read(weightLogsProvider.notifier).logWeight(
-                            _selectedDate,
-                            parsedWeight,
-                            note.isNotEmpty ? note : null,
-                          );
-                      Navigator.of(context).pop();
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                              'Logged ${parsedWeight.toStringAsFixed(1)} kg for $_selectedDate'),
-                          backgroundColor: AppTheme.cardSurface,
-                          behavior: SnackBarBehavior.floating,
+            // Trend Weight Preview Pill
+            if (previewTrendWeight != null)
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppTheme.trendWeight.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: AppTheme.trendWeight.withValues(alpha: 0.4),
+                      width: 1),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.auto_graph,
+                        size: 18, color: AppTheme.trendWeight),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Preview: Resulting Trend Weight will be ${previewTrendWeight.toStringAsFixed(1)} kg',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textPrimary,
                         ),
-                      );
-                    }
-                  : null,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.calories,
-                foregroundColor: AppTheme.background,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14)),
-                textStyle: const TextStyle(
-                  fontFamily: 'MacroSans',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              child: const Text('SAVE SCALE WEIGHT'),
+            const SizedBox(height: 14),
+
+            // Note Input
+            TextField(
+              controller: _noteController,
+              style: const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'Note (optional, e.g. morning fasted, post walk)...',
+                hintStyle:
+                    const TextStyle(fontSize: 13, color: AppTheme.textMuted),
+                filled: true,
+                fillColor: AppTheme.surface,
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.cardBorder),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.cardBorder),
+                ),
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 20),
+
+            // Save Button
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: parsedWeight != null && parsedWeight > 0
+                    ? () {
+                        final note = _noteController.text.trim();
+                        ref.read(weightLogsProvider.notifier).logWeight(
+                              _selectedDate,
+                              parsedWeight,
+                              note.isNotEmpty ? note : null,
+                            );
+                        Navigator.of(context).pop();
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                                'Logged ${parsedWeight.toStringAsFixed(1)} kg for $_selectedDate'),
+                            backgroundColor: AppTheme.cardSurface,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    : null,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.calories,
+                  foregroundColor: AppTheme.background,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                child: const FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text('SAVE SCALE WEIGHT'),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -20,9 +20,16 @@ final databaseProvider = Provider<AppDatabase>((ref) {
       'databaseProvider must be overridden in ProviderScope');
 });
 
-/// Currently selected date in the dashboard (YYYY-MM-DD).
+/// System clock provider, defaulting to real wall clock [DateTime.now].
+/// Overridable in widget and golden tests to ensure deterministic time rendering.
+final clockProvider = Provider<DateTime Function()>((ref) {
+  return () => DateTime.now();
+});
+
+/// Currently selected date in the dashboard and food log (YYYY-MM-DD).
 final selectedDateProvider = StateProvider<String>((ref) {
-  return DateFormat('yyyy-MM-dd').format(DateTime.now());
+  final clock = ref.watch(clockProvider);
+  return DateFormat('yyyy-MM-dd').format(clock());
 });
 
 /// Global revision counter tracking food log additions, edits, and deletions.
@@ -288,7 +295,8 @@ final expenditureStateProvider = Provider<ExpenditureState>((ref) {
       ? profile.baselineExpenditureKcal
       : 2000.0;
 
-  final now = DateTime.now();
+  final clock = ref.watch(clockProvider);
+  final now = clock();
   final todayDate = DateTime(now.year, now.month, now.day);
 
   // If no weights logged at all, return uninitialized baseline state

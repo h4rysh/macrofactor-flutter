@@ -77,7 +77,6 @@ class _ExpenditureSettingsScreenState
           const Text(
             'Live Algorithmic State',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -101,7 +100,6 @@ class _ExpenditureSettingsScreenState
                       const Text(
                         'Expenditure',
                         style: TextStyle(
-                          fontFamily: 'DMSans',
                           fontSize: 12,
                           color: AppTheme.expenditure,
                           fontWeight: FontWeight.w600,
@@ -111,7 +109,6 @@ class _ExpenditureSettingsScreenState
                       Text(
                         '${expenditureKcal.toStringAsFixed(0)} kcal',
                         style: const TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: AppTheme.textPrimary,
@@ -121,7 +118,6 @@ class _ExpenditureSettingsScreenState
                       const Text(
                         'Bayesian Kalman Estimate',
                         style: TextStyle(
-                          fontFamily: 'DMSans',
                           fontSize: 10,
                           color: AppTheme.textMuted,
                         ),
@@ -146,7 +142,6 @@ class _ExpenditureSettingsScreenState
                       const Text(
                         'Trend Weight',
                         style: TextStyle(
-                          fontFamily: 'DMSans',
                           fontSize: 12,
                           color: AppTheme.trendWeight,
                           fontWeight: FontWeight.w600,
@@ -158,7 +153,6 @@ class _ExpenditureSettingsScreenState
                             ? '${trendWeightKg.toStringAsFixed(1)} kg'
                             : 'No logs yet',
                         style: const TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: AppTheme.textPrimary,
@@ -168,7 +162,6 @@ class _ExpenditureSettingsScreenState
                       const Text(
                         'Bidirectional Smoothed',
                         style: TextStyle(
-                          fontFamily: 'DMSans',
                           fontSize: 10,
                           color: AppTheme.textMuted,
                         ),
@@ -202,7 +195,6 @@ class _ExpenditureSettingsScreenState
               const Text(
                 'Baseline Expenditure Prior',
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary,
@@ -211,7 +203,6 @@ class _ExpenditureSettingsScreenState
               Text(
                 '${baseline.toStringAsFixed(0)} kcal',
                 style: const TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.expenditure,
@@ -223,7 +214,6 @@ class _ExpenditureSettingsScreenState
           const Text(
             'Initial mathematical prior used before sufficient longitudinal weight and intake observations are collected.',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
             ),
@@ -253,15 +243,9 @@ class _ExpenditureSettingsScreenState
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text('1,400 kcal',
-                  style: TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 11,
-                      color: AppTheme.textMuted)),
+                  style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
               Text('3,500 kcal',
-                  style: TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 11,
-                      color: AppTheme.textMuted)),
+                  style: TextStyle(fontSize: 11, color: AppTheme.textMuted)),
             ],
           ),
         ],
@@ -292,7 +276,6 @@ class _ExpenditureSettingsScreenState
           const Text(
             'Kalman Filter Responsiveness',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -339,7 +322,6 @@ class _ExpenditureSettingsScreenState
                           Text(
                             name,
                             style: TextStyle(
-                              fontFamily: 'DMSans',
                               fontSize: 13,
                               fontWeight: isSelected
                                   ? FontWeight.w700
@@ -352,7 +334,6 @@ class _ExpenditureSettingsScreenState
                           Text(
                             desc,
                             style: const TextStyle(
-                              fontFamily: 'DMSans',
                               fontSize: 11,
                               color: AppTheme.textMuted,
                             ),
@@ -388,7 +369,6 @@ class _ExpenditureSettingsScreenState
               Text(
                 'Adherence Neutrality Guarantee',
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary,
@@ -403,7 +383,6 @@ class _ExpenditureSettingsScreenState
             '• Missing days (<500 kcal logged) are excluded from Bayesian updates to prevent false metabolic drop-offs.\n'
             '• A hard ±150 kcal daily clamp prevents erratic spikes from temporary water weight or sodium retention.',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
               height: 1.45,
@@ -431,7 +410,6 @@ class _ExpenditureSettingsScreenState
             child: Text(
               'Scale weight fluctuates up to ±2.5 kg daily due to glycogen hydration, fiber transit, and sodium. The Weight Trend algorithm filters this high-frequency noise using an exponential moving average with forward-backward passes.',
               style: TextStyle(
-                fontFamily: 'DMSans',
                 fontSize: 12,
                 color: AppTheme.textSecondary,
                 height: 1.4,

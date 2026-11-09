@@ -34,7 +34,6 @@ class GoogleAccountCard extends ConsumerWidget {
                     Text(
                       user.displayName,
                       style: const TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 17,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
@@ -48,7 +47,6 @@ class GoogleAccountCard extends ConsumerWidget {
                           ? user.email
                           : 'Local Guest Account',
                       style: const TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 12,
                         color: AppTheme.textSecondary,
                       ),
@@ -89,7 +87,6 @@ class GoogleAccountCard extends ConsumerWidget {
                         child: Text(
                           'Google Sign-In Alert',
                           style: TextStyle(
-                            fontFamily: 'MacroSans',
                             fontSize: 13,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.calories,
@@ -114,7 +111,6 @@ class GoogleAccountCard extends ConsumerWidget {
                   Text(
                     authState.message,
                     style: const TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 11,
                       color: AppTheme.textSecondary,
                     ),
@@ -138,7 +134,6 @@ class GoogleAccountCard extends ConsumerWidget {
                     Text(
                       'Health Connect Sync',
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textPrimary,
@@ -150,7 +145,6 @@ class GoogleAccountCard extends ConsumerWidget {
                     Text(
                       'Auto-sync Hevy workouts & smart scale weights',
                       style: TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 11,
                         color: AppTheme.textSecondary,
                       ),
@@ -207,7 +201,6 @@ class GoogleAccountCard extends ConsumerWidget {
       child: Text(
         initial,
         style: const TextStyle(
-          fontFamily: 'MacroSans',
           fontSize: 22,
           fontWeight: FontWeight.w800,
           color: Colors.white,
@@ -251,7 +244,6 @@ class GoogleAccountCard extends ConsumerWidget {
                     Text(
                       'Change Password',
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: AppTheme.textPrimary,
@@ -331,7 +323,6 @@ class GoogleAccountCard extends ConsumerWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.calories,
@@ -353,7 +344,6 @@ class GoogleAccountCard extends ConsumerWidget {
               child: const Text(
                 'Delete Account',
                 style: TextStyle(
-                  fontFamily: 'DMSans',
                   fontSize: 12,
                   color: AppTheme.textSecondary,
                   decoration: TextDecoration.underline,
@@ -389,7 +379,6 @@ class GoogleAccountCard extends ConsumerWidget {
                   child: Text(
                     'Sign-in unavailable: Firebase not configured',
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.warning,
@@ -453,7 +442,6 @@ class GoogleAccountCard extends ConsumerWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
                         color: isConfigured
@@ -513,7 +501,6 @@ class GoogleAccountCard extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimary,
@@ -562,7 +549,6 @@ class GoogleAccountCard extends ConsumerWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textPrimary,

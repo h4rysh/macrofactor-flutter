@@ -74,7 +74,6 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
                   children: [
                     const Text('Google Health Connect',
                         style: TextStyle(
-                            fontFamily: 'MacroSans',
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary)),
@@ -83,9 +82,7 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
                             ? 'Android Health API'
                             : 'Not available on device',
                         style: const TextStyle(
-                            fontFamily: 'DMSans',
-                            fontSize: 12,
-                            color: AppTheme.textSecondary)),
+                            fontSize: 12, color: AppTheme.textSecondary)),
                   ],
                 ),
               ),
@@ -96,7 +93,6 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(8)),
                 child: Text(label,
                     style: TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: color)),
@@ -117,10 +113,7 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(10)),
               ),
               child: const Text('Grant Read Permissions',
-                  style: TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700)),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
             ),
           ],
         ],
@@ -145,32 +138,23 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
             children: [
               const Text('Synchronization',
                   style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary)),
               Text('Last: ${st.formattedLastSync}',
-                  style: const TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 12,
-                      color: AppTheme.textMuted)),
+                  style:
+                      const TextStyle(fontSize: 12, color: AppTheme.textMuted)),
             ],
           ),
           const SizedBox(height: 6),
           const Text(
             'Synchronizes 30 days of workouts and scale weights into local storage.',
-            style: TextStyle(
-                fontFamily: 'DMSans',
-                fontSize: 12,
-                color: AppTheme.textSecondary),
+            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
           if (st.isError && st.errorMessage != null) ...[
             const SizedBox(height: 10),
             Text(st.errorMessage!,
-                style: const TextStyle(
-                    fontFamily: 'DMSans',
-                    fontSize: 11,
-                    color: Color(0xFFFF453A))),
+                style: const TextStyle(fontSize: 11, color: Color(0xFFFF453A))),
           ],
           const SizedBox(height: 14),
           ElevatedButton(
@@ -202,9 +186,7 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
                       SizedBox(width: 8),
                       Text('Syncing...',
                           style: TextStyle(
-                              fontFamily: 'DMSans',
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700)),
+                              fontSize: 13, fontWeight: FontWeight.w700)),
                     ],
                   )
                 : const Row(
@@ -214,9 +196,7 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
                       SizedBox(width: 6),
                       Text('Sync Now (30 Days)',
                           style: TextStyle(
-                              fontFamily: 'DMSans',
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700)),
+                              fontSize: 13, fontWeight: FontWeight.w700)),
                     ],
                   ),
           ),
@@ -236,15 +216,12 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
                 children: [
                   Text(title,
                       style: const TextStyle(
-                          fontFamily: 'DMSans',
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
                           color: AppTheme.textPrimary)),
                   Text(sub,
                       style: const TextStyle(
-                          fontFamily: 'DMSans',
-                          fontSize: 11,
-                          color: AppTheme.textSecondary)),
+                          fontSize: 11, color: AppTheme.textSecondary)),
                 ],
               ),
             ),
@@ -263,7 +240,6 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
         children: [
           const Text('Supported Channels',
               style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary)),
@@ -295,10 +271,7 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
             child: Text(
               '100% Local Privacy: Health Connect data is imported directly into SQLite on this device. No health data ever leaves your device.',
               style: TextStyle(
-                  fontFamily: 'DMSans',
-                  fontSize: 11,
-                  color: AppTheme.textSecondary,
-                  height: 1.4),
+                  fontSize: 11, color: AppTheme.textSecondary, height: 1.4),
             ),
           ),
         ],

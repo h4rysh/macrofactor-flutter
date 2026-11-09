@@ -60,8 +60,7 @@ class TimelineFoodCard extends StatelessWidget {
                       children: [
                         Text(
                           timeStr,
-                          style: const TextStyle(
-                            fontFamily: 'DMSans',
+                          style: AppTypography.numericCaption.copyWith(
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: AppTheme.textSecondary,
@@ -71,8 +70,7 @@ class TimelineFoodCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             entry.food.name,
-                            style: const TextStyle(
-                              fontFamily: 'MacroSans',
+                            style: AppTypography.titleSmall.copyWith(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textPrimary,
@@ -86,8 +84,7 @@ class TimelineFoodCard extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       '${entry.effectiveCalories.round()} 🔥 • ${entry.effectiveProtein.toStringAsFixed(1)}P • ${entry.effectiveFat.toStringAsFixed(1)}F • ${entry.effectiveCarbs.toStringAsFixed(1)}C • ${entry.quantity.toStringAsFixed(1)} ${entry.portionUnit.unitName}',
-                      style: const TextStyle(
-                        fontFamily: 'DMSans',
+                      style: AppTypography.numericCaption.copyWith(
                         fontSize: 12,
                         fontWeight: FontWeight.w400,
                         color: AppTheme.textSecondary,

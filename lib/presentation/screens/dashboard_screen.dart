@@ -54,83 +54,100 @@ class DashboardScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          DateFormat('EEEE, MMM d')
-                              .format(selectedDate)
-                              .toUpperCase(),
-                          style: const TextStyle(
-                            fontFamily: 'MacroSans',
-                            fontSize: 11,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.textMuted,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        const Text(
-                          'Dashboard',
-                          style: TextStyle(
-                            fontFamily: 'MacroSans',
-                            fontSize: 26,
-                            fontWeight: FontWeight.w900,
-                            color: AppTheme.textPrimary,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        // Scale Weight Log Action
-                        IconButton(
-                          tooltip: 'Log Scale Weight',
-                          icon: const Icon(
-                            Icons.monitor_weight_outlined,
-                            color: AppTheme.trendWeight,
-                            size: 24,
-                          ),
-                          onPressed: () => WeightLogModal.show(context),
-                        ),
-                        // Adaptive Goal Questionnaire Action
-                        IconButton(
-                          key: const Key('dashboard_goal_setup_btn'),
-                          tooltip: 'Personalize Program',
-                          icon: const Icon(
-                            Icons.tune_rounded,
-                            color: AppTheme.activeBlue,
-                            size: 22,
-                          ),
-                          onPressed: () => GoalQuestionnaireSheet.show(context),
-                        ),
-                        // Strategy Action
-                        if (onNavigateToStrategy != null)
-                          IconButton(
-                            tooltip: 'Strategy',
-                            icon: const Icon(
-                              Icons.hub_outlined,
-                              color: AppTheme.textSecondary,
-                              size: 22,
-                            ),
-                            onPressed: onNavigateToStrategy,
-                          ),
-                        const SizedBox(width: 6),
-                        // Profile Avatar Action (36x36 Circular AppleBouncy)
-                        ProfileAvatarButton(
-                          key: const Key('dashboard_profile_avatar_btn'),
-                          user: currentUser,
-                          size: 36,
-                          onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute<void>(
-                                builder: (_) => const AccountProfileScreen(),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              DateFormat('EEEE, MMM d')
+                                  .format(selectedDate)
+                                  .toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textMuted,
+                                letterSpacing: 1.0,
                               ),
-                            );
-                          },
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Dashboard',
+                              style: TextStyle(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                color: AppTheme.textPrimary,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // Scale Weight Log Action
+                            IconButton(
+                              tooltip: 'Log Scale Weight',
+                              icon: const Icon(
+                                Icons.monitor_weight_outlined,
+                                color: AppTheme.trendWeight,
+                                size: 24,
+                              ),
+                              onPressed: () => WeightLogModal.show(context),
+                            ),
+                            // Adaptive Goal Questionnaire Action
+                            IconButton(
+                              key: const Key('dashboard_goal_setup_btn'),
+                              tooltip: 'Personalize Program',
+                              icon: const Icon(
+                                Icons.tune_rounded,
+                                color: AppTheme.activeBlue,
+                                size: 22,
+                              ),
+                              onPressed: () =>
+                                  GoalQuestionnaireSheet.show(context),
+                            ),
+                            // Strategy Action
+                            if (onNavigateToStrategy != null)
+                              IconButton(
+                                tooltip: 'Strategy',
+                                icon: const Icon(
+                                  Icons.hub_outlined,
+                                  color: AppTheme.textSecondary,
+                                  size: 22,
+                                ),
+                                onPressed: onNavigateToStrategy,
+                              ),
+                            const SizedBox(width: 6),
+                            // Profile Avatar Action (36x36 Circular AppleBouncy)
+                            ProfileAvatarButton(
+                              key: const Key('dashboard_profile_avatar_btn'),
+                              user: currentUser,
+                              size: 36,
+                              onTap: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute<void>(
+                                    builder: (_) =>
+                                        const AccountProfileScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ),
@@ -184,14 +201,19 @@ class DashboardScreen extends ConsumerWidget {
                                   children: [
                                     Row(
                                       children: [
-                                        Text(
-                                          'ADAPTIVE SETUP',
-                                          style: TextStyle(
-                                            fontFamily: 'MacroSans',
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w800,
-                                            color: AppTheme.activeBlue,
-                                            letterSpacing: 0.8,
+                                        Flexible(
+                                          child: FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              'ADAPTIVE SETUP',
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w800,
+                                                color: AppTheme.activeBlue,
+                                                letterSpacing: 0.8,
+                                              ),
+                                            ),
                                           ),
                                         ),
                                       ],
@@ -200,7 +222,6 @@ class DashboardScreen extends ConsumerWidget {
                                     Text(
                                       'Personalize Your Goal & Diet',
                                       style: TextStyle(
-                                        fontFamily: 'MacroSans',
                                         fontSize: 14,
                                         fontWeight: FontWeight.w800,
                                         color: AppTheme.textPrimary,
@@ -210,7 +231,6 @@ class DashboardScreen extends ConsumerWidget {
                                     Text(
                                       'Tailor rate, Indian staples, and protein strategy in 6 steps',
                                       style: TextStyle(
-                                        fontFamily: 'DMSans',
                                         fontSize: 11,
                                         color: AppTheme.textSecondary,
                                       ),
@@ -349,7 +369,6 @@ class DashboardScreen extends ConsumerWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary,
@@ -380,7 +399,6 @@ class DashboardScreen extends ConsumerWidget {
               const Text(
                 'ENERGY BALANCE',
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textMuted,
@@ -401,7 +419,6 @@ class DashboardScreen extends ConsumerWidget {
                 child: Text(
                   isDeficit ? 'DEFICIT' : 'SURPLUS',
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     color: badgeColor,
@@ -420,7 +437,6 @@ class DashboardScreen extends ConsumerWidget {
                 value: absBalance.toDouble(),
                 prefix: isDeficit ? '-' : '+',
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 30,
                   fontWeight: FontWeight.w900,
                   color: isDeficit ? AppTheme.activeBlue : AppTheme.warning,
@@ -431,7 +447,6 @@ class DashboardScreen extends ConsumerWidget {
               const Text(
                 'kcal / day',
                 style: TextStyle(
-                  fontFamily: 'DMSans',
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                   color: AppTheme.textSecondary,
@@ -445,7 +460,6 @@ class DashboardScreen extends ConsumerWidget {
                 ? 'Your daily net caloric deficit is driving body fat loss according to your plan.'
                 : 'Your daily intake exceeds expenditure for lean tissue accrual.',
             style: const TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textMuted,
             ),

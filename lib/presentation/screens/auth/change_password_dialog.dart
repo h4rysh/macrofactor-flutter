@@ -98,7 +98,6 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                     const Text(
                       'Change Password',
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
@@ -125,7 +124,6 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                     child: Text(
                       _errorMessage!,
                       style: const TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 12,
                         color: AppTheme.calories,
                       ),
@@ -236,7 +234,6 @@ class _ChangePasswordDialogState extends ConsumerState<ChangePasswordDialog> {
                       : const Text(
                           'Update Password',
                           style: TextStyle(
-                            fontFamily: 'MacroSans',
                             fontSize: 15,
                             fontWeight: FontWeight.w700,
                             color: Colors.white,

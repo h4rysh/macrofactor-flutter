@@ -103,23 +103,25 @@ class StrategyScreen extends ConsumerWidget {
                 backgroundColor: AppTheme.calories,
                 borderRadius: 16,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.auto_fix_high_rounded,
-                        color: Colors.white, size: 20),
-                    SizedBox(width: 8),
-                    Text(
-                      'REFIGURE PROGRAM STRATEGY',
-                      style: TextStyle(
-                        fontFamily: 'MacroSans',
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: 0.8,
+                child: const FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.auto_fix_high_rounded,
+                          color: Colors.white, size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'REFIGURE PROGRAM STRATEGY',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                          letterSpacing: 0.8,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -159,7 +161,6 @@ class StrategyScreen extends ConsumerWidget {
                 Text(
                   'ADHERENCE-NEUTRAL COACHING',
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
                     color: AppTheme.expenditure,
@@ -170,7 +171,6 @@ class StrategyScreen extends ConsumerWidget {
                 Text(
                   'Our Bayesian expenditure engine does not judge or assign guilt. Eat what you enjoy: your targets adapt to biological intake and weight flux, with zero behavioral penalties.',
                   style: TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                     height: 1.4,
@@ -202,7 +202,6 @@ class StrategyScreen extends ConsumerWidget {
           const Text(
             'COACHING MODE',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 12,
               fontWeight: FontWeight.w800,
               color: AppTheme.textSecondary,
@@ -213,7 +212,6 @@ class StrategyScreen extends ConsumerWidget {
           Text(
             _modeDescription(activeMode),
             style: const TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
             ),
@@ -309,13 +307,15 @@ class StrategyScreen extends ConsumerWidget {
                 : null,
           ),
           alignment: Alignment.center,
-          child: Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'MacroSans',
-              fontSize: 12,
-              fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-              color: isSelected ? AppTheme.calories : AppTheme.textSecondary,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? AppTheme.calories : AppTheme.textSecondary,
+              ),
             ),
           ),
         ),

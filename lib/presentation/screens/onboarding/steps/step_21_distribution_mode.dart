@@ -75,7 +75,6 @@ class _Step21DistributionModeState extends State<Step21DistributionMode> {
             const Text(
               'Select Your Training Days:',
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.textPrimary,
@@ -113,7 +112,6 @@ class _Step21DistributionModeState extends State<Step21DistributionMode> {
                   child: Text(
                     day['name'] as String,
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 13,
                       fontWeight:
                           isSelected ? FontWeight.w800 : FontWeight.w600,
@@ -169,7 +167,6 @@ class _DistributionCard extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: isSelected
@@ -181,7 +178,6 @@ class _DistributionCard extends StatelessWidget {
                 Text(
                   desc,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                     height: 1.35,

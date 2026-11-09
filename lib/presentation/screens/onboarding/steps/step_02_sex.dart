@@ -98,7 +98,6 @@ class _SexOptionTile extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,

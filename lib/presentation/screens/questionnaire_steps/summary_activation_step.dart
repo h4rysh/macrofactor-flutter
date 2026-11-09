@@ -19,7 +19,6 @@ class SummaryActivationStep extends StatelessWidget {
         const Text(
           'TARGET PREVIEW & CONFIRMATION',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 11,
             fontWeight: FontWeight.w800,
             color: AppTheme.calories,
@@ -30,7 +29,6 @@ class SummaryActivationStep extends StatelessWidget {
         const Text(
           'Your Calibrated Program',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 22,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -41,7 +39,6 @@ class SummaryActivationStep extends StatelessWidget {
         const Text(
           'Review your personalized targets. All parameters update the live dashboard seamlessly.',
           style: TextStyle(
-            fontFamily: 'DMSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -71,7 +68,6 @@ class SummaryActivationStep extends StatelessWidget {
               const Text(
                 'DAILY CALORIC TARGET',
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textMuted,
@@ -82,7 +78,6 @@ class SummaryActivationStep extends StatelessWidget {
               Text(
                 '${macros.calories.round()}',
                 style: const TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 44,
                   fontWeight: FontWeight.w900,
                   color: AppTheme.calories,
@@ -92,7 +87,6 @@ class SummaryActivationStep extends StatelessWidget {
               const Text(
                 'kcal / day',
                 style: TextStyle(
-                  fontFamily: 'DMSans',
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textSecondary,
@@ -145,7 +139,6 @@ class SummaryActivationStep extends StatelessWidget {
                     Text(
                       'ADHERENCE-NEUTRAL GUARANTEE',
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
@@ -155,7 +148,6 @@ class SummaryActivationStep extends StatelessWidget {
                     Text(
                       'Eat more or less than this target without guilt. The Bayesian algorithm continuously calculates expenditure from real weight trends, adapting seamlessly.',
                       style: TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 11,
                         color: AppTheme.textSecondary,
                         height: 1.3,
@@ -181,7 +173,6 @@ class SummaryActivationStep extends StatelessWidget {
         Text(
           label,
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 10,
             fontWeight: FontWeight.w800,
             color: color,
@@ -192,7 +183,6 @@ class SummaryActivationStep extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 16,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,

@@ -76,7 +76,6 @@ class MoreScreen extends ConsumerWidget {
                           Text(
                             'Interactive Program Setup',
                             style: TextStyle(
-                              fontFamily: 'MacroSans',
                               fontSize: 15,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textPrimary,
@@ -86,7 +85,6 @@ class MoreScreen extends ConsumerWidget {
                           Text(
                             '6-step dynamic branching for goal, rate, and Indian diet',
                             style: TextStyle(
-                              fontFamily: 'DMSans',
                               fontSize: 12,
                               color: AppTheme.textSecondary,
                             ),
@@ -197,7 +195,6 @@ class MoreScreen extends ConsumerWidget {
                 child: Text(
                   'Nutritional data sourced from ICMR-NIN IFCT 2017 (Indian Food Composition Tables).',
                   style: TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                     height: 1.35,
@@ -218,7 +215,6 @@ class MoreScreen extends ConsumerWidget {
                 child: const Text(
                   'Medical Disclaimer',
                   style: TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.activeBlue,
@@ -233,7 +229,6 @@ class MoreScreen extends ConsumerWidget {
                 child: const Text(
                   'Privacy Policy',
                   style: TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.activeBlue,
@@ -279,7 +274,6 @@ class MoreScreen extends ConsumerWidget {
                   Text(
                     'Delete All My Data',
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.calories,
@@ -289,7 +283,6 @@ class MoreScreen extends ConsumerWidget {
                   Text(
                     'Permanently wipe local databases and reset account',
                     style: TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 12,
                       color: AppTheme.textSecondary,
                     ),
@@ -357,7 +350,6 @@ class MoreScreen extends ConsumerWidget {
                         child: Text(
                           displayName,
                           style: const TextStyle(
-                            fontFamily: 'MacroSans',
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary,
@@ -379,7 +371,6 @@ class MoreScreen extends ConsumerWidget {
                           child: const Text(
                             'SYNC ACTIVE',
                             style: TextStyle(
-                              fontFamily: 'DMSans',
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
                               color: AppTheme.activeBlue,
@@ -394,7 +385,6 @@ class MoreScreen extends ConsumerWidget {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 12,
                       color: AppTheme.textSecondary,
                     ),
@@ -456,7 +446,6 @@ class MoreScreen extends ConsumerWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -466,7 +455,6 @@ class MoreScreen extends ConsumerWidget {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 12,
                       color: AppTheme.textSecondary,
                     ),

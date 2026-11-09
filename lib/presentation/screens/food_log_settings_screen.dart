@@ -89,7 +89,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
               Text(
                 'Default Portion Unit',
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary,
@@ -101,7 +100,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
           const Text(
             'The initial serving measurement selected when opening any food item.',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
             ),
@@ -145,7 +143,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
                       child: Text(
                         unit,
                         style: TextStyle(
-                          fontFamily: 'DMSans',
                           fontSize: 13,
                           fontWeight:
                               isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -190,7 +187,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
               Text(
                 'Default Cooking Oil Modifier',
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary,
@@ -202,7 +198,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
           const Text(
             'In Indian cooking, hidden preparation fat (tadka, ghee) is the #1 source of calorie estimation error. This sets your default presumption.',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
             ),
@@ -244,7 +239,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
                       child: Text(
                         mod,
                         style: TextStyle(
-                          fontFamily: 'DMSans',
                           fontSize: 13,
                           fontWeight:
                               isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -283,7 +277,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
               Text(
                 'Timeline & Display',
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary,
@@ -299,7 +292,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
               title: const Text(
                 'Show Empty Hourly Slots',
                 style: TextStyle(
-                  fontFamily: 'DMSans',
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textPrimary,
@@ -308,7 +300,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
               subtitle: const Text(
                 'Displays unoccupied hour slots on the Food Log timeline for fast chronological logging.',
                 style: TextStyle(
-                  fontFamily: 'DMSans',
                   fontSize: 12,
                   color: AppTheme.textSecondary,
                 ),
@@ -332,7 +323,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
               title: const Text(
                 'Auto-Expand Meal Sections',
                 style: TextStyle(
-                  fontFamily: 'DMSans',
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: AppTheme.textPrimary,
@@ -341,7 +331,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
               subtitle: const Text(
                 'Keep Breakfast, Lunch, Snack, and Dinner accordion lists open by default.',
                 style: TextStyle(
-                  fontFamily: 'DMSans',
                   fontSize: 12,
                   color: AppTheme.textSecondary,
                 ),
@@ -395,7 +384,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
                 child: Text(
                   'Health Connect Sync',
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimary,
@@ -418,7 +406,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
           const Text(
             'Synchronize workout sessions and smart scale weigh-ins automatically or on demand.',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
             ),
@@ -431,7 +418,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
                 'Last synced: ${syncState.formattedLastSync}',
                 key: const Key('settings_last_sync_text'),
                 style: const TextStyle(
-                  fontFamily: 'DMSans',
                   fontSize: 12,
                   color: AppTheme.textMuted,
                 ),
@@ -469,7 +455,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
                 label: Text(
                   syncState.isSyncing ? 'Syncing...' : 'Sync Now',
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                   ),
@@ -499,7 +484,6 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
             child: Text(
               'All settings are instantly auto-saved to SQLite. Changes immediately adjust portion selectors across plate sheets and food search.',
               style: TextStyle(
-                fontFamily: 'DMSans',
                 fontSize: 12,
                 color: AppTheme.textSecondary,
                 height: 1.4,

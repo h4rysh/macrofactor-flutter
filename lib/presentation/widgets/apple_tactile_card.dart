@@ -175,7 +175,6 @@ class AppleBadge extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: textColor ?? color,

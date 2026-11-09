@@ -76,7 +76,6 @@ class ProfileAvatarButton extends StatelessWidget {
         child: Text(
           initial,
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: size * 0.44,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,

@@ -14,7 +14,6 @@ class AuthLegalFooter extends StatelessWidget {
         title: const Text(
           'Privacy Policy',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,
           ),
@@ -33,7 +32,6 @@ class AuthLegalFooter extends StatelessWidget {
             'You may permanently delete your account at any time from Settings. '
             'Deleting your account completely purges your authentication profile and permanently wipes all on-device databases.',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 13,
               height: 1.45,
               color: AppTheme.textSecondary,
@@ -46,7 +44,6 @@ class AuthLegalFooter extends StatelessWidget {
             child: const Text(
               'Close',
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontWeight: FontWeight.w600,
                 color: AppTheme.activeBlue,
               ),
@@ -66,7 +63,6 @@ class AuthLegalFooter extends StatelessWidget {
         title: const Text(
           'Medical Disclaimer',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,
           ),
@@ -84,7 +80,6 @@ class AuthLegalFooter extends StatelessWidget {
             'By using Sique, you acknowledge that participation in exercise programs and dietary modifications carries '
             'inherent risks, and you do so voluntarily.',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 13,
               height: 1.45,
               color: AppTheme.textSecondary,
@@ -97,7 +92,6 @@ class AuthLegalFooter extends StatelessWidget {
             child: const Text(
               'Understood',
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontWeight: FontWeight.w600,
                 color: AppTheme.activeBlue,
               ),
@@ -126,7 +120,6 @@ class AuthLegalFooter extends StatelessWidget {
           child: const Text(
             'Privacy Policy',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
               decoration: TextDecoration.underline,
@@ -151,7 +144,6 @@ class AuthLegalFooter extends StatelessWidget {
           child: const Text(
             'Medical Disclaimer',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.textSecondary,
               decoration: TextDecoration.underline,

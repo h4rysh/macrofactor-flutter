@@ -13,30 +13,35 @@ class DateCarouselRibbon extends StatelessWidget {
     required this.onDateSelected,
     this.leading,
     this.trailing,
+    this.now,
   });
 
   final DateTime selectedDate;
   final ValueChanged<DateTime> onDateSelected;
   final Widget? leading;
   final Widget? trailing;
+  final DateTime? now;
 
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  String _formatHeaderDate(DateTime date) {
-    final now = DateTime.now();
-    if (_isSameDay(date, now)) return 'Today';
-    if (_isSameDay(date, now.subtract(const Duration(days: 1)))) {
+  String _formatHeaderDate(DateTime date, DateTime currentNow) {
+    if (_isSameDay(date, currentNow)) {
+      return 'Today';
+    }
+    if (_isSameDay(date, currentNow.subtract(const Duration(days: 1)))) {
       return 'Yesterday';
     }
-    if (_isSameDay(date, now.add(const Duration(days: 1)))) return 'Tomorrow';
+    if (_isSameDay(date, currentNow.add(const Duration(days: 1)))) {
+      return 'Tomorrow';
+    }
     return DateFormat('EEE, MMM d').format(date);
   }
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
+    final currentNow = now ?? DateTime.now();
 
     // Generate a 7-day window centered or ending around today/selectedDate
     final days = List.generate(7, (i) {
@@ -54,80 +59,85 @@ class DateCarouselRibbon extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               leading ?? const SizedBox(width: 40),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.chevron_left_rounded, size: 26),
-                    color: AppTheme.textSecondary,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () {
-                      HapticFeedback.selectionClick();
-                      onDateSelected(
-                        selectedDate.subtract(const Duration(days: 1)),
-                      );
-                    },
-                  ),
-                  const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () async {
-                      HapticFeedback.selectionClick();
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: selectedDate,
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime(2030),
-                        builder: (context, child) {
-                          return Theme(
-                            data: ThemeData.dark().copyWith(
-                              colorScheme: const ColorScheme.dark(
-                                primary: AppTheme.activeBlue,
-                                surface: AppTheme.cardSurface,
-                              ),
-                            ),
-                            child: child!,
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.chevron_left_rounded, size: 26),
+                        color: AppTheme.textSecondary,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          HapticFeedback.selectionClick();
+                          onDateSelected(
+                            selectedDate.subtract(const Duration(days: 1)),
                           );
                         },
-                      );
-                      if (picked != null) onDateSelected(picked);
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          _formatHeaderDate(selectedDate),
-                          style: const TextStyle(
-                            fontFamily: 'MacroSans',
-                            fontSize: 17,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
-                            letterSpacing: -0.3,
-                          ),
+                      ),
+                      const SizedBox(width: 6),
+                      GestureDetector(
+                        onTap: () async {
+                          HapticFeedback.selectionClick();
+                          final picked = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDate,
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2030),
+                            builder: (context, child) {
+                              return Theme(
+                                data: ThemeData.dark().copyWith(
+                                  colorScheme: const ColorScheme.dark(
+                                    primary: AppTheme.activeBlue,
+                                    surface: AppTheme.cardSurface,
+                                  ),
+                                ),
+                                child: child!,
+                              );
+                            },
+                          );
+                          if (picked != null) onDateSelected(picked);
+                        },
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _formatHeaderDate(selectedDate, currentNow),
+                              style: const TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textPrimary,
+                                letterSpacing: -0.3,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+                            const Icon(
+                              Icons.arrow_drop_down_rounded,
+                              color: AppTheme.textSecondary,
+                              size: 22,
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 2),
-                        const Icon(
-                          Icons.arrow_drop_down_rounded,
-                          color: AppTheme.textSecondary,
-                          size: 22,
-                        ),
-                      ],
-                    ),
+                      ),
+                      const SizedBox(width: 6),
+                      IconButton(
+                        icon: const Icon(Icons.chevron_right_rounded, size: 26),
+                        color: AppTheme.textSecondary,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          HapticFeedback.selectionClick();
+                          onDateSelected(
+                            selectedDate.add(const Duration(days: 1)),
+                          );
+                        },
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 6),
-                  IconButton(
-                    icon: const Icon(Icons.chevron_right_rounded, size: 26),
-                    color: AppTheme.textSecondary,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () {
-                      HapticFeedback.selectionClick();
-                      onDateSelected(
-                        selectedDate.add(const Duration(days: 1)),
-                      );
-                    },
-                  ),
-                ],
+                ),
               ),
               trailing ?? const SizedBox(width: 40),
             ],
@@ -142,7 +152,7 @@ class DateCarouselRibbon extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: days.map((day) {
               final isSelected = _isSameDay(day, selectedDate);
-              final isToday = _isSameDay(day, now);
+              final isToday = _isSameDay(day, currentNow);
               final dayInitial =
                   DateFormat('E').format(day)[0]; // 'M', 'T', 'W'...
               final dayNumber = day.day.toString();
@@ -173,35 +183,36 @@ class DateCarouselRibbon extends StatelessWidget {
                       width: isSelected ? 2.0 : 1.0,
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        dayInitial,
-                        style: TextStyle(
-                          fontFamily: 'MacroSans',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: isSelected
-                              ? AppTheme.activeBlue
-                              : AppTheme.textSecondary,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          dayInitial,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: isSelected
+                                ? AppTheme.activeBlue
+                                : AppTheme.textSecondary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        dayNumber,
-                        style: TextStyle(
-                          fontFamily: 'MacroSans',
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          color: isSelected
-                              ? AppTheme.textPrimary
-                              : (isToday
-                                  ? AppTheme.textPrimary
-                                  : AppTheme.textSecondary),
+                        const SizedBox(height: 2),
+                        Text(
+                          dayNumber,
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            color: isSelected
+                                ? AppTheme.textPrimary
+                                : (isToday
+                                    ? AppTheme.textPrimary
+                                    : AppTheme.textSecondary),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );

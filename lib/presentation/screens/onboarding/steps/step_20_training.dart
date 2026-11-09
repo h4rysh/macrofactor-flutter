@@ -80,7 +80,6 @@ class _Step20TrainingState extends State<Step20Training> {
                 child: Text(
                   day['short'] as String,
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 14,
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                     color: isSelected
@@ -108,7 +107,6 @@ class _Step20TrainingState extends State<Step20Training> {
                   child: Text(
                     '${_workoutDays.length} training days selected. You can shift extra carbohydrate energy to workout days in the next step.',
                     style: const TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 12,
                       color: AppTheme.textSecondary,
                       height: 1.35,

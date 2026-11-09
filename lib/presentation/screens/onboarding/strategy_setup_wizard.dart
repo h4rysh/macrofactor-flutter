@@ -192,7 +192,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         title: Text(
           'Step ${_currentStep + 1} of $_totalSteps',
           style: const TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 16,
             fontWeight: FontWeight.w600,
             color: AppTheme.textSecondary,
@@ -251,7 +250,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
                           ? 'Confirm Strategy & Continue'
                           : 'Continue',
                       style: const TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
@@ -281,7 +279,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const Text(
           'Tell us about yourself',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 26,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -291,7 +288,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const Text(
           'Used to compute your initial metabolic expenditure baseline.',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -365,7 +361,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const Text(
           'What is your primary goal?',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 26,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -375,7 +370,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const Text(
           'Sique recommends an adherence-neutral pacing strategy.',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -435,7 +429,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
                 ? '✓ Optimal Recommended Zone (Muscle Sparing)'
                 : '⚠ Aggressive Pacing (Higher metabolic adaptation)',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 12,
               fontWeight: FontWeight.w600,
               color: _targetRatePct.abs() <= 0.6
@@ -456,7 +449,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const Text(
           'Choose your coaching mode',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 26,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -466,7 +458,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const Text(
           'How much algorithmic automation do you want in your weekly check-ins?',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -513,7 +504,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const Text(
           'Macro Program Style',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 26,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -523,7 +513,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const Text(
           'Select how your non-protein calories are divided between carbs and fats.',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -544,7 +533,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const Text(
           'Dietary Habit (Indian Nutrition)',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 16,
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,
@@ -594,7 +582,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const Text(
           'Day Calorie Shifting',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 26,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -604,7 +591,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const Text(
           'Allocate higher energy to workout or weekend days without changing your weekly calorie total.',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -626,7 +612,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
           const Text(
             'Select Workout Days (Energy Surplus)',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 16,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -664,7 +649,6 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
                   child: Text(
                     day['name'] as String,
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
                       color: isWorkout ? Colors.white : AppTheme.textSecondary,

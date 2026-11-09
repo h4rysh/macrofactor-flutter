@@ -115,7 +115,6 @@ class _CardioTile extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textPrimary,
@@ -125,7 +124,6 @@ class _CardioTile extends StatelessWidget {
                 Text(
                   description,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                   ),

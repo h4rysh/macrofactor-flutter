@@ -42,29 +42,40 @@ class _SevenDayDistributionChartState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                '7-DAY ENERGY ALLOCATION',
-                style: TextStyle(
-                  fontFamily: 'MacroSans',
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textSecondary,
-                  letterSpacing: 0.8,
+              const Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '7-DAY ENERGY ALLOCATION',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textSecondary,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardElevated,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  program.allocationType.displayName,
-                  style: const TextStyle(
-                    fontFamily: 'MacroSans',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+              const SizedBox(width: 8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardElevated,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      program.allocationType.displayName,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -98,7 +109,6 @@ class _SevenDayDistributionChartState
                           Text(
                             '${day.calories.round()}',
                             style: TextStyle(
-                              fontFamily: 'MacroSans',
                               fontSize: 10,
                               fontWeight: isSelected
                                   ? FontWeight.w800
@@ -134,34 +144,36 @@ class _SevenDayDistributionChartState
                             ),
                           ),
                           const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              if (isWorkout) ...[
-                                Container(
-                                  width: 4,
-                                  height: 4,
-                                  decoration: const BoxDecoration(
-                                    color: AppTheme.calories,
-                                    shape: BoxShape.circle,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (isWorkout) ...[
+                                  Container(
+                                    width: 4,
+                                    height: 4,
+                                    decoration: const BoxDecoration(
+                                      color: AppTheme.calories,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 2),
+                                ],
+                                Text(
+                                  day.dayName.substring(0, 3),
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w800
+                                        : FontWeight.w600,
+                                    color: isSelected
+                                        ? AppTheme.textPrimary
+                                        : AppTheme.textSecondary,
                                   ),
                                 ),
-                                const SizedBox(width: 2),
                               ],
-                              Text(
-                                day.dayName.substring(0, 3),
-                                style: TextStyle(
-                                  fontFamily: 'MacroSans',
-                                  fontSize: 11,
-                                  fontWeight: isSelected
-                                      ? FontWeight.w800
-                                      : FontWeight.w600,
-                                  color: isSelected
-                                      ? AppTheme.textPrimary
-                                      : AppTheme.textSecondary,
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
                         ],
                       ),
@@ -187,60 +199,71 @@ class _SevenDayDistributionChartState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            selectedDay.dayName,
-                            style: const TextStyle(
-                              fontFamily: 'MacroSans',
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: selectedDay.isWorkoutDay
-                                  ? AppTheme.calories.withValues(alpha: 0.15)
-                                  : AppTheme.cardElevated,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              selectedDay.isWorkoutDay ? 'WORKOUT' : 'REST',
-                              style: TextStyle(
-                                fontFamily: 'MacroSans',
-                                fontSize: 9,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              selectedDay.dayName,
+                              style: const TextStyle(
+                                fontSize: 15,
                                 fontWeight: FontWeight.w800,
-                                color: selectedDay.isWorkoutDay
-                                    ? AppTheme.calories
-                                    : AppTheme.textSecondary,
+                                color: AppTheme.textPrimary,
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(width: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: selectedDay.isWorkoutDay
+                                    ? AppTheme.calories.withValues(alpha: 0.15)
+                                    : AppTheme.cardElevated,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                selectedDay.isWorkoutDay ? 'WORKOUT' : 'REST',
+                                style: TextStyle(
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                  color: selectedDay.isWorkoutDay
+                                      ? AppTheme.calories
+                                      : AppTheme.textSecondary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        'P: ${selectedDay.proteinGrams.round()}g • F: ${selectedDay.fatGrams.round()}g • C: ${selectedDay.carbsGrams.round()}g',
-                        style: const TextStyle(
-                          fontFamily: 'DMSans',
-                          fontSize: 12,
-                          color: AppTheme.textSecondary,
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'P: ${selectedDay.proteinGrams.round()}g • F: ${selectedDay.fatGrams.round()}g • C: ${selectedDay.carbsGrams.round()}g',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.textSecondary,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-                Text(
-                  '${selectedDay.calories.round()} kcal',
-                  style: const TextStyle(
-                    fontFamily: 'MacroSans',
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: AppTheme.calories,
+                const SizedBox(width: 8),
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      '${selectedDay.calories.round()} kcal',
+                      style: const TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.calories,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -261,7 +284,6 @@ class _SevenDayDistributionChartState
                 child: Text(
                   'Exact weekly energy conservation: sum of 7 days matches your target deficit.',
                   style: TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 11,
                     color: AppTheme.textSecondary,
                   ),

@@ -33,7 +33,6 @@ class PhysicalStatsSummaryCard extends ConsumerWidget {
                   Text(
                     'Physical Stats & Targets',
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.textPrimary,
@@ -55,7 +54,6 @@ class PhysicalStatsSummaryCard extends ConsumerWidget {
                     Text(
                       'Edit',
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.activeBlue,
@@ -160,7 +158,6 @@ class PhysicalStatsSummaryCard extends ConsumerWidget {
         Text(
           label,
           style: const TextStyle(
-            fontFamily: 'DMSans',
             fontSize: 11,
             color: AppTheme.textSecondary,
           ),
@@ -169,7 +166,6 @@ class PhysicalStatsSummaryCard extends ConsumerWidget {
         Text(
           value,
           style: const TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 15,
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,
@@ -185,7 +181,6 @@ class PhysicalStatsSummaryCard extends ConsumerWidget {
         Text(
           label,
           style: TextStyle(
-            fontFamily: 'DMSans',
             fontSize: 10,
             color: color,
             fontWeight: FontWeight.w600,
@@ -194,7 +189,6 @@ class PhysicalStatsSummaryCard extends ConsumerWidget {
         Text(
           value,
           style: const TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 12,
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,

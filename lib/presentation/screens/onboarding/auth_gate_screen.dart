@@ -143,7 +143,6 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                           'Account & Cloud Sync',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontFamily: 'MacroSans',
                             fontSize: 28,
                             fontWeight: FontWeight.w800,
                             color: AppTheme.textPrimary,
@@ -155,7 +154,6 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                           'Connect your Google account to automatically sync workouts from Hevy & Health Connect, or explore in guest mode.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontFamily: 'MacroSans',
                             fontSize: 14,
                             color: AppTheme.textSecondary,
                             height: 1.4,
@@ -187,7 +185,6 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                                   child: Text(
                                     'Sign-in unavailable: Firebase not configured',
                                     style: TextStyle(
-                                      fontFamily: 'MacroSans',
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                       color: AppTheme.warning,
@@ -234,7 +231,6 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                                 Text(
                                   'Continue with Google',
                                   style: TextStyle(
-                                    fontFamily: 'MacroSans',
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
                                     color: ref
@@ -283,7 +279,6 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                               Text(
                                 'Continue with Email',
                                 style: TextStyle(
-                                  fontFamily: 'MacroSans',
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                   color: ref
@@ -316,7 +311,6 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                               Text(
                                 'Try Demo Athlete Profile',
                                 style: TextStyle(
-                                  fontFamily: 'MacroSans',
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                   color: AppTheme.textPrimary,
@@ -337,7 +331,6 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                           child: const Text(
                             'Continue as Guest (Offline Mode)',
                             style: TextStyle(
-                              fontFamily: 'MacroSans',
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppTheme.textSecondary,

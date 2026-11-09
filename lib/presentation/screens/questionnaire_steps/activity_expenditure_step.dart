@@ -50,7 +50,6 @@ class ActivityExpenditureStep extends StatelessWidget {
         const Text(
           'PHYSICAL ACTIVITY & TDEE',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 11,
             fontWeight: FontWeight.w800,
             color: AppTheme.activeBlue,
@@ -61,7 +60,6 @@ class ActivityExpenditureStep extends StatelessWidget {
         const Text(
           'Daily Activity Level',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 22,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -72,7 +70,6 @@ class ActivityExpenditureStep extends StatelessWidget {
         const Text(
           'Used to seed your initial Bayesian expenditure algorithm baseline before observation data.',
           style: TextStyle(
-            fontFamily: 'DMSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -97,7 +94,6 @@ class ActivityExpenditureStep extends StatelessWidget {
                     Text(
                       'CALIBRATED BASELINE EXPENDITURE',
                       style: TextStyle(
-                        fontFamily: 'MacroSans',
                         fontSize: 10,
                         fontWeight: FontWeight.w700,
                         color: AppTheme.textMuted,
@@ -108,7 +104,6 @@ class ActivityExpenditureStep extends StatelessWidget {
                     Text(
                       'Bayesian Seed Point',
                       style: TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 12,
                         color: AppTheme.textSecondary,
                       ),
@@ -131,7 +126,6 @@ class ActivityExpenditureStep extends StatelessWidget {
                 child: Text(
                   '${baselineExpenditure.round()} kcal',
                   style: const TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 16,
                     fontWeight: FontWeight.w800,
                     color: AppTheme.expenditure,
@@ -182,7 +176,6 @@ class ActivityExpenditureStep extends StatelessWidget {
                           Text(
                             act['title'] as String,
                             style: const TextStyle(
-                              fontFamily: 'MacroSans',
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textPrimary,
@@ -192,7 +185,6 @@ class ActivityExpenditureStep extends StatelessWidget {
                           Text(
                             act['desc'] as String,
                             style: const TextStyle(
-                              fontFamily: 'DMSans',
                               fontSize: 12,
                               color: AppTheme.textSecondary,
                             ),

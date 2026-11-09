@@ -135,7 +135,6 @@ class _Step04HeightState extends State<Step04Height> {
                         const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 48,
                       fontWeight: FontWeight.w900,
                       color: AppTheme.textPrimary,
@@ -181,7 +180,6 @@ class _Step04HeightState extends State<Step04Height> {
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 44,
                       fontWeight: FontWeight.w900,
                       color: AppTheme.textPrimary,
@@ -190,7 +188,6 @@ class _Step04HeightState extends State<Step04Height> {
                       border: InputBorder.none,
                       suffixText: 'ft',
                       suffixStyle: TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 16,
                         color: AppTheme.textSecondary,
                       ),
@@ -207,7 +204,6 @@ class _Step04HeightState extends State<Step04Height> {
                     keyboardType: TextInputType.number,
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 44,
                       fontWeight: FontWeight.w900,
                       color: AppTheme.textPrimary,
@@ -216,7 +212,6 @@ class _Step04HeightState extends State<Step04Height> {
                       border: InputBorder.none,
                       suffixText: 'in',
                       suffixStyle: TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 16,
                         color: AppTheme.textSecondary,
                       ),
@@ -230,7 +225,6 @@ class _Step04HeightState extends State<Step04Height> {
           Text(
             _isImperial ? 'Imperial Height' : 'Centimeters (cm)',
             style: const TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 14,
               color: AppTheme.textMuted,
             ),
@@ -269,7 +263,6 @@ class _UnitToggleChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontFamily: 'DMSans',
           fontSize: 12,
           fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           color: isSelected ? AppTheme.activeBlue : AppTheme.textSecondary,

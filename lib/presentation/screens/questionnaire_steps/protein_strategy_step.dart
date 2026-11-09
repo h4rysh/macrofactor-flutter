@@ -60,7 +60,6 @@ class ProteinStrategyStep extends StatelessWidget {
         const Text(
           'PROTEIN STRATEGY',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 11,
             fontWeight: FontWeight.w800,
             color: AppTheme.protein,
@@ -71,7 +70,6 @@ class ProteinStrategyStep extends StatelessWidget {
         const Text(
           'Protein Intake Target',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 22,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -82,7 +80,6 @@ class ProteinStrategyStep extends StatelessWidget {
         Text(
           'Calculated proportionally to your current scale weight (${currentWeightKg.toStringAsFixed(1)} kg).',
           style: const TextStyle(
-            fontFamily: 'DMSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -103,7 +100,6 @@ class ProteinStrategyStep extends StatelessWidget {
           child: Text(
             goalContextHint,
             style: const TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 12,
               color: AppTheme.protein,
               height: 1.35,
@@ -142,7 +138,6 @@ class ProteinStrategyStep extends StatelessWidget {
                           Text(
                             opt['title'] as String,
                             style: const TextStyle(
-                              fontFamily: 'MacroSans',
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textPrimary,
@@ -152,7 +147,6 @@ class ProteinStrategyStep extends StatelessWidget {
                           Text(
                             opt['desc'] as String,
                             style: const TextStyle(
-                              fontFamily: 'DMSans',
                               fontSize: 12,
                               color: AppTheme.textSecondary,
                             ),
@@ -173,7 +167,6 @@ class ProteinStrategyStep extends StatelessWidget {
                       child: Text(
                         '${opt['grams']}g/day',
                         style: const TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
                           color: AppTheme.protein,

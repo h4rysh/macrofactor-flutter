@@ -162,7 +162,6 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
         title: const Text(
           'Search Food',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 20,
             fontWeight: FontWeight.w800,
           ),
@@ -178,14 +177,12 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                   controller: _searchController,
                   autofocus: true,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     color: AppTheme.textPrimary,
                     fontSize: 16,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Search 2,500+ Indian & Global foods...',
                     hintStyle: const TextStyle(
-                      fontFamily: 'DMSans',
                       color: AppTheme.textSecondary,
                     ),
                     prefixIcon: const Icon(
@@ -267,7 +264,6 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                           child: Text(
                             filter.displayName,
                             style: TextStyle(
-                              fontFamily: 'MacroSans',
                               fontSize: 12,
                               fontWeight: isSelected
                                   ? FontWeight.w700
@@ -306,7 +302,6 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                       Text(
                         'No foods found for "${_searchController.text}"',
                         style: const TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
                           color: AppTheme.textSecondary,
@@ -355,7 +350,6 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                                   Text(
                                     food.name,
                                     style: const TextStyle(
-                                      fontFamily: 'MacroSans',
                                       fontSize: 15,
                                       fontWeight: FontWeight.w700,
                                       color: AppTheme.textPrimary,

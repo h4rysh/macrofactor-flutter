@@ -55,56 +55,56 @@ class MacroGaugeRing extends StatelessWidget {
                     );
                   },
                 ),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AnimatedCountText(
-                      value: consumed.calories,
-                      style: const TextStyle(
-                        fontFamily: 'MacroSans',
-                        fontSize: 36,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.textPrimary,
-                        letterSpacing: -1.0,
-                      ),
-                    ),
-                    const Text(
-                      'CALORIES CONSUMED',
-                      style: TextStyle(
-                        fontFamily: 'MacroSans',
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textSecondary,
-                        letterSpacing: 0.9,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.surface.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: AppTheme.cardBorder.withValues(alpha: 0.8),
-                          width: 0.8,
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedCountText(
+                        value: consumed.calories,
+                        style: AppTypography.numericDisplay.copyWith(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.textPrimary,
+                          letterSpacing: -1.0,
                         ),
                       ),
-                      child: Text(
-                        remainingCalories >= 0
-                            ? '$remainingCalories left'
-                            : '+${remainingCalories.abs()} over',
-                        style: TextStyle(
-                          fontFamily: 'DMSans',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: remainingCalories >= 0
-                              ? AppTheme.calories
-                              : AppTheme.neutralInfo,
+                      Text(
+                        'CALORIES CONSUMED',
+                        style: AppTypography.labelSmall.copyWith(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textSecondary,
+                          letterSpacing: 0.9,
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface.withValues(alpha: 0.9),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: AppTheme.cardBorder.withValues(alpha: 0.8),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Text(
+                          remainingCalories >= 0
+                              ? '$remainingCalories left'
+                              : '+${remainingCalories.abs()} over',
+                          style: AppTypography.numericSmall.copyWith(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: remainingCalories >= 0
+                                ? AppTheme.calories
+                                : AppTheme.neutralInfo,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -175,8 +175,7 @@ class _AnimatedMacroProgressItem extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontFamily: 'MacroSans',
+                style: AppTypography.labelMedium.copyWith(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: color,
@@ -189,8 +188,7 @@ class _AnimatedMacroProgressItem extends StatelessWidget {
                 children: [
                   AnimatedCountText(
                     value: consumedGrams,
-                    style: const TextStyle(
-                      fontFamily: 'DMSans',
+                    style: AppTypography.numericCaption.copyWith(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.textSecondary,
@@ -198,8 +196,7 @@ class _AnimatedMacroProgressItem extends StatelessWidget {
                   ),
                   Text(
                     '/${targetGrams.round()}g',
-                    style: const TextStyle(
-                      fontFamily: 'DMSans',
+                    style: AppTypography.numericCaption.copyWith(
                       fontSize: 11,
                       fontWeight: FontWeight.w500,
                       color: AppTheme.textMuted,

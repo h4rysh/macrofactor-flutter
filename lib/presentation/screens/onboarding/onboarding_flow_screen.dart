@@ -260,7 +260,6 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
           'Step ${_currentStep + 1} of $_totalSteps',
           key: const Key('onboarding_step_title'),
           style: const TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 14,
             fontWeight: FontWeight.w700,
             color: AppTheme.textSecondary,

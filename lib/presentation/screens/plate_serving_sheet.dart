@@ -196,32 +196,40 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                   constraints: const BoxConstraints(),
                   onPressed: () => Navigator.pop(context),
                 ),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: AppTheme.cardElevated,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    timeStr,
-                    style: const TextStyle(
-                      fontFamily: 'DMSans',
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.cardElevated,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        timeStr,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textPrimary,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-                TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    'Edit',
-                    style: TextStyle(
-                      fontFamily: 'MacroSans',
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.activeBlue,
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: TextButton(
+                      onPressed: () {},
+                      child: const Text(
+                        'Edit',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.activeBlue,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -242,7 +250,6 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                       Text(
                         widget.food.name,
                         style: const TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: AppTheme.textPrimary,
@@ -260,7 +267,6 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                           child: Text(
                             widget.food.region,
                             style: const TextStyle(
-                              fontFamily: 'MacroSans',
                               fontSize: 10,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.activeBlue,
@@ -276,33 +282,35 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
             const SizedBox(height: 20),
 
             // Big Calories Display & Macro Badges
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  '${_effectiveCalories.round()}',
-                  style: const TextStyle(
-                    fontFamily: 'MacroSans',
-                    fontSize: 40,
-                    fontWeight: FontWeight.w900,
-                    color: AppTheme.textPrimary,
-                    height: 1.0,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                const Padding(
-                  padding: EdgeInsets.only(bottom: 6),
-                  child: Text(
-                    'Calories',
-                    style: TextStyle(
-                      fontFamily: 'MacroSans',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${_effectiveCalories.round()}',
+                    style: const TextStyle(
+                      fontSize: 40,
+                      fontWeight: FontWeight.w900,
+                      color: AppTheme.textPrimary,
+                      height: 1.0,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 8),
+                  const Padding(
+                    padding: EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      'Calories',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textSecondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
 
             const SizedBox(height: 12),
@@ -310,25 +318,31 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
             // Macro Percentage Badges
             Row(
               children: [
-                _buildMacroPill(
-                  label: 'Protein',
-                  grams: _effectiveProtein,
-                  percentage: proteinPct,
-                  color: AppTheme.protein,
+                Expanded(
+                  child: _buildMacroPill(
+                    label: 'Protein',
+                    grams: _effectiveProtein,
+                    percentage: proteinPct,
+                    color: AppTheme.protein,
+                  ),
                 ),
                 const SizedBox(width: 8),
-                _buildMacroPill(
-                  label: 'Fat',
-                  grams: _effectiveFat,
-                  percentage: fatPct,
-                  color: AppTheme.fat,
+                Expanded(
+                  child: _buildMacroPill(
+                    label: 'Fat',
+                    grams: _effectiveFat,
+                    percentage: fatPct,
+                    color: AppTheme.fat,
+                  ),
                 ),
                 const SizedBox(width: 8),
-                _buildMacroPill(
-                  label: 'Carbs',
-                  grams: _effectiveCarbs,
-                  percentage: carbsPct,
-                  color: AppTheme.carbs,
+                Expanded(
+                  child: _buildMacroPill(
+                    label: 'Carbs',
+                    grams: _effectiveCarbs,
+                    percentage: carbsPct,
+                    color: AppTheme.carbs,
+                  ),
                 ),
               ],
             ),
@@ -341,7 +355,6 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
             const Text(
               'SERVING SIZE',
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 color: AppTheme.textSecondary,
@@ -394,7 +407,6 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                               decimal: true),
                           textAlign: TextAlign.center,
                           style: const TextStyle(
-                            fontFamily: 'MacroSans',
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
                             color: AppTheme.textPrimary,
@@ -464,13 +476,16 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                         items: widget.portionUnits.map((u) {
                           return DropdownMenuItem(
                             value: u,
-                            child: Text(
-                              '${u.unitName} (${u.gramsPerUnit.round()}g)',
-                              style: const TextStyle(
-                                fontFamily: 'DMSans',
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.textPrimary,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                '${u.unitName} (${u.gramsPerUnit.round()}g)',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textPrimary,
+                                ),
                               ),
                             ),
                           );
@@ -491,7 +506,6 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
             const Text(
               '1-TAP OIL / GHEE MODIFIER',
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 color: AppTheme.textSecondary,
@@ -529,7 +543,6 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                         child: Text(
                           oil.displayName,
                           style: TextStyle(
-                            fontFamily: 'DMSans',
                             fontSize: 12,
                             fontWeight:
                                 isSelected ? FontWeight.w700 : FontWeight.w500,
@@ -553,7 +566,6 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
             const Text(
               'IMPACT ON TARGETS',
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontSize: 12,
                 fontWeight: FontWeight.w800,
                 color: AppTheme.textSecondary,
@@ -565,25 +577,33 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildTargetDial(
-                  label: 'Calories',
-                  pct: targetCalPct,
-                  color: AppTheme.calories,
+                Expanded(
+                  child: _buildTargetDial(
+                    label: 'Calories',
+                    pct: targetCalPct,
+                    color: AppTheme.calories,
+                  ),
                 ),
-                _buildTargetDial(
-                  label: 'Protein',
-                  pct: targetProteinPct,
-                  color: AppTheme.protein,
+                Expanded(
+                  child: _buildTargetDial(
+                    label: 'Protein',
+                    pct: targetProteinPct,
+                    color: AppTheme.protein,
+                  ),
                 ),
-                _buildTargetDial(
-                  label: 'Fat',
-                  pct: targetFatPct,
-                  color: AppTheme.fat,
+                Expanded(
+                  child: _buildTargetDial(
+                    label: 'Fat',
+                    pct: targetFatPct,
+                    color: AppTheme.fat,
+                  ),
                 ),
-                _buildTargetDial(
-                  label: 'Carbs',
-                  pct: targetCarbsPct,
-                  color: AppTheme.carbs,
+                Expanded(
+                  child: _buildTargetDial(
+                    label: 'Carbs',
+                    pct: targetCarbsPct,
+                    color: AppTheme.carbs,
+                  ),
                 ),
               ],
             ),
@@ -625,13 +645,15 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                       ),
                     ],
                   ),
-                  child: const Text(
-                    'Add to Plate',
-                    style: TextStyle(
-                      fontFamily: 'MacroSans',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      'Add to Plate',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
                     ),
                   ),
                 ),
@@ -656,35 +678,37 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withAlpha(80)),
       ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-            decoration: BoxDecoration(
-              color: color.withAlpha(50),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              '$percentage%',
-              style: TextStyle(
-                fontFamily: 'MacroSans',
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: color,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+              decoration: BoxDecoration(
+                color: color.withAlpha(50),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                '$percentage%',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            '${grams.toStringAsFixed(1)}g',
-            style: const TextStyle(
-              fontFamily: 'DMSans',
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: AppTheme.textPrimary,
+            const SizedBox(width: 6),
+            Text(
+              '${grams.toStringAsFixed(1)}g',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -709,25 +733,29 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                 valueColor: AlwaysStoppedAnimation<Color>(color),
               ),
             ),
-            Text(
-              '$pct%',
-              style: const TextStyle(
-                fontFamily: 'MacroSans',
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textPrimary,
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '$pct%',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                ),
               ),
             ),
           ],
         ),
         const SizedBox(height: 6),
-        Text(
-          label,
-          style: const TextStyle(
-            fontFamily: 'DMSans',
-            fontSize: 11,
-            fontWeight: FontWeight.w500,
-            color: AppTheme.textSecondary,
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: AppTheme.textSecondary,
+            ),
           ),
         ),
       ],

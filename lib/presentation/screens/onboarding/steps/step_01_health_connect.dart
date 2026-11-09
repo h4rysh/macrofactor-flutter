@@ -63,7 +63,6 @@ class _Step01HealthConnectState extends ConsumerState<Step01HealthConnect> {
                       Text(
                         'Health Connect Sync',
                         style: TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
@@ -73,7 +72,6 @@ class _Step01HealthConnectState extends ConsumerState<Step01HealthConnect> {
                       Text(
                         'Sync smart scale body weights & Hevy workouts automatically in the background.',
                         style: TextStyle(
-                          fontFamily: 'DMSans',
                           fontSize: 12,
                           color: AppTheme.textSecondary,
                           height: 1.35,
@@ -109,7 +107,6 @@ class _Step01HealthConnectState extends ConsumerState<Step01HealthConnect> {
                   child: Text(
                     'Optional. You can always input your daily weight and training manually.',
                     style: TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 12,
                       color: AppTheme.textSecondary,
                       height: 1.3,

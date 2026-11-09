@@ -88,7 +88,6 @@ class _Step15TargetWeightState extends State<Step15TargetWeight> {
                     child: Text(
                       'Target weight ${_targetWeightKg.toStringAsFixed(1)} kg places BMI (${_targetBmi.toStringAsFixed(1)}) in the clinical underweight range (< 18.5). Safe minimum target is ${_minSafeWeightKg.toStringAsFixed(1)} kg.',
                       style: const TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 13,
                         color: AppTheme.calories,
                         fontWeight: FontWeight.w600,
@@ -128,7 +127,6 @@ class _Step15TargetWeightState extends State<Step15TargetWeight> {
                       const TextInputType.numberWithOptions(decimal: true),
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
                     color: _isBmiViolation
@@ -164,7 +162,6 @@ class _Step15TargetWeightState extends State<Step15TargetWeight> {
           Text(
             'Target BMI: ${_targetBmi.toStringAsFixed(1)}',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 14,
               color: _isBmiViolation ? AppTheme.calories : AppTheme.textMuted,
             ),

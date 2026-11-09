@@ -93,7 +93,6 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
           Text(
             'Delete Account',
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 20,
               fontWeight: FontWeight.w700,
               color: AppTheme.textPrimary,
@@ -112,7 +111,6 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
                   ? 'Permanently delete your account (${widget.user.email}). All local workout, nutrition, and weight data will be permanently wiped. This cannot be undone. Enter your password to confirm:'
                   : 'Permanently delete your account (${widget.user.displayName}). All local workout, nutrition, and weight data will be permanently wiped. This cannot be undone. You may be prompted to re-authenticate with Google.',
               style: const TextStyle(
-                fontFamily: 'DMSans',
                 fontSize: 14,
                 color: AppTheme.textSecondary,
                 height: 1.4,
@@ -132,7 +130,6 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
                 child: Text(
                   _errorMessage!,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.calories,
                   ),

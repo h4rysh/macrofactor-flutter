@@ -25,7 +25,6 @@ class WorkoutStatsHeroGrid extends ConsumerWidget {
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary,
@@ -120,7 +119,6 @@ class WorkoutStatsHeroGrid extends ConsumerWidget {
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                   ),
@@ -142,7 +140,6 @@ class WorkoutStatsHeroGrid extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             style: const TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 22,
               fontWeight: FontWeight.w800,
               color: AppTheme.textPrimary,
@@ -153,7 +150,6 @@ class WorkoutStatsHeroGrid extends ConsumerWidget {
             overflow: TextOverflow.ellipsis,
             maxLines: 1,
             style: const TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 11,
               color: AppTheme.textMuted,
             ),

@@ -65,7 +65,6 @@ class _Step03DobState extends State<Step03Dob> {
                     child: Text(
                       'Sique algorithms and nutritional coaching are designed for adults 18 and older.',
                       style: TextStyle(
-                        fontFamily: 'DMSans',
                         fontSize: 13,
                         color: AppTheme.calories,
                         fontWeight: FontWeight.w600,
@@ -104,7 +103,6 @@ class _Step03DobState extends State<Step03Dob> {
                   keyboardType: TextInputType.number,
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
                     color: _isAdult ? AppTheme.textPrimary : AppTheme.calories,
@@ -138,7 +136,6 @@ class _Step03DobState extends State<Step03Dob> {
           const Text(
             'Years Old',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 14,
               color: AppTheme.textMuted,
             ),

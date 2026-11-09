@@ -101,7 +101,6 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
       title: const Text(
         'Serving Size',
         style: TextStyle(
-          fontFamily: 'MacroSans',
           fontSize: 18,
           fontWeight: FontWeight.w700,
           color: AppTheme.textPrimary,
@@ -118,7 +117,6 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
               const Text(
                 'UNIT',
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textSecondary,
@@ -144,7 +142,6 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
                         child: Text(
                           '${u.unitName} (${u.gramWeight.toStringAsFixed(0)}g)',
                           style: const TextStyle(
-                            fontFamily: 'DMSans',
                             fontSize: 14,
                             color: AppTheme.textPrimary,
                           ),
@@ -165,7 +162,6 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
             const Text(
               'QUANTITY',
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontSize: 11,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.textSecondary,
@@ -205,7 +201,6 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
                         const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.textPrimary,
@@ -279,7 +274,6 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
           child: const Text(
             'Cancel',
             style: TextStyle(
-              fontFamily: 'DMSans',
               color: AppTheme.textSecondary,
               fontWeight: FontWeight.w600,
             ),
@@ -303,7 +297,6 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
           child: const Text(
             'Set Portion',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontWeight: FontWeight.w700,
             ),
           ),

@@ -69,7 +69,6 @@ class CoachingCheckinCard extends ConsumerWidget {
                       Text(
                         'CHECK-IN READY',
                         style: TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
                           color: AppTheme.calories,
@@ -80,7 +79,6 @@ class CoachingCheckinCard extends ConsumerWidget {
                       Text(
                         'Weekly Metabolic Review',
                         style: TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
@@ -104,7 +102,6 @@ class CoachingCheckinCard extends ConsumerWidget {
             Text(
               recommendation.metabolicInsight,
               style: const TextStyle(
-                fontFamily: 'DMSans',
                 fontSize: 13,
                 color: AppTheme.textSecondary,
                 height: 1.35,
@@ -125,7 +122,6 @@ class CoachingCheckinCard extends ConsumerWidget {
                   Text(
                     'Review & Adjust Strategy',
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                       color: Colors.white,
@@ -174,7 +170,6 @@ class CoachingCheckinCard extends ConsumerWidget {
                 const Text(
                   'WEEKLY CHECK-IN',
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.textSecondary,
@@ -187,7 +182,6 @@ class CoachingCheckinCard extends ConsumerWidget {
                       ? 'Due tomorrow'
                       : 'Next check-in in ${recommendation.daysUntilNextCheckIn} days',
                   style: const TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.textPrimary,

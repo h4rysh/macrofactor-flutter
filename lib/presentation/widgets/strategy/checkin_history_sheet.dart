@@ -51,7 +51,6 @@ class CheckinHistorySheet extends ConsumerWidget {
                   const Text(
                     'Check-In History',
                     style: TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
                       color: AppTheme.textPrimary,
@@ -81,7 +80,6 @@ class CheckinHistorySheet extends ConsumerWidget {
                       Text(
                         'No Check-Ins Yet',
                         style: TextStyle(
-                          fontFamily: 'MacroSans',
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textPrimary,
@@ -92,7 +90,6 @@ class CheckinHistorySheet extends ConsumerWidget {
                         'Weekly check-in logs will appear here after your first review.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          fontFamily: 'DMSans',
                           fontSize: 13,
                           color: AppTheme.textSecondary,
                         ),
@@ -132,7 +129,6 @@ class CheckinHistorySheet extends ConsumerWidget {
                                 Text(
                                   dateStr,
                                   style: const TextStyle(
-                                    fontFamily: 'MacroSans',
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
                                     color: AppTheme.textPrimary,
@@ -153,7 +149,6 @@ class CheckinHistorySheet extends ConsumerWidget {
                                         ? 'Accepted'
                                         : 'Kept Current',
                                     style: TextStyle(
-                                      fontFamily: 'MacroSans',
                                       fontSize: 11,
                                       fontWeight: FontWeight.w700,
                                       color: item.isAccepted
@@ -170,7 +165,6 @@ class CheckinHistorySheet extends ConsumerWidget {
                                 Text(
                                   '${item.previousCalories.round()} → ${item.recommendedCalories.round()} kcal',
                                   style: const TextStyle(
-                                    fontFamily: 'MacroSans',
                                     fontSize: 16,
                                     fontWeight: FontWeight.w800,
                                     color: AppTheme.textPrimary,
@@ -182,7 +176,6 @@ class CheckinHistorySheet extends ConsumerWidget {
                                       ? '(0)'
                                       : '(${isSurplus ? '+' : ''}${delta.round()} kcal)',
                                   style: TextStyle(
-                                    fontFamily: 'DMSans',
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     color: isSurplus
@@ -196,7 +189,6 @@ class CheckinHistorySheet extends ConsumerWidget {
                             Text(
                               'Weight Trend: ${item.weightTrendKg.toStringAsFixed(1)} kg • TDEE: ${item.expenditureKcal.round()} kcal',
                               style: const TextStyle(
-                                fontFamily: 'DMSans',
                                 fontSize: 12,
                                 color: AppTheme.textSecondary,
                               ),
@@ -206,7 +198,6 @@ class CheckinHistorySheet extends ConsumerWidget {
                               Text(
                                 item.statusNote,
                                 style: const TextStyle(
-                                  fontFamily: 'DMSans',
                                   fontSize: 12,
                                   color: AppTheme.textSecondary,
                                   fontStyle: FontStyle.italic,

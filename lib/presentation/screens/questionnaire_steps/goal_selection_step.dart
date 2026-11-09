@@ -22,7 +22,6 @@ class GoalSelectionStep extends StatelessWidget {
         const Text(
           'GOAL SELECTION',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 11,
             fontWeight: FontWeight.w800,
             color: AppTheme.activeBlue,
@@ -33,7 +32,6 @@ class GoalSelectionStep extends StatelessWidget {
         const Text(
           'What is your primary goal?',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 22,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -44,7 +42,6 @@ class GoalSelectionStep extends StatelessWidget {
         const Text(
           'Sique tailors caloric targets and protein distributions to your metabolic objective.',
           style: TextStyle(
-            fontFamily: 'DMSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -135,7 +132,6 @@ class GoalSelectionStep extends StatelessWidget {
                         child: Text(
                           title,
                           style: const TextStyle(
-                            fontFamily: 'MacroSans',
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary,
@@ -153,7 +149,6 @@ class GoalSelectionStep extends StatelessWidget {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 12,
                       color: AppTheme.textSecondary,
                       height: 1.3,

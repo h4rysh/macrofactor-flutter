@@ -45,12 +45,11 @@ class DynamicExpenditureCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Flexible(
+                    Flexible(
                       child: Text(
                         'ENERGY EXPENDITURE',
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontFamily: 'MacroSans',
+                        style: AppTypography.labelSmall.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.expenditure,
@@ -74,52 +73,55 @@ class DynamicExpenditureCard extends StatelessWidget {
                     width: 1,
                   ),
                 ),
-                child: Text(
-                  isPaused ? 'Paused (Gaps)' : '$confidencePct% Confidence',
-                  style: TextStyle(
-                    fontFamily: 'DMSans',
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: isPaused ? AppTheme.warning : AppTheme.expenditure,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    isPaused ? 'Paused (Gaps)' : '$confidencePct% Confidence',
+                    style: AppTypography.labelSmall.copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: isPaused ? AppTheme.warning : AppTheme.expenditure,
+                    ),
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 14),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              AnimatedCountText(
-                value: expenditureState.expenditureKcal,
-                style: const TextStyle(
-                  fontFamily: 'MacroSans',
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  color: AppTheme.textPrimary,
-                  letterSpacing: -0.5,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                AnimatedCountText(
+                  value: expenditureState.expenditureKcal,
+                  style: AppTypography.numericLarge.copyWith(
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                    color: AppTheme.textPrimary,
+                    letterSpacing: -0.5,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 6),
-              const Text(
-                'kcal / day',
-                style: TextStyle(
-                  fontFamily: 'DMSans',
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary,
+                const SizedBox(width: 6),
+                Text(
+                  'kcal / day',
+                  style: AppTypography.bodyMedium.copyWith(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: AppTheme.textSecondary,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             isPaused
                 ? 'Expenditure updates paused due to ${expenditureState.consecutiveMissingDays} days of missing logs. Resume logging to reactivate.'
                 : 'Bayesian state-space tracker adapts to your true metabolism without manual formula guesswork.',
-            style: const TextStyle(
-              fontFamily: 'DMSans',
+            style: AppTypography.bodySmall.copyWith(
               fontSize: 12,
               color: AppTheme.textSecondary,
               height: 1.3,

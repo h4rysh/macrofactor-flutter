@@ -92,7 +92,6 @@ class _SummaryRow extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontFamily: 'DMSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -100,7 +99,6 @@ class _SummaryRow extends StatelessWidget {
         Text(
           value,
           style: const TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 15,
             fontWeight: FontWeight.w700,
             color: AppTheme.textPrimary,

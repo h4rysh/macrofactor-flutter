@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sique/presentation/theme/tokens/app_typography.dart';
 export 'apple_tactile_card.dart';
 
 /// Silky-smooth numeric count-up / count-down odometer text.
@@ -25,6 +26,9 @@ class AnimatedCountText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final effectiveStyle = AppTypography.withTabularFigures(
+      style ?? DefaultTextStyle.of(context).style,
+    );
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(end: value),
       duration: duration,
@@ -35,7 +39,7 @@ class AnimatedCountText extends StatelessWidget {
             : animatedValue.round().toString();
         return Text(
           '$prefix$formatted$suffix',
-          style: style,
+          style: effectiveStyle,
         );
       },
     );

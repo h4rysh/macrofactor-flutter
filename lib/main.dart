@@ -29,6 +29,19 @@ class SiqueApp extends StatelessWidget {
       title: 'Sique',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
+      builder: (context, child) {
+        final mediaQuery = MediaQuery.of(context);
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            textScaler: mediaQuery.textScaler.clamp(
+              minScaleFactor: 1.0,
+              maxScaleFactor:
+                  1.50, // Clamped to 1.50 to satisfy accessibility requirements ("not below 1.5") without layout overflow
+            ),
+          ),
+          child: child!,
+        );
+      },
       home: const OnboardingCoordinator(),
     );
   }

@@ -66,7 +66,6 @@ class _Step16GoalRateState extends State<Step16GoalRate> {
                   Text(
                     '${_ratePct.abs().toStringAsFixed(2)}% / week',
                     style: const TextStyle(
-                      fontFamily: 'MacroSans',
                       fontSize: 36,
                       fontWeight: FontWeight.w900,
                       color: AppTheme.textPrimary,
@@ -76,7 +75,6 @@ class _Step16GoalRateState extends State<Step16GoalRate> {
                   Text(
                     '${weeklyKg.toStringAsFixed(2)} kg/week • ${monthlyKg.toStringAsFixed(1)} kg/month',
                     style: const TextStyle(
-                      fontFamily: 'DMSans',
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: AppTheme.activeBlue,
@@ -149,7 +147,6 @@ class _Step16GoalRateState extends State<Step16GoalRate> {
                 'Energy intake will match your Kalman expenditure calculation to maintain body composition.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: 'DMSans',
                   fontSize: 14,
                   color: AppTheme.textSecondary,
                   height: 1.4,
@@ -193,7 +190,6 @@ class _PresetRateCard extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-              fontFamily: 'MacroSans',
               fontSize: 12,
               fontWeight: FontWeight.w700,
               color: isSelected ? AppTheme.activeBlue : AppTheme.textPrimary,
@@ -203,7 +199,6 @@ class _PresetRateCard extends StatelessWidget {
           Text(
             rateText,
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 11,
               color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
             ),

@@ -123,7 +123,6 @@ class _Step05WeightState extends State<Step05Weight> {
                       const TextInputType.numberWithOptions(decimal: true),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
                     color: AppTheme.textPrimary,
@@ -160,7 +159,6 @@ class _Step05WeightState extends State<Step05Weight> {
           Text(
             _isLbs ? 'Pounds (lbs)' : 'Kilograms (kg)',
             style: const TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 14,
               color: AppTheme.textMuted,
             ),
@@ -210,7 +208,6 @@ class _UnitChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontFamily: 'DMSans',
           fontSize: 12,
           fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
           color: isSelected ? AppTheme.activeBlue : AppTheme.textSecondary,

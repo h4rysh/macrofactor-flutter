@@ -52,8 +52,7 @@ class NutritionSummaryBanner extends StatelessWidget {
                       const SizedBox(width: 4),
                       Text(
                         '${consumed.totalCalories.round()} / ${targets.targetCalories.round()}',
-                        style: const TextStyle(
-                          fontFamily: 'MacroSans',
+                        style: AppTypography.numericSmall.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w800,
                           color: AppTheme.textPrimary,
@@ -157,8 +156,7 @@ class NutritionSummaryBanner extends StatelessWidget {
           children: [
             Text(
               label,
-              style: TextStyle(
-                fontFamily: 'MacroSans',
+              style: AppTypography.labelSmall.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
                 color: color,
@@ -167,8 +165,7 @@ class NutritionSummaryBanner extends StatelessWidget {
             const SizedBox(width: 2),
             Text(
               '$consumed/$target',
-              style: const TextStyle(
-                fontFamily: 'DMSans',
+              style: AppTypography.numericCaption.copyWith(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.textPrimary,

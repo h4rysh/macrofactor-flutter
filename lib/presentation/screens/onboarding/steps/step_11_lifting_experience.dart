@@ -108,7 +108,6 @@ class _ExperienceCard extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary,
@@ -123,7 +122,6 @@ class _ExperienceCard extends StatelessWidget {
           Text(
             description,
             style: const TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 13,
               color: AppTheme.textSecondary,
               height: 1.35,

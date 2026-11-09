@@ -45,7 +45,6 @@ class QuickActionsSheet extends StatelessWidget {
               const Text(
                 'Quick Actions',
                 style: TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
                   color: AppTheme.textPrimary,
@@ -168,7 +167,6 @@ class QuickActionsSheet extends StatelessWidget {
               child: Text(
                 title,
                 style: const TextStyle(
-                  fontFamily: 'MacroSans',
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textPrimary,

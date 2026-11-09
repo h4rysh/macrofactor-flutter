@@ -79,7 +79,6 @@ class _Step06WeightHistoryState extends State<Step06WeightHistory> {
                       const TextInputType.numberWithOptions(decimal: true),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 48,
                     fontWeight: FontWeight.w900,
                     color: AppTheme.textPrimary,
@@ -113,7 +112,6 @@ class _Step06WeightHistoryState extends State<Step06WeightHistory> {
           const Text(
             'Kilograms (kg)',
             style: TextStyle(
-              fontFamily: 'DMSans',
               fontSize: 14,
               color: AppTheme.textMuted,
             ),

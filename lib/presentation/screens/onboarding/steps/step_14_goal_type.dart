@@ -126,7 +126,6 @@ class _GoalTile extends StatelessWidget {
                 Text(
                   title,
                   style: TextStyle(
-                    fontFamily: 'MacroSans',
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                     color: isSelected
@@ -138,7 +137,6 @@ class _GoalTile extends StatelessWidget {
                 Text(
                   subtitle,
                   style: const TextStyle(
-                    fontFamily: 'DMSans',
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                     height: 1.35,

@@ -26,6 +26,33 @@ class MacroProgramHeroCard extends ConsumerWidget {
             ? '+${deficitSurplus.round()} kcal surplus'
             : 'Energy balance (0 kcal)';
 
+    final textScaler = MediaQuery.textScalerOf(context);
+    final isScaled = textScaler.scale(1.0) > 1.15;
+
+    final deficitBadge = Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: isDeficit
+            ? AppTheme.calories.withValues(alpha: 0.12)
+            : isSurplus
+                ? AppTheme.carbs.withValues(alpha: 0.12)
+                : AppTheme.cardElevated,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        deficitText,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: isDeficit
+              ? AppTheme.calories
+              : isSurplus
+                  ? AppTheme.carbs
+                  : AppTheme.textSecondary,
+        ),
+      ),
+    );
+
     return Container(
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
@@ -40,19 +67,21 @@ class MacroProgramHeroCard extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Wrap(
-                spacing: 6,
-                runSpacing: 6,
-                children: [
-                  _Badge(
-                    label: program.mode.displayName.toUpperCase(),
-                    color: AppTheme.calories,
-                  ),
-                  _Badge(
-                    label: program.style.displayName.toUpperCase(),
-                    color: AppTheme.activeBlue,
-                  ),
-                ],
+              Expanded(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    _Badge(
+                      label: program.mode.displayName.toUpperCase(),
+                      color: AppTheme.calories,
+                    ),
+                    _Badge(
+                      label: program.style.displayName.toUpperCase(),
+                      color: AppTheme.activeBlue,
+                    ),
+                  ],
+                ),
               ),
               IconButton(
                 onPressed: () {
@@ -75,54 +104,54 @@ class MacroProgramHeroCard extends ConsumerWidget {
 
           // Average Calories
           Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                '${program.dailyAverageCalories.round()}',
-                style: const TextStyle(
-                  fontFamily: 'MacroSans',
-                  fontSize: 38,
-                  fontWeight: FontWeight.w900,
-                  color: AppTheme.calories,
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text(
-                'kcal / day avg',
-                style: TextStyle(
-                  fontFamily: 'DMSans',
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isDeficit
-                      ? AppTheme.calories.withValues(alpha: 0.12)
-                      : isSurplus
-                          ? AppTheme.carbs.withValues(alpha: 0.12)
-                          : AppTheme.cardElevated,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  deficitText,
-                  style: TextStyle(
-                    fontFamily: 'DMSans',
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: isDeficit
-                        ? AppTheme.calories
-                        : isSurplus
-                            ? AppTheme.carbs
-                            : AppTheme.textSecondary,
+              Flexible(
+                flex: isScaled ? 3 : 1,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '${program.dailyAverageCalories.round()}',
+                        style: const TextStyle(
+                          fontSize: 38,
+                          fontWeight: FontWeight.w900,
+                          color: AppTheme.calories,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'kcal / day avg',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
+              const SizedBox(width: 8),
+              if (isScaled)
+                Flexible(
+                  flex: 2,
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerRight,
+                    child: deficitBadge,
+                  ),
+                )
+              else
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: deficitBadge,
+                ),
             ],
           ),
           const SizedBox(height: 20),
@@ -163,25 +192,27 @@ class MacroProgramHeroCard extends ConsumerWidget {
             backgroundColor: AppTheme.cardElevated,
             borderRadius: 14,
             padding: const EdgeInsets.symmetric(vertical: 12),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.tune_rounded,
-                  color: AppTheme.calories,
-                  size: 18,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Change Strategy or Preferences',
-                  style: TextStyle(
-                    fontFamily: 'MacroSans',
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
+            child: const FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.tune_rounded,
+                    color: AppTheme.calories,
+                    size: 18,
                   ),
-                ),
-              ],
+                  SizedBox(width: 8),
+                  Text(
+                    'Change Strategy or Preferences',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -208,7 +239,6 @@ class _Badge extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontFamily: 'MacroSans',
           fontSize: 10,
           fontWeight: FontWeight.w800,
           color: color,
@@ -240,29 +270,30 @@ class _MacroSplitPill extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
-        child: Column(
-          children: [
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'MacroSans',
-                fontSize: 10,
-                fontWeight: FontWeight.w800,
-                color: color,
-                letterSpacing: 0.5,
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Column(
+            children: [
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                  letterSpacing: 0.5,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              grams,
-              style: TextStyle(
-                fontFamily: 'MacroSans',
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: color,
+              const SizedBox(height: 4),
+              Text(
+                grams,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

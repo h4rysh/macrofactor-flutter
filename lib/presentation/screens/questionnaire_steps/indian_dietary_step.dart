@@ -48,7 +48,6 @@ class IndianDietaryStep extends StatelessWidget {
         const Text(
           'INDIAN NUTRITION & DIET',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 11,
             fontWeight: FontWeight.w800,
             color: AppTheme.activeBlue,
@@ -59,7 +58,6 @@ class IndianDietaryStep extends StatelessWidget {
         const Text(
           'Indian Nutrition & Habits',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 22,
             fontWeight: FontWeight.w800,
             color: AppTheme.textPrimary,
@@ -70,7 +68,6 @@ class IndianDietaryStep extends StatelessWidget {
         const Text(
           'Tailor search ranking, default logging portions, and cooking oil modifiers (ICMR-NIN IFCT).',
           style: TextStyle(
-            fontFamily: 'DMSans',
             fontSize: 14,
             color: AppTheme.textSecondary,
           ),
@@ -81,7 +78,6 @@ class IndianDietaryStep extends StatelessWidget {
         const Text(
           'DIETARY PATTERN',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 11,
             fontWeight: FontWeight.w800,
             color: AppTheme.textMuted,
@@ -108,7 +104,6 @@ class IndianDietaryStep extends StatelessWidget {
         const Text(
           'DAILY STAPLE PREFERENCE',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 11,
             fontWeight: FontWeight.w800,
             color: AppTheme.textMuted,
@@ -130,7 +125,6 @@ class IndianDietaryStep extends StatelessWidget {
         const Text(
           'TYPICAL COOKING OIL / GHEE HABIT',
           style: TextStyle(
-            fontFamily: 'MacroSans',
             fontSize: 11,
             fontWeight: FontWeight.w800,
             color: AppTheme.textMuted,
@@ -181,7 +175,6 @@ class IndianDietaryStep extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color:
@@ -218,7 +211,6 @@ class IndianDietaryStep extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color:
@@ -259,7 +251,6 @@ class IndianDietaryStep extends StatelessWidget {
             Text(
               title,
               style: TextStyle(
-                fontFamily: 'MacroSans',
                 fontSize: 13,
                 fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
                 color:
