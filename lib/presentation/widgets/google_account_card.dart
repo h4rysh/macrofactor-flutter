@@ -512,54 +512,6 @@ class GoogleAccountCard extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        AppleBouncy(
-          onTap: isLoading
-              ? null
-              : () {
-                  ref
-                      .read(authNotifierProvider.notifier)
-                      .signInWithDemoAthlete();
-                },
-          child: Container(
-            key: const Key('profile_demo_sign_in_btn'),
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: AppTheme.cardElevated,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.cardBorder,
-                width: 1,
-              ),
-            ),
-            alignment: Alignment.center,
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.fitness_center_rounded,
-                  size: 16,
-                  color: AppTheme.activeBlue,
-                ),
-                SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    'Continue with Demo Athlete Profile',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ],
     );
   }

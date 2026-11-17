@@ -9,6 +9,7 @@ import '../widgets/strategy/checkin_history_sheet.dart';
 import '../widgets/strategy/coaching_checkin_card.dart';
 import '../widgets/strategy/macro_program_hero_card.dart';
 import '../widgets/strategy/seven_day_distribution_chart.dart';
+import 'goal_questionnaire_sheet.dart';
 import 'onboarding/strategy_setup_wizard.dart';
 
 /// Strategy & Coaching Screen reconstructed with Sique's clean-room
@@ -22,6 +23,10 @@ class StrategyScreen extends ConsumerWidget {
         builder: (_) => const StrategySetupWizard(),
       ),
     );
+  }
+
+  void _openQuestionnaire(BuildContext context) {
+    GoalQuestionnaireSheet.show(context);
   }
 
   void _openHistorySheet(BuildContext context) {
@@ -48,10 +53,12 @@ class StrategyScreen extends ConsumerWidget {
             tooltip: 'Check-In History',
           ),
           IconButton(
-            onPressed: () => _openSetupWizard(context),
-            icon: const Icon(Icons.tune_rounded),
-            tooltip: 'Customize Program',
+            key: const Key('strategy_goal_questionnaire_btn'),
+            onPressed: () => _openQuestionnaire(context),
+            icon: const Icon(Icons.tune_rounded, color: AppTheme.activeBlue),
+            tooltip: 'Personalize Goal & Strategy',
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: SingleChildScrollView(
@@ -95,37 +102,148 @@ class StrategyScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
-            // 6. Strategy Action Buttons
+            // 6. Refined Adjust Strategy & Program Personalization Card
             AppleStaggeredEntrance(
               index: 5,
-              child: AppleTactileCard(
-                onTap: () => _openSetupWizard(context),
-                backgroundColor: AppTheme.calories,
-                borderRadius: 16,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                child: const FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.auto_fix_high_rounded,
-                          color: Colors.white, size: 20),
-                      SizedBox(width: 8),
-                      Text(
-                        'REFIGURE PROGRAM STRATEGY',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                    ],
+              child: Container(
+                key: const Key('strategy_adjust_program_card'),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardSurface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppTheme.activeBlue.withValues(alpha: 0.25),
+                    width: 1.0,
                   ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(
+                          Icons.tune_rounded,
+                          size: 18,
+                          color: AppTheme.activeBlue,
+                        ),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'ADJUST STRATEGY & GOALS',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textSecondary,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      'Personalize your target rate of change, Indian diet staples, or refigure the entire macro split.',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: AppTheme.textSecondary,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppleBouncy(
+                            scaleDown: 0.96,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              _openQuestionnaire(context);
+                            },
+                            child: Container(
+                              key: const Key('strategy_personalize_goal_btn'),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 4),
+                              decoration: BoxDecoration(
+                                color:
+                                    AppTheme.activeBlue.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: AppTheme.activeBlue
+                                      .withValues(alpha: 0.35),
+                                  width: 1,
+                                ),
+                              ),
+                              child: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.edit_note_rounded,
+                                        size: 16, color: AppTheme.activeBlue),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Edit Goal & Diet',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w700,
+                                        color: AppTheme.activeBlue,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: AppleBouncy(
+                            scaleDown: 0.96,
+                            onTap: () {
+                              HapticFeedback.lightImpact();
+                              _openSetupWizard(context);
+                            },
+                            child: Container(
+                              key: const Key('strategy_refigure_program_btn'),
+                              padding: const EdgeInsets.symmetric(
+                                  vertical: 12, horizontal: 4),
+                              decoration: BoxDecoration(
+                                color: AppTheme.calories,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.auto_fix_high_rounded,
+                                        size: 16, color: Colors.white),
+                                    SizedBox(width: 4),
+                                    Text(
+                                      'Refigure Split',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 110),
           ],
         ),
       ),

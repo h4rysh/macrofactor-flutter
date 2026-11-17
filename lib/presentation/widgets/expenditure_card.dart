@@ -35,9 +35,9 @@ class DynamicExpenditureCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
+                Expanded(
+                  flex: 3,
                   child: Row(
-                    mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(6),
@@ -52,10 +52,11 @@ class DynamicExpenditureCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Flexible(
+                      Expanded(
                         child: Text(
                           'ENERGY EXPENDITURE',
                           overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                           style: AppTypography.labelSmall.copyWith(
                             fontSize: 12,
                             fontWeight: FontWeight.w700,
@@ -68,28 +69,35 @@ class DynamicExpenditureCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: isPaused
-                        ? AppTheme.warning.withValues(alpha: 0.15)
-                        : AppTheme.expenditure.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: isPaused ? AppTheme.warning : AppTheme.expenditure,
-                      width: 1,
-                    ),
-                  ),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      isPaused ? 'Paused (Gaps)' : '$confidencePct% Confidence',
-                      style: AppTypography.labelSmall.copyWith(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                Flexible(
+                  flex: 2,
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: isPaused
+                          ? AppTheme.warning.withValues(alpha: 0.15)
+                          : AppTheme.expenditure.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
                         color:
                             isPaused ? AppTheme.warning : AppTheme.expenditure,
+                        width: 1,
+                      ),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        isPaused
+                            ? 'Paused (Gaps)'
+                            : '$confidencePct% Confidence',
+                        style: AppTypography.labelSmall.copyWith(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: isPaused
+                              ? AppTheme.warning
+                              : AppTheme.expenditure,
+                        ),
                       ),
                     ),
                   ),

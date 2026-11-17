@@ -73,17 +73,6 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
     }
   }
 
-  Future<void> _handleDemoAthlete() async {
-    setState(() => _isLoading = true);
-    try {
-      await ref.read(authNotifierProvider.notifier).signInWithDemoAthlete();
-      if (!mounted) return;
-      _proceed();
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   void _handleContinueAsGuest() {
     _proceed();
   }
@@ -294,35 +283,7 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // Button 3: Demo Athlete Profile
-                        AppleTactileCard(
-                          key: const Key('auth_gate_demo_btn'),
-                          onTap: _isLoading ? null : _handleDemoAthlete,
-                          backgroundColor: AppTheme.cardSurface,
-                          borderRadius: 16,
-                          border:
-                              Border.all(color: AppTheme.cardBorder, width: 1),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.fitness_center_rounded,
-                                  color: AppTheme.expenditure, size: 20),
-                              SizedBox(width: 10),
-                              Text(
-                                'Try Demo Athlete Profile',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.textPrimary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Button 4: Continue as Guest
+                        // Button 3: Continue as Guest
                         TextButton(
                           key: const Key('auth_gate_guest_btn'),
                           onPressed: _isLoading ? null : _handleContinueAsGuest,

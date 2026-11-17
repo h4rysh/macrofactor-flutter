@@ -8,7 +8,6 @@ import 'package:sique/presentation/screens/auth/delete_account_dialog.dart';
 import 'package:sique/presentation/screens/data_export_screen.dart';
 import 'package:sique/presentation/screens/expenditure_settings_screen.dart';
 import 'package:sique/presentation/screens/food_log_settings_screen.dart';
-import 'package:sique/presentation/screens/goal_questionnaire_sheet.dart';
 import 'package:sique/presentation/screens/profile_targets_screen.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/animated_primitives.dart';
@@ -37,73 +36,8 @@ class MoreScreen extends ConsumerWidget {
             child: _buildAccountCard(context, user),
           ),
           const SizedBox(height: 12),
-          // Featured Apple Tactile Card: Interactive Goal & Preference Questionnaire
           AppleStaggeredEntrance(
             index: 1,
-            child: AppleBouncy(
-              onTap: () => GoalQuestionnaireSheet.show(context),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                decoration: BoxDecoration(
-                  color: AppTheme.activeBlue.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: AppTheme.activeBlue.withValues(alpha: 0.3),
-                    width: 1.0,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(9),
-                      decoration: BoxDecoration(
-                        color: AppTheme.activeBlue.withValues(alpha: 0.18),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.auto_awesome_rounded,
-                        color: AppTheme.activeBlue,
-                        size: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-                    const Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Interactive Program Setup',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          SizedBox(height: 2),
-                          Text(
-                            '6-step dynamic branching for goal, rate, and Indian diet',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppTheme.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 14,
-                      color: AppTheme.activeBlue,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          AppleStaggeredEntrance(
-            index: 2,
             child: _buildSettingsTile(
               context: context,
               icon: Icons.account_circle_outlined,
@@ -169,7 +103,7 @@ class MoreScreen extends ConsumerWidget {
             index: 8,
             child: _buildDeleteDataTile(context, user),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 110),
         ],
       ),
     );

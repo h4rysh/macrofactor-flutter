@@ -71,7 +71,7 @@ void main() {
 
   group('Goal Questionnaire Sheet Flow & Dynamic Branching', () {
     testWidgets(
-        'Dashboard banner opens Goal Questionnaire Sheet and displays step 1',
+        'Strategy card opens Goal Questionnaire Sheet and displays step 1',
         (WidgetTester tester) async {
       tester.view.physicalSize = const Size(450, 1000);
       tester.view.devicePixelRatio = 1.0;
@@ -81,13 +81,15 @@ void main() {
       await tester.pumpWidget(createSubject());
       await tester.pumpAndSettle();
 
-      // Navigate to Dashboard tab
-      await tester.tap(find.text('Dashboard').first);
+      // Navigate to Strategy tab
+      await tester.tap(find.text('Strategy').first);
       await tester.pumpAndSettle();
 
-      // Tap the top adaptive setup banner
-      expect(find.byKey(const Key('dashboard_goal_banner')), findsOneWidget);
-      await tester.tap(find.byKey(const Key('dashboard_goal_banner')));
+      // Tap the strategy AppBar action button
+      expect(find.byKey(const Key('strategy_goal_questionnaire_btn')),
+          findsOneWidget);
+      await tester
+          .tap(find.byKey(const Key('strategy_goal_questionnaire_btn')));
       await tester.pumpAndSettle();
 
       // Questionnaire sheet should be displayed
@@ -108,10 +110,11 @@ void main() {
       await tester.pumpWidget(createSubject());
       await tester.pumpAndSettle();
 
-      // Open from Dashboard button
-      await tester.tap(find.text('Dashboard').first);
+      // Open from Strategy button
+      await tester.tap(find.text('Strategy').first);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('dashboard_goal_setup_btn')));
+      await tester
+          .tap(find.byKey(const Key('strategy_goal_questionnaire_btn')));
       await tester.pumpAndSettle();
 
       // Case A: Fat Loss
@@ -166,9 +169,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // Open Questionnaire
-      await tester.tap(find.text('Dashboard').first);
+      await tester.tap(find.text('Strategy').first);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('dashboard_goal_banner')));
+      await tester
+          .tap(find.byKey(const Key('strategy_goal_questionnaire_btn')));
       await tester.pumpAndSettle();
 
       // Step 0: Goal -> Fat Loss
@@ -250,9 +254,10 @@ void main() {
       await tester.pumpWidget(createSubject());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Dashboard').first);
+      await tester.tap(find.text('Strategy').first);
       await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('dashboard_goal_banner')));
+      await tester
+          .tap(find.byKey(const Key('strategy_goal_questionnaire_btn')));
       await tester.pumpAndSettle();
 
       // Advance to step 5
@@ -271,9 +276,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Dashboard should still be rendered and not popped out
-      expect(find.text('Dashboard'), findsWidgets);
-      expect(find.text('ENERGY EXPENDITURE'), findsOneWidget);
+      // Strategy should still be rendered and not popped out
+      expect(find.text('Strategy'), findsWidgets);
+      expect(find.text('ADHERENCE-NEUTRAL COACHING'), findsOneWidget);
     });
 
     testWidgets(
@@ -287,11 +292,12 @@ void main() {
       await tester.pumpWidget(createSubject());
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Dashboard').first);
+      await tester.tap(find.text('Strategy').first);
       await tester.pumpAndSettle();
 
       // Open questionnaire
-      await tester.tap(find.byKey(const Key('dashboard_goal_banner')));
+      await tester
+          .tap(find.byKey(const Key('strategy_goal_questionnaire_btn')));
       await tester.pumpAndSettle();
 
       // Select Muscle Gain

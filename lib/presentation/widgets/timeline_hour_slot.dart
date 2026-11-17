@@ -62,9 +62,13 @@ class TimelineHourSlot extends StatelessWidget {
     final bool showCopyYesterday = entries.isEmpty &&
         yesterdayEntries.isNotEmpty &&
         onCopyYesterday != null;
+    final bool isEmptySlot = entries.isEmpty && !showCopyYesterday;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: isEmptySlot ? 3 : 8,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -81,28 +85,40 @@ class TimelineHourSlot extends StatelessWidget {
                   onAddTap();
                 },
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isEmptySlot ? 8 : 10,
+                    vertical: isEmptySlot ? 3 : 5,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppTheme.cardSurface,
+                    color: isEmptySlot
+                        ? AppTheme.cardSurface.withAlpha(140)
+                        : AppTheme.cardSurface,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: AppTheme.cardBorder),
+                    border: Border.all(
+                      color: isEmptySlot
+                          ? AppTheme.cardBorder.withAlpha(80)
+                          : AppTheme.cardBorder,
+                      width: 0.8,
+                    ),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         _formatHour(hour),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
+                        style: TextStyle(
+                          fontSize: isEmptySlot ? 11 : 12,
+                          fontWeight:
+                              isEmptySlot ? FontWeight.w600 : FontWeight.w700,
+                          color: isEmptySlot
+                              ? AppTheme.textSecondary
+                              : AppTheme.textPrimary,
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(
+                      Icon(
                         Icons.add_rounded,
-                        size: 14,
+                        size: isEmptySlot ? 12 : 14,
                         color: AppTheme.activeBlue,
                       ),
                     ],
@@ -154,7 +170,8 @@ class TimelineHourSlot extends StatelessWidget {
             ],
           ),
 
-          const SizedBox(height: 8),
+          if (entries.isNotEmpty || showCopyYesterday)
+            const SizedBox(height: 8),
 
           // Body: Collapsed Icon Row OR Detailed Cards OR Copy Yesterday
           if (entries.isNotEmpty) ...[
@@ -207,10 +224,11 @@ class TimelineHourSlot extends StatelessWidget {
                 },
               )
             else
-              // Empty placeholder for this hour slot
+              // Compact hairline for continuous 24h timeline
               Container(
-                height: 1,
-                color: AppTheme.cardBorder.withAlpha(40),
+                margin: const EdgeInsets.only(top: 4),
+                height: 0.6,
+                color: AppTheme.cardBorder.withAlpha(25),
               ),
           ],
         ],

@@ -10,7 +10,6 @@ import '../widgets/profile_avatar_button.dart';
 import '../widgets/weight_trend_card.dart';
 import 'account_profile_screen.dart';
 import 'food_search_screen.dart';
-import 'goal_questionnaire_sheet.dart';
 import 'quick_actions_sheet.dart';
 import 'weight_log_modal.dart';
 
@@ -107,18 +106,6 @@ class DashboardScreen extends ConsumerWidget {
                               ),
                               onPressed: () => WeightLogModal.show(context),
                             ),
-                            // Adaptive Goal Questionnaire Action
-                            IconButton(
-                              key: const Key('dashboard_goal_setup_btn'),
-                              tooltip: 'Personalize Program',
-                              icon: const Icon(
-                                Icons.tune_rounded,
-                                color: AppTheme.activeBlue,
-                                size: 22,
-                              ),
-                              onPressed: () =>
-                                  GoalQuestionnaireSheet.show(context),
-                            ),
                             // Strategy Action
                             if (onNavigateToStrategy != null)
                               IconButton(
@@ -160,99 +147,9 @@ class DashboardScreen extends ConsumerWidget {
               sliver: SliverList(
                 delegate: SliverChildListDelegate(
                   [
-                    // Top Interactive Direction Banner (Apple Tactile)
-                    AppleStaggeredEntrance(
-                      index: 0,
-                      child: AppleBouncy(
-                        onTap: () => GoalQuestionnaireSheet.show(context),
-                        child: Container(
-                          key: const Key('dashboard_goal_banner'),
-                          margin: const EdgeInsets.only(bottom: 14),
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 14),
-                          decoration: BoxDecoration(
-                            color: AppTheme.activeBlue.withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color:
-                                  AppTheme.activeBlue.withValues(alpha: 0.25),
-                              width: 0.9,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(9),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.activeBlue
-                                      .withValues(alpha: 0.18),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: const Icon(
-                                  Icons.auto_awesome_rounded,
-                                  color: AppTheme.activeBlue,
-                                  size: 22,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              const Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Flexible(
-                                          child: FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: Text(
-                                              'ADAPTIVE SETUP',
-                                              style: TextStyle(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w800,
-                                                color: AppTheme.activeBlue,
-                                                letterSpacing: 0.8,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      'Personalize Your Goal & Diet',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppTheme.textPrimary,
-                                      ),
-                                    ),
-                                    SizedBox(height: 2),
-                                    Text(
-                                      'Tailor rate, Indian staples, and protein strategy in 6 steps',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: AppTheme.textSecondary,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(
-                                Icons.arrow_forward_ios_rounded,
-                                size: 14,
-                                color: AppTheme.activeBlue,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
                     // A. Nutrition Focus Tile: Macro Gauge Ring (Calories + P/F/C breakdown)
                     AppleStaggeredEntrance(
-                      index: 1,
+                      index: 0,
                       child: MacroGaugeRing(
                         consumed: dailyNutrition,
                         targets: macroTarget,
@@ -262,7 +159,7 @@ class DashboardScreen extends ConsumerWidget {
 
                     // Quick Action Strip
                     AppleStaggeredEntrance(
-                      index: 2,
+                      index: 1,
                       child: Row(
                         children: [
                           Expanded(
@@ -307,7 +204,7 @@ class DashboardScreen extends ConsumerWidget {
 
                     // B. Dynamic Bayesian Energy Expenditure V3
                     AppleStaggeredEntrance(
-                      index: 3,
+                      index: 2,
                       child: DynamicExpenditureCard(
                         expenditureState: expenditureState,
                       ),
@@ -316,7 +213,7 @@ class DashboardScreen extends ConsumerWidget {
 
                     // C. Smoothed Weight Trend V2 Card
                     AppleStaggeredEntrance(
-                      index: 4,
+                      index: 3,
                       child: WeightTrendCard(
                         latestTrendPoint: latestTrendPoint,
                         onLogWeightTap: () => WeightLogModal.show(context),
@@ -326,10 +223,10 @@ class DashboardScreen extends ConsumerWidget {
 
                     // D. Energy Balance Tile
                     AppleStaggeredEntrance(
-                      index: 5,
+                      index: 4,
                       child: _buildEnergyBalanceCard(energyBalanceKcal),
                     ),
-                    const SizedBox(height: 80),
+                    const SizedBox(height: 110),
                   ],
                 ),
               ),

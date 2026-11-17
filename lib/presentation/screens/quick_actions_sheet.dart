@@ -4,7 +4,6 @@ import '../../domain/models/food_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/apple_tactile_card.dart';
 import 'food_search_screen.dart';
-import 'goal_questionnaire_sheet.dart';
 import 'weight_log_modal.dart';
 
 /// Quick actions bottom sheet triggered by the center '+' navigation button.
@@ -52,16 +51,6 @@ class QuickActionsSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildTile(
-                context: context,
-                icon: Icons.tune_rounded,
-                title: 'Personalize Goals & Preferences',
-                color: AppTheme.activeBlue,
-                onTap: () {
-                  Navigator.pop(context);
-                  GoalQuestionnaireSheet.show(context);
-                },
-              ),
               _buildTile(
                 context: context,
                 icon: Icons.search_rounded,

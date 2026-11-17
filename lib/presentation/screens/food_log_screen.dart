@@ -239,16 +239,8 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     final db = ref.read(databaseProvider);
     final yesterdayLogs = db.getFoodLogsForDate(yesterdayStr);
 
-    // Define canonical hourly milestones
-    const baseHours = [8, 10, 13, 16, 20];
-    final loggedHours = dayLogs.map((e) => e.loggedAt.hour).toSet();
-    final yesterdayHours = yesterdayLogs.map((e) => e.loggedAt.hour).toSet();
-    final allHours = {
-      ...baseHours,
-      ...loggedHours,
-      ...yesterdayHours,
-    }.toList()
-      ..sort();
+    // Continuous 24-hour timeline slots (12 AM to 11 PM)
+    final allHours = List<int>.generate(24, (i) => i);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -358,9 +350,17 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                   ),
                 ),
 
-                // Bottom padding to avoid persistent search bar overlap
+                // Bottom padding to avoid persistent search bar and navigation dock overlap
                 const SliverToBoxAdapter(child: SizedBox(height: 80)),
               ],
+            ),
+
+            // Navigation dock avoidance placeholder (always in widget tree)
+            const Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: SizedBox(height: 80),
             ),
 
             // 5. Docked Persistent Quick Search Bar (above Bottom Nav)
