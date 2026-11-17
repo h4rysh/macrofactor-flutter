@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../domain/models/food_models.dart';
 import '../theme/app_theme.dart';
 import 'apple_tactile_card.dart';
@@ -15,6 +16,8 @@ class TimelineHourSlot extends StatelessWidget {
     required this.onAddTap,
     required this.onEntryTap,
     required this.onEntryDelete,
+    this.yesterdayEntries = const [],
+    this.onCopyYesterday,
   });
 
   final int hour;
@@ -23,6 +26,12 @@ class TimelineHourSlot extends StatelessWidget {
   final VoidCallback onAddTap;
   final ValueChanged<DailyFoodLogEntry> onEntryTap;
   final ValueChanged<DailyFoodLogEntry> onEntryDelete;
+
+  /// Entries from the same hour slot on the previous day, used for Copy Yesterday.
+  final List<DailyFoodLogEntry> yesterdayEntries;
+
+  /// Called when user taps "Copy Yesterday". Receives the list to be copied.
+  final ValueChanged<List<DailyFoodLogEntry>>? onCopyYesterday;
 
   String _formatHour(int h) {
     if (h == 0) return '12 AM';
@@ -50,6 +59,10 @@ class TimelineHourSlot extends StatelessWidget {
       (sum, e) => sum + e.effectiveCarbs,
     );
 
+    final bool showCopyYesterday = entries.isEmpty &&
+        yesterdayEntries.isNotEmpty &&
+        onCopyYesterday != null;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
@@ -63,7 +76,10 @@ class TimelineHourSlot extends StatelessWidget {
               AppleBouncy(
                 scaleDown: 0.94,
                 semanticLabel: 'Add food at ${_formatHour(hour)}',
-                onTap: onAddTap,
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  onAddTap();
+                },
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -140,7 +156,7 @@ class TimelineHourSlot extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          // Body: Collapsed Icon Row OR Detailed Cards
+          // Body: Collapsed Icon Row OR Detailed Cards OR Copy Yesterday
           if (entries.isNotEmpty) ...[
             if (isCollapsed)
               // Collapsed mode: horizontal scroll of food icons
@@ -181,13 +197,76 @@ class TimelineHourSlot extends StatelessWidget {
                 ),
               ),
           ] else ...[
-            // Empty placeholder for this hour slot
-            Container(
-              height: 1,
-              color: AppTheme.cardBorder.withAlpha(40),
-            ),
+            if (showCopyYesterday)
+              // "Copy Yesterday" subtle action button
+              _CopyYesterdayButton(
+                count: yesterdayEntries.length,
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  onCopyYesterday!(yesterdayEntries);
+                },
+              )
+            else
+              // Empty placeholder for this hour slot
+              Container(
+                height: 1,
+                color: AppTheme.cardBorder.withAlpha(40),
+              ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Subtle tactile "Copy Yesterday (N items)" button for empty hour slots.
+class _CopyYesterdayButton extends StatelessWidget {
+  const _CopyYesterdayButton({
+    required this.count,
+    required this.onTap,
+  });
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Copy $count ${count == 1 ? 'item' : 'items'} from yesterday',
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppTheme.activeBlue.withAlpha(18),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(
+              color: AppTheme.activeBlue.withAlpha(60),
+              width: 0.8,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.content_copy_rounded,
+                size: 13,
+                color: AppTheme.activeBlue.withAlpha(200),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Copy Yesterday ($count ${count == 1 ? 'item' : 'items'})',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.activeBlue.withAlpha(220),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

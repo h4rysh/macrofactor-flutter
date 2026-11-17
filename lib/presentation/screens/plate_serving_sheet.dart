@@ -115,6 +115,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
 
   void _setQuantity(double newQ) {
     if (newQ > 0) {
+      HapticFeedback.lightImpact();
       setState(() {
         _quantity = (newQ * 100).roundToDouble() / 100.0;
         _quantityController.text = _formatQuantity(_quantity);
@@ -493,7 +494,10 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                           );
                         }).toList(),
                         onChanged: (u) {
-                          if (u != null) setState(() => _selectedUnit = u);
+                          if (u != null) {
+                            HapticFeedback.lightImpact();
+                            setState(() => _selectedUnit = u);
+                          }
                         },
                       ),
                     ),
@@ -524,7 +528,10 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                     padding: const EdgeInsets.only(right: 8),
                     child: AppleBouncy(
                       scaleDown: 0.94,
-                      onTap: () => setState(() => _selectedOil = oil),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        setState(() => _selectedOil = oil);
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 14,
@@ -619,6 +626,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
               child: AppleBouncy(
                 scaleDown: 0.96,
                 onTap: () {
+                  HapticFeedback.mediumImpact();
                   widget.onLogConfirmed(
                     unit: _selectedUnit,
                     quantity: _quantity,

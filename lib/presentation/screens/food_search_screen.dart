@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/food_models.dart';
 import '../providers/app_providers.dart';
@@ -151,8 +152,38 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     );
   }
 
+  void _quickLogFood(FoodItem food) {
+    HapticFeedback.mediumImpact();
+    final db = ref.read(databaseProvider);
+    final portionUnits = db.getPortionUnits(food.id);
+    final defaultUnit =
+        portionUnits.isNotEmpty ? portionUnits.first : food.defaultPortionUnit;
+
+    ref.read(dailyFoodLogsProvider.notifier).addEntry(
+          food: food,
+          portionUnit: defaultUnit,
+          quantity: 1.0,
+          mealType: widget.mealType,
+          oilModifier: OilModifier.none,
+          loggedAt: widget.initialLoggedAt ?? DateTime.now(),
+        );
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Logged 1x ${food.name} to Plate'),
+        backgroundColor: AppTheme.cardElevated,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final recentFoods = ref.watch(recentLoggedFoodsProvider);
+
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
@@ -293,103 +324,203 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
           ),
         ),
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.activeBlue),
-            )
-          : _searchResults.isEmpty
-              ? SiqueEmptyState(
-                  icon: Icons.search_off_rounded,
-                  title: 'No foods found',
-                  message:
-                      'No items match "${_searchController.text}". Try a different term or barcode scan.',
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: _searchResults.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final food = _searchResults[index];
-                    final defaultNutrition = food.calculateNutrition(
-                      quantity: 1.0,
-                      unit: food.defaultPortionUnit,
-                    );
-                    return AppleBouncy(
-                      scaleDown: 0.98,
-                      onTap: () => _openPlateSheet(food),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Recent & Frequent 1-Tap Row
+          if (_searchController.text.isEmpty && recentFoods.isNotEmpty) ...[
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 8),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.history_rounded,
+                    size: 16,
+                    color: AppTheme.activeBlue,
+                  ),
+                  SizedBox(width: 6),
+                  Text(
+                    'RECENT & FREQUENT (1-TAP)',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textSecondary,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            SizedBox(
+              height: 42,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: recentFoods.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final food = recentFoods[index];
+                  return AppleBouncy(
+                    scaleDown: 0.94,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      _openPlateSheet(food);
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppTheme.cardSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: AppTheme.cardBorder,
+                          width: 0.8,
                         ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardSurface,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: AppTheme.cardBorder,
-                            width: 0.8,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            FoodSvgIcon(
-                              iconName: food.iconName,
-                              size: 34,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          FoodSvgIcon(iconName: food.iconName, size: 22),
+                          const SizedBox(width: 6),
+                          Text(
+                            food.name,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary,
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                          ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: () => _quickLogFood(food),
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.activeBlue.withAlpha(35),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.add_rounded,
+                                size: 14,
+                                color: AppTheme.activeBlue,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Divider(height: 1, color: AppTheme.cardBorder),
+          ],
+          Expanded(
+            child: _isLoading
+                ? const Center(
+                    child:
+                        CircularProgressIndicator(color: AppTheme.activeBlue),
+                  )
+                : _searchResults.isEmpty
+                    ? SiqueEmptyState(
+                        icon: Icons.search_off_rounded,
+                        title: 'No foods found',
+                        message:
+                            'No items match "${_searchController.text}". Try a different term or barcode scan.',
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: _searchResults.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final food = _searchResults[index];
+                          final defaultNutrition = food.calculateNutrition(
+                            quantity: 1.0,
+                            unit: food.defaultPortionUnit,
+                          );
+                          return AppleBouncy(
+                            scaleDown: 0.98,
+                            onTap: () => _openPlateSheet(food),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.cardSurface,
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: AppTheme.cardBorder,
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: Row(
                                 children: [
-                                  Text(
-                                    food.name,
-                                    style: const TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppTheme.textPrimary,
+                                  FoodSvgIcon(
+                                    iconName: food.iconName,
+                                    size: 34,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          food.name,
+                                          style: const TextStyle(
+                                            fontSize: 15,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppTheme.textPrimary,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 6),
+                                        Wrap(
+                                          spacing: 6,
+                                          runSpacing: 4,
+                                          children: [
+                                            AppleBadge(
+                                              label:
+                                                  '${defaultNutrition.calories.round()} kcal',
+                                              color: AppTheme.calories,
+                                            ),
+                                            AppleBadge(
+                                              label:
+                                                  '${defaultNutrition.protein.toStringAsFixed(1)}P',
+                                              color: AppTheme.protein,
+                                            ),
+                                            AppleBadge(
+                                              label:
+                                                  '${defaultNutrition.fat.toStringAsFixed(1)}F',
+                                              color: AppTheme.fat,
+                                            ),
+                                            AppleBadge(
+                                              label:
+                                                  '${defaultNutrition.carbs.toStringAsFixed(1)}C',
+                                              color: AppTheme.carbs,
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  const SizedBox(height: 6),
-                                  Wrap(
-                                    spacing: 6,
-                                    runSpacing: 4,
-                                    children: [
-                                      AppleBadge(
-                                        label:
-                                            '${defaultNutrition.calories.round()} kcal',
-                                        color: AppTheme.calories,
-                                      ),
-                                      AppleBadge(
-                                        label:
-                                            '${defaultNutrition.protein.toStringAsFixed(1)}P',
-                                        color: AppTheme.protein,
-                                      ),
-                                      AppleBadge(
-                                        label:
-                                            '${defaultNutrition.fat.toStringAsFixed(1)}F',
-                                        color: AppTheme.fat,
-                                      ),
-                                      AppleBadge(
-                                        label:
-                                            '${defaultNutrition.carbs.toStringAsFixed(1)}C',
-                                        color: AppTheme.carbs,
-                                      ),
-                                    ],
+                                  const Icon(
+                                    Icons.arrow_forward_ios_rounded,
+                                    size: 13,
+                                    color: AppTheme.textMuted,
                                   ),
                                 ],
                               ),
                             ),
-                            const Icon(
-                              Icons.arrow_forward_ios_rounded,
-                              size: 13,
-                              color: AppTheme.textMuted,
-                            ),
-                          ],
-                        ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
+          ),
+        ],
+      ),
     );
   }
 }

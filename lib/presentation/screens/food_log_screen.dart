@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/food_models.dart';
@@ -22,6 +23,11 @@ class FoodLogScreen extends ConsumerStatefulWidget {
 
 class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
   bool _isCollapsed = false;
+
+  /// Tracks whether we have already fired the celebratory haptic this session
+  /// for calories and protein independently to avoid repeat firing.
+  bool _calHapticFired = false;
+  bool _proteinHapticFired = false;
 
   DateTime get _selectedDate {
     final str = ref.read(selectedDateProvider);
@@ -88,10 +94,104 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     );
   }
 
+  /// Fires celebratory haptic when daily calories or protein first reach their target.
+  void _checkAndFireCelebratoryHaptic({
+    required double totalCalories,
+    required double totalProtein,
+    required double targetCalories,
+    required double targetProteinGrams,
+  }) {
+    final calReached = targetCalories > 0 && totalCalories >= targetCalories;
+    final proteinReached =
+        targetProteinGrams > 0 && totalProtein >= targetProteinGrams;
+
+    if (calReached && !_calHapticFired) {
+      _calHapticFired = true;
+      HapticFeedback.mediumImpact();
+      Future.delayed(const Duration(milliseconds: 120), () {
+        HapticFeedback.lightImpact();
+      });
+    }
+    if (proteinReached && !_proteinHapticFired) {
+      _proteinHapticFired = true;
+      HapticFeedback.mediumImpact();
+      Future.delayed(const Duration(milliseconds: 120), () {
+        HapticFeedback.lightImpact();
+      });
+    }
+  }
+
+  /// Copies entries from yesterday's same hour slot to the current selected date.
+  void _copyYesterdayEntries(
+    List<DailyFoodLogEntry> yesterdayEntries,
+    DateTime selectedDate,
+    int hour,
+  ) {
+    for (final entry in yesterdayEntries) {
+      final newLoggedAt = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day,
+        hour,
+        entry.loggedAt.minute,
+      );
+      ref.read(dailyFoodLogsProvider.notifier).addEntry(
+            food: entry.food,
+            portionUnit: PortionUnit(
+              id: 0,
+              foodId: entry.food.id,
+              unitName: entry.unitName,
+              gramsPerUnit: entry.gramWeight /
+                  (entry.servingQuantity > 0 ? entry.servingQuantity : 1.0),
+            ),
+            quantity: entry.servingQuantity,
+            mealType: _getMealTypeForHour(hour),
+            oilModifier: entry.oilModifier,
+            loggedAt: newLoggedAt,
+          );
+    }
+
+    final count = yesterdayEntries.length;
+    // Show floating SnackBar with Undo support
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Copied $count ${count == 1 ? 'item' : 'items'} from yesterday',
+        ),
+        action: SnackBarAction(
+          label: 'Undo',
+          textColor: AppTheme.activeBlue,
+          onPressed: () {
+            // Remove the just-added entries (last `count` entries of this hour)
+            final current = ref.read(dailyFoodLogsProvider);
+            final todayStr = DateFormat('yyyy-MM-dd').format(selectedDate);
+            final toRemove = current
+                .where(
+                  (e) => e.date == todayStr && e.loggedAt.hour == hour,
+                )
+                .toList()
+                .reversed
+                .take(count)
+                .toList();
+            for (final e in toRemove) {
+              ref.read(dailyFoodLogsProvider.notifier).removeEntry(e.id);
+            }
+          },
+        ),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 5),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     ref.listen<String>(selectedDateProvider, (prev, next) {
       if (prev != next) {
+        // Reset celebratory haptic flags when date changes
+        _calHapticFired = false;
+        _proteinHapticFired = false;
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
       }
     });
@@ -123,10 +223,32 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
       ),
     );
 
+    // Check for celebratory haptic (runs after each build)
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndFireCelebratoryHaptic(
+        totalCalories: dailyAggregate.totalCalories,
+        totalProtein: dailyAggregate.totalProtein,
+        targetCalories: macroTargets.targetCalories,
+        targetProteinGrams: macroTargets.targetProteinGrams,
+      );
+    });
+
+    // Fetch yesterday's logs for Copy Yesterday feature
+    final yesterday = selectedDate.subtract(const Duration(days: 1));
+    final yesterdayStr = DateFormat('yyyy-MM-dd').format(yesterday);
+    final db = ref.read(databaseProvider);
+    final yesterdayLogs = db.getFoodLogsForDate(yesterdayStr);
+
     // Define canonical hourly milestones
     const baseHours = [8, 10, 13, 16, 20];
     final loggedHours = dayLogs.map((e) => e.loggedAt.hour).toSet();
-    final allHours = {...baseHours, ...loggedHours}.toList()..sort();
+    final yesterdayHours = yesterdayLogs.map((e) => e.loggedAt.hour).toSet();
+    final allHours = {
+      ...baseHours,
+      ...loggedHours,
+      ...yesterdayHours,
+    }.toList()
+      ..sort();
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -173,7 +295,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-                // 3. Nutrition Summary Progress Banner
+                // 3. Nutrition Summary Progress Banner (with streak)
                 SliverToBoxAdapter(
                   child: NutritionSummaryBanner(
                     consumed: dailyAggregate,
@@ -191,6 +313,9 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                       final hourEntries = dayLogs
                           .where((e) => e.loggedAt.hour == hour)
                           .toList();
+                      final hourYesterday = yesterdayLogs
+                          .where((e) => e.loggedAt.hour == hour)
+                          .toList();
 
                       return TimelineHourSlot(
                         hour: hour,
@@ -198,6 +323,13 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                         isCollapsed: _isCollapsed,
                         onAddTap: () => _onAddForHour(hour),
                         onEntryTap: _onEntryTap,
+                        yesterdayEntries: hourYesterday,
+                        onCopyYesterday: (entriesToCopy) =>
+                            _copyYesterdayEntries(
+                          entriesToCopy,
+                          selectedDate,
+                          hour,
+                        ),
                         onEntryDelete: (entry) {
                           ref
                               .read(dailyFoodLogsProvider.notifier)

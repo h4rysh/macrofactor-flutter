@@ -11,6 +11,7 @@ import 'package:sique/presentation/providers/strategy_providers.dart';
 
 export 'auth_providers.dart';
 export 'health_sync_providers.dart';
+export 'logging_streak_provider.dart';
 export 'strategy_providers.dart';
 export 'workout_providers.dart';
 
@@ -442,3 +443,36 @@ final dailyMacroTargetProvider = Provider<MacroTarget>((ref) {
 
 /// Backwards compatible alias for dailyMacroTargetProvider
 final macroTargetProvider = dailyMacroTargetProvider;
+
+/// Recently and frequently logged foods for 1-tap quick logging / search suggestions.
+final recentLoggedFoodsProvider = Provider<List<FoodItem>>((ref) {
+  ref.watch(foodLogsRevisionProvider);
+  final db = ref.watch(databaseProvider);
+  final allLogs = db.getAllFoodLogs();
+
+  final seenIds = <int>{};
+  final result = <FoodItem>[];
+
+  for (final log in allLogs) {
+    if (seenIds.add(log.foodId)) {
+      final food = db.getFoodById(log.foodId);
+      if (food != null) {
+        result.add(food);
+      }
+    }
+    if (result.length >= 10) break;
+  }
+
+  // Fallback to top catalog staples if fewer than 5 items have been logged
+  if (result.length < 5) {
+    final defaults = db.searchFoods('', limit: 8);
+    for (final food in defaults) {
+      if (seenIds.add(food.id)) {
+        result.add(food);
+      }
+      if (result.length >= 8) break;
+    }
+  }
+
+  return result;
+});

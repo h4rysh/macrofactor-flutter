@@ -262,6 +262,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
               child: ElevatedButton(
                 onPressed: parsedWeight != null && parsedWeight > 0
                     ? () {
+                        HapticFeedback.mediumImpact();
                         final note = _noteController.text.trim();
                         ref.read(weightLogsProvider.notifier).logWeight(
                               _selectedDate,

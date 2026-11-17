@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../domain/models/food_models.dart';
 import '../theme/app_theme.dart';
 import '../widgets/apple_tactile_card.dart';
@@ -117,6 +118,7 @@ class QuickActionsSheet extends StatelessWidget {
                 icon: Icons.note_alt_outlined,
                 title: 'Add Day Note',
                 color: AppTheme.protein,
+                isConfirm: true,
                 onTap: () {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -140,9 +142,17 @@ class QuickActionsSheet extends StatelessWidget {
     required String title,
     required Color color,
     required VoidCallback onTap,
+    bool isConfirm = false,
   }) {
     return AppleBouncy(
-      onTap: onTap,
+      onTap: () {
+        if (isConfirm) {
+          HapticFeedback.mediumImpact();
+        } else {
+          HapticFeedback.lightImpact();
+        }
+        onTap();
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
