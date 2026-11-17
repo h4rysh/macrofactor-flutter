@@ -45,18 +45,20 @@ void main() {
     test(
         'Exact arithmetic mean verification with 2, 3, 5, 20, and 100 same-day readings',
         () async {
-      final baseDate = DateTime(2026, 10, 18);
+      final now = DateTime.now();
+      final baseDate = DateTime(now.year, now.month, now.day)
+          .subtract(const Duration(days: 2));
       final dateStr = DateFormat('yyyy-MM-dd').format(baseDate);
 
       // Scenario 1: 2 readings
       final twoWeights = [
         ScaleWeightEntry(
-          date: DateTime(2026, 10, 18, 7, 0),
+          date: DateTime(baseDate.year, baseDate.month, baseDate.day, 7, 0),
           weightKg: 72.0,
           note: 'Morning',
         ),
         ScaleWeightEntry(
-          date: DateTime(2026, 10, 18, 19, 0),
+          date: DateTime(baseDate.year, baseDate.month, baseDate.day, 19, 0),
           weightKg: 74.0,
           note: 'Evening',
         ),
@@ -74,17 +76,17 @@ void main() {
       // Scenario 2: 3 readings with fractional decimals
       final threeWeights = [
         ScaleWeightEntry(
-          date: DateTime(2026, 10, 18, 6, 30),
+          date: DateTime(baseDate.year, baseDate.month, baseDate.day, 6, 30),
           weightKg: 70.1,
           note: 'Scale A',
         ),
         ScaleWeightEntry(
-          date: DateTime(2026, 10, 18, 12, 15),
+          date: DateTime(baseDate.year, baseDate.month, baseDate.day, 12, 15),
           weightKg: 70.2,
           note: 'Scale A',
         ),
         ScaleWeightEntry(
-          date: DateTime(2026, 10, 18, 21, 45),
+          date: DateTime(baseDate.year, baseDate.month, baseDate.day, 21, 45),
           weightKg: 70.6,
           note: 'Scale B',
         ),
@@ -102,11 +104,21 @@ void main() {
 
       // Scenario 3: 5 readings
       final fiveWeights = [
-        ScaleWeightEntry(date: DateTime(2026, 10, 18, 6), weightKg: 80.0),
-        ScaleWeightEntry(date: DateTime(2026, 10, 18, 9), weightKg: 81.0),
-        ScaleWeightEntry(date: DateTime(2026, 10, 18, 13), weightKg: 82.0),
-        ScaleWeightEntry(date: DateTime(2026, 10, 18, 17), weightKg: 83.0),
-        ScaleWeightEntry(date: DateTime(2026, 10, 18, 22), weightKg: 84.0),
+        ScaleWeightEntry(
+            date: DateTime(baseDate.year, baseDate.month, baseDate.day, 6),
+            weightKg: 80.0),
+        ScaleWeightEntry(
+            date: DateTime(baseDate.year, baseDate.month, baseDate.day, 9),
+            weightKg: 81.0),
+        ScaleWeightEntry(
+            date: DateTime(baseDate.year, baseDate.month, baseDate.day, 13),
+            weightKg: 82.0),
+        ScaleWeightEntry(
+            date: DateTime(baseDate.year, baseDate.month, baseDate.day, 17),
+            weightKg: 83.0),
+        ScaleWeightEntry(
+            date: DateTime(baseDate.year, baseDate.month, baseDate.day, 22),
+            weightKg: 84.0),
       ];
       mockAdapter.setWeights(fiveWeights);
       ok = await container.read(healthConnectSyncProvider.notifier).syncNow();
@@ -119,7 +131,7 @@ void main() {
       final twentyWeights = List.generate(
         20,
         (i) => ScaleWeightEntry(
-          date: DateTime(2026, 10, 18, 0, i * 2),
+          date: DateTime(baseDate.year, baseDate.month, baseDate.day, 0, i * 2),
           weightKg: 75.0 + (i * 0.1),
           note: 'Test Scale',
         ),
@@ -138,7 +150,8 @@ void main() {
       final hundredWeights = List.generate(
         100,
         (i) => ScaleWeightEntry(
-          date: DateTime(2026, 10, 18, i ~/ 5, (i % 5) * 10),
+          date: DateTime(baseDate.year, baseDate.month, baseDate.day, i ~/ 5,
+              (i % 5) * 10),
           weightKg: 65.0 + (i % 10) * 0.25,
           note: i % 2 == 0 ? 'Device Alpha' : 'Device Beta',
         ),
@@ -158,8 +171,14 @@ void main() {
     test(
         'Midnight timezone boundaries (.toLocal() vs UTC) groups by local calendar date',
         () async {
-      final utcReading1 = DateTime.utc(2026, 10, 18, 23, 50);
-      final utcReading2 = DateTime.utc(2026, 10, 19, 0, 10);
+      final now = DateTime.now();
+      final baseDate = DateTime(now.year, now.month, now.day)
+          .subtract(const Duration(days: 2));
+      final nextDate = baseDate.add(const Duration(days: 1));
+      final utcReading1 =
+          DateTime.utc(baseDate.year, baseDate.month, baseDate.day, 23, 50);
+      final utcReading2 =
+          DateTime.utc(nextDate.year, nextDate.month, nextDate.day, 0, 10);
 
       final localDateStr1 =
           DateFormat('yyyy-MM-dd').format(utcReading1.toLocal());
@@ -202,7 +221,8 @@ void main() {
     test(
         'Manual weight entries are NEVER overwritten by Health Connect sync (repeated sync stress)',
         () async {
-      const dateStr = '2026-10-18';
+      final dateStr = DateFormat('yyyy-MM-dd')
+          .format(DateTime.now().subtract(const Duration(days: 2)));
 
       // 1. User records a manual weight
       appDb.insertWeightLog(
@@ -266,7 +286,8 @@ void main() {
     test(
         'Full lifecycle transition: Health Connect sync -> Manual overwrite -> Health Connect re-sync immunity',
         () async {
-      const dateStr = '2026-10-18';
+      final dateStr = DateFormat('yyyy-MM-dd')
+          .format(DateTime.now().subtract(const Duration(days: 2)));
 
       // Phase 1: Health Connect syncs first
       mockAdapter.setWeights([
@@ -321,9 +342,12 @@ void main() {
     test(
         'Multi-day interleaved batch Health Connect payload correctly segregates averages per local date',
         () async {
-      const day1 = '2026-10-18';
-      const day2 = '2026-10-19';
-      const day3 = '2026-10-20';
+      final day1 = DateFormat('yyyy-MM-dd')
+          .format(DateTime.now().subtract(const Duration(days: 4)));
+      final day2 = DateFormat('yyyy-MM-dd')
+          .format(DateTime.now().subtract(const Duration(days: 3)));
+      final day3 = DateFormat('yyyy-MM-dd')
+          .format(DateTime.now().subtract(const Duration(days: 2)));
 
       // Day 3 already has a manual entry
       appDb.insertWeightLog(day3, 65.0, 'Pre-existing manual log',
@@ -369,7 +393,8 @@ void main() {
 
     test('Empty and whitespace-only notes default to "Health Connect"',
         () async {
-      const dateStr = '2026-10-18';
+      final dateStr = DateFormat('yyyy-MM-dd')
+          .format(DateTime.now().subtract(const Duration(days: 2)));
       final blankNotes = [
         ScaleWeightEntry(
           date: DateTime.parse('$dateStr 07:00:00'),
