@@ -6,7 +6,6 @@ import 'package:sique/data/local/app_database.dart';
 import 'package:sique/domain/models/food_models.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
-import 'package:sique/presentation/providers/logging_streak_provider.dart';
 import 'package:sique/presentation/screens/food_log_screen.dart';
 import 'package:sique/presentation/screens/food_search_screen.dart';
 import 'package:sique/presentation/screens/plate_serving_sheet.dart';
@@ -97,7 +96,9 @@ void main() {
       expect(streak, 0);
     });
 
-    test('returns 0 when yesterday has food logged but today has no food logged', () {
+    test(
+        'returns 0 when yesterday has food logged but today has no food logged',
+        () {
       final food = createTestFood();
       db.insertFood(food);
       final yesterdayLog = createTestLogEntry(
@@ -317,20 +318,19 @@ void main() {
 
       final todayStr = DateFormat('yyyy-MM-dd').format(fixedClock);
       final yesterdayClock = fixedClock.subtract(const Duration(days: 1));
-      final yesterdayStr = DateFormat('yyyy-MM-dd').format(yesterdayClock);
 
       // 2 items logged yesterday at 8 AM
       final item1 = createTestLogEntry(
         id: 101,
         food: food,
-        loggedAt: DateTime(
-            yesterdayClock.year, yesterdayClock.month, yesterdayClock.day, 8, 15),
+        loggedAt: DateTime(yesterdayClock.year, yesterdayClock.month,
+            yesterdayClock.day, 8, 15),
       );
       final item2 = createTestLogEntry(
         id: 102,
         food: food,
-        loggedAt: DateTime(
-            yesterdayClock.year, yesterdayClock.month, yesterdayClock.day, 8, 45),
+        loggedAt: DateTime(yesterdayClock.year, yesterdayClock.month,
+            yesterdayClock.day, 8, 45),
       );
       db.insertFoodLog(item1);
       db.insertFoodLog(item2);
