@@ -145,6 +145,9 @@ class CheckinHistorySheet extends ConsumerWidget {
                                         fontSize: 16,
                                         fontWeight: FontWeight.w800,
                                         color: AppTheme.textPrimary,
+                                        fontFeatures: [
+                                          FontFeature.tabularFigures()
+                                        ],
                                       ),
                                     ),
                                     const SizedBox(width: 8),
@@ -158,6 +161,9 @@ class CheckinHistorySheet extends ConsumerWidget {
                                         color: isSurplus
                                             ? AppTheme.carbs
                                             : AppTheme.calories,
+                                        fontFeatures: const [
+                                          FontFeature.tabularFigures()
+                                        ],
                                       ),
                                     ),
                                   ],
@@ -168,6 +174,9 @@ class CheckinHistorySheet extends ConsumerWidget {
                                   style: const TextStyle(
                                     fontSize: 12,
                                     color: AppTheme.textSecondary,
+                                    fontFeatures: [
+                                      FontFeature.tabularFigures()
+                                    ],
                                   ),
                                 ),
                                 if (item.statusNote.isNotEmpty) ...[

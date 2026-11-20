@@ -398,6 +398,9 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
                                     fontSize: 18,
                                     fontWeight: FontWeight.w800,
                                     color: AppTheme.textPrimary,
+                                    fontFeatures: [
+                                      FontFeature.tabularFigures()
+                                    ],
                                   ),
                                   inputFormatters: [
                                     FilteringTextInputFormatter.allow(

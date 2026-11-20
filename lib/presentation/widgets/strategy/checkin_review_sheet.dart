@@ -144,6 +144,9 @@ class CheckinReviewSheet extends ConsumerWidget {
                                       fontSize: 24,
                                       fontWeight: FontWeight.w700,
                                       color: AppTheme.textPrimary,
+                                      fontFeatures: [
+                                        FontFeature.tabularFigures()
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -191,6 +194,9 @@ class CheckinReviewSheet extends ConsumerWidget {
                                           : isIncrease
                                               ? AppTheme.carbs
                                               : AppTheme.calories,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures()
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -209,6 +215,9 @@ class CheckinReviewSheet extends ConsumerWidget {
                                           : isIncrease
                                               ? AppTheme.carbs
                                               : AppTheme.calories,
+                                      fontFeatures: const [
+                                        FontFeature.tabularFigures()
+                                      ],
                                     ),
                                   ),
                                 ),
@@ -248,6 +257,9 @@ class CheckinReviewSheet extends ConsumerWidget {
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
                                     color: AppTheme.expenditure,
+                                    fontFeatures: [
+                                      FontFeature.tabularFigures()
+                                    ],
                                   ),
                                 ),
                               ),

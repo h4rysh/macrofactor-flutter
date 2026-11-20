@@ -42,6 +42,7 @@ class PlateMacroPill extends StatelessWidget {
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
                   color: color,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
             ),

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/user_profile.dart';
@@ -200,126 +201,130 @@ class _GoalQuestionnaireSheetState
     return Container(
       height: MediaQuery.of(context).size.height * 0.88,
       decoration: BoxDecoration(
-        color: AppTheme.cardSurface,
+        color: AppTheme.cardSurface.withValues(alpha: 0.88),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border.all(
-          color: AppTheme.cardBorder,
-          width: 0.8,
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 0.5,
         ),
       ),
       child: ClipRRect(
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // 1. Apple Sheet Grabber Pill
-              const AppleSheetGrabber(
-                  margin: EdgeInsets.only(top: 10, bottom: 12)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: SafeArea(
+            child: Column(
+              children: [
+                // 1. Apple Sheet Grabber Pill
+                const AppleSheetGrabber(
+                    margin: EdgeInsets.only(top: 10, bottom: 12)),
 
-              // 2. Header with Apple-Style Step Indicator & Back Button
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    if (_currentStep > 0)
+                // 2. Header with Apple-Style Step Indicator & Back Button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Row(
+                    children: [
+                      if (_currentStep > 0)
+                        IconButton(
+                          key: const Key('questionnaire_back_btn'),
+                          tooltip: 'Back',
+                          icon: const Icon(Icons.arrow_back_ios_new_rounded,
+                              size: 18, color: AppTheme.textSecondary),
+                          onPressed: _prevStep,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                        )
+                      else
+                        const SizedBox(width: 18),
+                      const Spacer(),
+                      Text(
+                        'Step ${_currentStep + 1} of $_totalSteps',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textMuted,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const Spacer(),
                       IconButton(
-                        key: const Key('questionnaire_back_btn'),
-                        tooltip: 'Back',
-                        icon: const Icon(Icons.arrow_back_ios_new_rounded,
-                            size: 18, color: AppTheme.textSecondary),
-                        onPressed: _prevStep,
+                        tooltip: 'Close',
+                        icon: const Icon(Icons.close_rounded,
+                            size: 20, color: AppTheme.textSecondary),
+                        onPressed: () {
+                          _autoSaveCurrentState();
+                          Navigator.of(context).pop(false);
+                        },
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
-                      )
-                    else
-                      const SizedBox(width: 18),
-                    const Spacer(),
-                    Text(
-                      'Step ${_currentStep + 1} of $_totalSteps',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textMuted,
-                        letterSpacing: 0.5,
                       ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      tooltip: 'Close',
-                      icon: const Icon(Icons.close_rounded,
-                          size: 20, color: AppTheme.textSecondary),
-                      onPressed: () {
-                        _autoSaveCurrentState();
-                        Navigator.of(context).pop(false);
-                      },
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
 
-              // 3. Smooth Animated Progress Bar
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(4),
-                  child: SizedBox(
-                    height: 4,
-                    child: Row(
-                      children: List.generate(_totalSteps, (index) {
-                        final isCompleted = index <= _currentStep;
-                        return Expanded(
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeOutCubic,
-                            margin: const EdgeInsets.symmetric(horizontal: 1.5),
-                            decoration: BoxDecoration(
-                              color: isCompleted
-                                  ? AppTheme.calories
-                                  : const Color(0x1FFFFFFF),
-                              borderRadius: BorderRadius.circular(2),
+                // 3. Smooth Animated Progress Bar
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: SizedBox(
+                      height: 4,
+                      child: Row(
+                        children: List.generate(_totalSteps, (index) {
+                          final isCompleted = index <= _currentStep;
+                          return Expanded(
+                            child: AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeOutCubic,
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 1.5),
+                              decoration: BoxDecoration(
+                                color: isCompleted
+                                    ? AppTheme.calories
+                                    : const Color(0x1FFFFFFF),
+                                borderRadius: BorderRadius.circular(2),
+                              ),
                             ),
-                          ),
-                        );
-                      }),
+                          );
+                        }),
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const Divider(height: 12, color: AppTheme.cardBorder),
+                const Divider(height: 12, color: AppTheme.cardBorder),
 
-              // 4. Interactive Page Content with Spring Slide Transition
-              Expanded(
-                child: AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 280),
-                  switchInCurve: Curves.easeOutCubic,
-                  switchOutCurve: Curves.easeInCubic,
-                  transitionBuilder: (child, animation) {
-                    return SlideTransition(
-                      position: Tween<Offset>(
-                        begin: const Offset(0.06, 0.0),
-                        end: Offset.zero,
-                      ).animate(animation),
-                      child: FadeTransition(
-                        opacity: animation,
-                        child: child,
-                      ),
-                    );
-                  },
-                  child: _buildCurrentStepView(
-                    context,
-                    profile,
-                    previewMacros,
+                // 4. Interactive Page Content with Spring Slide Transition
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 280),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) {
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: const Offset(0.06, 0.0),
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: FadeTransition(
+                          opacity: animation,
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: _buildCurrentStepView(
+                      context,
+                      profile,
+                      previewMacros,
+                    ),
                   ),
                 ),
-              ),
 
-              // 5. Bottom Navigation Action Bar
-              _buildBottomActionBar(),
-            ],
+                // 5. Bottom Navigation Action Bar
+                _buildBottomActionBar(),
+              ],
+            ),
           ),
         ),
       ),
