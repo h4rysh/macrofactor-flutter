@@ -114,13 +114,7 @@ class WelcomeScreen extends StatelessWidget {
               onTap: () {
                 Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (_) => AuthGateScreen(
-                      onProceed: () => Navigator.of(context).pushReplacement(
-                        MaterialPageRoute(
-                          builder: (_) => const OnboardingFlowScreen(),
-                        ),
-                      ),
-                    ),
+                    builder: (_) => const OnboardingFlowScreen(),
                   ),
                 );
               },
