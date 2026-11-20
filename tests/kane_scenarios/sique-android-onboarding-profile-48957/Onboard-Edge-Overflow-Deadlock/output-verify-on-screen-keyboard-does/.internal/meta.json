@@ -1,0 +1,18 @@
+{
+  "test_id": "0b1651cf-e451-47b4-9e0c-24d876c726c9",
+  "project_id": "01M7VGEQMVA1YWRM3W6PFV1V34",
+  "folder_id": "01M7VGES5ZC6FYWJ239ME5J04B",
+  "org_id": "3442257",
+  "session_name": "verify-on-screen-keyboard-does",
+  "commit_id": "099c0d6f-596a-4835-9648-40360715414f",
+  "testcase_id": "01M7VJ0AGK6F66Z4B98AFP3XE3",
+  "executions": [
+    {
+      "execution_id": "4992b836-e4ba-4b61-8450-d9dd701dda1b",
+      "run_kind": "author",
+      "status": "failed",
+      "valid": true,
+      "at": "2026-11-20T04:11:56.424Z"
+    }
+  ]
+}

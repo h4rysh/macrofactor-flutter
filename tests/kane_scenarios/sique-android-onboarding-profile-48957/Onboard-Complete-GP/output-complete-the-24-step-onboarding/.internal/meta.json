@@ -1,0 +1,18 @@
+{
+  "commit_id": "ee4ee354-4cad-45a4-9024-644c6027929a",
+  "test_id": "ebaf4131-52e5-4e54-941f-fbe66544db09",
+  "testcase_id": "01M7VH8A8X32RJ11E56W4XR112",
+  "project_id": "01M7VGEQMVA1YWRM3W6PFV1V34",
+  "folder_id": "01M7VGES5ZC6FYWJ239ME5J04B",
+  "org_id": "3442257",
+  "session_name": "complete-the-24-step-onboarding",
+  "executions": [
+    {
+      "execution_id": "a7ac086f-9768-46d9-a585-a1bb6b81a860",
+      "run_kind": "author",
+      "status": "broken",
+      "valid": true,
+      "at": "2026-11-20T04:03:13.857Z"
+    }
+  ]
+}
