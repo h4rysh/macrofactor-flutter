@@ -144,7 +144,7 @@ class GoogleAccountCard extends ConsumerWidget {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Auto-sync workouts (Health Connect, Hevy, Strava) & smart scale weights',
+                      'Auto-sync workouts & smart scale weights directly from device',
                       style: TextStyle(
                         fontSize: 11,
                         color: AppTheme.textSecondary,

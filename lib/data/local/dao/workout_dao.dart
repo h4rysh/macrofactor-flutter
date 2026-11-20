@@ -37,7 +37,6 @@ class WorkoutDao {
   void insertWorkoutSessions(List<WorkoutSession> sessions, {String? userId}) {
     if (sessions.isEmpty) return;
     final uid = userId ?? effectiveUserId;
-    final hasUserCol = _hasUserColumn();
 
     // 1. In-batch deduplication and deterministic ID mapping
     final Map<String, WorkoutSession> deduplicatedBatch = {};
@@ -69,62 +68,37 @@ class WorkoutDao {
       deduplicatedBatch[resolvedId] = normalized;
     }
 
-    final stmt = hasUserCol ? _db.prepare('''
-            INSERT INTO workout_sessions (
-              id, user_id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-              source = excluded.source,
-              title = excluded.title,
-              start_time = excluded.start_time,
-              end_time = excluded.end_time,
-              duration_minutes = excluded.duration_minutes,
-              calories_burned = excluded.calories_burned,
-              notes = excluded.notes;
-          ''') : _db.prepare('''
-            INSERT INTO workout_sessions (
-              id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ON CONFLICT(id) DO UPDATE SET
-              source = excluded.source,
-              title = excluded.title,
-              start_time = excluded.start_time,
-              end_time = excluded.end_time,
-              duration_minutes = excluded.duration_minutes,
-              calories_burned = excluded.calories_burned,
-              notes = excluded.notes;
-          ''');
+    final stmt = _db.prepare('''
+      INSERT INTO workout_sessions (
+        id, user_id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        user_id = excluded.user_id,
+        source = excluded.source,
+        title = excluded.title,
+        start_time = excluded.start_time,
+        end_time = excluded.end_time,
+        duration_minutes = excluded.duration_minutes,
+        calories_burned = excluded.calories_burned,
+        notes = excluded.notes;
+    ''');
 
     try {
       _db.execute('BEGIN TRANSACTION;');
       try {
         for (final session in deduplicatedBatch.values) {
-          if (hasUserCol) {
-            stmt.execute([
-              session.id,
-              uid,
-              session.source,
-              session.title,
-              session.startTime.toIso8601String(),
-              session.endTime.toIso8601String(),
-              session.durationMinutes,
-              session.caloriesBurned,
-              session.notes,
-              session.createdAt.toIso8601String(),
-            ]);
-          } else {
-            stmt.execute([
-              session.id,
-              session.source,
-              session.title,
-              session.startTime.toIso8601String(),
-              session.endTime.toIso8601String(),
-              session.durationMinutes,
-              session.caloriesBurned,
-              session.notes,
-              session.createdAt.toIso8601String(),
-            ]);
-          }
+          stmt.execute([
+            session.id,
+            uid,
+            session.source,
+            session.title,
+            session.startTime.toIso8601String(),
+            session.endTime.toIso8601String(),
+            session.durationMinutes,
+            session.caloriesBurned,
+            session.notes,
+            session.createdAt.toIso8601String(),
+          ]);
         }
         _db.execute('COMMIT;');
       } catch (e, st) {
@@ -154,20 +128,15 @@ class WorkoutDao {
   /// Retrieves all workout sessions ordered chronologically descending (newest first).
   List<WorkoutSession> getAllWorkoutSessions({String? userId}) {
     final uid = userId ?? effectiveUserId;
-    final hasUserCol = _hasUserColumn();
 
-    final stmt = hasUserCol ? _db.prepare('''
-            SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
-            FROM workout_sessions
-            WHERE user_id = ?
-            ORDER BY start_time DESC;
-          ''') : _db.prepare('''
-            SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
-            FROM workout_sessions
-            ORDER BY start_time DESC;
-          ''');
+    final stmt = _db.prepare('''
+      SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
+      FROM workout_sessions
+      WHERE user_id = ?
+      ORDER BY start_time DESC;
+    ''');
     try {
-      final result = hasUserCol ? stmt.select([uid]) : stmt.select();
+      final result = stmt.select([uid]);
       return result.map(_mapWorkoutSessionRow).toList();
     } finally {
       stmt.dispose();
@@ -178,23 +147,16 @@ class WorkoutDao {
   List<WorkoutSession> getWorkoutSessionsInRange(DateTime start, DateTime end,
       {String? userId}) {
     final uid = userId ?? effectiveUserId;
-    final hasUserCol = _hasUserColumn();
 
-    final stmt = hasUserCol ? _db.prepare('''
-            SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
-            FROM workout_sessions
-            WHERE user_id = ? AND start_time >= ? AND start_time <= ?
-            ORDER BY start_time DESC;
-          ''') : _db.prepare('''
-            SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
-            FROM workout_sessions
-            WHERE start_time >= ? AND start_time <= ?
-            ORDER BY start_time DESC;
-          ''');
+    final stmt = _db.prepare('''
+      SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
+      FROM workout_sessions
+      WHERE user_id = ? AND start_time >= ? AND start_time <= ?
+      ORDER BY start_time DESC;
+    ''');
     try {
-      final result = hasUserCol
-          ? stmt.select([uid, start.toIso8601String(), end.toIso8601String()])
-          : stmt.select([start.toIso8601String(), end.toIso8601String()]);
+      final result =
+          stmt.select([uid, start.toIso8601String(), end.toIso8601String()]);
       return result.map(_mapWorkoutSessionRow).toList();
     } finally {
       stmt.dispose();
@@ -204,29 +166,13 @@ class WorkoutDao {
   /// Deletes a workout session by its identifier.
   void deleteWorkoutSession(dynamic id, {String? userId}) {
     final uid = userId ?? effectiveUserId;
-    final hasUserCol = _hasUserColumn();
 
-    final stmt = hasUserCol
-        ? _db.prepare(
-            'DELETE FROM workout_sessions WHERE id = ? AND user_id = ?;')
-        : _db.prepare('DELETE FROM workout_sessions WHERE id = ?;');
+    final stmt = _db
+        .prepare('DELETE FROM workout_sessions WHERE id = ? AND user_id = ?;');
     try {
-      if (hasUserCol) {
-        stmt.execute([id.toString(), uid]);
-      } else {
-        stmt.execute([id.toString()]);
-      }
+      stmt.execute([id.toString(), uid]);
     } finally {
       stmt.dispose();
-    }
-  }
-
-  bool _hasUserColumn() {
-    try {
-      final rows = _db.select("PRAGMA table_info('workout_sessions');");
-      return rows.any((r) => (r['name'] as String).toLowerCase() == 'user_id');
-    } catch (_) {
-      return false;
     }
   }
 

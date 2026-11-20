@@ -5,6 +5,7 @@ import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/domain/validation/domain_validator.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/utils/unit_formatter.dart';
 
 /// Screen for viewing and configuring user profile, caloric targets, and macro distribution.
 /// Implements Instant Auto-Save: all slider/toggle changes immediately persist to SQLite.
@@ -645,10 +646,10 @@ class ProfileTargetsScreen extends ConsumerWidget {
           ],
           autofocus: true,
           style: const TextStyle(color: AppTheme.textPrimary),
-          decoration: const InputDecoration(
-            labelText: 'Weight (kg)',
-            labelStyle: TextStyle(color: AppTheme.textSecondary),
-            suffixText: 'kg',
+          decoration: InputDecoration(
+            labelText: UnitFormatter.weightLabel(),
+            labelStyle: const TextStyle(color: AppTheme.textSecondary),
+            suffixText: UnitFormatter.weightUnit(),
           ),
         ),
         actions: [
@@ -694,10 +695,10 @@ class ProfileTargetsScreen extends ConsumerWidget {
           ],
           autofocus: true,
           style: const TextStyle(color: AppTheme.textPrimary),
-          decoration: const InputDecoration(
-            labelText: 'Target Weight (kg)',
-            labelStyle: TextStyle(color: AppTheme.textSecondary),
-            suffixText: 'kg',
+          decoration: InputDecoration(
+            labelText: UnitFormatter.targetWeightLabel(),
+            labelStyle: const TextStyle(color: AppTheme.textSecondary),
+            suffixText: UnitFormatter.weightUnit(),
           ),
         ),
         actions: [
@@ -760,10 +761,10 @@ class ProfileTargetsScreen extends ConsumerWidget {
           ],
           autofocus: true,
           style: const TextStyle(color: AppTheme.textPrimary),
-          decoration: const InputDecoration(
-            labelText: 'Height (cm)',
-            labelStyle: TextStyle(color: AppTheme.textSecondary),
-            suffixText: 'cm',
+          decoration: InputDecoration(
+            labelText: UnitFormatter.heightLabel(),
+            labelStyle: const TextStyle(color: AppTheme.textSecondary),
+            suffixText: UnitFormatter.heightUnit(),
           ),
         ),
         actions: [

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/oil_modifier_display.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_sheet_grabber.dart';
@@ -452,8 +453,10 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
                     ),
                     const SizedBox(height: 8),
                     Row(
-                      children: OilModifier.values.map((mod) {
+                      children: OilModifierDisplay.canonicalTiers.map((mod) {
                         final isSelected = _oilModifier == mod;
+                        final isVegan = OilModifierDisplay.isVegan(
+                            ref.read(userProfileProvider).dietType);
                         return Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 3),
@@ -461,11 +464,8 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
                               label: FittedBox(
                                 fit: BoxFit.scaleDown,
                                 child: Text(
-                                  mod == OilModifier.lowOil
-                                      ? 'Homestyle\n(-15% Fat)'
-                                      : mod == OilModifier.standard
-                                          ? 'Standard\nRecipe'
-                                          : 'Desi Ghee\n(+5g Fat)',
+                                  OilModifierDisplay.getTierLabel(mod,
+                                      isVegan: isVegan),
                                   textAlign: TextAlign.center,
                                   style: TextStyle(
                                     fontSize: 10,

@@ -8,7 +8,7 @@ import 'database_schema.dart';
 class DatabaseMigrations {
   const DatabaseMigrations._();
 
-  static const int currentVersion = 3;
+  static const int currentVersion = 4;
   static const int busyTimeoutMs = 5000;
 
   /// Applies necessary schema migrations and performance pragmas to the database.
@@ -56,6 +56,10 @@ class DatabaseMigrations {
     if (currentDbVersion < 3) {
       _runStep(db, 3, _applyVersion3);
     }
+
+    if (currentDbVersion < 4) {
+      _runStep(db, 4, _applyVersion4);
+    }
   }
 
   /// Public test-friendly hook for running an isolated migration step.
@@ -67,6 +71,8 @@ class DatabaseMigrations {
         _runStep(db, 2, _applyVersion2);
       case 3:
         _runStep(db, 3, _applyVersion3);
+      case 4:
+        _runStep(db, 4, _applyVersion4);
       default:
         throw ArgumentError('Unknown migration target version: $targetVersion');
     }
@@ -294,6 +300,26 @@ class DatabaseMigrations {
       db.execute(
           'ALTER TABLE expenditure_history_v3_temp RENAME TO expenditure_history;');
     }
+  }
+
+  static void _applyVersion4(CommonDatabase db) {
+    // 1. coaching_check_ins: add user_id column if missing, and create idx_coaching_check_ins_user_date
+    final coachingCols = _getTableColumns(db, 'coaching_check_ins');
+    if (coachingCols.isNotEmpty) {
+      if (!coachingCols.contains('user_id')) {
+        db.execute(
+            "ALTER TABLE coaching_check_ins ADD COLUMN user_id TEXT NOT NULL DEFAULT 'default_user';");
+      }
+      db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_coaching_check_ins_user_date ON coaching_check_ins(user_id, check_in_date);',
+      );
+    }
+
+    // 2. Drop redundant single-column indexes superseded by composite (user_id, date) indexes
+    db.execute('DROP INDEX IF EXISTS idx_food_logs_date;');
+    db.execute('DROP INDEX IF EXISTS idx_weight_logs_date;');
+    db.execute('DROP INDEX IF EXISTS idx_day_completions_date;');
+    db.execute('DROP INDEX IF EXISTS idx_coaching_check_ins_date;');
   }
 
   static Set<String> _getTableColumns(CommonDatabase db, String tableName) {

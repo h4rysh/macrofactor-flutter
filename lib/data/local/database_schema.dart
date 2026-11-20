@@ -146,6 +146,7 @@ class DatabaseSchema {
   static const String createCoachingCheckInsTable = '''
     CREATE TABLE IF NOT EXISTS coaching_check_ins (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
       check_in_date TEXT NOT NULL,
       previous_calories REAL NOT NULL,
       recommended_calories REAL NOT NULL,
@@ -158,7 +159,7 @@ class DatabaseSchema {
   ''';
 
   static const String createCoachingCheckInsIndex = '''
-    CREATE INDEX IF NOT EXISTS idx_coaching_check_ins_date ON coaching_check_ins(check_in_date);
+    CREATE INDEX IF NOT EXISTS idx_coaching_check_ins_user_date ON coaching_check_ins(user_id, check_in_date);
   ''';
 
   static const String createDayCompletionsTable = '''

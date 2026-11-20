@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/macro_program.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/domain/models/workout_session.dart';
 import 'package:sqlite3/sqlite3.dart';
@@ -21,11 +22,11 @@ void main() {
       appDb.close();
     });
 
-    test('1. Migration v3 establishes composite keys and new schema columns',
+    test('1. Migration v4 establishes composite keys and new schema columns',
         () {
-      // PRAGMA user_version is 3
+      // PRAGMA user_version is 4
       final ver = rawDb.select('PRAGMA user_version;').first.values.first;
-      expect(ver, equals(3));
+      expect(ver, equals(4));
 
       // user_profile has date_of_birth and user_id
       final profileCols = rawDb
@@ -34,6 +35,13 @@ void main() {
           .toSet();
       expect(profileCols.contains('date_of_birth'), isTrue);
       expect(profileCols.contains('user_id'), isTrue);
+
+      // coaching_check_ins has user_id
+      final coachingCols = rawDb
+          .select("PRAGMA table_info('coaching_check_ins');")
+          .map((r) => r['name'] as String)
+          .toSet();
+      expect(coachingCols.contains('user_id'), isTrue);
 
       // food_logs has user_id
       final foodCols = rawDb
@@ -140,7 +148,7 @@ void main() {
           equals(88.0));
 
       // Verify user_profile weight synchronization for user_alpha
-      final profile = appDb.getUserProfile();
+      final profile = appDb.getUserProfile(userId: 'user_alpha');
       expect(profile?.currentWeightKg, equals(78.5));
     });
 
@@ -397,6 +405,174 @@ void main() {
         () async => await AppDatabase.open(customPath: impossiblePath),
         throwsA(isA<DatabaseOpenException>()),
       );
+    });
+
+    test(
+        '9. date_of_birth persists across database close and reopen via canonical 29-column upsert',
+        () {
+      final tempDir = Directory.systemTemp.createTempSync('sique_dob_test_');
+      final dbFile = File('${tempDir.path}/dob_test.db');
+      try {
+        // Open file-backed DB, write user profile with DOB
+        var diskDb = sqlite3.open(dbFile.path);
+        var dbInstance = AppDatabase(diskDb, dbPath: dbFile.path);
+
+        const profileWithDob = UserProfile(
+          id: 'user_dob_123',
+          name: 'Athlete DOB',
+          currentWeightKg: 78.5,
+          targetWeightKg: 72.0,
+          heightCm: 180.0,
+          age: 26,
+          dateOfBirth: '1998-05-14',
+          isMale: true,
+          goalType: GoalType.fatLoss,
+          programMode: ProgramMode.coached,
+          weeklyRateOfChangePct: -0.5,
+          proteinPreference: ProteinPreference.high,
+          calorieFloor: 1500.0,
+          baselineExpenditureKcal: 2500.0,
+        );
+
+        dbInstance.profileDao.saveUserProfile(profileWithDob);
+        final initialRead =
+            dbInstance.profileDao.getUserProfile(userId: 'user_dob_123');
+        expect(initialRead, isNotNull);
+        expect(initialRead!.dateOfBirth, equals('1998-05-14'));
+        expect(initialRead.age, equals(26));
+
+        // Close database cleanly
+        dbInstance.close();
+
+        // Reopen database from same file path
+        diskDb = sqlite3.open(dbFile.path);
+        dbInstance = AppDatabase(diskDb, dbPath: dbFile.path);
+
+        final reopenedRead =
+            dbInstance.profileDao.getUserProfile(userId: 'user_dob_123');
+        expect(reopenedRead, isNotNull);
+        expect(reopenedRead!.dateOfBirth, equals('1998-05-14'));
+        expect(reopenedRead.name, equals('Athlete DOB'));
+        expect(reopenedRead.age, equals(26));
+
+        dbInstance.close();
+      } finally {
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
+      }
+    });
+
+    test('10. Multi-tenancy on coaching_check_ins scopes check-ins per user_id',
+        () {
+      final checkInAlpha = CoachingCheckIn(
+        id: 'checkin_alpha_1',
+        checkInDate: DateTime.parse('2026-11-15T08:00:00Z'),
+        previousCalories: 2200.0,
+        recommendedCalories: 2150.0,
+        expenditureKcal: 2500.0,
+        weightTrendKg: 75.0,
+        isAccepted: true,
+        statusNote: 'Alpha checkin note',
+        createdAt: DateTime.parse('2026-11-15T08:00:00Z'),
+      );
+
+      final checkInBeta = CoachingCheckIn(
+        id: 'checkin_beta_1',
+        checkInDate: DateTime.parse('2026-11-15T09:00:00Z'),
+        previousCalories: 2800.0,
+        recommendedCalories: 2750.0,
+        expenditureKcal: 3100.0,
+        weightTrendKg: 85.0,
+        isAccepted: false,
+        statusNote: 'Beta checkin note',
+        createdAt: DateTime.parse('2026-11-15T09:00:00Z'),
+      );
+
+      // Insert for user_alpha and user_beta
+      appDb.insertCoachingCheckIn(checkInAlpha, userId: 'user_alpha');
+      appDb.insertCoachingCheckIn(checkInBeta, userId: 'user_beta');
+
+      final alphaList = appDb.getCoachingCheckIns(userId: 'user_alpha');
+      final betaList = appDb.getCoachingCheckIns(userId: 'user_beta');
+
+      expect(alphaList.length, equals(1));
+      expect(alphaList.first.id, equals('checkin_alpha_1'));
+      expect(alphaList.first.previousCalories, equals(2200.0));
+
+      expect(betaList.length, equals(1));
+      expect(betaList.first.id, equals('checkin_beta_1'));
+      expect(betaList.first.previousCalories, equals(2800.0));
+    });
+
+    test(
+        '11. clearUserData wipes only the target tenant and preserves static foods catalog',
+        () {
+      // Seed data for user_alpha and user_beta
+      appDb.foodDao.insertFoodLog(
+        FoodLogEntry(
+          date: '2026-11-20',
+          mealType: MealType.breakfast,
+          foodId: 101,
+          foodName: 'Oats',
+          servingQuantity: 1,
+          unitName: 'bowl',
+          gramWeight: 100,
+          calories: 350,
+          protein: 12,
+          carbs: 60,
+          fat: 6,
+          fiber: 8,
+          oilModifier: OilModifier.standard,
+          loggedAt: DateTime.now(),
+        ),
+        userId: 'user_alpha',
+      );
+
+      appDb.foodDao.insertFoodLog(
+        FoodLogEntry(
+          date: '2026-11-20',
+          mealType: MealType.breakfast,
+          foodId: 102,
+          foodName: 'Eggs',
+          servingQuantity: 2,
+          unitName: 'egg',
+          gramWeight: 100,
+          calories: 140,
+          protein: 12,
+          carbs: 1,
+          fat: 10,
+          fiber: 0,
+          oilModifier: OilModifier.standard,
+          loggedAt: DateTime.now(),
+        ),
+        userId: 'user_beta',
+      );
+
+      // Verify both have 1 food entry
+      expect(
+          appDb.foodDao
+              .getFoodLogsForDate('2026-11-20', userId: 'user_alpha')
+              .length,
+          equals(1));
+      expect(
+          appDb.foodDao
+              .getFoodLogsForDate('2026-11-20', userId: 'user_beta')
+              .length,
+          equals(1));
+
+      // Wipe only user_alpha
+      appDb.clearUserData('user_alpha');
+
+      // user_alpha food logs are gone, user_beta logs remain
+      expect(
+          appDb.foodDao.getFoodLogsForDate('2026-11-20', userId: 'user_alpha'),
+          isEmpty);
+      expect(
+          appDb.foodDao
+              .getFoodLogsForDate('2026-11-20', userId: 'user_beta')
+              .length,
+          equals(1));
     });
   });
 }

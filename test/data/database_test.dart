@@ -27,7 +27,8 @@ void main() {
           fiber REAL NOT NULL,
           icon_svg TEXT NOT NULL,
           source TEXT NOT NULL,
-          aliases TEXT NOT NULL
+          aliases TEXT NOT NULL,
+          is_verified INTEGER NOT NULL DEFAULT 1
         );
 
         CREATE TABLE portion_units (

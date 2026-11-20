@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/utils/unit_formatter.dart';
 
 /// Screen for viewing and configuring the Bayesian Expenditure engine and Weight Trend smoother.
 class ExpenditureSettingsScreen extends ConsumerStatefulWidget {
@@ -408,15 +409,16 @@ class _ExpenditureSettingsScreenState
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.cardBorder),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.auto_graph_rounded, size: 22, color: AppTheme.trendWeight),
-          SizedBox(width: 12),
+          const Icon(Icons.auto_graph_rounded,
+              size: 22, color: AppTheme.trendWeight),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Scale weight fluctuates up to ±2.5 kg daily due to glycogen hydration, fiber transit, and sodium. The Weight Trend algorithm filters this high-frequency noise using an exponential moving average with forward-backward passes.',
-              style: TextStyle(
+              'Scale weight fluctuates up to ±${UnitFormatter.formatWeight(2.5)} daily due to glycogen hydration, fiber transit, and sodium. The Weight Trend algorithm filters this high-frequency noise using an exponential moving average with forward-backward passes.',
+              style: const TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondary,
                 height: 1.4,

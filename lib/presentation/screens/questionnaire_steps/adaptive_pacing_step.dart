@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../domain/models/user_profile.dart';
+import '../../../utils/unit_formatter.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/apple_tactile_card.dart';
 
@@ -184,8 +185,8 @@ class AdaptivePacingStep extends StatelessWidget {
                 ),
                 child: Text(
                   weeklyRate == 0
-                      ? 'Stable 0.0 kg/wk'
-                      : '${weeklyRate < 0 ? "-" : "+"}$weeklyDeltaKg kg/wk',
+                      ? UnitFormatter.formatWeeklyRate(0.0)
+                      : '${weeklyRate < 0 ? "-" : "+"}$weeklyDeltaKg ${UnitFormatter.weightUnit()}/wk',
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,

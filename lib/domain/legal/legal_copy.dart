@@ -6,7 +6,7 @@ class LegalCopy {
   // --- Privacy Policy ---
   static const String privacyPolicyTitle = 'Privacy Policy';
   static const String privacyPolicySubtitle =
-      'Local-first storage, authentication & encryption';
+      'Local-first storage, authentication & privacy';
 
   static const String privacyPolicyText =
       'Sique prioritizes your data privacy and security.\n\n'

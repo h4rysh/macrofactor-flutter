@@ -101,15 +101,15 @@ void main() {
 
         final initialVersion =
             rawDb.select('PRAGMA user_version;').first.values.first as int;
-        expect(initialVersion, equals(3));
+        expect(initialVersion, equals(DatabaseMigrations.currentVersion));
 
-        // Simulate failing step 4 that adds a column and then throws before commit
+        // Simulate failing step 5 that adds a column and then throws before commit
         expect(
-          () => DatabaseMigrations.runStepForTest(rawDb, 4, (db) {
+          () => DatabaseMigrations.runStepForTest(rawDb, 5, (db) {
             db.execute(
                 'ALTER TABLE user_profile ADD COLUMN experimental_metric REAL;');
             // Throw before user_version is bumped or committed
-            throw StateError('Simulated crash during schema migration step 4');
+            throw StateError('Simulated crash during schema migration step 5');
           }),
           throwsA(isA<StateError>()),
         );
@@ -117,7 +117,7 @@ void main() {
         // Verify user_version remained unchanged
         final versionAfterRollback =
             rawDb.select('PRAGMA user_version;').first.values.first as int;
-        expect(versionAfterRollback, equals(3));
+        expect(versionAfterRollback, equals(DatabaseMigrations.currentVersion));
 
         // Verify experimental_metric was completely rolled back from table schema
         final tableInfo = rawDb.select("PRAGMA table_info('user_profile');");
@@ -140,9 +140,9 @@ void main() {
             "INSERT INTO app_settings (key, value) VALUES ('version_meta', '1.0');");
 
         expect(
-          () => DatabaseMigrations.runStepForTest(rawDb, 4, (db) {
+          () => DatabaseMigrations.runStepForTest(rawDb, 5, (db) {
             db.execute(
-                "INSERT INTO app_settings (key, value) VALUES ('step4_key', 'val4');");
+                "INSERT INTO app_settings (key, value) VALUES ('step5_key', 'val5');");
             db.execute(
                 "UPDATE app_settings SET value = '2.0' WHERE key = 'version_meta';");
             throw const SocketException(
@@ -180,16 +180,16 @@ void main() {
 
         // Attempt 1 fails
         expect(
-          () => DatabaseMigrations.runStepForTest(rawDb, 4, migrationStep),
+          () => DatabaseMigrations.runStepForTest(rawDb, 5, migrationStep),
           throwsA(isA<Exception>()),
         );
-        expect(
-            rawDb.select('PRAGMA user_version;').first.values.first, equals(3));
+        expect(rawDb.select('PRAGMA user_version;').first.values.first,
+            equals(DatabaseMigrations.currentVersion));
 
         // Attempt 2 succeeds
-        DatabaseMigrations.runStepForTest(rawDb, 4, migrationStep);
-        expect(
-            rawDb.select('PRAGMA user_version;').first.values.first, equals(4));
+        DatabaseMigrations.runStepForTest(rawDb, 5, migrationStep);
+        expect(rawDb.select('PRAGMA user_version;').first.values.first,
+            equals(DatabaseMigrations.currentVersion + 1));
 
         // Verify table exists with columns from attempt 2
         final cols = rawDb
@@ -207,9 +207,9 @@ void main() {
     // =========================================================================
     group('Downgrade Protection Under Higher user_version', () {
       test(
-          'Protects higher user_versions (4, 10, 999999) without touching schema or version',
+          'Protects higher user_versions (5, 10, 999999) without touching schema or version',
           () {
-        final versionsToTest = [4, 10, 999999];
+        final versionsToTest = [5, 10, 999999];
 
         for (final higherVer in versionsToTest) {
           final rawDb = sqlite3.openInMemory();
@@ -237,16 +237,16 @@ void main() {
         }
       });
 
-      test('Exact currentVersion (3) executes cleanly as idempotent no-op', () {
+      test('Exact currentVersion (4) executes cleanly as idempotent no-op', () {
         final rawDb = sqlite3.openInMemory();
         DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
-        expect(
-            rawDb.select('PRAGMA user_version;').first.values.first, equals(3));
+        expect(rawDb.select('PRAGMA user_version;').first.values.first,
+            equals(DatabaseMigrations.currentVersion));
 
         // Calling it again should be a complete no-op
         DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
-        expect(
-            rawDb.select('PRAGMA user_version;').first.values.first, equals(3));
+        expect(rawDb.select('PRAGMA user_version;').first.values.first,
+            equals(DatabaseMigrations.currentVersion));
 
         rawDb.dispose();
       });

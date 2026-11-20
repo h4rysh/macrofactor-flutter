@@ -1,15 +1,18 @@
 import 'dart:developer' as developer;
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:sique/data/local/app_database_coaching.dart';
 import 'package:sique/data/utils/backup_codec.dart';
 import 'package:sique/data/utils/csv_sanitizer.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/export_card_tile.dart';
 
 /// Screen for exporting user nutrition logs and weight observations to JSON or CSV via Android share sheet.
 /// Supports full backup (.sique.json) and restore with schema version validation.
@@ -78,11 +81,21 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     final profile = ref.read(userProfileProvider);
     final foodLogs = db.getAllFoodLogs();
     final weightLogs = db.getAllWeightLogs();
+    final workoutSessions = db.getAllWorkoutSessions();
+    final expenditureHistory = db.expenditureDao.getExpenditureHistory();
+    final coachingCheckIns = db.getCoachingCheckIns();
+    final dayCompletions = db.expenditureDao.getDayCompletions();
+    final appSettings = db.getAllSettings();
 
     return BackupCodec.encodeBackup(
       profile: profile,
       foodLogs: foodLogs,
       weightLogs: weightLogs,
+      workoutSessions: workoutSessions,
+      expenditureHistory: expenditureHistory,
+      coachingCheckIns: coachingCheckIns,
+      dayCompletions: dayCompletions,
+      appSettings: appSettings,
     );
   }
 
@@ -219,17 +232,40 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
         db.foodDao.restoreFoodLog(f);
       }
 
+      if (decoded.workoutSessions.isNotEmpty) {
+        db.insertWorkoutSessions(decoded.workoutSessions);
+      }
+
+      if (decoded.expenditureHistory.isNotEmpty) {
+        db.expenditureDao.saveExpenditures(decoded.expenditureHistory);
+      }
+
+      for (final c in decoded.coachingCheckIns) {
+        db.insertCoachingCheckIn(c);
+      }
+
+      decoded.dayCompletions.forEach((date, isComplete) {
+        db.expenditureDao.setDayComplete(date, isComplete);
+      });
+
+      decoded.appSettings.forEach((k, v) {
+        db.setSetting(k, v);
+      });
+
       // Refresh providers
+      ref.read(userDataEpochProvider.notifier).state++;
       ref.invalidate(userProfileProvider);
       ref.invalidate(weightLogsProvider);
       ref.invalidate(dailyFoodLogsProvider);
+      ref.invalidate(dayCompletionsProvider);
+      ref.invalidate(workoutSessionsProvider);
       _loadStats();
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Backup restored: ${decoded.foodLogs.length} foods, ${decoded.weightLogs.length} weights, profile updated.',
+              'Backup restored: ${decoded.foodLogs.length} foods, ${decoded.weightLogs.length} weights, ${decoded.workoutSessions.length} workouts, profile updated.',
             ),
             backgroundColor: const Color(0xFF34C759),
             behavior: SnackBarBehavior.floating,
@@ -257,6 +293,32 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     }
   }
 
+  Future<void> _pickAndRestoreFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.any,
+      );
+      if (result != null &&
+          result.files.isNotEmpty &&
+          result.files.single.path != null) {
+        final path = result.files.single.path!;
+        final file = File(path);
+        final content = await file.readAsString();
+        await _restoreFromBackupContent(content);
+      }
+    } catch (e, st) {
+      developer.log('File pick error', error: e, stackTrace: st);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to read file: $e'),
+            backgroundColor: AppTheme.calories,
+          ),
+        );
+      }
+    }
+  }
+
   void _showRestoreDialog() {
     final controller = TextEditingController();
 
@@ -274,36 +336,66 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
         ),
         content: SizedBox(
           width: double.maxFinite,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Paste the raw JSON content of your .sique.json backup archive below. Schema version will be validated prior to restoring.',
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                key: const Key('restore_backup_json_input'),
-                controller: controller,
-                maxLines: 6,
-                style: const TextStyle(
-                    fontSize: 12,
-                    fontFamily: 'monospace',
-                    color: AppTheme.textPrimary),
-                decoration: InputDecoration(
-                  hintText:
-                      '{\n  "app": "Sique",\n  "schemaVersion": 3,\n  ...\n}',
-                  hintStyle: const TextStyle(color: AppTheme.textMuted),
-                  filled: true,
-                  fillColor: AppTheme.cardElevated,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppTheme.cardBorder),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                ElevatedButton.icon(
+                  key: const Key('choose_backup_file_btn'),
+                  icon: const Icon(Icons.file_open_rounded, size: 18),
+                  label: const Text('Choose .sique.json File'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.activeBlue,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    _pickAndRestoreFile();
+                  },
+                ),
+                const SizedBox(height: 16),
+                const Row(
+                  children: [
+                    Expanded(child: Divider(color: AppTheme.cardBorder)),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: Text('OR PASTE JSON',
+                          style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textMuted)),
+                    ),
+                    Expanded(child: Divider(color: AppTheme.cardBorder)),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  key: const Key('restore_backup_json_input'),
+                  controller: controller,
+                  maxLines: 5,
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                      color: AppTheme.textPrimary),
+                  decoration: InputDecoration(
+                    hintText:
+                        '{\n  "app": "Sique",\n  "schemaVersion": 4,\n  ...\n}',
+                    hintStyle: const TextStyle(color: AppTheme.textMuted),
+                    filled: true,
+                    fillColor: AppTheme.cardElevated,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      borderSide: const BorderSide(color: AppTheme.cardBorder),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
         actions: [
@@ -314,8 +406,8 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           ElevatedButton(
             key: const Key('restore_backup_confirm_btn'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.activeBlue,
-              foregroundColor: Colors.white,
+              backgroundColor: AppTheme.activeBlue.withValues(alpha: 0.2),
+              foregroundColor: AppTheme.activeBlue,
             ),
             onPressed: () {
               final text = controller.text.trim();
@@ -382,31 +474,54 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
         children: [
           _buildStorageOverviewCard(),
           const SizedBox(height: 16),
-          _buildExportTile(
+          ExportCardTile(
             icon: Icons.data_object_rounded,
             color: AppTheme.activeBlue,
             title: 'Export Food Logs (JSON)',
             subtitle:
                 'Complete nutritional history formatted with ISO timestamps, portion weights, and oil modifiers.',
-            countLabel: '$_totalFoodLogs meals logged',
-            onShare: _exportFoodLogs,
-            onPreview: () => _showPreviewDialog(
+            badgeText: '$_totalFoodLogs meals logged',
+            primaryButtonLabel: 'Share File',
+            primaryButtonIcon: Icons.share_rounded,
+            onPrimaryPressed: _exportFoodLogs,
+            secondaryButtonLabel: 'Preview',
+            secondaryButtonIcon: Icons.preview_rounded,
+            onSecondaryPressed: () => _showPreviewDialog(
                 'Food Logs Preview', _generateFoodLogsJson()),
           ),
           const SizedBox(height: 16),
-          _buildExportTile(
+          ExportCardTile(
             icon: Icons.table_chart_rounded,
             color: AppTheme.trendWeight,
             title: 'Export Scale Weights (CSV)',
             subtitle:
                 'Chronological weigh-ins compatible with Excel, Google Sheets, or custom statistical models.',
-            countLabel: '$_totalWeightLogs weigh-ins logged',
-            onShare: _exportWeightLogs,
-            onPreview: () => _showPreviewDialog(
+            badgeText: '$_totalWeightLogs weigh-ins logged',
+            primaryButtonLabel: 'Share File',
+            primaryButtonIcon: Icons.share_rounded,
+            onPrimaryPressed: _exportWeightLogs,
+            secondaryButtonLabel: 'Preview',
+            secondaryButtonIcon: Icons.preview_rounded,
+            onSecondaryPressed: () => _showPreviewDialog(
                 'Scale Weights CSV Preview', _generateWeightLogsCsv()),
           ),
           const SizedBox(height: 16),
-          _buildFullBackupCard(),
+          ExportCardTile(
+            actionKey: const Key('full_backup_card'),
+            icon: Icons.backup_rounded,
+            color: AppTheme.calories,
+            title: 'Full Backup & Recovery (.sique.json)',
+            subtitle:
+                'Export or restore an entire snapshot of your profile, nutrition targets, scale weights, and meal entries with schema version validation.',
+            badgeText: 'Complete schema snapshot (v4)',
+            primaryButtonLabel: 'Export Backup',
+            primaryButtonIcon: Icons.download_rounded,
+            onPrimaryPressed: _exportFullBackup,
+            secondaryButtonLabel: 'Restore Backup',
+            secondaryButtonIcon: Icons.restore_rounded,
+            secondaryButtonKey: const Key('restore_from_backup_btn'),
+            onSecondaryPressed: _showRestoreDialog,
+          ),
           const SizedBox(height: 16),
           _buildPrivacyCard(),
           const SizedBox(height: 32),
@@ -483,211 +598,15 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       ),
       child: Column(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 11,
-              color: AppTheme.textSecondary,
-            ),
-            textAlign: TextAlign.center,
-          ),
+          Text(label,
+              style:
+                  const TextStyle(fontSize: 11, color: AppTheme.textSecondary),
+              textAlign: TextAlign.center),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: color,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExportTile({
-    required IconData icon,
-    required Color color,
-    required String title,
-    required String subtitle,
-    required String countLabel,
-    required VoidCallback onShare,
-    required VoidCallback onPreview,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.cardBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 22, color: color),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      countLabel,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: color,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppTheme.textSecondary,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  icon: const Icon(Icons.preview_rounded, size: 16),
-                  label: const Text('Preview'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.textPrimary,
-                    side: const BorderSide(color: AppTheme.cardBorder),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: onPreview,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.share_rounded, size: 16),
-                  label: const Text('Share File'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: color.withAlpha(40),
-                    foregroundColor: color,
-                    elevation: 0,
-                    side: BorderSide(color: color.withAlpha(90)),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: onShare,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFullBackupCard() {
-    return Container(
-      key: const Key('full_backup_card'),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.cardBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Row(
-            children: [
-              Icon(Icons.backup_rounded, size: 22, color: AppTheme.calories),
-              SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Full Backup & Recovery (.sique.json)',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    Text(
-                      'Complete schema snapshot (v3)',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.calories,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Export or restore an entire snapshot of your profile, nutrition targets, scale weights, and meal entries with cryptographic schema version validation.',
-            style: TextStyle(
-              fontSize: 12,
-              color: AppTheme.textSecondary,
-              height: 1.35,
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  key: const Key('restore_from_backup_btn'),
-                  icon: const Icon(Icons.restore_rounded, size: 16),
-                  label: const Text('Restore Backup'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.textPrimary,
-                    side: const BorderSide(color: AppTheme.cardBorder),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: _showRestoreDialog,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  key: const Key('export_full_backup_btn'),
-                  icon: const Icon(Icons.download_rounded, size: 16),
-                  label: const Text('Export Backup'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.calories.withAlpha(40),
-                    foregroundColor: AppTheme.calories,
-                    elevation: 0,
-                    side: BorderSide(color: AppTheme.calories.withAlpha(90)),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: _exportFullBackup,
-                ),
-              ),
-            ],
-          ),
+          Text(value,
+              style: TextStyle(
+                  fontSize: 16, fontWeight: FontWeight.w800, color: color),
+              textAlign: TextAlign.center),
         ],
       ),
     );

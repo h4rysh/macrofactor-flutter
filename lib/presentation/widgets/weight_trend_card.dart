@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:sique/domain/algorithms/weight_trend_v2.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/animated_primitives.dart';
+import 'package:sique/utils/unit_formatter.dart';
 
 /// Weight Trend Card displaying smoothed trend weight vs raw scale observation
 /// and water-weight noise range.
@@ -17,8 +18,9 @@ class WeightTrendCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final unit = UnitFormatter.weightUnit();
     final semanticsLabel = latestTrendPoint != null
-        ? 'Weight Trend: ${latestTrendPoint!.trendWeightKg.toStringAsFixed(1)} kg trend, ${latestTrendPoint!.scaleWeightKg.toStringAsFixed(1)} kg raw scale.'
+        ? 'Weight Trend: ${latestTrendPoint!.trendWeightKg.toStringAsFixed(1)} $unit trend, ${latestTrendPoint!.scaleWeightKg.toStringAsFixed(1)} $unit raw scale.'
         : 'Weight Trend: No weight entries logged yet.';
 
     return Semantics(
@@ -130,8 +132,8 @@ class WeightTrendCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            'kg trend',
-                            style: AppTypography.bodyMedium.copyWith(
+                            '${UnitFormatter.weightUnit()} trend',
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                               color: AppTheme.textSecondary,

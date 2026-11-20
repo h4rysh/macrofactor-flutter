@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/oil_modifier_display.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/food_svg_icon.dart';
 
@@ -158,9 +159,8 @@ class _FoodLogRowItem extends StatelessWidget {
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
-                          entry.oilModifier == OilModifier.lowOil
-                              ? 'Low Oil'
-                              : 'Desi Ghee',
+                          OilModifierDisplay.getTimelineBadge(
+                              entry.oilModifier),
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,

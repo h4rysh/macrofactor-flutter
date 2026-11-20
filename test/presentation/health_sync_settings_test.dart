@@ -108,7 +108,9 @@ void main() {
       expect(find.byKey(const Key('health_sync_manual_card')), findsOneWidget);
       expect(find.text('Synchronization'), findsOneWidget);
       expect(find.byKey(const Key('health_sync_trigger_btn')), findsOneWidget);
-      expect(find.text('Sync Now (30 Days)'), findsOneWidget);
+      expect(find.text('Sync Now (30d)'), findsOneWidget);
+      expect(find.text('30 Days'), findsOneWidget);
+      expect(find.text('90 Days'), findsOneWidget);
 
       // Supported channels
       expect(find.text('Supported Channels'), findsOneWidget);
@@ -116,7 +118,7 @@ void main() {
       expect(find.text('Scale Body Weight'), findsOneWidget);
 
       // Privacy card
-      expect(find.textContaining('100% Local Privacy'), findsOneWidget);
+      expect(find.textContaining('100% On-Device Privacy'), findsOneWidget);
     });
 
     testWidgets('tapping health_sync_trigger_btn triggers manual sync',

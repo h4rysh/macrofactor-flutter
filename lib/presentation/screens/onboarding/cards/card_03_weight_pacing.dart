@@ -4,6 +4,7 @@ import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/domain/validation/domain_validator.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/utils/unit_formatter.dart';
 
 /// Card 3: Weight Goal & Dynamic Rate Pacing (live kcal/day preview + BMI guardrail).
 class Card03WeightPacing extends StatefulWidget {
@@ -196,8 +197,8 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
 
         // Target Weight Input
         if (!isMaintenance) ...[
-          const Text('Target Weight (kg)',
-              style: TextStyle(
+          Text(UnitFormatter.targetWeightLabel(),
+              style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.textSecondary)),

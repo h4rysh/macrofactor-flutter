@@ -18,7 +18,7 @@ void main() {
         CREATE TABLE foods (
           id INTEGER PRIMARY KEY, uuid TEXT, name TEXT, category TEXT, region TEXT,
           calories REAL, protein REAL, carbs REAL, fat REAL, fiber REAL, icon_svg TEXT,
-          source TEXT, aliases TEXT
+          source TEXT, aliases TEXT, is_verified INTEGER NOT NULL DEFAULT 1
         );
         CREATE TABLE portion_units (
           id INTEGER PRIMARY KEY, food_id INTEGER, unit_name TEXT, gram_weight REAL, is_default INTEGER

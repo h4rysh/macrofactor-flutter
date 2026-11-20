@@ -72,26 +72,7 @@ class WeightDao {
       } finally {
         stmt.dispose();
       }
-    } catch (_) {
-      // Fallback for environments where user_profile is indexed by id or undergoing migration
-      try {
-        final fallbackStmt = _db.prepare('''
-          UPDATE user_profile
-          SET current_weight = (
-            SELECT scale_weight FROM weight_logs
-            WHERE user_id = ?
-            ORDER BY date DESC, logged_at DESC
-            LIMIT 1
-          )
-          WHERE (id = ? OR id = 'default_profile') AND EXISTS (SELECT 1 FROM weight_logs WHERE user_id = ?);
-        ''');
-        try {
-          fallbackStmt.execute([uid, uid, uid]);
-        } finally {
-          fallbackStmt.dispose();
-        }
-      } catch (_) {}
-    }
+    } catch (_) {}
   }
 
   /// Convenience method to insert scale weight from DateTime.

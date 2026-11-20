@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
@@ -181,6 +182,16 @@ class SiqueApp extends StatelessWidget {
       title: 'Sique',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [
+        Locale('en', 'IN'),
+        Locale('en', 'US'),
+        Locale('en', 'GB'),
+      ],
       builder: (context, child) {
         final mediaQuery = MediaQuery.of(context);
         return MediaQuery(

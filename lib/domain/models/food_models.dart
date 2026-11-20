@@ -153,7 +153,8 @@ enum OilModifier {
   standard('Standard Recipe (0 kcal)', 0.0, 0.0),
   halfTsp('+½ tsp Oil (+22.5 kcal)', 22.5, 2.5),
   oneTsp('+1 tsp Oil (+45 kcal)', 45.0, 5.0),
-  oneTbsp('+1 tbsp Oil (+120 kcal)', 120.0, 13.5);
+  oneTbsp('+1 tbsp Oil (+120 kcal)', 120.0, 13.5),
+  twoTbsp('+2 tbsp Oil (+240 kcal)', 240.0, 27.0);
 
   const OilModifier(this.label, this.approxCalorieDelta, this.approxFatGrams);
   final String label;
@@ -161,6 +162,9 @@ enum OilModifier {
   final double approxFatGrams;
 
   static const OilModifier none = OilModifier.standard;
+  static const OilModifier light = OilModifier.oneTsp;
+  static const OilModifier home = OilModifier.oneTbsp;
+  static const OilModifier rich = OilModifier.twoTbsp;
   static const OilModifier extraGheeOrOil = OilModifier.oneTsp;
 
   String get displayName => label;

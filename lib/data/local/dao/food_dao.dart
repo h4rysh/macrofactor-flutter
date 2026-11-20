@@ -95,7 +95,8 @@ class FoodDao {
   List<FoodItem> searchFoods(String query, {int limit = 30}) {
     final ftsQuery = sanitizeFts5Query(query);
     if (ftsQuery.isEmpty) {
-      final stmt = _db.prepare('SELECT * FROM foods LIMIT ?;');
+      final stmt = _db.prepare(
+          'SELECT * FROM foods ORDER BY is_verified DESC, name ASC LIMIT ?;');
       try {
         final result = stmt.select([limit]);
         return result.map(_mapFoodRow).toList();
@@ -109,7 +110,7 @@ class FoodDao {
         SELECT f.* FROM foods f
         JOIN foods_fts fts ON f.id = fts.rowid
         WHERE foods_fts MATCH ?
-        ORDER BY fts.rank
+        ORDER BY fts.rank, f.is_verified DESC, f.name ASC
         LIMIT ?;
       ''');
       try {
@@ -135,6 +136,7 @@ class FoodDao {
     final fallbackStmt = _db.prepare('''
       SELECT * FROM foods
       WHERE name LIKE ? OR aliases LIKE ? OR category LIKE ?
+      ORDER BY is_verified DESC, name ASC
       LIMIT ?;
     ''');
     try {
@@ -303,11 +305,28 @@ class FoodDao {
       return insertFoodLog(entry, userId: uid);
     }
     final stmt = _db.prepare('''
-      INSERT OR REPLACE INTO food_logs (
+      INSERT INTO food_logs (
         id, user_id, date, meal_type, food_id, food_name, serving_quantity,
         unit_name, gram_weight, calories, protein, carbs,
         fat, fiber, oil_modifier, logged_at, icon_svg
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        user_id = excluded.user_id,
+        date = excluded.date,
+        meal_type = excluded.meal_type,
+        food_id = excluded.food_id,
+        food_name = excluded.food_name,
+        serving_quantity = excluded.serving_quantity,
+        unit_name = excluded.unit_name,
+        gram_weight = excluded.gram_weight,
+        calories = excluded.calories,
+        protein = excluded.protein,
+        carbs = excluded.carbs,
+        fat = excluded.fat,
+        fiber = excluded.fiber,
+        oil_modifier = excluded.oil_modifier,
+        logged_at = excluded.logged_at,
+        icon_svg = excluded.icon_svg;
     ''');
     try {
       stmt.execute([

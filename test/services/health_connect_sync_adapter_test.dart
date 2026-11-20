@@ -294,7 +294,7 @@ void main() {
       final workout = workouts.first;
       expect(workout.id, equals('hevy-session-001'));
       expect(workout.source, equals(WorkoutSource.hevy));
-      expect(workout.title, equals('Hevy: Chest and Triceps Hypertrophy'));
+      expect(workout.title, equals('Chest and Triceps Hypertrophy'));
       expect(workout.durationMinutes, equals(75));
       expect(workout.caloriesBurned, equals(420.0));
     });
@@ -359,7 +359,7 @@ void main() {
       );
 
       expect(workouts.first.source, equals(WorkoutSource.hevy));
-      expect(workouts.first.title, equals('Hevy Strength Session'));
+      expect(workouts.first.title, equals('Workout Session'));
     });
 
     test('maps non-Hevy third-party workouts to WorkoutSource.healthConnect',

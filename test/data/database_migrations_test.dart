@@ -9,14 +9,15 @@ import 'package:sqlite3/sqlite3.dart';
 void main() {
   group('Database Migrations and Profile Column Schema Evolution', () {
     test(
-        'Fresh database migration ladder upgrades user_version to 3 with WAL and foreign keys',
+        'Fresh database migration ladder upgrades user_version to current with WAL and foreign keys',
         () {
       final rawDb = sqlite3.openInMemory();
       DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
 
-      // Verify user_version is 3
+      // Verify user_version is 4
       final versionResult = rawDb.select('PRAGMA user_version;');
-      expect(versionResult.first.values.first, equals(3));
+      expect(versionResult.first.values.first,
+          equals(DatabaseMigrations.currentVersion));
 
       // Verify foreign_keys enabled
       final fkResult = rawDb.select('PRAGMA foreign_keys;');
@@ -83,9 +84,10 @@ void main() {
       // Run migration
       DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
 
-      // Verify version upgraded to 3
+      // Verify version upgraded to current
       final versionResult = rawDb.select('PRAGMA user_version;');
-      expect(versionResult.first.values.first, equals(3));
+      expect(versionResult.first.values.first,
+          equals(DatabaseMigrations.currentVersion));
 
       final appDb = AppDatabase(rawDb, isInMemory: true);
       final profile = appDb.getUserProfile();
@@ -240,28 +242,28 @@ void main() {
       final rawDb = sqlite3.openInMemory();
       DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
 
-      // Current user_version is 3
+      // Current user_version is 4
       final initialVersion =
           rawDb.select('PRAGMA user_version;').first.values.first;
-      expect(initialVersion, equals(3));
+      expect(initialVersion, equals(DatabaseMigrations.currentVersion));
 
-      // Attempt a failing migration step to version 4
+      // Attempt a failing migration step to version 5
       expect(
-        () => DatabaseMigrations.runStepForTest(rawDb, 4, (db) {
-          db.execute('CREATE TABLE step4_rollback_table (id INT);');
+        () => DatabaseMigrations.runStepForTest(rawDb, 5, (db) {
+          db.execute('CREATE TABLE step5_rollback_table (id INT);');
           throw Exception('Simulated migration crash');
         }),
         throwsA(isA<Exception>()),
       );
 
-      // Verify user_version remained 3
+      // Verify user_version remained 4
       final postFailureVersion =
           rawDb.select('PRAGMA user_version;').first.values.first;
-      expect(postFailureVersion, equals(3));
+      expect(postFailureVersion, equals(DatabaseMigrations.currentVersion));
 
-      // Verify step4_rollback_table was rolled back and does not exist
+      // Verify step5_rollback_table was rolled back and does not exist
       final checkTable = rawDb.select(
-        "SELECT count(*) as cnt FROM sqlite_master WHERE type='table' AND name='step4_rollback_table';",
+        "SELECT count(*) as cnt FROM sqlite_master WHERE type='table' AND name='step5_rollback_table';",
       );
       expect(checkTable.first['cnt'], equals(0));
 

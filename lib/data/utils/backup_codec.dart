@@ -1,28 +1,41 @@
 import 'dart:convert';
+import 'package:sique/data/local/app_database_expenditure.dart';
 import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/macro_program.dart';
 import 'package:sique/domain/models/scale_weight_entry.dart';
 import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/domain/models/workout_session.dart';
 
 /// Archive encoder and decoder for Sique full database backups (.sique.json).
-/// Enforces schema version validation (supported: <= 3).
+/// Enforces schema version validation (supported: <= 4).
 class BackupCodec {
-  static const int currentSchemaVersion = 3;
+  static const int currentSchemaVersion = 4;
   static const String appSignature = 'Sique';
 
-  /// Serializes full backup to pretty JSON string.
+  /// Serializes full 7-table backup to pretty JSON string.
   static String encodeBackup({
     required UserProfile profile,
     required List<FoodLogEntry> foodLogs,
     required List<ScaleWeightEntry> weightLogs,
+    List<WorkoutSession> workoutSessions = const [],
+    List<ExpenditureRecord> expenditureHistory = const [],
+    List<CoachingCheckIn> coachingCheckIns = const [],
+    Map<String, bool> dayCompletions = const {},
+    Map<String, String> appSettings = const {},
   }) {
     final backup = {
       'app': appSignature,
-      'backupVersion': 1,
+      'backupVersion': 2,
       'schemaVersion': currentSchemaVersion,
       'exportedAt': DateTime.now().toIso8601String(),
       'profile': profileToMap(profile),
       'foodLogs': foodLogs.map(foodLogToMap).toList(),
       'weightLogs': weightLogs.map(weightToMap).toList(),
+      'workoutSessions': workoutSessions.map((w) => w.toMap()).toList(),
+      'expenditureHistory': expenditureHistory.map((e) => e.toMap()).toList(),
+      'coachingCheckIns': coachingCheckIns.map((c) => c.toJson()).toList(),
+      'dayCompletions': dayCompletions,
+      'appSettings': appSettings,
     };
 
     return const JsonEncoder.withIndent('  ').convert(backup);
@@ -72,12 +85,68 @@ class BackupCodec {
       }
     }
 
+    final workoutSessions = <WorkoutSession>[];
+    if (decoded['workoutSessions'] is List) {
+      for (final item in decoded['workoutSessions'] as List) {
+        if (item is Map<String, dynamic>) {
+          workoutSessions.add(WorkoutSession.fromMap(item));
+        }
+      }
+    }
+
+    final expenditureHistory = <ExpenditureRecord>[];
+    if (decoded['expenditureHistory'] is List) {
+      for (final item in decoded['expenditureHistory'] as List) {
+        if (item is Map<String, dynamic>) {
+          expenditureHistory.add(ExpenditureRecord(
+            date: item['date'] as String,
+            expenditureKcal: (item['expenditure_kcal'] as num).toDouble(),
+            trendWeightKg: (item['trend_weight_kg'] as num).toDouble(),
+            variance: (item['variance'] as num).toDouble(),
+            confidence: (item['confidence'] as num).toDouble(),
+          ));
+        }
+      }
+    }
+
+    final coachingCheckIns = <CoachingCheckIn>[];
+    if (decoded['coachingCheckIns'] is List) {
+      for (final item in decoded['coachingCheckIns'] as List) {
+        if (item is Map<String, dynamic>) {
+          coachingCheckIns.add(CoachingCheckIn.fromJson(item));
+        }
+      }
+    }
+
+    final dayCompletions = <String, bool>{};
+    if (decoded['dayCompletions'] is Map) {
+      (decoded['dayCompletions'] as Map).forEach((k, v) {
+        if (k is String && v is bool) {
+          dayCompletions[k] = v;
+        }
+      });
+    }
+
+    final appSettings = <String, String>{};
+    if (decoded['appSettings'] is Map) {
+      (decoded['appSettings'] as Map).forEach((k, v) {
+        if (k is String && v is String) {
+          appSettings[k] = v;
+        }
+      });
+    }
+
     return DecodedBackup(
       schemaVersion: schemaVersion,
       exportedAt: decoded['exportedAt'] as String?,
       profile: profile,
       weightLogs: weightLogs,
       foodLogs: foodLogs,
+      workoutSessions: workoutSessions,
+      expenditureHistory: expenditureHistory,
+      coachingCheckIns: coachingCheckIns,
+      dayCompletions: dayCompletions,
+      appSettings: appSettings,
     );
   }
 
@@ -90,6 +159,7 @@ class BackupCodec {
         'targetWeightKg': p.targetWeightKg,
         'heightCm': p.heightCm,
         'age': p.age,
+        'dateOfBirth': p.dateOfBirth,
         'isMale': p.isMale,
         'goalType': p.goalType.name,
         'programMode': p.programMode.name,
@@ -120,6 +190,7 @@ class BackupCodec {
         targetWeightKg: (map['targetWeightKg'] as num?)?.toDouble() ?? 70.0,
         heightCm: (map['heightCm'] as num?)?.toDouble() ?? 175.0,
         age: (map['age'] as num?)?.toInt() ?? 28,
+        dateOfBirth: map['dateOfBirth'] as String?,
         isMale: map['isMale'] as bool? ?? true,
         goalType: GoalType.values.firstWhere(
           (g) => g.name == map['goalType'],
@@ -223,7 +294,7 @@ class BackupCodec {
   }
 }
 
-/// Structured container for validated backup contents.
+/// Structured container for validated backup contents across all 7 user data tables.
 class DecodedBackup {
   const DecodedBackup({
     required this.schemaVersion,
@@ -231,6 +302,11 @@ class DecodedBackup {
     this.profile,
     required this.weightLogs,
     required this.foodLogs,
+    this.workoutSessions = const [],
+    this.expenditureHistory = const [],
+    this.coachingCheckIns = const [],
+    this.dayCompletions = const {},
+    this.appSettings = const {},
   });
 
   final int schemaVersion;
@@ -238,4 +314,9 @@ class DecodedBackup {
   final UserProfile? profile;
   final List<ScaleWeightEntry> weightLogs;
   final List<FoodLogEntry> foodLogs;
+  final List<WorkoutSession> workoutSessions;
+  final List<ExpenditureRecord> expenditureHistory;
+  final List<CoachingCheckIn> coachingCheckIns;
+  final Map<String, bool> dayCompletions;
+  final Map<String, String> appSettings;
 }

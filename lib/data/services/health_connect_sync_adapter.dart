@@ -237,11 +237,7 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
   String _formatWorkoutTitle(HealthDataPoint point, {required bool isHevy}) {
     final metaTitle = point.metadata?['title'] as String?;
     if (metaTitle != null && metaTitle.trim().isNotEmpty) {
-      final trimmed = metaTitle.trim();
-      if (isHevy && !trimmed.toLowerCase().startsWith('hevy')) {
-        return 'Hevy: $trimmed';
-      }
-      return trimmed;
+      return metaTitle.trim();
     }
 
     final value = point.value;
@@ -256,10 +252,10 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
       if (formatted.isNotEmpty &&
           formatted != 'Other' &&
           formatted != 'Unknown') {
-        return isHevy ? 'Hevy: $formatted' : formatted;
+        return formatted;
       }
     }
 
-    return isHevy ? 'Hevy Strength Session' : 'Health Connect Workout';
+    return 'Workout Session';
   }
 }

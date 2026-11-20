@@ -33,11 +33,9 @@ class WorkoutStatsHeroGrid extends ConsumerWidget {
             ),
             const SizedBox(width: 8),
             AppleBadge(
-              label: stats.hevyWorkoutsCount > 0
-                  ? '${stats.hevyWorkoutsCount} Hevy'
-                  : (stats.totalWorkouts > 0
-                      ? '${stats.totalWorkouts} Synced'
-                      : '0 Synced'),
+              label: stats.totalWorkouts > 0
+                  ? '${stats.totalWorkouts} Synced'
+                  : '0 Synced',
               color: const Color(0xFF8B5CF6),
               icon: Icons.fitness_center_rounded,
             ),
@@ -56,9 +54,7 @@ class WorkoutStatsHeroGrid extends ConsumerWidget {
               key: const Key('hero_stat_total_workouts'),
               title: 'Total Workouts',
               value: '${stats.totalWorkouts}',
-              subtitle: stats.hevyWorkoutsCount > 0
-                  ? '${stats.hevyWorkoutsCount} via Hevy'
-                  : 'All sources',
+              subtitle: 'All sources',
               icon: Icons.fitness_center_rounded,
               accentColor: AppTheme.activeBlue,
             ),

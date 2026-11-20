@@ -40,14 +40,16 @@ extension AppDatabaseCoachingExtension on AppDatabase {
     }
   }
 
-  /// Inserts a new coaching check-in record.
-  void insertCoachingCheckIn(CoachingCheckIn checkIn) {
+  /// Inserts a new coaching check-in record scoped to user_id.
+  void insertCoachingCheckIn(CoachingCheckIn checkIn, {String? userId}) {
+    final uid = userId ?? currentUserId;
     final stmt = rawDb.prepare('''
       INSERT INTO coaching_check_ins (
-        id, check_in_date, previous_calories, recommended_calories,
+        id, user_id, check_in_date, previous_calories, recommended_calories,
         expenditure_kcal, weight_trend_kg, is_accepted, status_note, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
+        user_id = excluded.user_id,
         previous_calories = excluded.previous_calories,
         recommended_calories = excluded.recommended_calories,
         expenditure_kcal = excluded.expenditure_kcal,
@@ -58,6 +60,7 @@ extension AppDatabaseCoachingExtension on AppDatabase {
 
     stmt.execute([
       checkIn.id,
+      uid,
       checkIn.checkInDate.toIso8601String(),
       checkIn.previousCalories,
       checkIn.recommendedCalories,
@@ -70,13 +73,15 @@ extension AppDatabaseCoachingExtension on AppDatabase {
     stmt.dispose();
   }
 
-  /// Retrieves all historical coaching check-ins ordered chronologically descending.
-  List<CoachingCheckIn> getCoachingCheckIns() {
+  /// Retrieves all historical coaching check-ins ordered chronologically descending, scoped to user_id.
+  List<CoachingCheckIn> getCoachingCheckIns({String? userId}) {
+    final uid = userId ?? currentUserId;
     final stmt = rawDb.prepare('''
       SELECT * FROM coaching_check_ins
+      WHERE user_id = ?
       ORDER BY check_in_date DESC, created_at DESC;
     ''');
-    final result = stmt.select();
+    final result = stmt.select([uid]);
     stmt.dispose();
 
     return result.map((row) {

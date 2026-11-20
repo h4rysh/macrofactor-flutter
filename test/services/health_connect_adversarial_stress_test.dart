@@ -254,7 +254,7 @@ void main() {
       expect(res.length, equals(3));
       for (final w in res) {
         expect(w.isHevy, isTrue);
-        expect(w.title, equals('Hevy: Weightlifting'));
+        expect(w.title, equals('Weightlifting'));
         expect(w.notes, isNull);
       }
     });
@@ -269,7 +269,7 @@ void main() {
       ];
 
       final res = await adapter.fetchWorkouts(startTime: start, endTime: end);
-      expect(res.first.title, equals('Hevy: Weightlifting'));
+      expect(res.first.title, equals('Weightlifting'));
     });
 
     test('Empty UUID in HealthDataPoint falls back to timestamp-based ID',
@@ -305,8 +305,8 @@ void main() {
       ];
 
       final res = await adapter.fetchWorkouts(startTime: start, endTime: end);
-      expect(res[0].title, equals('Hevy: $complexTitle'));
-      expect(res[1].title, startsWith('Hevy: Bench Press'));
+      expect(res[0].title, equals(complexTitle));
+      expect(res[1].title, startsWith('Bench Press'));
       expect(res[1].title.length, greaterThan(2000));
     });
   });
@@ -370,7 +370,7 @@ void main() {
       final res = await adapter.fetchWorkouts(startTime: start, endTime: end);
       expect(res[0].caloriesBurned, equals(15000.0));
       expect(res[1].caloriesBurned, equals(220.0));
-      expect(res[1].title, equals('Hevy Strength Session'));
+      expect(res[1].title, equals('Workout Session'));
     });
   });
 
@@ -399,8 +399,8 @@ void main() {
       ];
 
       final res = await adapter.fetchWorkouts(startTime: start, endTime: end);
-      expect(res[0].title, equals('Hevy Strength Session'));
-      expect(res[1].title, equals('Health Connect Workout'));
+      expect(res[0].title, equals('Workout Session'));
+      expect(res[1].title, equals('Workout Session'));
     });
 
     test('Multi-word activity types formatted in Title Case with spaces',
@@ -417,7 +417,7 @@ void main() {
       final res = await adapter.fetchWorkouts(startTime: start, endTime: end);
       expect(
         res.first.title,
-        equals('Hevy: High Intensity Interval Training'),
+        equals('High Intensity Interval Training'),
       );
     });
 

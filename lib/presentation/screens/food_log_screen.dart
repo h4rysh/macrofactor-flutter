@@ -397,14 +397,6 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                     ),
                   );
                 },
-                onBarcodeTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Barcode scanner active'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
                 onCustomFoodTap: () {
                   final nowHour = ref.read(clockProvider)().hour;
                   Navigator.push(

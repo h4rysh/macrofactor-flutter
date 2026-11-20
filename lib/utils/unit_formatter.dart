@@ -133,6 +133,25 @@ class UnitFormatter {
   /// Returns unit suffix ('kg' or 'lbs').
   static String weightUnit({bool useLbs = false}) => useLbs ? 'lbs' : 'kg';
 
+  /// Formatted weight field label: 'Weight (kg)' or 'Weight (lbs)'.
+  static String weightLabel({bool useLbs = false}) =>
+      'Weight (${weightUnit(useLbs: useLbs)})';
+
+  /// Formatted target weight field label: 'Target Weight (kg)' or 'Target Weight (lbs)'.
+  static String targetWeightLabel({bool useLbs = false}) =>
+      'Target Weight (${weightUnit(useLbs: useLbs)})';
+
+  /// Formatted weekly rate: e.g. 'Stable 0.0 kg/wk' or '-0.50 kg/wk'.
+  static String formatWeeklyRate(double rateKgPerWeek, {bool useLbs = false}) {
+    final val = useLbs ? kgToLbs(rateKgPerWeek) : rateKgPerWeek;
+    final unit = weightUnit(useLbs: useLbs);
+    if (rateKgPerWeek.abs() < 0.01) {
+      return 'Stable 0.0 $unit/wk';
+    }
+    final sign = val > 0 ? '+' : '';
+    return '$sign${val.toStringAsFixed(2)} $unit/wk';
+  }
+
   // ---------------------------------------------------------------------------
   // Height Formatting & Conversions
   // ---------------------------------------------------------------------------
@@ -163,4 +182,8 @@ class UnitFormatter {
   /// Returns unit suffix ('cm' or 'ft/in').
   static String heightUnit({bool useImperial = false}) =>
       useImperial ? 'ft/in' : 'cm';
+
+  /// Formatted height field label: 'Height (cm)' or 'Height (ft/in)'.
+  static String heightLabel({bool useImperial = false}) =>
+      'Height (${heightUnit(useImperial: useImperial)})';
 }

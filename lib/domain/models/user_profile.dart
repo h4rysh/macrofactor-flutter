@@ -92,6 +92,7 @@ class UserProfile {
     this.customProteinGrams,
     this.customCarbsGrams,
     this.customFatGrams,
+    this.dateOfBirth,
     this.dietType = 'standard',
     this.calorieFloorType = 'standard',
     this.liftingExperience = 'beginner',
@@ -110,6 +111,7 @@ class UserProfile {
   final double targetWeightKg;
   final double heightCm;
   final int age;
+  final String? dateOfBirth;
   final bool isMale;
   final GoalType goalType;
   final ProgramMode programMode;
@@ -220,6 +222,7 @@ class UserProfile {
     double? targetWeightKg,
     double? heightCm,
     int? age,
+    String? dateOfBirth,
     bool? isMale,
     GoalType? goalType,
     ProgramMode? programMode,
@@ -250,6 +253,7 @@ class UserProfile {
       targetWeightKg: targetWeightKg ?? this.targetWeightKg,
       heightCm: heightCm ?? this.heightCm,
       age: age ?? this.age,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
       isMale: isMale ?? this.isMale,
       goalType: goalType ?? this.goalType,
       programMode: programMode ?? this.programMode,
@@ -279,4 +283,77 @@ class UserProfile {
       dailyActivity: dailyActivity ?? this.dailyActivity,
     );
   }
+
+  Map<String, dynamic> toMap() => {
+        'id': id,
+        'name': name,
+        'currentWeightKg': currentWeightKg,
+        'targetWeightKg': targetWeightKg,
+        'heightCm': heightCm,
+        'age': age,
+        'dateOfBirth': dateOfBirth,
+        'isMale': isMale,
+        'goalType': goalType.name,
+        'programMode': programMode.name,
+        'weeklyRateOfChangePct': weeklyRateOfChangePct,
+        'proteinPreference': proteinPreference.name,
+        'calorieFloor': calorieFloor,
+        'baselineExpenditureKcal': baselineExpenditureKcal,
+        'customCalories': customCalories,
+        'customProteinGrams': customProteinGrams,
+        'customCarbsGrams': customCarbsGrams,
+        'customFatGrams': customFatGrams,
+        'dietType': dietType,
+        'calorieFloorType': calorieFloorType,
+        'liftingExperience': liftingExperience,
+        'cardioExperience': cardioExperience,
+        'bodyFatRange': bodyFatRange,
+        'weightHistoryMax': weightHistoryMax,
+        'distributionMode': distributionMode,
+        'recentWeightTrend': recentWeightTrend,
+        'exerciseFrequency': exerciseFrequency,
+        'dailyActivity': dailyActivity,
+      };
+
+  factory UserProfile.fromMap(Map<String, dynamic> map) => UserProfile(
+        id: map['id'] as String? ?? 'active_user',
+        name: map['name'] as String? ?? 'Athlete',
+        currentWeightKg: (map['currentWeightKg'] as num?)?.toDouble() ?? 75.0,
+        targetWeightKg: (map['targetWeightKg'] as num?)?.toDouble() ?? 70.0,
+        heightCm: (map['heightCm'] as num?)?.toDouble() ?? 175.0,
+        age: (map['age'] as num?)?.toInt() ?? 28,
+        dateOfBirth: map['dateOfBirth'] as String?,
+        isMale: map['isMale'] as bool? ?? true,
+        goalType: GoalType.values.firstWhere(
+          (g) => g.name == map['goalType'],
+          orElse: () => GoalType.fatLoss,
+        ),
+        programMode: ProgramMode.values.firstWhere(
+          (p) => p.name == map['programMode'],
+          orElse: () => ProgramMode.coached,
+        ),
+        weeklyRateOfChangePct:
+            (map['weeklyRateOfChangePct'] as num?)?.toDouble() ?? -0.5,
+        proteinPreference: ProteinPreference.values.firstWhere(
+          (p) => p.name == map['proteinPreference'],
+          orElse: () => ProteinPreference.high,
+        ),
+        calorieFloor: (map['calorieFloor'] as num?)?.toDouble() ?? 1500.0,
+        baselineExpenditureKcal:
+            (map['baselineExpenditureKcal'] as num?)?.toDouble() ?? 2400.0,
+        customCalories: (map['customCalories'] as num?)?.toDouble(),
+        customProteinGrams: (map['customProteinGrams'] as num?)?.toDouble(),
+        customCarbsGrams: (map['customCarbsGrams'] as num?)?.toDouble(),
+        customFatGrams: (map['customFatGrams'] as num?)?.toDouble(),
+        dietType: map['dietType'] as String? ?? 'standard',
+        calorieFloorType: map['calorieFloorType'] as String? ?? 'standard',
+        liftingExperience: map['liftingExperience'] as String? ?? 'beginner',
+        cardioExperience: map['cardioExperience'] as String? ?? 'beginner',
+        bodyFatRange: map['bodyFatRange'] as String?,
+        weightHistoryMax: (map['weightHistoryMax'] as num?)?.toDouble(),
+        distributionMode: map['distributionMode'] as String? ?? 'even',
+        recentWeightTrend: map['recentWeightTrend'] as String? ?? 'stable',
+        exerciseFrequency: map['exerciseFrequency'] as String? ?? '1-3',
+        dailyActivity: map['dailyActivity'] as String? ?? 'moderate',
+      );
 }

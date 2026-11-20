@@ -86,7 +86,7 @@ class _EmptyWorkoutsCard extends StatelessWidget {
           ),
           SizedBox(height: 4),
           Text(
-            'Workouts synced from Health Connect, Hevy, Strava, or logged manually will appear here.',
+            'Workouts synced from Health Connect, fitness apps, or logged manually will appear here.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,

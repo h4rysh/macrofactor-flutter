@@ -133,7 +133,7 @@ void main() {
       expect(find.text('No workouts synced yet'), findsOneWidget);
       expect(
           find.text(
-              'Workouts synced from Health Connect, Hevy, Strava, or logged manually will appear here.'),
+              'Workouts synced from Health Connect, fitness apps, or logged manually will appear here.'),
           findsOneWidget);
 
       // Hero Grid shows 0 stats without division-by-zero or NaN
@@ -183,10 +183,10 @@ void main() {
       expect(
           find.byKey(const Key('recent_workouts_empty_state')), findsNothing);
 
-      // Verify hero stats displays 10000 workouts and 5000 Hevy
+      // Verify hero stats displays 10000 workouts
       expect(find.text('10000'), findsOneWidget);
-      expect(find.text('5000 via Hevy'), findsOneWidget);
-      expect(find.text('5000 Hevy'), findsOneWidget);
+      expect(find.text('All sources'), findsOneWidget);
+      expect(find.text('10000 Synced'), findsOneWidget);
     });
 
     testWidgets(

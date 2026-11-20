@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../domain/models/food_models.dart';
+import '../../domain/models/oil_modifier_display.dart';
 import '../../domain/models/user_profile.dart';
 import '../theme/app_theme.dart';
 import '../widgets/apple_sheet_grabber.dart';
@@ -564,7 +565,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(
-                        children: OilModifier.values.map((oil) {
+                        children: OilModifierDisplay.canonicalTiers.map((oil) {
                           final isSelected = _selectedOil == oil;
                           return Padding(
                             padding: const EdgeInsets.only(right: 8),
@@ -593,7 +594,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                   ),
                                 ),
                                 child: Text(
-                                  oil.displayName,
+                                  OilModifierDisplay.getTierLabel(oil),
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: isSelected

@@ -4,11 +4,20 @@ import 'package:sique/presentation/providers/health_sync_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
 /// Dedicated settings and diagnostics screen for Health Connect synchronization.
-class HealthSyncSettingsScreen extends ConsumerWidget {
+class HealthSyncSettingsScreen extends ConsumerStatefulWidget {
   const HealthSyncSettingsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HealthSyncSettingsScreen> createState() =>
+      _HealthSyncSettingsScreenState();
+}
+
+class _HealthSyncSettingsScreenState
+    extends ConsumerState<HealthSyncSettingsScreen> {
+  int _selectedDays = 30;
+
+  @override
+  Widget build(BuildContext context) {
     final sync = ref.watch(healthConnectSyncProvider);
 
     return Scaffold(
@@ -25,9 +34,9 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
-          _buildStatusCard(ref, sync),
+          _buildStatusCard(sync),
           const SizedBox(height: 14),
-          _buildSyncActionCard(ref, sync),
+          _buildSyncActionCard(sync),
           const SizedBox(height: 14),
           _buildChannelsCard(),
           const SizedBox(height: 14),
@@ -38,7 +47,7 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildStatusCard(WidgetRef ref, HealthSyncState st) {
+  Widget _buildStatusCard(HealthSyncState st) {
     final connected = st.isAvailable && st.hasPermissions;
     final color = !st.isAvailable
         ? AppTheme.textMuted
@@ -122,7 +131,7 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildSyncActionCard(WidgetRef ref, HealthSyncState st) {
+  Widget _buildSyncActionCard(HealthSyncState st) {
     return Container(
       key: const Key('health_sync_manual_card'),
       padding: const EdgeInsets.all(16),
@@ -148,9 +157,26 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Synchronizes 30 days of workouts and scale weights into local storage.',
-            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          Text(
+            'Synchronizes past $_selectedDays days of workouts and scale weights directly from device into local SQLite. Works 100% offline in Guest Mode without cloud sign-in.',
+            style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          SegmentedButton<int>(
+            segments: const [
+              ButtonSegment<int>(value: 30, label: Text('30 Days')),
+              ButtonSegment<int>(value: 90, label: Text('90 Days')),
+            ],
+            selected: {_selectedDays},
+            onSelectionChanged: (Set<int> newSelection) {
+              setState(() => _selectedDays = newSelection.first);
+            },
+            style: SegmentedButton.styleFrom(
+              selectedBackgroundColor:
+                  AppTheme.activeBlue.withValues(alpha: 0.2),
+              selectedForegroundColor: AppTheme.activeBlue,
+              foregroundColor: AppTheme.textSecondary,
+            ),
           ),
           if (st.isError && st.errorMessage != null) ...[
             const SizedBox(height: 12),
@@ -217,7 +243,7 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
                               ? null
                               : () => ref
                                   .read(healthConnectSyncProvider.notifier)
-                                  .syncNow(),
+                                  .syncNow(trailingDays: _selectedDays),
                           icon: const Icon(Icons.refresh_rounded, size: 14),
                           label: const Text('Retry'),
                           style: ElevatedButton.styleFrom(
@@ -243,7 +269,9 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
             key: const Key('health_sync_trigger_btn'),
             onPressed: st.isSyncing
                 ? null
-                : () => ref.read(healthConnectSyncProvider.notifier).syncNow(),
+                : () => ref
+                    .read(healthConnectSyncProvider.notifier)
+                    .syncNow(trailingDays: _selectedDays),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.activeBlue,
               foregroundColor: Colors.white,
@@ -271,13 +299,13 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
                               fontSize: 13, fontWeight: FontWeight.w700)),
                     ],
                   )
-                : const Row(
+                : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.sync_rounded, size: 16),
-                      SizedBox(width: 6),
-                      Text('Sync Now (30 Days)',
-                          style: TextStyle(
+                      const Icon(Icons.sync_rounded, size: 16),
+                      const SizedBox(width: 6),
+                      Text('Sync Now (${_selectedDays}d)',
+                          style: const TextStyle(
                               fontSize: 13, fontWeight: FontWeight.w700)),
                     ],
                   ),
@@ -351,7 +379,7 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              '100% Local Privacy: Health Connect data is imported directly into SQLite on this device. No health data ever leaves your device.',
+              '100% On-Device Privacy: Health Connect data is imported directly into SQLite on this device. Fully functional in Guest Mode without Google Sign-In or cloud accounts.',
               style: TextStyle(
                   fontSize: 11, color: AppTheme.textSecondary, height: 1.4),
             ),

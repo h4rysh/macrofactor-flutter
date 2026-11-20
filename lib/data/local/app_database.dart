@@ -311,10 +311,11 @@ class AppDatabase {
   // User Profile & Preferences Forwarding Methods
   // ==========================================
 
-  void saveUserProfile(UserProfile profile) =>
-      profileDao.saveUserProfile(profile);
+  void saveUserProfile(UserProfile profile, {String? userId}) =>
+      profileDao.saveUserProfile(profile, userId: userId ?? _currentUserId);
 
-  UserProfile? getUserProfile() => profileDao.getUserProfile();
+  UserProfile? getUserProfile({String? userId}) =>
+      profileDao.getUserProfile(userId: userId ?? _currentUserId);
 
   String getSetting(String key, String defaultValue) =>
       settingsDao.getSetting(key, defaultValue, userId: _currentUserId);
@@ -333,6 +334,8 @@ class AppDatabase {
   void clearAccountSession() => profileDao.clearAccountSession();
 
   void clearAllData() => profileDao.clearAllData();
+
+  void clearUserData(String userId) => profileDao.clearUserData(userId);
 
   // ==========================================
   // Workout Sessions Forwarding Methods
@@ -398,17 +401,10 @@ class AppDatabase {
           await parentDir.create(recursive: true);
         }
 
-        // Check legacy path first for seamless user data retention
-        final legacyPath = p.join(file.parent.path, 'legacy_local.db');
-        final legacyFile = File(legacyPath);
-        if (await legacyFile.exists()) {
-          await legacyFile.copy(dbPath);
-        } else {
-          final data = await rootBundle.load('assets/database/foods_master.db');
-          final bytes =
-              data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-          await file.writeAsBytes(bytes, flush: true);
-        }
+        final data = await rootBundle.load('assets/database/foods_master.db');
+        final bytes =
+            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+        await file.writeAsBytes(bytes, flush: true);
       }
 
       final rawDb = sqlite3.open(dbPath);

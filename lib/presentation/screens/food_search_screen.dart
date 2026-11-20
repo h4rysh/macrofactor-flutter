@@ -440,7 +440,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                         icon: Icons.search_off_rounded,
                         title: 'No foods found',
                         message:
-                            'No items match "${_searchController.text}". Try a different term or barcode scan.',
+                            'No items match "${_searchController.text}". Try a different search term.',
                       )
                     : ListView.separated(
                         padding: const EdgeInsets.all(16),
