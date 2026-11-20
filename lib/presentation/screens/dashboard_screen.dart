@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
+import '../theme/tokens/app_haptics.dart';
 import '../widgets/animated_primitives.dart';
 import '../widgets/expenditure_card.dart';
 import '../widgets/macro_gauge_ring.dart';
@@ -36,6 +37,7 @@ class DashboardScreen extends ConsumerWidget {
     final expenditureState = ref.watch(expenditureStateProvider);
     final latestTrendPoint = ref.watch(latestTrendWeightProvider);
     final currentUser = ref.watch(currentUserProvider);
+    final syncState = ref.watch(healthConnectSyncProvider);
 
     final energyBalanceKcal =
         (dailyNutrition.calories - expenditureState.expenditureKcal).round();
@@ -43,195 +45,222 @@ class DashboardScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // 1. Sleek Dashboard Header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0, vertical: 12.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              DateFormat('EEEE, MMM d')
-                                  .format(selectedDate)
-                                  .toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w800,
-                                color: AppTheme.textMuted,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          const FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'Dashboard',
-                              style: TextStyle(
-                                fontSize: 26,
-                                fontWeight: FontWeight.w900,
-                                color: AppTheme.textPrimary,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Flexible(
-                      child: FittedBox(
-                        fit: BoxFit.scaleDown,
-                        alignment: Alignment.centerRight,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
+        child: RefreshIndicator(
+          color: AppTheme.activeBlue,
+          backgroundColor: AppTheme.cardElevated,
+          onRefresh: () async {
+            AppHaptics.lightImpact();
+            await ref.read(healthConnectSyncProvider.notifier).syncNow();
+          },
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              // 1. Sleek Dashboard Header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0, vertical: 12.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Scale Weight Log Action
-                            IconButton(
-                              tooltip: 'Log Scale Weight',
-                              icon: const Icon(
-                                Icons.monitor_weight_outlined,
-                                color: AppTheme.trendWeight,
-                                size: 24,
-                              ),
-                              onPressed: () => WeightLogModal.show(context),
-                            ),
-                            // Strategy Action
-                            if (onNavigateToStrategy != null)
-                              IconButton(
-                                tooltip: 'Strategy',
-                                icon: const Icon(
-                                  Icons.hub_outlined,
-                                  color: AppTheme.textSecondary,
-                                  size: 22,
-                                ),
-                                onPressed: onNavigateToStrategy,
-                              ),
-                            const SizedBox(width: 6),
-                            // Profile Avatar Action (36x36 Circular AppleBouncy)
-                            ProfileAvatarButton(
-                              key: const Key('dashboard_profile_avatar_btn'),
-                              user: currentUser,
-                              size: 36,
-                              onTap: () {
-                                Navigator.of(context).push(
-                                  MaterialPageRoute<void>(
-                                    builder: (_) =>
-                                        const AccountProfileScreen(),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    DateFormat('EEEE, MMM d')
+                                        .format(selectedDate)
+                                        .toUpperCase(),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppTheme.textMuted,
+                                      letterSpacing: 1.0,
+                                    ),
                                   ),
-                                );
-                              },
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: syncState.isSyncing
+                                          ? AppTheme.activeBlue
+                                          : (syncState.hasPermissions
+                                              ? AppTheme.expenditure
+                                              : AppTheme.cardBorder),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            const FittedBox(
+                              fit: BoxFit.scaleDown,
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                'Dashboard',
+                                style: TextStyle(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppTheme.textPrimary,
+                                  letterSpacing: -0.5,
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // 2. Dashboard Body Cards
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate(
-                  [
-                    // A. Nutrition Focus Tile: Macro Gauge Ring (Calories + P/F/C breakdown)
-                    AppleStaggeredEntrance(
-                      index: 0,
-                      child: MacroGaugeRing(
-                        consumed: dailyNutrition,
-                        targets: macroTarget,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Quick Action Strip
-                    AppleStaggeredEntrance(
-                      index: 1,
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: _buildActionPill(
-                              icon: Icons.add_rounded,
-                              label: 'Log Food',
-                              color: AppTheme.activeBlue,
-                              onTap: () {
-                                if (onNavigateToFoodLog != null) {
-                                  onNavigateToFoodLog!();
-                                } else {
-                                  Navigator.push(
-                                    context,
-                                    FoodSearchScreen.route(),
+                      Flexible(
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          alignment: Alignment.centerRight,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              // Scale Weight Log Action
+                              IconButton(
+                                tooltip: 'Log Scale Weight',
+                                icon: const Icon(
+                                  Icons.monitor_weight_outlined,
+                                  color: AppTheme.trendWeight,
+                                  size: 24,
+                                ),
+                                onPressed: () => WeightLogModal.show(context),
+                              ),
+                              // Strategy Action
+                              if (onNavigateToStrategy != null)
+                                IconButton(
+                                  tooltip: 'Strategy',
+                                  icon: const Icon(
+                                    Icons.hub_outlined,
+                                    color: AppTheme.textSecondary,
+                                    size: 22,
+                                  ),
+                                  onPressed: onNavigateToStrategy,
+                                ),
+                              const SizedBox(width: 6),
+                              // Profile Avatar Action (36x36 Circular AppleBouncy)
+                              ProfileAvatarButton(
+                                key: const Key('dashboard_profile_avatar_btn'),
+                                user: currentUser,
+                                size: 36,
+                                onTap: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) =>
+                                          const AccountProfileScreen(),
+                                    ),
                                   );
-                                }
-                              },
-                            ),
+                                },
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _buildActionPill(
-                              icon: Icons.monitor_weight_outlined,
-                              label: 'Log Weight',
-                              color: AppTheme.trendWeight,
-                              onTap: () => WeightLogModal.show(context),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: _buildActionPill(
-                              icon: Icons.bolt_rounded,
-                              label: 'Quick Add',
-                              color: AppTheme.calories,
-                              onTap: () => QuickActionsSheet.show(context),
-                            ),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // B. Dynamic Bayesian Energy Expenditure V3
-                    AppleStaggeredEntrance(
-                      index: 2,
-                      child: DynamicExpenditureCard(
-                        expenditureState: expenditureState,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // C. Smoothed Weight Trend V2 Card
-                    AppleStaggeredEntrance(
-                      index: 3,
-                      child: WeightTrendCard(
-                        latestTrendPoint: latestTrendPoint,
-                        onLogWeightTap: () => WeightLogModal.show(context),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-
-                    // D. Energy Balance Tile
-                    AppleStaggeredEntrance(
-                      index: 4,
-                      child: _buildEnergyBalanceCard(energyBalanceKcal),
-                    ),
-                    const SizedBox(height: 110),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ],
+
+              // 2. Dashboard Body Cards
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate(
+                    [
+                      // A. Nutrition Focus Tile: Macro Gauge Ring (Calories + P/F/C breakdown)
+                      AppleStaggeredEntrance(
+                        index: 0,
+                        child: MacroGaugeRing(
+                          consumed: dailyNutrition,
+                          targets: macroTarget,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // Quick Action Strip
+                      AppleStaggeredEntrance(
+                        index: 1,
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _buildActionPill(
+                                icon: Icons.add_rounded,
+                                label: 'Log Food',
+                                color: AppTheme.activeBlue,
+                                onTap: () {
+                                  if (onNavigateToFoodLog != null) {
+                                    onNavigateToFoodLog!();
+                                  } else {
+                                    Navigator.push(
+                                      context,
+                                      FoodSearchScreen.route(),
+                                    );
+                                  }
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildActionPill(
+                                icon: Icons.monitor_weight_outlined,
+                                label: 'Log Weight',
+                                color: AppTheme.trendWeight,
+                                onTap: () => WeightLogModal.show(context),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _buildActionPill(
+                                icon: Icons.bolt_rounded,
+                                label: 'Quick Add',
+                                color: AppTheme.calories,
+                                onTap: () => QuickActionsSheet.show(context),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // B. Dynamic Bayesian Energy Expenditure V3
+                      AppleStaggeredEntrance(
+                        index: 2,
+                        child: DynamicExpenditureCard(
+                          expenditureState: expenditureState,
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // C. Smoothed Weight Trend V2 Card
+                      AppleStaggeredEntrance(
+                        index: 3,
+                        child: WeightTrendCard(
+                          latestTrendPoint: latestTrendPoint,
+                          onLogWeightTap: () => WeightLogModal.show(context),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+
+                      // D. Energy Balance Tile
+                      AppleStaggeredEntrance(
+                        index: 4,
+                        child: _buildEnergyBalanceCard(energyBalanceKcal),
+                      ),
+                      const SizedBox(height: 110),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

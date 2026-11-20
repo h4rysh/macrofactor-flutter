@@ -2,10 +2,13 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
+import '../theme/tokens/app_haptics.dart';
 import '../widgets/app_lifecycle_sync_observer.dart';
 import '../widgets/apple_tactile_card.dart';
+import '../widgets/sique_bouncy.dart';
 import 'dashboard_screen.dart';
 import 'food_log_screen.dart';
+import 'food_search_screen.dart';
 import 'more_screen.dart';
 import 'quick_actions_sheet.dart';
 import 'strategy_screen.dart';
@@ -111,11 +114,18 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                           child: Semantics(
                             button: true,
                             label: 'Open quick actions menu',
-                            child: AppleBouncy(
+                            child: SiqueBouncy(
                               semanticLabel: 'Open quick actions menu',
                               onTap: () {
-                                HapticFeedback.mediumImpact();
+                                AppHaptics.mediumImpact();
                                 QuickActionsSheet.show(context);
+                              },
+                              onLongPress: () {
+                                AppHaptics.heavyImpact();
+                                Navigator.push(
+                                  context,
+                                  FoodSearchScreen.route(),
+                                );
                               },
                               child: Container(
                                 key: const Key('center_action_fab'),

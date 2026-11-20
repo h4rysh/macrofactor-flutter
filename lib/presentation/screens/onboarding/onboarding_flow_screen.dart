@@ -335,7 +335,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final progress = (_currentStep + 1) / _totalSteps;
+    final progress = 0.22 + (_currentStep / (_totalSteps - 1)) * 0.78;
     final tdee = _calculateBaselineTDEE();
     final bmr = _calculateBmr();
 
@@ -375,12 +375,17 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         centerTitle: true,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(4),
-          child: LinearProgressIndicator(
-            value: progress,
-            backgroundColor: AppTheme.cardBorder,
-            valueColor:
-                const AlwaysStoppedAnimation<Color>(AppTheme.activeBlue),
-            minHeight: 3,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0.22, end: progress),
+            duration: const Duration(milliseconds: 320),
+            curve: Curves.easeOutCubic,
+            builder: (context, val, _) => LinearProgressIndicator(
+              value: val,
+              backgroundColor: AppTheme.cardBorder,
+              valueColor:
+                  const AlwaysStoppedAnimation<Color>(AppTheme.activeBlue),
+              minHeight: 3,
+            ),
           ),
         ),
       ),
