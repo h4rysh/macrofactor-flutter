@@ -40,8 +40,10 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
-    vcsInfo {
-        include = false
+    packaging {
+        resources {
+            excludes += "META-INF/version-control-info.textproto"
+        }
     }
 
     compileOptions {
