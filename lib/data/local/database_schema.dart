@@ -5,6 +5,7 @@ class DatabaseSchema {
   static const String createFoodLogsTable = '''
     CREATE TABLE IF NOT EXISTS food_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
       date TEXT NOT NULL,
       meal_type TEXT NOT NULL,
       food_id INTEGER NOT NULL,
@@ -27,14 +28,20 @@ class DatabaseSchema {
     CREATE INDEX IF NOT EXISTS idx_food_logs_date ON food_logs(date);
   ''';
 
+  static const String createFoodLogsUserDateIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_food_logs_user_date ON food_logs(user_id, date, logged_at);
+  ''';
+
   static const String createWeightLogsTable = '''
     CREATE TABLE IF NOT EXISTS weight_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      date TEXT NOT NULL UNIQUE,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
+      date TEXT NOT NULL,
       scale_weight REAL NOT NULL,
       note TEXT,
       source TEXT NOT NULL DEFAULT 'manual',
-      logged_at TEXT NOT NULL
+      logged_at TEXT NOT NULL,
+      UNIQUE(user_id, date)
     );
   ''';
 
@@ -42,14 +49,20 @@ class DatabaseSchema {
     CREATE INDEX IF NOT EXISTS idx_weight_logs_date ON weight_logs(date);
   ''';
 
+  static const String createWeightLogsUserDateIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_weight_logs_user_date ON weight_logs(user_id, date);
+  ''';
+
   static const String createUserProfileTable = '''
     CREATE TABLE IF NOT EXISTS user_profile (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
       name TEXT NOT NULL,
       current_weight REAL NOT NULL,
       target_weight REAL NOT NULL,
       height_cm REAL NOT NULL,
       age INTEGER NOT NULL,
+      date_of_birth TEXT,
       is_male INTEGER NOT NULL,
       goal_type TEXT NOT NULL,
       program_mode TEXT NOT NULL,
@@ -76,11 +89,13 @@ class DatabaseSchema {
 
   static const String createExpenditureHistoryTable = '''
     CREATE TABLE IF NOT EXISTS expenditure_history (
-      date TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
+      date TEXT NOT NULL,
       expenditure_kcal REAL NOT NULL,
       trend_weight_kg REAL NOT NULL,
       variance REAL NOT NULL,
-      confidence REAL NOT NULL
+      confidence REAL NOT NULL,
+      PRIMARY KEY(user_id, date)
     );
   ''';
 
@@ -148,9 +163,11 @@ class DatabaseSchema {
 
   static const String createDayCompletionsTable = '''
     CREATE TABLE IF NOT EXISTS day_completions (
-      date TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
+      date TEXT NOT NULL,
       is_complete INTEGER NOT NULL,
-      updated_at TEXT NOT NULL
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY(user_id, date)
     );
   ''';
 
@@ -161,8 +178,10 @@ class DatabaseSchema {
   static const List<String> allCreateStatements = [
     createFoodLogsTable,
     createFoodLogsIndex,
+    createFoodLogsUserDateIndex,
     createWeightLogsTable,
     createWeightLogsIndex,
+    createWeightLogsUserDateIndex,
     createUserProfileTable,
     createExpenditureHistoryTable,
     createAppSettingsTable,

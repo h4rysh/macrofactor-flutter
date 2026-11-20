@@ -203,11 +203,11 @@ class NutritionalValues {
         fiber = 0,
         totalGrams = 0;
 
-  double get totalCalories => calories;
-  double get totalProtein => protein;
-  double get totalCarbs => carbs;
-  double get totalFat => fat;
-  double get totalFiber => fiber;
+  double get totalCalories => math.max(0.0, calories);
+  double get totalProtein => math.max(0.0, protein);
+  double get totalCarbs => math.max(0.0, carbs);
+  double get totalFat => math.max(0.0, fat);
+  double get totalFiber => math.max(0.0, fiber);
 
   @override
   bool operator ==(Object other) =>
@@ -304,22 +304,22 @@ class FoodLogEntry {
       servingQuantity: servingQuantity ?? this.servingQuantity,
       unitName: unitName ?? this.unitName,
       gramWeight: gramWeight ?? this.gramWeight,
-      calories: calories ?? this.calories,
-      protein: protein ?? this.protein,
-      carbs: carbs ?? this.carbs,
-      fat: fat ?? this.fat,
-      fiber: fiber ?? this.fiber,
+      calories: calories != null ? math.max(0.0, calories) : this.calories,
+      protein: protein != null ? math.max(0.0, protein) : this.protein,
+      carbs: carbs != null ? math.max(0.0, carbs) : this.carbs,
+      fat: fat != null ? math.max(0.0, fat) : this.fat,
+      fiber: fiber != null ? math.max(0.0, fiber) : this.fiber,
       oilModifier: oilModifier ?? this.oilModifier,
       loggedAt: loggedAt ?? this.loggedAt,
       iconSvg: iconSvg ?? this.iconSvg,
     );
   }
 
-  double get effectiveCalories => calories;
-  double get effectiveProtein => protein;
-  double get effectiveCarbs => carbs;
-  double get effectiveFat => fat;
-  double get effectiveFiber => fiber;
+  double get effectiveCalories => math.max(0.0, calories);
+  double get effectiveProtein => math.max(0.0, protein);
+  double get effectiveCarbs => math.max(0.0, carbs);
+  double get effectiveFat => math.max(0.0, fat);
+  double get effectiveFiber => math.max(0.0, fiber);
   double get quantity => servingQuantity;
   double get grams => gramWeight;
   FoodItem get food {

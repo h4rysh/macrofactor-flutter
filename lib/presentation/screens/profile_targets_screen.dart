@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/domain/validation/domain_validator.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
@@ -288,13 +289,18 @@ class ProfileTargetsScreen extends ConsumerWidget {
               trackHeight: 4,
             ),
             child: Slider(
-              value: profile.weeklyRateOfChangePct.clamp(-1.5, 1.0),
+              value: DomainValidator.clampRateOfChange(
+                profile.weeklyRateOfChangePct,
+                profile.goalType,
+              ).clamp(-1.5, 1.0),
               min: -1.5,
               max: 1.0,
               divisions: 50,
               onChanged: (val) {
+                final safeRate =
+                    DomainValidator.clampRateOfChange(val, profile.goalType);
                 ref.read(userProfileProvider.notifier).updateProfile(
-                      profile.copyWith(weeklyRateOfChangePct: val),
+                      profile.copyWith(weeklyRateOfChangePct: safeRate),
                     );
               },
             ),
@@ -702,12 +708,28 @@ class ProfileTargetsScreen extends ConsumerWidget {
           TextButton(
             onPressed: () {
               final val = double.tryParse(controller.text);
-              if (val != null && val > 20 && val < 300) {
-                ref.read(userProfileProvider.notifier).updateProfile(
-                      profile.copyWith(targetWeightKg: val),
-                    );
+              if (val != null) {
+                final v = DomainValidator.validateTargetWeight(
+                  targetWeightKg: val,
+                  heightCm: profile.heightCm,
+                  goalType: profile.goalType,
+                );
+                if (v.isValid) {
+                  ref.read(userProfileProvider.notifier).updateProfile(
+                        profile.copyWith(targetWeightKg: val),
+                      );
+                  Navigator.of(ctx).pop();
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(v.errorMessage ?? 'Invalid target weight'),
+                      backgroundColor: AppTheme.calories,
+                    ),
+                  );
+                }
+              } else {
+                Navigator.of(ctx).pop();
               }
-              Navigator.of(ctx).pop();
             },
             child: const Text('Save',
                 style: TextStyle(

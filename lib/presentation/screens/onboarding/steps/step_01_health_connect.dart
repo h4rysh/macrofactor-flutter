@@ -70,7 +70,7 @@ class _Step01HealthConnectState extends ConsumerState<Step01HealthConnect> {
                       ),
                       SizedBox(height: 4),
                       Text(
-                        'Sync smart scale body weights & Hevy workouts automatically in the background.',
+                        'Syncs automatically when you open Sique.',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppTheme.textSecondary,

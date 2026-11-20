@@ -2,29 +2,42 @@ import 'dart:developer' as developer;
 import 'package:sique/domain/models/food_models.dart';
 import 'package:sqlite3/common.dart';
 
-/// Data Access Object managing foods catalog, portion units, full-text search, and food logs.
+/// Data Access Object managing foods catalog, portion units, full-text search, and multi-tenant food logs.
 class FoodDao {
-  FoodDao(this._db) {
+  FoodDao(this._db,
+      {this.userId = 'default_user', String Function()? userIdProvider})
+      : _userIdProvider = userIdProvider {
     _ensureIndexes();
   }
 
   final CommonDatabase _db;
+  String userId;
+  String Function()? _userIdProvider;
 
-  /// Ensures SQLite index on portion_units(food_id) exists for high-speed portion queries (ISS-8-07).
+  set userIdProvider(String Function()? provider) => _userIdProvider = provider;
+
+  /// Active tenant user id for multi-tenant data scoping.
+  String get effectiveUserId =>
+      _userIdProvider != null ? _userIdProvider!() : userId;
+
+  /// Ensures SQLite indexes on portion_units and multi-tenant food_logs exist.
   void _ensureIndexes() {
     try {
       _db.execute(
         'CREATE INDEX IF NOT EXISTS idx_portion_units_food_id ON portion_units(food_id);',
       );
+      _db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_food_logs_user_date ON food_logs(user_id, date, logged_at);',
+      );
     } catch (_) {}
   }
 
   /// Sanitizes an input search string for SQLite FTS5 by stripping control operators
-  /// and enclosing each search term in double-quotes with wildcard prefix.
-  /// Prevents syntax error crashes with `"`, `*`, `-`, `NEAR`, `AND`, `OR`, `NOT`.
+  /// and enclosing each tokenized search term in double quotes, escaping internal quotes as `""`
+  /// to prevent FTS5 syntax crashes on boolean keywords (e.g. AND, OR, NOT) or malformed quotes.
   static String sanitizeFts5Query(String query) {
     final cleaned =
-        query.replaceAll(RegExp(r'''["*^~:(){}\[\]+\-?]'''), ' ').trim();
+        query.replaceAll(RegExp(r'''[*^~:(){}\[\]+\-?]'''), ' ').trim();
     if (cleaned.isEmpty) return '';
 
     final words =
@@ -32,7 +45,7 @@ class FoodDao {
     if (words.isEmpty) return '';
 
     return words.map((w) {
-      final safe = w.replaceAll('"', '');
+      final safe = w.replaceAll('"', '""');
       return '"$safe"*';
     }).join(' ');
   }
@@ -214,17 +227,19 @@ class FoodDao {
     }
   }
 
-  /// Logs a food entry.
-  int insertFoodLog(FoodLogEntry entry) {
+  /// Logs a food entry scoped to user_id.
+  int insertFoodLog(FoodLogEntry entry, {String? userId}) {
+    final uid = userId ?? effectiveUserId;
     final stmt = _db.prepare('''
       INSERT INTO food_logs (
-        date, meal_type, food_id, food_name, serving_quantity,
+        user_id, date, meal_type, food_id, food_name, serving_quantity,
         unit_name, gram_weight, calories, protein, carbs,
         fat, fiber, oil_modifier, logged_at, icon_svg
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     ''');
     try {
       stmt.execute([
+        uid,
         entry.date,
         entry.mealType.name,
         entry.foodId,
@@ -248,21 +263,23 @@ class FoodDao {
   }
 
   /// Restores a previously deleted food entry, preserving its original id,
-  /// date, and timestamp.
-  int restoreFoodLog(FoodLogEntry entry) {
+  /// date, and timestamp scoped to user_id.
+  int restoreFoodLog(FoodLogEntry entry, {String? userId}) {
+    final uid = userId ?? effectiveUserId;
     if (entry.id == null) {
-      return insertFoodLog(entry);
+      return insertFoodLog(entry, userId: uid);
     }
     final stmt = _db.prepare('''
       INSERT OR REPLACE INTO food_logs (
-        id, date, meal_type, food_id, food_name, serving_quantity,
+        id, user_id, date, meal_type, food_id, food_name, serving_quantity,
         unit_name, gram_weight, calories, protein, carbs,
         fat, fiber, oil_modifier, logged_at, icon_svg
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     ''');
     try {
       stmt.execute([
         entry.id,
+        uid,
         entry.date,
         entry.mealType.name,
         entry.foodId,
@@ -285,13 +302,14 @@ class FoodDao {
     }
   }
 
-  /// Retrieves all logged food items for a date (YYYY-MM-DD).
-  List<FoodLogEntry> getFoodLogsForDate(String date) {
+  /// Retrieves all logged food items for a date (YYYY-MM-DD) scoped to user_id.
+  List<FoodLogEntry> getFoodLogsForDate(String date, {String? userId}) {
+    final uid = userId ?? effectiveUserId;
     final stmt = _db.prepare('''
-      SELECT * FROM food_logs WHERE date = ? ORDER BY logged_at ASC, id ASC;
+      SELECT * FROM food_logs WHERE user_id = ? AND date = ? ORDER BY logged_at ASC, id ASC;
     ''');
     try {
-      final result = stmt.select([date]);
+      final result = stmt.select([uid, date]);
       return result.map(_mapFoodLogEntryRow).toList();
     } finally {
       stmt.dispose();
@@ -299,22 +317,25 @@ class FoodDao {
   }
 
   /// Deletes a food log entry by id.
-  void deleteFoodLog(int id) {
-    final stmt = _db.prepare('DELETE FROM food_logs WHERE id = ?;');
+  void deleteFoodLog(int id, {String? userId}) {
+    final uid = userId ?? effectiveUserId;
+    final stmt =
+        _db.prepare('DELETE FROM food_logs WHERE id = ? AND user_id = ?;');
     try {
-      stmt.execute([id]);
+      stmt.execute([id, uid]);
     } finally {
       stmt.dispose();
     }
   }
 
-  /// Retrieves all logged food entries across all dates.
-  List<FoodLogEntry> getAllFoodLogs() {
+  /// Retrieves all logged food entries across all dates scoped to user_id.
+  List<FoodLogEntry> getAllFoodLogs({String? userId}) {
+    final uid = userId ?? effectiveUserId;
     final stmt = _db.prepare('''
-      SELECT * FROM food_logs ORDER BY date DESC, logged_at DESC;
+      SELECT * FROM food_logs WHERE user_id = ? ORDER BY date DESC, logged_at DESC;
     ''');
     try {
-      final result = stmt.select();
+      final result = stmt.select([uid]);
       return result.map(_mapFoodLogEntryRow).toList();
     } finally {
       stmt.dispose();
@@ -342,15 +363,17 @@ class FoodDao {
     }
   }
 
-  /// Returns total logged calories mapped by date string 'YYYY-MM-DD'.
-  Map<String, double> getDailyCalorieTotals() {
+  /// Returns total logged calories mapped by date string 'YYYY-MM-DD' scoped to user_id.
+  Map<String, double> getDailyCalorieTotals({String? userId}) {
+    final uid = userId ?? effectiveUserId;
     final stmt = _db.prepare('''
       SELECT date, SUM(calories) as total_cals
       FROM food_logs
+      WHERE user_id = ?
       GROUP BY date;
     ''');
     try {
-      final result = stmt.select();
+      final result = stmt.select([uid]);
       final map = <String, double>{};
       for (final row in result) {
         map[row['date'] as String] = (row['total_cals'] as num).toDouble();

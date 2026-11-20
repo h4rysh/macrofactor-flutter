@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:sique/domain/legal/legal_copy.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/auth_legal_footer.dart';
 
-/// Screen displaying app provenance, clean-room methodology, dataset citations, and architecture notes.
+/// Screen displaying app provenance, metabolic science, dataset citations, and architecture notes.
 class AboutScreen extends StatelessWidget {
   const AboutScreen({super.key});
 
@@ -26,9 +27,9 @@ class AboutScreen extends StatelessWidget {
           _buildPillarTile(
             icon: Icons.biotech_rounded,
             color: AppTheme.activeBlue,
-            title: 'Clean-Room Architecture',
+            title: 'Bayesian Adaptive Science',
             description:
-                'Engineered from scratch using behavioral black-box reverse engineering of athletic macro tracker interfaces. All math algorithms, StateNotifier graphs, and database schemas were built cleanly without proprietary source code.',
+                'Engineered from first-principles metabolic mathematics and recursive Bayesian expenditure estimation. Caloric targets adapt dynamically to body mass standard deviations without proprietary heuristics.',
           ),
           const SizedBox(height: 12),
           _buildPillarTile(
@@ -79,7 +80,7 @@ class AboutScreen extends StatelessWidget {
             leading: const Icon(Icons.health_and_safety_outlined,
                 color: AppTheme.activeBlue),
             title: const Text(
-              'Medical Disclaimer',
+              LegalCopy.medicalDisclaimerTitle,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -87,7 +88,7 @@ class AboutScreen extends StatelessWidget {
               ),
             ),
             subtitle: const Text(
-              'Safety notices, fitness guidelines & liability',
+              LegalCopy.medicalDisclaimerSubtitle,
               style: TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondary,
@@ -103,7 +104,7 @@ class AboutScreen extends StatelessWidget {
             leading: const Icon(Icons.privacy_tip_outlined,
                 color: AppTheme.activeBlue),
             title: const Text(
-              'Privacy Policy',
+              LegalCopy.privacyPolicyTitle,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -111,7 +112,7 @@ class AboutScreen extends StatelessWidget {
               ),
             ),
             subtitle: const Text(
-              'Local-first storage, authentication & encryption',
+              LegalCopy.privacyPolicySubtitle,
               style: TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondary,

@@ -168,11 +168,18 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
   }
 
   Widget _buildOilModifierCard() {
+    final profile = ref.watch(userProfileProvider);
+    final isVegan = profile.dietType.toLowerCase() == 'vegan';
+
     final modifiers = [
       'Zero Oil (Raw / Boiled / Steamed)',
       'Low Oil (1 tsp, ~40 kcal)',
-      'Standard (1 tbsp oil/ghee, ~120 kcal)',
-      'Extra Ghee / Restaurant Style (2 tbsp, ~240 kcal)',
+      isVegan
+          ? 'Standard (1 tbsp oil, ~120 kcal)'
+          : 'Standard (1 tbsp oil/ghee, ~120 kcal)',
+      isVegan
+          ? 'Extra Oil / Restaurant Style (2 tbsp, ~240 kcal)'
+          : 'Extra Ghee / Restaurant Style (2 tbsp, ~240 kcal)',
     ];
 
     return Container(
@@ -202,16 +209,22 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
             ],
           ),
           const SizedBox(height: 6),
-          const Text(
-            'In Indian cooking, hidden preparation fat (tadka, ghee) is the #1 source of calorie estimation error. This sets your default presumption.',
-            style: TextStyle(
+          Text(
+            'In Indian cooking, hidden preparation fat (tadka, ${isVegan ? "oil" : "ghee"}) is the #1 source of calorie estimation error. This sets your default presumption.',
+            style: const TextStyle(
               fontSize: 12,
               color: AppTheme.textSecondary,
             ),
           ),
           const SizedBox(height: 14),
           ...modifiers.map((mod) {
-            final isSelected = _defaultOilModifier == mod;
+            final isSelected = _defaultOilModifier == mod ||
+                (isVegan &&
+                    mod.startsWith('Standard') &&
+                    _defaultOilModifier.startsWith('Standard')) ||
+                (isVegan &&
+                    mod.startsWith('Extra') &&
+                    _defaultOilModifier.startsWith('Extra'));
             return InkWell(
               onTap: () => _updateSetting(
                 'default_oil_modifier',

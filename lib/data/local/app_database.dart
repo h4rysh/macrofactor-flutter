@@ -29,6 +29,17 @@ export 'dao/workout_dao.dart';
 export 'database_migrations.dart';
 export 'database_schema.dart';
 
+/// Exception thrown when [AppDatabase.open] fails to initialize or open persistent storage.
+class DatabaseOpenException implements Exception {
+  const DatabaseOpenException(this.message, [this.cause]);
+  final String message;
+  final Object? cause;
+
+  @override
+  String toString() =>
+      'DatabaseOpenException: $message${cause != null ? ' (Cause: $cause)' : ''}';
+}
+
 /// Local high-performance SQLite database facade delegating to specialized DAOs.
 class AppDatabase {
   AppDatabase(this._db, {bool isInMemory = false})
@@ -38,6 +49,7 @@ class AppDatabase {
         workoutDao = WorkoutDao(_db),
         expenditureDao = ExpenditureDao(_db),
         settingsDao = SettingsDao(_db) {
+    _wireDaoUserIds();
     DatabaseMigrations.initializeAndMigrate(_db, isInMemory: isInMemory);
     _initializeFtsAndTriggers();
     _initializeIndexes();
@@ -54,11 +66,17 @@ class AppDatabase {
 
   String _currentUserId = 'default_user';
 
-  /// Active user tenant identifier (ISS-6-03).
+  /// Active user tenant identifier (ISS-6-03, AUD-12).
   String get currentUserId => _currentUserId;
   set currentUserId(String value) {
     if (value.trim().isNotEmpty) {
       _currentUserId = value.trim();
+      foodDao.userId = _currentUserId;
+      weightDao.userId = _currentUserId;
+      settingsDao.userId = _currentUserId;
+      expenditureDao.userId = _currentUserId;
+      workoutDao.userId = _currentUserId;
+      profileDao.userId = _currentUserId;
     }
   }
 
@@ -68,8 +86,18 @@ class AppDatabase {
   /// Underlying raw sqlite3 database handle for low-level or test operations.
   Database get rawDb => _db;
 
+  void _wireDaoUserIds() {
+    foodDao.userIdProvider = () => _currentUserId;
+    weightDao.userIdProvider = () => _currentUserId;
+    settingsDao.userIdProvider = () => _currentUserId;
+    expenditureDao.userIdProvider = () => _currentUserId;
+    workoutDao.userIdProvider = () => _currentUserId;
+    profileDao.userIdProvider = () => _currentUserId;
+  }
+
   /// Legacy initializer - retained for compatibility.
   void initUserTables() {
+    _wireDaoUserIds();
     DatabaseMigrations.initializeAndMigrate(_db, isInMemory: true);
     _initializeFtsAndTriggers();
     _initializeIndexes();
@@ -139,9 +167,12 @@ class AppDatabase {
       _db.execute(
         'CREATE INDEX IF NOT EXISTS idx_portion_units_food_id ON portion_units(food_id);',
       );
+      _db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_food_logs_user_date ON food_logs(user_id, date, logged_at);',
+      );
     } catch (e, st) {
       developer.log(
-        'Failed to create idx_portion_units_food_id',
+        'Failed to create indexes in _initializeIndexes',
         name: 'AppDatabase',
         error: e,
         stackTrace: st,
@@ -149,7 +180,7 @@ class AppDatabase {
     }
   }
 
-  /// Ensures multi-tenancy user_id column and indices exist across user entity tables (ISS-6-03).
+  /// Ensures multi-tenancy user_id column and indices exist across user entity tables (ISS-6-03, AUD-12).
   void _ensureMultiTenancySupport() {
     final tables = [
       'food_logs',
@@ -158,6 +189,7 @@ class AppDatabase {
       'expenditure_history',
       'day_completions',
       'coaching_check_ins',
+      'user_profile',
     ];
 
     for (final table in tables) {
@@ -218,19 +250,23 @@ class AppDatabase {
 
   void insertPortionUnit(PortionUnit unit) => foodDao.insertPortionUnit(unit);
 
-  int insertFoodLog(FoodLogEntry entry) => foodDao.insertFoodLog(entry);
+  int insertFoodLog(FoodLogEntry entry) =>
+      foodDao.insertFoodLog(entry, userId: _currentUserId);
 
-  int restoreFoodLog(FoodLogEntry entry) => foodDao.restoreFoodLog(entry);
+  int restoreFoodLog(FoodLogEntry entry) =>
+      foodDao.restoreFoodLog(entry, userId: _currentUserId);
 
   List<FoodLogEntry> getFoodLogsForDate(String date) =>
-      foodDao.getFoodLogsForDate(date);
+      foodDao.getFoodLogsForDate(date, userId: _currentUserId);
 
-  void deleteFoodLog(int id) => foodDao.deleteFoodLog(id);
+  void deleteFoodLog(int id) =>
+      foodDao.deleteFoodLog(id, userId: _currentUserId);
 
-  List<FoodLogEntry> getAllFoodLogs() => foodDao.getAllFoodLogs();
+  List<FoodLogEntry> getAllFoodLogs() =>
+      foodDao.getAllFoodLogs(userId: _currentUserId);
 
   Map<String, double> getDailyCalorieTotals() =>
-      foodDao.getDailyCalorieTotals();
+      foodDao.getDailyCalorieTotals(userId: _currentUserId);
 
   int getFoodCount() => foodDao.getFoodCount();
 
@@ -244,24 +280,31 @@ class AppDatabase {
     String? note, {
     String source = 'manual',
   }) =>
-      weightDao.insertWeightLog(date, scaleWeight, note, source: source);
+      weightDao.insertWeightLog(
+        date,
+        scaleWeight,
+        note,
+        source: source,
+        userId: _currentUserId,
+      );
 
   void insertScaleWeight(DateTime date, double weightKg, [String? note]) =>
-      weightDao.insertScaleWeight(date, weightKg, note);
+      weightDao.insertScaleWeight(date, weightKg, note, _currentUserId);
 
   List<ScaleWeightEntry> getScaleWeights(String startDate, String endDate) =>
-      weightDao.getScaleWeights(startDate, endDate);
+      weightDao.getScaleWeights(startDate, endDate, userId: _currentUserId);
 
-  List<ScaleWeightEntry> getAllWeightLogs() => weightDao.getAllWeightLogs();
+  List<ScaleWeightEntry> getAllWeightLogs() =>
+      weightDao.getAllWeightLogs(userId: _currentUserId);
 
   ScaleWeightEntry? getWeightLogForDate(String date) =>
-      weightDao.getWeightLogForDate(date);
+      weightDao.getWeightLogForDate(date, userId: _currentUserId);
 
   List<ScaleWeightEntry> getWeightEntries({int limit = 90}) =>
-      weightDao.getWeightEntries(limit: limit);
+      weightDao.getWeightEntries(limit: limit, userId: _currentUserId);
 
   void deleteWeightLogForDate(String date) =>
-      weightDao.deleteWeightLogForDate(date);
+      weightDao.deleteWeightLogForDate(date, userId: _currentUserId);
 
   // ==========================================
   // User Profile & Preferences Forwarding Methods
@@ -273,12 +316,13 @@ class AppDatabase {
   UserProfile? getUserProfile() => profileDao.getUserProfile();
 
   String getSetting(String key, String defaultValue) =>
-      settingsDao.getSetting(key, defaultValue);
+      settingsDao.getSetting(key, defaultValue, userId: _currentUserId);
 
   void setSetting(String key, String value) =>
-      settingsDao.setSetting(key, value);
+      settingsDao.setSetting(key, value, userId: _currentUserId);
 
-  Map<String, String> getAllSettings() => settingsDao.getAllSettings();
+  Map<String, String> getAllSettings() =>
+      settingsDao.getAllSettings(userId: _currentUserId);
 
   void saveAccountSession(UserAccount session) =>
       profileDao.saveAccountSession(session);
@@ -294,16 +338,17 @@ class AppDatabase {
   // ==========================================
 
   void insertWorkoutSessions(List<WorkoutSession> sessions) =>
-      workoutDao.insertWorkoutSessions(sessions);
+      workoutDao.insertWorkoutSessions(sessions, userId: _currentUserId);
 
   List<WorkoutSession> getAllWorkoutSessions() =>
-      workoutDao.getAllWorkoutSessions();
+      workoutDao.getAllWorkoutSessions(userId: _currentUserId);
 
   List<WorkoutSession> getWorkoutSessionsInRange(
           DateTime start, DateTime end) =>
-      workoutDao.getWorkoutSessionsInRange(start, end);
+      workoutDao.getWorkoutSessionsInRange(start, end, userId: _currentUserId);
 
-  void deleteWorkoutSession(dynamic id) => workoutDao.deleteWorkoutSession(id);
+  void deleteWorkoutSession(dynamic id) =>
+      workoutDao.deleteWorkoutSession(id, userId: _currentUserId);
 
   /// Closes and disposes the database handle.
   void close() {
@@ -333,27 +378,49 @@ class AppDatabase {
   }
 
   /// Opens the application database, bundling foods_master.db if first launch.
-  static Future<AppDatabase> open() async {
-    final docsDir = await getApplicationDocumentsDirectory();
-    final dbPath = p.join(docsDir.path, 'sique_local.db');
-    final file = File(dbPath);
-
-    if (!await file.exists()) {
-      // Check legacy path first for seamless user data retention
-      final legacyPath = p.join(docsDir.path, 'legacy_local.db');
-      final legacyFile = File(legacyPath);
-      if (await legacyFile.exists()) {
-        await legacyFile.copy(dbPath);
+  /// Explicitly throws [DatabaseOpenException] on failure so callers know if open failed
+  /// rather than silently falling back to an in-memory database.
+  static Future<AppDatabase> open({String? customPath}) async {
+    try {
+      final String dbPath;
+      if (customPath != null) {
+        dbPath = customPath;
       } else {
-        final data = await rootBundle.load('assets/database/foods_master.db');
-        final bytes =
-            data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-        await file.writeAsBytes(bytes, flush: true);
+        final docsDir = await getApplicationDocumentsDirectory();
+        dbPath = p.join(docsDir.path, 'sique_local.db');
       }
-    }
+      final file = File(dbPath);
 
-    final rawDb = sqlite3.open(dbPath);
-    final appDb = AppDatabase(rawDb);
-    return appDb;
+      if (!await file.exists()) {
+        final parentDir = file.parent;
+        if (!await parentDir.exists()) {
+          await parentDir.create(recursive: true);
+        }
+
+        // Check legacy path first for seamless user data retention
+        final legacyPath = p.join(file.parent.path, 'legacy_local.db');
+        final legacyFile = File(legacyPath);
+        if (await legacyFile.exists()) {
+          await legacyFile.copy(dbPath);
+        } else {
+          final data = await rootBundle.load('assets/database/foods_master.db');
+          final bytes =
+              data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+          await file.writeAsBytes(bytes, flush: true);
+        }
+      }
+
+      final rawDb = sqlite3.open(dbPath);
+      final appDb = AppDatabase(rawDb);
+      return appDb;
+    } catch (e, st) {
+      developer.log(
+        'AppDatabase.open failed to open persistent SQLite database; throwing explicitly',
+        name: 'AppDatabase',
+        error: e,
+        stackTrace: st,
+      );
+      throw DatabaseOpenException('Failed to open database: $e', e);
+    }
   }
 }

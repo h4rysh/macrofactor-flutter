@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -163,10 +164,10 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
         oilModifier: _selectedOil,
       );
 
-  double get _effectiveCalories => _nutrition.calories;
-  double get _effectiveProtein => _nutrition.protein;
-  double get _effectiveFat => _nutrition.fat;
-  double get _effectiveCarbs => _nutrition.carbs;
+  double get _effectiveCalories => math.max(0.0, _nutrition.calories);
+  double get _effectiveProtein => math.max(0.0, _nutrition.protein);
+  double get _effectiveFat => math.max(0.0, _nutrition.fat);
+  double get _effectiveCarbs => math.max(0.0, _nutrition.carbs);
 
   @override
   Widget build(BuildContext context) {

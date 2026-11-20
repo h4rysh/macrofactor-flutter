@@ -9,20 +9,20 @@ import 'package:sqlite3/sqlite3.dart';
 void main() {
   group('Database Migrations and Profile Column Schema Evolution', () {
     test(
-        'Fresh database migration ladder upgrades user_version to 2 with WAL and foreign keys',
+        'Fresh database migration ladder upgrades user_version to 3 with WAL and foreign keys',
         () {
       final rawDb = sqlite3.openInMemory();
       DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
 
-      // Verify user_version is 2
+      // Verify user_version is 3
       final versionResult = rawDb.select('PRAGMA user_version;');
-      expect(versionResult.first.values.first, equals(2));
+      expect(versionResult.first.values.first, equals(3));
 
       // Verify foreign_keys enabled
       final fkResult = rawDb.select('PRAGMA foreign_keys;');
       expect(fkResult.first.values.first, equals(1));
 
-      // Verify all 7 new columns exist in user_profile
+      // Verify all new columns exist in user_profile
       final tableInfo = rawDb.select("PRAGMA table_info('user_profile');");
       final columnNames = tableInfo.map((r) => r['name'] as String).toSet();
 
@@ -33,6 +33,8 @@ void main() {
       expect(columnNames.contains('body_fat_range'), isTrue);
       expect(columnNames.contains('weight_history_max'), isTrue);
       expect(columnNames.contains('distribution_mode'), isTrue);
+      expect(columnNames.contains('date_of_birth'), isTrue);
+      expect(columnNames.contains('user_id'), isTrue);
 
       rawDb.dispose();
     });
@@ -81,9 +83,9 @@ void main() {
       // Run migration
       DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
 
-      // Verify version upgraded to 2
+      // Verify version upgraded to 3
       final versionResult = rawDb.select('PRAGMA user_version;');
-      expect(versionResult.first.values.first, equals(2));
+      expect(versionResult.first.values.first, equals(3));
 
       final appDb = AppDatabase(rawDb, isInMemory: true);
       final profile = appDb.getUserProfile();
@@ -238,35 +240,35 @@ void main() {
       final rawDb = sqlite3.openInMemory();
       DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
 
-      // Current user_version is 2
+      // Current user_version is 3
       final initialVersion =
           rawDb.select('PRAGMA user_version;').first.values.first;
-      expect(initialVersion, equals(2));
+      expect(initialVersion, equals(3));
 
-      // Attempt a failing migration step to version 3
+      // Attempt a failing migration step to version 4
       expect(
-        () => DatabaseMigrations.runStepForTest(rawDb, 3, (db) {
-          db.execute('CREATE TABLE step3_rollback_table (id INT);');
+        () => DatabaseMigrations.runStepForTest(rawDb, 4, (db) {
+          db.execute('CREATE TABLE step4_rollback_table (id INT);');
           throw Exception('Simulated migration crash');
         }),
         throwsA(isA<Exception>()),
       );
 
-      // Verify user_version remained 2
+      // Verify user_version remained 3
       final postFailureVersion =
           rawDb.select('PRAGMA user_version;').first.values.first;
-      expect(postFailureVersion, equals(2));
+      expect(postFailureVersion, equals(3));
 
-      // Verify step3_rollback_table was rolled back and does not exist
+      // Verify step4_rollback_table was rolled back and does not exist
       final checkTable = rawDb.select(
-        "SELECT count(*) as cnt FROM sqlite_master WHERE type='table' AND name='step3_rollback_table';",
+        "SELECT count(*) as cnt FROM sqlite_master WHERE type='table' AND name='step4_rollback_table';",
       );
       expect(checkTable.first['cnt'], equals(0));
 
       rawDb.dispose();
     });
 
-    test('Isolated step-by-step v0 -> v1 -> v2 migration ladder', () {
+    test('Isolated step-by-step v0 -> v1 -> v2 -> v3 migration ladder', () {
       final rawDb = sqlite3.openInMemory();
 
       // Starts at v0
@@ -297,6 +299,23 @@ void main() {
       final tableInfoV2 = rawDb.select("PRAGMA table_info('user_profile');");
       final colsV2 = tableInfoV2.map((r) => r['name'] as String).toSet();
       expect(colsV2.contains('diet_type'), isTrue);
+
+      // Apply Step 3
+      DatabaseMigrations.applyStepForTest(rawDb, 3);
+      final v3 = rawDb.select('PRAGMA user_version;').first.values.first;
+      expect(v3, equals(3));
+
+      // Verify date_of_birth column exists in user_profile under v3
+      final tableInfoV3 = rawDb.select("PRAGMA table_info('user_profile');");
+      final colsV3 = tableInfoV3.map((r) => r['name'] as String).toSet();
+      expect(colsV3.contains('date_of_birth'), isTrue);
+
+      // Verify food_logs user_id column exists
+      final foodLogCols = rawDb
+          .select("PRAGMA table_info('food_logs');")
+          .map((r) => r['name'] as String)
+          .toSet();
+      expect(foodLogCols.contains('user_id'), isTrue);
 
       rawDb.dispose();
     });

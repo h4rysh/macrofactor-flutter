@@ -90,7 +90,7 @@ void main() {
     // Verify Quick Actions Sheet contents
     expect(find.text('Quick Actions'), findsOneWidget);
     expect(find.text('Search Food / Add to Plate'), findsOneWidget);
-    expect(find.text('Scan Barcode'), findsOneWidget);
+    expect(find.text('Scan Barcode'), findsNothing);
     expect(find.text('Log Scale Weight'), findsOneWidget);
     expect(find.textContaining('Quick Add Calories'), findsOneWidget);
   });

@@ -122,7 +122,7 @@ void main() {
 
     // Verify AuthGateScreen is displayed
     expect(find.byType(AuthGateScreen), findsOneWidget);
-    expect(find.text('Account & Cloud Sync'), findsOneWidget);
+    expect(find.text('Account & Device Data'), findsOneWidget);
 
     // Tap Continue as Guest
     await tester.tap(find.byKey(const Key('auth_gate_guest_btn')));
@@ -157,6 +157,6 @@ void main() {
 
     // Verify AuthGateScreen is open
     expect(find.byType(AuthGateScreen), findsOneWidget);
-    expect(find.text('Account & Cloud Sync'), findsOneWidget);
+    expect(find.text('Account & Device Data'), findsOneWidget);
   });
 }

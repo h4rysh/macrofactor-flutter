@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/domain/validation/domain_validator.dart';
 import 'package:sique/presentation/screens/onboarding/widgets/onboarding_step_scaffold.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
@@ -43,22 +44,23 @@ class _Step15TargetWeightState extends State<Step15TargetWeight> {
     super.dispose();
   }
 
-  double get _targetBmi {
-    final heightM = widget.heightCm / 100.0;
-    if (heightM <= 0) return 22.0;
-    return _targetWeightKg / (heightM * heightM);
-  }
+  double get _targetBmi =>
+      DomainValidator.calculateBmi(_targetWeightKg, widget.heightCm);
 
-  double get _minSafeWeightKg {
-    final heightM = widget.heightCm / 100.0;
-    return 18.5 * (heightM * heightM);
-  }
+  double get _minSafeWeightKg =>
+      DomainValidator.minSafeWeightKg(widget.heightCm);
 
   bool get _isBmiViolation =>
-      widget.goalType == GoalType.fatLoss && _targetBmi < 18.5;
+      widget.goalType == GoalType.fatLoss &&
+      DomainValidator.isUnderweightBmi(_targetWeightKg, widget.heightCm);
 
-  bool get _isValid =>
-      _targetWeightKg >= 30 && _targetWeightKg <= 350 && !_isBmiViolation;
+  ValidationResult get _validation => DomainValidator.validateTargetWeight(
+        targetWeightKg: _targetWeightKg,
+        heightCm: widget.heightCm,
+        goalType: widget.goalType,
+      );
+
+  bool get _isValid => _validation.isValid;
 
   @override
   Widget build(BuildContext context) {

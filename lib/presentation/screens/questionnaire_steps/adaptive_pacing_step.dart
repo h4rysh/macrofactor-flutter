@@ -23,6 +23,10 @@ class AdaptivePacingStep extends StatelessWidget {
     final isFatLoss = selectedGoal == GoalType.fatLoss;
     final isMuscleGain = selectedGoal == GoalType.muscleGain;
 
+    final safeWeight = currentWeightKg > 0 ? currentWeightKg : 70.0;
+    int calculateDailyKcalDelta(double ratePct) =>
+        (safeWeight * (ratePct.abs() / 100.0) * 7700 / 7).round();
+
     String heading;
     String description;
     List<Map<String, dynamic>> rateOptions;
@@ -30,24 +34,27 @@ class AdaptivePacingStep extends StatelessWidget {
     if (isFatLoss) {
       heading = 'Select Your Desired Pace';
       description = 'Select your desired pace of fat loss:';
+      final d50 = calculateDailyKcalDelta(-0.50);
+      final d75 = calculateDailyKcalDelta(-0.75);
+      final d100 = calculateDailyKcalDelta(-1.00);
       rateOptions = [
         {
           'rate': -0.50,
           'title': 'Conservative Loss',
-          'desc': 'Mild deficit (~250 kcal/day). Highest satiety and energy.',
+          'desc': 'Mild deficit (~$d50 kcal/day). Highest satiety and energy.',
           'badge': '-0.50%/wk',
         },
         {
           'rate': -0.75,
           'title': 'Recommended Standard',
           'desc':
-              'Optimal pace (~500 kcal deficit). Preserves lean muscle mass.',
+              'Optimal pace (~$d75 kcal deficit). Preserves lean muscle mass.',
           'badge': '-0.75%/wk',
         },
         {
           'rate': -1.00,
           'title': 'Aggressive Deficit',
-          'desc': 'Steeper deficit (~750 kcal). Fast results for short cuts.',
+          'desc': 'Steeper deficit (~$d100 kcal). Fast results for short cuts.',
           'badge': '-1.00%/wk',
         },
       ];
@@ -55,25 +62,29 @@ class AdaptivePacingStep extends StatelessWidget {
       heading = 'Select Your Hypertrophy Rate';
       description =
           'A controlled surplus maximizes muscle accretion while minimizing unwanted fat storage.';
+      final s25 = calculateDailyKcalDelta(0.25);
+      final s50 = calculateDailyKcalDelta(0.50);
+      final s75 = calculateDailyKcalDelta(0.75);
       rateOptions = [
         {
           'rate': 0.25,
           'title': 'Lean Bulk (Conservative)',
-          'desc': 'Minimal fat gain (~190 kcal surplus). Best for lean builds.',
+          'desc':
+              'Minimal fat gain (~$s25 kcal surplus). Best for lean builds.',
           'badge': '+0.25%/wk',
         },
         {
           'rate': 0.50,
           'title': 'Standard Muscle Gain',
           'desc':
-              'Optimal muscle growth (~380 kcal surplus). Balanced accretion.',
+              'Optimal muscle growth (~$s50 kcal surplus). Balanced accretion.',
           'badge': '+0.50%/wk',
         },
         {
           'rate': 0.75,
           'title': 'Hypertrophy Surplus',
           'desc':
-              'Maximum strength support (~570 kcal surplus). High volume training.',
+              'Maximum strength support (~$s75 kcal surplus). High volume training.',
           'badge': '+0.75%/wk',
         },
       ];

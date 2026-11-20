@@ -2,37 +2,129 @@ import 'dart:developer' as developer;
 import 'package:sique/domain/models/workout_session.dart';
 import 'package:sqlite3/common.dart';
 
-/// Data Access Object managing workout sessions and training telemetry.
+/// Data Access Object managing workout sessions, training telemetry, and deterministic deduplication.
 class WorkoutDao {
-  WorkoutDao(this._db);
+  WorkoutDao(this._db,
+      {this.userId = 'default_user', String Function()? userIdProvider})
+      : _userIdProvider = userIdProvider;
 
   final CommonDatabase _db;
+  String userId;
+  String Function()? _userIdProvider;
 
-  /// Inserts or updates a list of workout sessions within an atomic transaction.
+  set userIdProvider(String Function()? provider) => _userIdProvider = provider;
+
+  /// Active tenant user id for multi-tenant data scoping.
+  String get effectiveUserId =>
+      _userIdProvider != null ? _userIdProvider!() : userId;
+
+  /// Generates a deterministic workout UUID/ID from source, timestamps, and title.
+  static String deterministicWorkoutId({
+    required String source,
+    required DateTime startTime,
+    required DateTime endTime,
+    String title = '',
+  }) {
+    final s = source.trim().toLowerCase();
+    final startMs = startTime.toUtc().millisecondsSinceEpoch;
+    final endMs = endTime.toUtc().millisecondsSinceEpoch;
+    final t = title.trim().toLowerCase().replaceAll(RegExp(r'\s+'), '_');
+    return 'workout_${s}_${startMs}_${endMs}_$t';
+  }
+
+  /// Inserts or updates a list of workout sessions with deduplication on workout_uuid / deterministic ID.
   /// Enforces try/finally statement disposal and comprehensive rollback safety (ISS-8-04, ISS-8-05).
-  void insertWorkoutSessions(List<WorkoutSession> sessions) {
+  void insertWorkoutSessions(List<WorkoutSession> sessions, {String? userId}) {
     if (sessions.isEmpty) return;
-    final stmt = _db.prepare(
-      'INSERT INTO workout_sessions (id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at) '
-      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) '
-      'ON CONFLICT(id) DO UPDATE SET source = excluded.source, title = excluded.title, start_time = excluded.start_time, end_time = excluded.end_time, duration_minutes = excluded.duration_minutes, calories_burned = excluded.calories_burned, notes = excluded.notes;',
-    );
+    final uid = userId ?? effectiveUserId;
+    final hasUserCol = _hasUserColumn();
+
+    // 1. In-batch deduplication and deterministic ID mapping
+    final Map<String, WorkoutSession> deduplicatedBatch = {};
+    for (final session in sessions) {
+      final resolvedId =
+          session.id.trim().isNotEmpty && !session.id.startsWith('temp_')
+              ? session.id.trim()
+              : deterministicWorkoutId(
+                  source: session.source,
+                  startTime: session.startTime,
+                  endTime: session.endTime,
+                  title: session.title,
+                );
+
+      final normalized = session.id == resolvedId
+          ? session
+          : WorkoutSession(
+              id: resolvedId,
+              source: session.source,
+              title: session.title,
+              startTime: session.startTime,
+              endTime: session.endTime,
+              durationMinutes: session.durationMinutes,
+              caloriesBurned: session.caloriesBurned,
+              notes: session.notes,
+              createdAt: session.createdAt,
+            );
+
+      deduplicatedBatch[resolvedId] = normalized;
+    }
+
+    final stmt = hasUserCol ? _db.prepare('''
+            INSERT INTO workout_sessions (
+              id, user_id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              source = excluded.source,
+              title = excluded.title,
+              start_time = excluded.start_time,
+              end_time = excluded.end_time,
+              duration_minutes = excluded.duration_minutes,
+              calories_burned = excluded.calories_burned,
+              notes = excluded.notes;
+          ''') : _db.prepare('''
+            INSERT INTO workout_sessions (
+              id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              source = excluded.source,
+              title = excluded.title,
+              start_time = excluded.start_time,
+              end_time = excluded.end_time,
+              duration_minutes = excluded.duration_minutes,
+              calories_burned = excluded.calories_burned,
+              notes = excluded.notes;
+          ''');
 
     try {
       _db.execute('BEGIN TRANSACTION;');
       try {
-        for (final session in sessions) {
-          stmt.execute([
-            session.id,
-            session.source,
-            session.title,
-            session.startTime.toIso8601String(),
-            session.endTime.toIso8601String(),
-            session.durationMinutes,
-            session.caloriesBurned,
-            session.notes,
-            session.createdAt.toIso8601String(),
-          ]);
+        for (final session in deduplicatedBatch.values) {
+          if (hasUserCol) {
+            stmt.execute([
+              session.id,
+              uid,
+              session.source,
+              session.title,
+              session.startTime.toIso8601String(),
+              session.endTime.toIso8601String(),
+              session.durationMinutes,
+              session.caloriesBurned,
+              session.notes,
+              session.createdAt.toIso8601String(),
+            ]);
+          } else {
+            stmt.execute([
+              session.id,
+              session.source,
+              session.title,
+              session.startTime.toIso8601String(),
+              session.endTime.toIso8601String(),
+              session.durationMinutes,
+              session.caloriesBurned,
+              session.notes,
+              session.createdAt.toIso8601String(),
+            ]);
+          }
         }
         _db.execute('COMMIT;');
       } catch (e, st) {
@@ -60,12 +152,22 @@ class WorkoutDao {
   }
 
   /// Retrieves all workout sessions ordered chronologically descending (newest first).
-  List<WorkoutSession> getAllWorkoutSessions() {
-    final stmt = _db.prepare(
-      'SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at FROM workout_sessions ORDER BY start_time DESC;',
-    );
+  List<WorkoutSession> getAllWorkoutSessions({String? userId}) {
+    final uid = userId ?? effectiveUserId;
+    final hasUserCol = _hasUserColumn();
+
+    final stmt = hasUserCol ? _db.prepare('''
+            SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
+            FROM workout_sessions
+            WHERE user_id = ?
+            ORDER BY start_time DESC;
+          ''') : _db.prepare('''
+            SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
+            FROM workout_sessions
+            ORDER BY start_time DESC;
+          ''');
     try {
-      final result = stmt.select();
+      final result = hasUserCol ? stmt.select([uid]) : stmt.select();
       return result.map(_mapWorkoutSessionRow).toList();
     } finally {
       stmt.dispose();
@@ -73,13 +175,26 @@ class WorkoutDao {
   }
 
   /// Retrieves workout sessions whose start_time is between [start] and [end] (inclusive).
-  List<WorkoutSession> getWorkoutSessionsInRange(DateTime start, DateTime end) {
-    final stmt = _db.prepare(
-      'SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at FROM workout_sessions WHERE start_time >= ? AND start_time <= ? ORDER BY start_time DESC;',
-    );
+  List<WorkoutSession> getWorkoutSessionsInRange(DateTime start, DateTime end,
+      {String? userId}) {
+    final uid = userId ?? effectiveUserId;
+    final hasUserCol = _hasUserColumn();
+
+    final stmt = hasUserCol ? _db.prepare('''
+            SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
+            FROM workout_sessions
+            WHERE user_id = ? AND start_time >= ? AND start_time <= ?
+            ORDER BY start_time DESC;
+          ''') : _db.prepare('''
+            SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
+            FROM workout_sessions
+            WHERE start_time >= ? AND start_time <= ?
+            ORDER BY start_time DESC;
+          ''');
     try {
-      final result =
-          stmt.select([start.toIso8601String(), end.toIso8601String()]);
+      final result = hasUserCol
+          ? stmt.select([uid, start.toIso8601String(), end.toIso8601String()])
+          : stmt.select([start.toIso8601String(), end.toIso8601String()]);
       return result.map(_mapWorkoutSessionRow).toList();
     } finally {
       stmt.dispose();
@@ -87,12 +202,31 @@ class WorkoutDao {
   }
 
   /// Deletes a workout session by its identifier.
-  void deleteWorkoutSession(dynamic id) {
-    final stmt = _db.prepare('DELETE FROM workout_sessions WHERE id = ?;');
+  void deleteWorkoutSession(dynamic id, {String? userId}) {
+    final uid = userId ?? effectiveUserId;
+    final hasUserCol = _hasUserColumn();
+
+    final stmt = hasUserCol
+        ? _db.prepare(
+            'DELETE FROM workout_sessions WHERE id = ? AND user_id = ?;')
+        : _db.prepare('DELETE FROM workout_sessions WHERE id = ?;');
     try {
-      stmt.execute([id.toString()]);
+      if (hasUserCol) {
+        stmt.execute([id.toString(), uid]);
+      } else {
+        stmt.execute([id.toString()]);
+      }
     } finally {
       stmt.dispose();
+    }
+  }
+
+  bool _hasUserColumn() {
+    try {
+      final rows = _db.select("PRAGMA table_info('workout_sessions');");
+      return rows.any((r) => (r['name'] as String).toLowerCase() == 'user_id');
+    } catch (_) {
+      return false;
     }
   }
 

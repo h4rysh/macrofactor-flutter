@@ -36,9 +36,15 @@ class IndianDietaryStep extends StatelessWidget {
       {'title': 'Rice & Katori Dominant', 'slug': 'rice'},
     ];
 
-    const oilHabits = [
+    final isVegan = dietSlug == 'vegan';
+
+    final oilHabits = [
       {'title': 'Light spray (~0.5 tbsp)', 'slug': 'light'},
-      {'title': 'Standard (1 tbsp oil/ghee)', 'slug': 'standard'},
+      {
+        'title':
+            isVegan ? 'Standard (1 tbsp oil)' : 'Standard (1 tbsp oil/ghee)',
+        'slug': 'standard'
+      },
       {'title': 'Generous (2 tbsp restaurant/heavy tadka)', 'slug': 'generous'},
     ];
 
@@ -122,9 +128,11 @@ class IndianDietaryStep extends StatelessWidget {
         const SizedBox(height: 16),
 
         // Section C: Cooking Oil Habit
-        const Text(
-          'TYPICAL COOKING OIL / GHEE HABIT',
-          style: TextStyle(
+        Text(
+          isVegan
+              ? 'TYPICAL COOKING OIL HABIT'
+              : 'TYPICAL COOKING OIL / GHEE HABIT',
+          style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w800,
             color: AppTheme.textMuted,

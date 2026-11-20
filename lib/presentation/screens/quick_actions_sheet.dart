@@ -71,21 +71,6 @@ class QuickActionsSheet extends StatelessWidget {
                     ),
                     _buildTile(
                       context: context,
-                      icon: Icons.qr_code_scanner_rounded,
-                      title: 'Scan Barcode',
-                      color: AppTheme.carbs,
-                      onTap: () {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Barcode scanner active'),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                    ),
-                    _buildTile(
-                      context: context,
                       icon: Icons.monitor_weight_outlined,
                       title: 'Log Scale Weight',
                       color: AppTheme.trendWeight,

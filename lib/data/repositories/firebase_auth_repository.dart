@@ -59,6 +59,9 @@ class FirebaseAuthRepository implements AuthRepository {
     if (!isConfigured) {
       throw StateError('Sign-in unavailable: Firebase not configured');
     }
+    if (password.length < 8) {
+      throw ArgumentError('Password must be at least 8 characters');
+    }
 
     final now = DateTime.now();
     final user = UserAccount(
@@ -86,6 +89,9 @@ class FirebaseAuthRepository implements AuthRepository {
   }) async {
     if (!isConfigured) {
       throw StateError('Sign-in unavailable: Firebase not configured');
+    }
+    if (password.length < 8) {
+      throw ArgumentError('Password must be at least 8 characters');
     }
 
     final now = DateTime.now();
@@ -159,6 +165,9 @@ class FirebaseAuthRepository implements AuthRepository {
     if (_currentCachedUser!.authProvider != AuthProviderType.email) {
       throw UnsupportedError(
           'Change password is only supported for email accounts.');
+    }
+    if (newPassword.length < 8) {
+      throw ArgumentError('Password must be at least 8 characters');
     }
   }
 

@@ -242,9 +242,8 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     double floorCalories;
     if (_calorieFloorType == 'aggressive') {
       floorCalories = _isMale ? 1300.0 : 1000.0;
-    } else if (_calorieFloorType == 'disabled') {
-      floorCalories = 800.0;
     } else {
+      // Coached programs lock minimum clinical floor to 1200 kcal F / 1500 kcal M (AUD-05)
       floorCalories = _isMale ? 1500.0 : 1200.0;
     }
 
@@ -508,7 +507,9 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
           // Step 19: Calorie Floor
           Step19CalorieFloor(
             isMale: _isMale,
-            initialFloorType: _calorieFloorType,
+            initialFloorType: _calorieFloorType == 'disabled'
+                ? 'standard'
+                : _calorieFloorType,
             onNext: (floor) {
               _calorieFloorType = floor;
               _nextStep();

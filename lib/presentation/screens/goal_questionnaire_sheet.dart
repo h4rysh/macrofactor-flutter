@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/user_profile.dart';
+import '../../domain/validation/domain_validator.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/apple_sheet_grabber.dart';
@@ -132,9 +133,12 @@ class _GoalQuestionnaireSheetState
     final currentProfile = ref.read(userProfileProvider);
     final db = ref.read(databaseProvider);
 
+    final safeRate =
+        DomainValidator.clampRateOfChange(_weeklyRate, _selectedGoal);
+
     final updatedProfile = currentProfile.copyWith(
       goalType: _selectedGoal,
-      weeklyRateOfChangePct: _weeklyRate,
+      weeklyRateOfChangePct: safeRate,
       proteinPreference: _proteinPref,
       baselineExpenditureKcal: _baselineExpenditure,
       clearCustom: true,
@@ -361,7 +365,9 @@ class _GoalQuestionnaireSheetState
           weeklyRate: _weeklyRate,
           currentWeightKg: profile.currentWeightKg,
           onRateSelected: (rate) {
-            setState(() => _weeklyRate = rate);
+            final safeRate =
+                DomainValidator.clampRateOfChange(rate, _selectedGoal);
+            setState(() => _weeklyRate = safeRate);
           },
         );
       case 2:

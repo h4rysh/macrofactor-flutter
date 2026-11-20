@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sique/domain/legal/legal_copy.dart';
 import 'package:sique/presentation/screens/onboarding/widgets/onboarding_step_scaffold.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
@@ -20,9 +21,8 @@ class _Step23MedicalDisclaimerState extends State<Step23MedicalDisclaimer> {
   @override
   Widget build(BuildContext context) {
     return OnboardingStepScaffold(
-      title: 'Health & Safety Notice',
-      subtitle:
-          'Please review and acknowledge Sique\'s clinical disclaimer before activating your program.',
+      title: LegalCopy.onboardingNoticeTitle,
+      subtitle: LegalCopy.onboardingNoticeSubtitle,
       icon: Icons.health_and_safety_rounded,
       continueKey: const Key('step_23_continue_btn'),
       isContinueEnabled: _hasAcknowledged,
@@ -45,7 +45,7 @@ class _Step23MedicalDisclaimerState extends State<Step23MedicalDisclaimer> {
                         size: 20, color: AppTheme.activeBlue),
                     SizedBox(width: 10),
                     Text(
-                      'Medical Disclaimer',
+                      LegalCopy.medicalDisclaimerTitle,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
@@ -56,12 +56,7 @@ class _Step23MedicalDisclaimerState extends State<Step23MedicalDisclaimer> {
                 ),
                 SizedBox(height: 12),
                 Text(
-                  '1. Not Medical Advice:\n'
-                  'Sique is an automated algorithmic tracking and nutritional estimation tool. It does not provide medical diagnosis, treatment, or clinical nutrition therapy.\n\n'
-                  '2. Physician Consultation:\n'
-                  'Always consult a qualified healthcare physician or registered clinical dietitian before starting an intensive dietary deficit, surplus, or high-volume resistance training regimen.\n\n'
-                  '3. Personal Health Responsibility:\n'
-                  'If you experience faintness, dizzy spells, severe fatigue, or gastrointestinal distress, discontinue the program and seek immediate medical evaluation.',
+                  LegalCopy.onboardingDisclaimerBody,
                   style: TextStyle(
                     fontSize: 12,
                     color: AppTheme.textSecondary,
@@ -96,7 +91,7 @@ class _Step23MedicalDisclaimerState extends State<Step23MedicalDisclaimer> {
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
-                    'I have read, understood, and agree to the Health & Medical Disclaimer.',
+                    LegalCopy.onboardingDisclaimerAgreement,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,

@@ -26,7 +26,10 @@ class _Step19CalorieFloorState extends State<Step19CalorieFloor> {
   @override
   void initState() {
     super.initState();
-    _floorType = widget.initialFloorType;
+    // Clinical guardrail: 'disabled' is locked out in coached programs
+    _floorType = widget.initialFloorType == 'disabled'
+        ? 'standard'
+        : widget.initialFloorType;
   }
 
   @override
@@ -59,15 +62,6 @@ class _Step19CalorieFloorState extends State<Step19CalorieFloor> {
                 'Designed for shorter athletes or rapid pre-contest weight cuts under qualified supervision.',
             isSelected: _floorType == 'aggressive',
             onTap: () => setState(() => _floorType = 'aggressive'),
-          ),
-          const SizedBox(height: 12),
-          _FloorCard(
-            key: const Key('step_19_floor_disabled'),
-            title: 'No Lower Bound (Uncapped)',
-            desc:
-                'Algorithm tracks pure thermodynamics without artificial lower intervention clamp.',
-            isSelected: _floorType == 'disabled',
-            onTap: () => setState(() => _floorType = 'disabled'),
           ),
         ],
       ),

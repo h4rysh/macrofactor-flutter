@@ -6,122 +6,236 @@ import 'package:sqlite3/common.dart';
 
 /// Data Access Object managing user profile, account session, and app preferences.
 class ProfileDao {
-  ProfileDao(this._db);
+  ProfileDao(this._db,
+      {this.userId = 'default_user', String Function()? userIdProvider})
+      : _userIdProvider = userIdProvider;
 
   final CommonDatabase _db;
+  String userId;
+  String Function()? _userIdProvider;
+
+  set userIdProvider(String Function()? provider) => _userIdProvider = provider;
+
+  /// Active tenant user id for multi-tenant data scoping.
+  String get effectiveUserId =>
+      _userIdProvider != null ? _userIdProvider!() : userId;
 
   /// Saves user profile and coaching settings.
-  void saveUserProfile(UserProfile profile) {
-    final stmt = _db.prepare('''
-      INSERT INTO user_profile (
-        id, name, current_weight, target_weight, height_cm, age,
-        is_male, goal_type, program_mode, weekly_rate,
-        protein_preference, calorie_floor, baseline_expenditure,
-        custom_calories, custom_protein, custom_carbs, custom_fat,
-        diet_type, calorie_floor_type, lifting_experience, cardio_experience,
-        body_fat_range, weight_history_max, distribution_mode,
-        recent_weight_trend, exercise_frequency, daily_activity
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(id) DO UPDATE SET
-        name = excluded.name,
-        current_weight = excluded.current_weight,
-        target_weight = excluded.target_weight,
-        height_cm = excluded.height_cm,
-        age = excluded.age,
-        is_male = excluded.is_male,
-        goal_type = excluded.goal_type,
-        program_mode = excluded.program_mode,
-        weekly_rate = excluded.weekly_rate,
-        protein_preference = excluded.protein_preference,
-        calorie_floor = excluded.calorie_floor,
-        baseline_expenditure = excluded.baseline_expenditure,
-        custom_calories = excluded.custom_calories,
-        custom_protein = excluded.custom_protein,
-        custom_carbs = excluded.custom_carbs,
-        custom_fat = excluded.custom_fat,
-        diet_type = excluded.diet_type,
-        calorie_floor_type = excluded.calorie_floor_type,
-        lifting_experience = excluded.lifting_experience,
-        cardio_experience = excluded.cardio_experience,
-        body_fat_range = excluded.body_fat_range,
-        weight_history_max = excluded.weight_history_max,
-        distribution_mode = excluded.distribution_mode,
-        recent_weight_trend = excluded.recent_weight_trend,
-        exercise_frequency = excluded.exercise_frequency,
-        daily_activity = excluded.daily_activity;
-    ''');
+  void saveUserProfile(UserProfile profile, {String? userId}) {
+    final uid = userId ?? effectiveUserId;
+    final hasUserCol = _hasUserColumn();
 
-    stmt.execute([
-      profile.id,
-      profile.name,
-      profile.currentWeightKg,
-      profile.targetWeightKg,
-      profile.heightCm,
-      profile.age,
-      profile.isMale ? 1 : 0,
-      profile.goalType.name,
-      profile.programMode.name,
-      profile.weeklyRateOfChangePct,
-      profile.proteinPreference.name,
-      profile.calorieFloor,
-      profile.baselineExpenditureKcal,
-      profile.customCalories,
-      profile.customProteinGrams,
-      profile.customCarbsGrams,
-      profile.customFatGrams,
-      profile.dietType,
-      profile.calorieFloorType,
-      profile.liftingExperience,
-      profile.cardioExperience,
-      profile.bodyFatRange,
-      profile.weightHistoryMax,
-      profile.distributionMode,
-      profile.recentWeightTrend,
-      profile.exerciseFrequency,
-      profile.dailyActivity,
-    ]);
-    stmt.dispose();
+    final stmt = hasUserCol ? _db.prepare('''
+            INSERT INTO user_profile (
+              id, user_id, name, current_weight, target_weight, height_cm, age,
+              is_male, goal_type, program_mode, weekly_rate,
+              protein_preference, calorie_floor, baseline_expenditure,
+              custom_calories, custom_protein, custom_carbs, custom_fat,
+              diet_type, calorie_floor_type, lifting_experience, cardio_experience,
+              body_fat_range, weight_history_max, distribution_mode,
+              recent_weight_trend, exercise_frequency, daily_activity
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              user_id = excluded.user_id,
+              name = excluded.name,
+              current_weight = excluded.current_weight,
+              target_weight = excluded.target_weight,
+              height_cm = excluded.height_cm,
+              age = excluded.age,
+              is_male = excluded.is_male,
+              goal_type = excluded.goal_type,
+              program_mode = excluded.program_mode,
+              weekly_rate = excluded.weekly_rate,
+              protein_preference = excluded.protein_preference,
+              calorie_floor = excluded.calorie_floor,
+              baseline_expenditure = excluded.baseline_expenditure,
+              custom_calories = excluded.custom_calories,
+              custom_protein = excluded.custom_protein,
+              custom_carbs = excluded.custom_carbs,
+              custom_fat = excluded.custom_fat,
+              diet_type = excluded.diet_type,
+              calorie_floor_type = excluded.calorie_floor_type,
+              lifting_experience = excluded.lifting_experience,
+              cardio_experience = excluded.cardio_experience,
+              body_fat_range = excluded.body_fat_range,
+              weight_history_max = excluded.weight_history_max,
+              distribution_mode = excluded.distribution_mode,
+              recent_weight_trend = excluded.recent_weight_trend,
+              exercise_frequency = excluded.exercise_frequency,
+              daily_activity = excluded.daily_activity;
+          ''') : _db.prepare('''
+            INSERT INTO user_profile (
+              id, name, current_weight, target_weight, height_cm, age,
+              is_male, goal_type, program_mode, weekly_rate,
+              protein_preference, calorie_floor, baseline_expenditure,
+              custom_calories, custom_protein, custom_carbs, custom_fat,
+              diet_type, calorie_floor_type, lifting_experience, cardio_experience,
+              body_fat_range, weight_history_max, distribution_mode,
+              recent_weight_trend, exercise_frequency, daily_activity
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              name = excluded.name,
+              current_weight = excluded.current_weight,
+              target_weight = excluded.target_weight,
+              height_cm = excluded.height_cm,
+              age = excluded.age,
+              is_male = excluded.is_male,
+              goal_type = excluded.goal_type,
+              program_mode = excluded.program_mode,
+              weekly_rate = excluded.weekly_rate,
+              protein_preference = excluded.protein_preference,
+              calorie_floor = excluded.calorie_floor,
+              baseline_expenditure = excluded.baseline_expenditure,
+              custom_calories = excluded.custom_calories,
+              custom_protein = excluded.custom_protein,
+              custom_carbs = excluded.custom_carbs,
+              custom_fat = excluded.custom_fat,
+              diet_type = excluded.diet_type,
+              calorie_floor_type = excluded.calorie_floor_type,
+              lifting_experience = excluded.lifting_experience,
+              cardio_experience = excluded.cardio_experience,
+              body_fat_range = excluded.body_fat_range,
+              weight_history_max = excluded.weight_history_max,
+              distribution_mode = excluded.distribution_mode,
+              recent_weight_trend = excluded.recent_weight_trend,
+              exercise_frequency = excluded.exercise_frequency,
+              daily_activity = excluded.daily_activity;
+          ''');
+
+    try {
+      if (hasUserCol) {
+        stmt.execute([
+          profile.id,
+          uid,
+          profile.name,
+          profile.currentWeightKg,
+          profile.targetWeightKg,
+          profile.heightCm,
+          profile.age,
+          profile.isMale ? 1 : 0,
+          profile.goalType.name,
+          profile.programMode.name,
+          profile.weeklyRateOfChangePct,
+          profile.proteinPreference.name,
+          profile.calorieFloor,
+          profile.baselineExpenditureKcal,
+          profile.customCalories,
+          profile.customProteinGrams,
+          profile.customCarbsGrams,
+          profile.customFatGrams,
+          profile.dietType,
+          profile.calorieFloorType,
+          profile.liftingExperience,
+          profile.cardioExperience,
+          profile.bodyFatRange,
+          profile.weightHistoryMax,
+          profile.distributionMode,
+          profile.recentWeightTrend,
+          profile.exerciseFrequency,
+          profile.dailyActivity,
+        ]);
+      } else {
+        stmt.execute([
+          profile.id,
+          profile.name,
+          profile.currentWeightKg,
+          profile.targetWeightKg,
+          profile.heightCm,
+          profile.age,
+          profile.isMale ? 1 : 0,
+          profile.goalType.name,
+          profile.programMode.name,
+          profile.weeklyRateOfChangePct,
+          profile.proteinPreference.name,
+          profile.calorieFloor,
+          profile.baselineExpenditureKcal,
+          profile.customCalories,
+          profile.customProteinGrams,
+          profile.customCarbsGrams,
+          profile.customFatGrams,
+          profile.dietType,
+          profile.calorieFloorType,
+          profile.liftingExperience,
+          profile.cardioExperience,
+          profile.bodyFatRange,
+          profile.weightHistoryMax,
+          profile.distributionMode,
+          profile.recentWeightTrend,
+          profile.exerciseFrequency,
+          profile.dailyActivity,
+        ]);
+      }
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Retrieves user profile or null if none saved.
-  UserProfile? getUserProfile() {
-    final stmt = _db.prepare('SELECT * FROM user_profile LIMIT 1;');
-    final result = stmt.select();
-    stmt.dispose();
-    if (result.isEmpty) return null;
+  UserProfile? getUserProfile({String? userId}) {
+    final uid = userId ?? effectiveUserId;
+    final hasUserCol = _hasUserColumn();
+    final stmt = hasUserCol
+        ? _db.prepare(
+            'SELECT * FROM user_profile WHERE user_id = ? OR id = ? LIMIT 1;')
+        : _db.prepare('SELECT * FROM user_profile LIMIT 1;');
+    try {
+      var result = hasUserCol ? stmt.select([uid, uid]) : stmt.select();
+      if (result.isEmpty && userId == null) {
+        // Fallback for single-tenant or default profile retrieval when unconstrained
+        final fallbackStmt = _db.prepare('SELECT * FROM user_profile LIMIT 1;');
+        try {
+          result = fallbackStmt.select();
+        } finally {
+          fallbackStmt.dispose();
+        }
+      }
+      if (result.isEmpty) return null;
 
-    final row = result.first;
-    return UserProfile(
-      id: row['id'] as String,
-      name: row['name'] as String,
-      currentWeightKg: (row['current_weight'] as num).toDouble(),
-      targetWeightKg: (row['target_weight'] as num).toDouble(),
-      heightCm: (row['height_cm'] as num).toDouble(),
-      age: row['age'] as int,
-      isMale: (row['is_male'] as int) == 1,
-      goalType: GoalType.values.firstWhere((g) => g.name == row['goal_type']),
-      programMode:
-          ProgramMode.values.firstWhere((p) => p.name == row['program_mode']),
-      weeklyRateOfChangePct: (row['weekly_rate'] as num).toDouble(),
-      proteinPreference: ProteinPreference.values
-          .firstWhere((p) => p.name == row['protein_preference']),
-      calorieFloor: (row['calorie_floor'] as num).toDouble(),
-      baselineExpenditureKcal: (row['baseline_expenditure'] as num).toDouble(),
-      customCalories: (row['custom_calories'] as num?)?.toDouble(),
-      customProteinGrams: (row['custom_protein'] as num?)?.toDouble(),
-      customCarbsGrams: (row['custom_carbs'] as num?)?.toDouble(),
-      customFatGrams: (row['custom_fat'] as num?)?.toDouble(),
-      dietType: row['diet_type'] as String? ?? 'standard',
-      calorieFloorType: row['calorie_floor_type'] as String? ?? 'standard',
-      liftingExperience: row['lifting_experience'] as String? ?? 'beginner',
-      cardioExperience: row['cardio_experience'] as String? ?? 'beginner',
-      bodyFatRange: row['body_fat_range'] as String?,
-      weightHistoryMax: (row['weight_history_max'] as num?)?.toDouble(),
-      distributionMode: row['distribution_mode'] as String? ?? 'even',
-      recentWeightTrend: row['recent_weight_trend'] as String? ?? 'stable',
-      exerciseFrequency: row['exercise_frequency'] as String? ?? '1-3',
-      dailyActivity: row['daily_activity'] as String? ?? 'moderate',
-    );
+      final row = result.first;
+      return UserProfile(
+        id: row['id'] as String,
+        name: row['name'] as String,
+        currentWeightKg: (row['current_weight'] as num).toDouble(),
+        targetWeightKg: (row['target_weight'] as num).toDouble(),
+        heightCm: (row['height_cm'] as num).toDouble(),
+        age: row['age'] as int,
+        isMale: (row['is_male'] as int) == 1,
+        goalType: GoalType.values.firstWhere((g) => g.name == row['goal_type']),
+        programMode:
+            ProgramMode.values.firstWhere((p) => p.name == row['program_mode']),
+        weeklyRateOfChangePct: (row['weekly_rate'] as num).toDouble(),
+        proteinPreference: ProteinPreference.values
+            .firstWhere((p) => p.name == row['protein_preference']),
+        calorieFloor: (row['calorie_floor'] as num).toDouble(),
+        baselineExpenditureKcal:
+            (row['baseline_expenditure'] as num).toDouble(),
+        customCalories: (row['custom_calories'] as num?)?.toDouble(),
+        customProteinGrams: (row['custom_protein'] as num?)?.toDouble(),
+        customCarbsGrams: (row['custom_carbs'] as num?)?.toDouble(),
+        customFatGrams: (row['custom_fat'] as num?)?.toDouble(),
+        dietType: row['diet_type'] as String? ?? 'standard',
+        calorieFloorType: row['calorie_floor_type'] as String? ?? 'standard',
+        liftingExperience: row['lifting_experience'] as String? ?? 'beginner',
+        cardioExperience: row['cardio_experience'] as String? ?? 'beginner',
+        bodyFatRange: row['body_fat_range'] as String?,
+        weightHistoryMax: (row['weight_history_max'] as num?)?.toDouble(),
+        distributionMode: row['distribution_mode'] as String? ?? 'even',
+        recentWeightTrend: row['recent_weight_trend'] as String? ?? 'stable',
+        exerciseFrequency: row['exercise_frequency'] as String? ?? '1-3',
+        dailyActivity: row['daily_activity'] as String? ?? 'moderate',
+      );
+    } finally {
+      stmt.dispose();
+    }
+  }
+
+  bool _hasUserColumn() {
+    try {
+      final rows = _db.select("PRAGMA table_info('user_profile');");
+      return rows.any((r) => (r['name'] as String).toLowerCase() == 'user_id');
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Saves or updates the active user account session in SQLite.
@@ -189,28 +303,94 @@ class ProfileDao {
     stmt.dispose();
   }
 
-  /// Wipes all user-generated data across all tables.
+  /// Wipes all user-generated data across all tables within an atomic transaction,
+  /// commits, then executes WAL checkpoint and VACUUM strictly outside any open transaction.
+  /// Preserves static foods catalog seed marker.
   void clearAllData() {
-    _db.execute('DELETE FROM food_logs;');
-    _db.execute('DELETE FROM weight_logs;');
-    _db.execute('DELETE FROM user_profile;');
-    _db.execute('DELETE FROM expenditure_history;');
-    _db.execute('DELETE FROM workout_sessions;');
-    _db.execute('DELETE FROM coaching_check_ins;');
-    _db.execute('DELETE FROM day_completions;');
-    _db.execute('DELETE FROM app_settings;');
-    _db.execute('DELETE FROM user_account_session;');
+    _db.execute('BEGIN TRANSACTION;');
     try {
+      _db.execute('DELETE FROM food_logs;');
+      _db.execute('DELETE FROM weight_logs;');
+      _db.execute('DELETE FROM user_profile;');
+      _db.execute('DELETE FROM expenditure_history;');
+      _db.execute('DELETE FROM workout_sessions;');
+      _db.execute('DELETE FROM coaching_check_ins;');
+      _db.execute('DELETE FROM day_completions;');
       _db.execute(
-        "DELETE FROM sqlite_sequence WHERE name IN ('food_logs', 'weight_logs');",
+        "DELETE FROM app_settings WHERE key NOT LIKE '%seed%' AND key NOT LIKE '%catalog%';",
       );
-    } on SqliteException catch (e, st) {
+      _db.execute('DELETE FROM user_account_session;');
+      try {
+        _db.execute(
+          "DELETE FROM sqlite_sequence WHERE name IN ('food_logs', 'weight_logs');",
+        );
+      } on SqliteException catch (e, st) {
+        developer.log(
+          'sqlite_sequence reset note',
+          name: 'ProfileDao',
+          error: e,
+          stackTrace: st,
+        );
+      }
+      _db.execute('COMMIT;');
+    } catch (e, st) {
       developer.log(
-        'sqlite_sequence reset omitted or table empty',
+        'Transaction failed during clearAllData; executing rollback',
         name: 'ProfileDao',
         error: e,
         stackTrace: st,
       );
+      try {
+        _db.execute('ROLLBACK;');
+      } catch (_) {}
+      rethrow;
+    }
+
+    // Execute WAL checkpoint and VACUUM strictly outside any open transaction
+    try {
+      _db.execute('PRAGMA wal_checkpoint(TRUNCATE);');
+    } catch (e, st) {
+      developer.log(
+        'wal_checkpoint omitted or unsupported in current environment',
+        name: 'ProfileDao',
+        error: e,
+        stackTrace: st,
+      );
+    }
+
+    try {
+      _db.execute('VACUUM;');
+    } catch (e, st) {
+      developer.log(
+        'VACUUM omitted or unsupported in current environment',
+        name: 'ProfileDao',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  /// Saves date of birth (ISO-8601 yyyy-MM-dd) for a user profile.
+  void saveDateOfBirth(String profileId, String dateOfBirth) {
+    try {
+      final stmt = _db
+          .prepare('UPDATE user_profile SET date_of_birth = ? WHERE id = ?;');
+      stmt.execute([dateOfBirth, profileId]);
+      stmt.dispose();
+    } catch (_) {}
+  }
+
+  /// Retrieves date of birth (ISO-8601 yyyy-MM-dd) for a user profile, or null.
+  String? getDateOfBirth(String profileId) {
+    try {
+      final stmt = _db.prepare(
+          'SELECT date_of_birth FROM user_profile WHERE id = ? LIMIT 1;');
+      final result = stmt.select([profileId]);
+      stmt.dispose();
+      if (result.isEmpty) return null;
+      return result.first['date_of_birth'] as String?;
+    } catch (_) {
+      return null;
     }
   }
 }

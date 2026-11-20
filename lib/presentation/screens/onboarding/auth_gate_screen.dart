@@ -130,7 +130,7 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                         ),
                         const SizedBox(height: 28),
                         const Text(
-                          'Account & Cloud Sync',
+                          'Account & Device Data',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 28,
@@ -141,7 +141,7 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                         ),
                         const SizedBox(height: 12),
                         const Text(
-                          'Connect your Google account to automatically sync workouts from Hevy & Health Connect, or explore in guest mode.',
+                          'Connect your Google account to sync workouts from Hevy & Health Connect, or explore in guest mode. Syncs automatically when you open Sique.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
