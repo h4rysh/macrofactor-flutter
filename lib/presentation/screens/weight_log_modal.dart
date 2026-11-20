@@ -79,11 +79,52 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
     }
   }
 
+  void _handleDelete(ScaleWeightEntry entry) {
+    if (_isSubmitting) return;
+    setState(() => _isSubmitting = true);
+
+    try {
+      HapticFeedback.mediumImpact();
+      final dateStr = DateFormat('yyyy-MM-dd').format(entry.date);
+      ref.read(weightLogsProvider.notifier).deleteWeight(dateStr);
+      Navigator.of(context).pop();
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Deleted weight log for $dateStr'),
+          action: SnackBarAction(
+            label: 'Undo',
+            textColor: AppTheme.activeBlue,
+            onPressed: () {
+              ref.read(weightLogsProvider.notifier).logWeight(
+                    dateStr,
+                    entry.weightKg,
+                    entry.note,
+                  );
+            },
+          ),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 5),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final double? parsedWeight = double.tryParse(_weightController.text);
     final existingWeights = ref.watch(weightLogsProvider);
     final mediaQuery = MediaQuery.of(context);
+    final existingEntryForDate = existingWeights
+        .where(
+          (e) => DateFormat('yyyy-MM-dd').format(e.date) == _selectedDate,
+        )
+        .firstOrNull;
 
     // Compute preview trend weight if weight is entered
     double? previewTrendWeight;
@@ -154,6 +195,17 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                           ),
                         ),
                         const SizedBox(width: 8),
+                        if (existingEntryForDate != null) ...[
+                          IconButton(
+                            key: const Key('weight_log_delete_btn'),
+                            icon: const Icon(Icons.delete_outline_rounded,
+                                size: 20, color: AppTheme.calories),
+                            tooltip: 'Delete weight log',
+                            onPressed: () =>
+                                _handleDelete(existingEntryForDate),
+                          ),
+                          const SizedBox(width: 4),
+                        ],
                         TextButton.icon(
                           onPressed: () async {
                             final picked = await showDatePicker(
@@ -333,6 +385,25 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                         ),
                       ),
                     ),
+                    if (existingEntryForDate != null) ...[
+                      const SizedBox(height: 12),
+                      Center(
+                        child: TextButton.icon(
+                          key: const Key('weight_log_delete_text_btn'),
+                          onPressed: () => _handleDelete(existingEntryForDate),
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              size: 16, color: AppTheme.calories),
+                          label: const Text(
+                            'Delete Weight Log for This Date',
+                            style: TextStyle(
+                              color: AppTheme.calories,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -97,30 +97,86 @@ class HealthConnectSyncCard extends ConsumerWidget {
           if (healthState.isError && healthState.errorMessage != null) ...[
             const SizedBox(height: 12),
             Container(
-              padding: const EdgeInsets.all(10),
+              key: const Key('health_sync_error_recovery_card'),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppTheme.calories.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(12),
                 border: Border.all(
                   color: AppTheme.calories.withValues(alpha: 0.35),
                 ),
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Icon(
-                    Icons.error_outline_rounded,
-                    size: 16,
-                    color: AppTheme.calories,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      healthState.errorMessage!,
-                      style: const TextStyle(
-                        fontSize: 11,
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        size: 18,
                         color: AppTheme.calories,
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          healthState.errorMessage!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.calories,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          key: const Key('health_sync_error_permissions_btn'),
+                          onPressed: () => ref
+                              .read(healthConnectSyncProvider.notifier)
+                              .requestPermissions(),
+                          icon: const Icon(Icons.security_rounded, size: 14),
+                          label: const Text('Permissions'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.textPrimary,
+                            side: const BorderSide(color: AppTheme.cardBorder),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            textStyle: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          key: const Key('health_sync_error_retry_btn'),
+                          onPressed: isSyncing
+                              ? null
+                              : () => ref
+                                  .read(healthConnectSyncProvider.notifier)
+                                  .syncNow(),
+                          icon: const Icon(Icons.refresh_rounded, size: 14),
+                          label: const Text('Retry'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.activeBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            textStyle: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

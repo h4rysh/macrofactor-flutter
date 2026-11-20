@@ -358,7 +358,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                                 },
                               ),
                               behavior: SnackBarBehavior.floating,
-                              duration: const Duration(seconds: 4),
+                              duration: const Duration(seconds: 5),
                             ),
                           );
                         },

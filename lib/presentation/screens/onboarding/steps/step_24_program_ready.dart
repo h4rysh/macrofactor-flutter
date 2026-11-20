@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/domain/models/macro_program.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
@@ -151,6 +152,159 @@ class Step24ProgramReady extends ConsumerWidget {
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 16),
+          // Save Your Strategy: Optional Google Sign-In & Health Connect Sync (AUD-38)
+          const _SaveStrategyOptionsCard(),
+        ],
+      ),
+    );
+  }
+}
+
+class _SaveStrategyOptionsCard extends ConsumerStatefulWidget {
+  const _SaveStrategyOptionsCard();
+
+  @override
+  ConsumerState<_SaveStrategyOptionsCard> createState() =>
+      _SaveStrategyOptionsCardState();
+}
+
+class _SaveStrategyOptionsCardState
+    extends ConsumerState<_SaveStrategyOptionsCard> {
+  bool _healthConnectEnabled = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final authState = ref.watch(authNotifierProvider);
+    final user = authState.user;
+    final isAuthenticated = authState.isAuthenticated;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.save_rounded, color: AppTheme.activeBlue, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Save Your Strategy',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Connect Google Auth or Health Connect to sync workouts and body metrics.',
+            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          if (isAuthenticated) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.activeBlue.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.account_circle_rounded,
+                      color: AppTheme.activeBlue, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Signed in as ${user.displayName.isNotEmpty ? user.displayName : (user.email.isNotEmpty ? user.email : "Athlete")}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ] else ...[
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                key: const Key('onboarding_google_sign_in_btn'),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  ref.read(authNotifierProvider.notifier).signInWithGoogle();
+                },
+                icon: const Icon(Icons.g_mobiledata_rounded, size: 22),
+                label: const Text('Sign in with Google'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.textPrimary,
+                  side: const BorderSide(color: AppTheme.cardBorder),
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: AppTheme.carbs.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.sync_rounded,
+                    color: AppTheme.carbs, size: 18),
+              ),
+              const SizedBox(width: 10),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Google Health Connect',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Auto-sync workouts (Health Connect, Hevy, Strava) & weights.',
+                      style: TextStyle(
+                          fontSize: 11, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                key: const Key('onboarding_health_connect_toggle'),
+                value: _healthConnectEnabled,
+                activeTrackColor: AppTheme.activeBlue,
+                onChanged: (val) {
+                  setState(() => _healthConnectEnabled = val);
+                  if (val) {
+                    ref
+                        .read(healthConnectSyncProvider.notifier)
+                        .requestPermissions();
+                  }
+                },
+              ),
+            ],
           ),
         ],
       ),

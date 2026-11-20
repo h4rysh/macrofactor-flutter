@@ -1,18 +1,18 @@
-import 'dart:convert';
 import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:sique/data/utils/backup_codec.dart';
 import 'package:sique/data/utils/csv_sanitizer.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
-/// Screen for exporting user nutrition logs and weight observations to JSON or CSV.
-/// Shows database statistics and reinforces local-only data privacy.
+/// Screen for exporting user nutrition logs and weight observations to JSON or CSV via Android share sheet.
+/// Supports full backup (.sique.json) and restore with schema version validation.
 class DataExportScreen extends ConsumerStatefulWidget {
   const DataExportScreen({super.key});
 
@@ -21,13 +21,12 @@ class DataExportScreen extends ConsumerStatefulWidget {
 }
 
 class _DataExportScreenState extends ConsumerState<DataExportScreen> {
-  // Safe payload threshold to prevent Android Binder TransactionTooLargeException crashes (ISS-6-02)
-  static const int _kMaxBinderPayloadChars = 200 * 1024; // ~200 KB safe limit
   static const int _kMaxPreviewChars = 40 * 1024; // ~40 KB preview limit
 
   int _foodCatalogCount = 0;
   int _totalFoodLogs = 0;
   int _totalWeightLogs = 0;
+  bool _isProcessing = false;
 
   @override
   void initState() {
@@ -50,34 +49,13 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
   String _generateFoodLogsJson() {
     final db = ref.read(databaseProvider);
-    final logs = db.getAllFoodLogs();
-    final list = logs.map((e) {
-      return {
-        'id': e.id,
-        'date': e.date,
-        'mealType': e.mealType.name,
-        'foodId': e.foodId,
-        'foodName': e.foodName,
-        'servingQuantity': e.servingQuantity,
-        'unitName': e.unitName,
-        'gramWeight': e.gramWeight,
-        'calories': e.calories,
-        'protein': e.protein,
-        'carbs': e.carbs,
-        'fat': e.fat,
-        'fiber': e.fiber,
-        'oilModifier': e.oilModifier.displayName,
-        'loggedAt': e.loggedAt.toIso8601String(),
-      };
-    }).toList();
-
-    const encoder = JsonEncoder.withIndent('  ');
-    return encoder.convert({
-      'exportDate': DateTime.now().toIso8601String(),
-      'app': 'Sique',
-      'totalEntries': list.length,
-      'entries': list,
-    });
+    final profile = ref.read(userProfileProvider);
+    final foodLogs = db.getAllFoodLogs();
+    return BackupCodec.encodeBackup(
+      profile: profile,
+      foodLogs: foodLogs,
+      weightLogs: const [],
+    );
   }
 
   String _generateWeightLogsCsv() {
@@ -95,7 +73,19 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     return buffer.toString();
   }
 
-  /// Exports large string content to local storage in chunks to prevent memory/binder issues (ISS-6-02).
+  String _generateFullBackupJson() {
+    final db = ref.read(databaseProvider);
+    final profile = ref.read(userProfileProvider);
+    final foodLogs = db.getAllFoodLogs();
+    final weightLogs = db.getAllWeightLogs();
+
+    return BackupCodec.encodeBackup(
+      profile: profile,
+      foodLogs: foodLogs,
+      weightLogs: weightLogs,
+    );
+  }
+
   Future<File?> _saveExportToFile(String filename, String content) async {
     try {
       final docsDir = await getApplicationDocumentsDirectory();
@@ -104,17 +94,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
         await exportDir.create(recursive: true);
       }
       final file = File(p.join(exportDir.path, filename));
-      final sink = file.openWrite();
-
-      // Chunked stream write
-      const chunkSize = 16 * 1024;
-      for (var i = 0; i < content.length; i += chunkSize) {
-        final end =
-            (i + chunkSize < content.length) ? i + chunkSize : content.length;
-        sink.write(content.substring(i, end));
-      }
-      await sink.flush();
-      await sink.close();
+      await file.writeAsString(content, flush: true);
       return file;
     } catch (e, st) {
       developer.log(
@@ -127,95 +107,227 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     }
   }
 
-  /// Copies text to system clipboard with binder-safe chunking and fallback to file (ISS-6-02).
-  Future<void> _safeCopyToClipboard({
+  Future<void> _shareExportFile({
+    required String filename,
     required String content,
+    required String mimeType,
     required String successMessage,
     required Color color,
-    required String filename,
   }) async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+
     try {
-      if (content.length > _kMaxBinderPayloadChars) {
-        // Prevent Android TransactionTooLargeException: write full export to file first
-        final savedFile = await _saveExportToFile(filename, content);
-        final safeChunk = content.substring(0, _kMaxBinderPayloadChars);
+      final file = await _saveExportToFile(filename, content);
+      if (file != null && mounted) {
+        final xFile = XFile(file.path, mimeType: mimeType, name: filename);
+        // ignore: deprecated_member_use
+        await Share.shareXFiles(
+          [xFile],
+          text: 'Sique Data Export: $filename',
+        );
 
-        await Clipboard.setData(ClipboardData(text: safeChunk));
-
-        if (mounted) {
-          final locationInfo =
-              savedFile != null ? 'Full file saved to ${savedFile.path}. ' : '';
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Large payload chunked. ${locationInfo}First chunk copied to clipboard.',
-              ),
-              backgroundColor: color,
-              duration: const Duration(seconds: 4),
-            ),
-          );
-        }
-      } else {
-        await Clipboard.setData(ClipboardData(text: content));
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(successMessage),
               backgroundColor: color,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
             ),
           );
         }
       }
-    } on PlatformException catch (e, st) {
+    } catch (e, st) {
       developer.log(
-        'PlatformException during clipboard setData; attempting file fallback',
+        'Error sharing export file',
         name: 'DataExportScreen',
         error: e,
         stackTrace: st,
       );
-      final savedFile = await _saveExportToFile(filename, content);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to export file: $e'),
+            backgroundColor: AppTheme.calories,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  void _exportFoodLogs() {
+    final jsonStr = _generateFoodLogsJson();
+    _shareExportFile(
+      filename: 'food_logs_export.json',
+      content: jsonStr,
+      mimeType: 'application/json',
+      successMessage: 'Food logs exported ($_totalFoodLogs entries)',
+      color: AppTheme.activeBlue,
+    );
+  }
+
+  void _exportWeightLogs() {
+    final csvStr = _generateWeightLogsCsv();
+    _shareExportFile(
+      filename: 'weight_logs_export.csv',
+      content: csvStr,
+      mimeType: 'text/csv',
+      successMessage: 'Weight logs exported ($_totalWeightLogs entries)',
+      color: AppTheme.trendWeight,
+    );
+  }
+
+  void _exportFullBackup() {
+    final timestamp =
+        DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
+    final backupJson = _generateFullBackupJson();
+    _shareExportFile(
+      filename: 'sique_backup_$timestamp.sique.json',
+      content: backupJson,
+      mimeType: 'application/json',
+      successMessage: 'Full backup archive created & shared',
+      color: AppTheme.calories,
+    );
+  }
+
+  Future<void> _restoreFromBackupContent(String jsonContent) async {
+    try {
+      final decoded = BackupCodec.decodeAndValidate(jsonContent);
+      final db = ref.read(databaseProvider);
+
+      if (decoded.profile != null) {
+        db.profileDao.saveUserProfile(decoded.profile!);
+      }
+
+      for (final w in decoded.weightLogs) {
+        final dateStr = w.date.toIso8601String().split('T').first;
+        db.weightDao.insertWeightLog(
+          dateStr,
+          w.weightKg,
+          w.note,
+          source: w.source,
+        );
+      }
+
+      for (final f in decoded.foodLogs) {
+        db.foodDao.restoreFoodLog(f);
+      }
+
+      // Refresh providers
+      ref.invalidate(userProfileProvider);
+      ref.invalidate(weightLogsProvider);
+      ref.invalidate(dailyFoodLogsProvider);
+      _loadStats();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              savedFile != null
-                  ? 'Clipboard unavailable. Saved to ${savedFile.path}'
-                  : 'Clipboard transaction exceeded platform limits.',
+              'Backup restored: ${decoded.foodLogs.length} foods, ${decoded.weightLogs.length} weights, profile updated.',
             ),
-            backgroundColor: AppTheme.calories,
+            backgroundColor: const Color(0xFF34C759),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
-    } catch (e) {
+    } catch (e, st) {
+      developer.log(
+        'Restore from backup failed',
+        name: 'DataExportScreen',
+        error: e,
+        stackTrace: st,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Export error: $e'),
+            content: Text('Restore failed: $e'),
             backgroundColor: AppTheme.calories,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 5),
           ),
         );
       }
     }
   }
 
-  void _copyFoodLogs() {
-    final jsonStr = _generateFoodLogsJson();
-    _safeCopyToClipboard(
-      content: jsonStr,
-      successMessage: 'Food logs copied to clipboard ($_totalFoodLogs entries)',
-      color: AppTheme.activeBlue,
-      filename: 'food_logs_export.json',
-    );
-  }
+  void _showRestoreDialog() {
+    final controller = TextEditingController();
 
-  void _copyWeightLogs() {
-    final csvStr = _generateWeightLogsCsv();
-    _safeCopyToClipboard(
-      content: csvStr,
-      successMessage:
-          'Weight logs copied to clipboard ($_totalWeightLogs entries)',
-      color: AppTheme.trendWeight,
-      filename: 'weight_logs_export.csv',
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.cardSurface,
+        title: const Row(
+          children: [
+            Icon(Icons.restore_page_rounded, color: AppTheme.activeBlue),
+            SizedBox(width: 8),
+            Text('Restore from Backup',
+                style: TextStyle(color: AppTheme.textPrimary, fontSize: 18)),
+          ],
+        ),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Paste the raw JSON content of your .sique.json backup archive below. Schema version will be validated prior to restoring.',
+                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                key: const Key('restore_backup_json_input'),
+                controller: controller,
+                maxLines: 6,
+                style: const TextStyle(
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                    color: AppTheme.textPrimary),
+                decoration: InputDecoration(
+                  hintText:
+                      '{\n  "app": "Sique",\n  "schemaVersion": 3,\n  ...\n}',
+                  hintStyle: const TextStyle(color: AppTheme.textMuted),
+                  filled: true,
+                  fillColor: AppTheme.cardElevated,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    borderSide: const BorderSide(color: AppTheme.cardBorder),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            key: const Key('restore_backup_confirm_btn'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.activeBlue,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              final text = controller.text.trim();
+              Navigator.of(ctx).pop();
+              if (text.isNotEmpty) {
+                _restoreFromBackupContent(text);
+              }
+            },
+            child: const Text('Validate & Restore'),
+          ),
+        ],
+      ),
     );
   }
 
@@ -248,20 +360,6 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('Close'),
           ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              _safeCopyToClipboard(
-                content: content,
-                successMessage: 'Copied to clipboard',
-                color: AppTheme.activeBlue,
-                filename: 'preview_export.txt',
-              );
-            },
-            child: const Text('Copy All',
-                style: TextStyle(
-                    fontWeight: FontWeight.w700, color: AppTheme.activeBlue)),
-          ),
         ],
       ),
     );
@@ -291,7 +389,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             subtitle:
                 'Complete nutritional history formatted with ISO timestamps, portion weights, and oil modifiers.',
             countLabel: '$_totalFoodLogs meals logged',
-            onCopy: _copyFoodLogs,
+            onShare: _exportFoodLogs,
             onPreview: () => _showPreviewDialog(
                 'Food Logs Preview', _generateFoodLogsJson()),
           ),
@@ -303,10 +401,12 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             subtitle:
                 'Chronological weigh-ins compatible with Excel, Google Sheets, or custom statistical models.',
             countLabel: '$_totalWeightLogs weigh-ins logged',
-            onCopy: _copyWeightLogs,
+            onShare: _exportWeightLogs,
             onPreview: () => _showPreviewDialog(
                 'Scale Weights CSV Preview', _generateWeightLogsCsv()),
           ),
+          const SizedBox(height: 16),
+          _buildFullBackupCard(),
           const SizedBox(height: 16),
           _buildPrivacyCard(),
           const SizedBox(height: 32),
@@ -412,7 +512,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     required String title,
     required String subtitle,
     required String countLabel,
-    required VoidCallback onCopy,
+    required VoidCallback onShare,
     required VoidCallback onPreview,
   }) {
     return Container(
@@ -482,8 +582,8 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
               const SizedBox(width: 10),
               Expanded(
                 child: ElevatedButton.icon(
-                  icon: const Icon(Icons.copy_rounded, size: 16),
-                  label: const Text('Copy to Clipboard'),
+                  icon: const Icon(Icons.share_rounded, size: 16),
+                  label: const Text('Share File'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: color.withAlpha(40),
                     foregroundColor: color,
@@ -492,7 +592,98 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10)),
                   ),
-                  onPressed: onCopy,
+                  onPressed: onShare,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFullBackupCard() {
+    return Container(
+      key: const Key('full_backup_card'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppTheme.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.backup_rounded, size: 22, color: AppTheme.calories),
+              SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Full Backup & Recovery (.sique.json)',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Complete schema snapshot (v3)',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.calories,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Export or restore an entire snapshot of your profile, nutrition targets, scale weights, and meal entries with cryptographic schema version validation.',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppTheme.textSecondary,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  key: const Key('restore_from_backup_btn'),
+                  icon: const Icon(Icons.restore_rounded, size: 16),
+                  label: const Text('Restore Backup'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.textPrimary,
+                    side: const BorderSide(color: AppTheme.cardBorder),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: _showRestoreDialog,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton.icon(
+                  key: const Key('export_full_backup_btn'),
+                  icon: const Icon(Icons.download_rounded, size: 16),
+                  label: const Text('Export Backup'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.calories.withAlpha(40),
+                    foregroundColor: AppTheme.calories,
+                    elevation: 0,
+                    side: BorderSide(color: AppTheme.calories.withAlpha(90)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: _exportFullBackup,
                 ),
               ),
             ],

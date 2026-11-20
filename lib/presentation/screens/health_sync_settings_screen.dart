@@ -153,9 +153,90 @@ class HealthSyncSettingsScreen extends ConsumerWidget {
             style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
           if (st.isError && st.errorMessage != null) ...[
-            const SizedBox(height: 10),
-            Text(st.errorMessage!,
-                style: const TextStyle(fontSize: 11, color: Color(0xFFFF453A))),
+            const SizedBox(height: 12),
+            Container(
+              key: const Key('health_sync_settings_error_recovery_card'),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF453A).withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: const Color(0xFFFF453A).withValues(alpha: 0.35),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(
+                        Icons.error_outline_rounded,
+                        size: 18,
+                        color: Color(0xFFFF453A),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          st.errorMessage!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Color(0xFFFF453A),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () => ref
+                              .read(healthConnectSyncProvider.notifier)
+                              .requestPermissions(),
+                          icon: const Icon(Icons.security_rounded, size: 14),
+                          label: const Text('Permissions'),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.textPrimary,
+                            side: const BorderSide(color: AppTheme.cardBorder),
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            textStyle: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: st.isSyncing
+                              ? null
+                              : () => ref
+                                  .read(healthConnectSyncProvider.notifier)
+                                  .syncNow(),
+                          icon: const Icon(Icons.refresh_rounded, size: 14),
+                          label: const Text('Retry'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.activeBlue,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            textStyle: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.w600),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
           const SizedBox(height: 14),
           ElevatedButton(

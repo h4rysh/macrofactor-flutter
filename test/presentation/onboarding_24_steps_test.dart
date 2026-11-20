@@ -188,15 +188,15 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
 
-      // Simulate earlier progress saved at step 7 (0-indexed => step 8)
-      db.setSetting('onboarding_step', '7');
+      // Simulate earlier progress saved at step 3 (0-indexed => step 4)
+      db.setSetting('onboarding_step', '3');
 
       await tester.pumpWidget(createTestWidget(const OnboardingFlowScreen()));
       await tester.pumpAndSettle();
 
-      // Renders Step 8 of 24 directly
-      expect(find.text('Step 8 of 24'), findsOneWidget);
-      expect(find.text('Body Fat Range'), findsOneWidget);
+      // Renders Step 4 of 7 directly
+      expect(find.text('Step 4 of 7'), findsOneWidget);
+      expect(find.textContaining('Activity & Training'), findsOneWidget);
     });
 
     testWidgets(

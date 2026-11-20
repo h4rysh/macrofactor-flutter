@@ -92,9 +92,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Verify OnboardingFlowScreen opened at step index 4 (Step 5 of 24)
+    // Verify OnboardingFlowScreen opened at step index 4 (Step 5 of 7)
     expect(find.byType(OnboardingFlowScreen), findsOneWidget);
-    expect(find.text('Step 5 of 24'), findsOneWidget);
+    expect(find.text('Step 5 of 7'), findsOneWidget);
     expect(find.byType(WelcomeScreen), findsNothing);
   });
 
@@ -130,7 +130,7 @@ void main() {
 
     // Verify OnboardingFlowScreen is open at step 1
     expect(find.byType(OnboardingFlowScreen), findsOneWidget);
-    expect(find.text('Step 1 of 24'), findsOneWidget);
+    expect(find.text('Step 1 of 7'), findsOneWidget);
   });
 
   testWidgets(

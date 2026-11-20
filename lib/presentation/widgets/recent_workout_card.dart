@@ -86,7 +86,7 @@ class _EmptyWorkoutsCard extends StatelessWidget {
           ),
           SizedBox(height: 4),
           Text(
-            'Workouts logged in Hevy or Google Health Connect will appear here.',
+            'Workouts synced from Health Connect, Hevy, Strava, or logged manually will appear here.',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12,
@@ -172,22 +172,33 @@ class RecentWorkoutCard extends StatelessWidget {
   }
 
   Widget _buildSourceBadge() {
-    if (session.isHevy) {
+    final lower = session.source.toLowerCase();
+    if (session.isHevy || lower.contains('hevy')) {
       return const AppleBadge(
         label: 'Hevy',
         color: Color(0xFF8B5CF6),
         icon: Icons.fitness_center_rounded,
       );
     }
-    if (session.isHealthConnect) {
+    if (lower.contains('strava')) {
+      return const AppleBadge(
+        label: 'Strava',
+        color: Color(0xFFFC6100),
+        icon: Icons.directions_run_rounded,
+      );
+    }
+    if (session.isHealthConnect ||
+        lower.contains('health_connect') ||
+        lower.contains('health connect')) {
       return const AppleBadge(
         label: 'Health Connect',
         color: AppTheme.carbs,
         icon: Icons.sync_rounded,
       );
     }
+    final displaySource = session.source.isEmpty ? 'Workout' : session.source;
     return AppleBadge(
-      label: session.source,
+      label: displaySource,
       color: AppTheme.textSecondary,
     );
   }

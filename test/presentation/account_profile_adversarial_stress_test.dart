@@ -133,14 +133,14 @@ void main() {
       expect(find.text('No workouts synced yet'), findsOneWidget);
       expect(
           find.text(
-              'Workouts logged in Hevy or Google Health Connect will appear here.'),
+              'Workouts synced from Health Connect, Hevy, Strava, or logged manually will appear here.'),
           findsOneWidget);
 
       // Hero Grid shows 0 stats without division-by-zero or NaN
       expect(find.byKey(const Key('hero_stat_total_workouts')), findsOneWidget);
       expect(find.text('0'), findsWidgets); // Total workouts, active cals
       expect(find.text('0m'), findsWidgets); // Total duration, avg duration
-      expect(find.text('0 Hevy'), findsOneWidget);
+      expect(find.text('0 Synced'), findsOneWidget);
 
       // Weekly Consistency Tracker
       expect(find.text('0 sessions this week'), findsOneWidget);

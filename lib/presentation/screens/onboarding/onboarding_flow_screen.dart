@@ -9,34 +9,23 @@ import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/screens/scaffold_with_nav_bar.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
-import 'steps/step_01_health_connect.dart';
-import 'steps/step_02_sex.dart';
-import 'steps/step_03_dob.dart';
-import 'steps/step_04_height.dart';
-import 'steps/step_05_weight.dart';
-import 'steps/step_06_weight_history.dart';
-import 'steps/step_07_weight_trend.dart';
-import 'steps/step_08_body_fat.dart';
-import 'steps/step_09_exercise_frequency.dart';
-import 'steps/step_10_daily_activity.dart';
-import 'steps/step_11_lifting_experience.dart';
-import 'steps/step_12_cardio_experience.dart';
-import 'steps/step_13_tdee_reveal.dart';
-import 'steps/step_14_goal_type.dart';
-import 'steps/step_15_target_weight.dart';
-import 'steps/step_16_goal_rate.dart';
-import 'steps/step_17_goal_summary.dart';
-import 'steps/step_18_diet_type.dart';
-import 'steps/step_19_calorie_floor.dart';
-import 'steps/step_20_training.dart';
-import 'steps/step_21_distribution_mode.dart';
-import 'steps/step_22_protein_preference.dart';
-import 'steps/step_23_medical_disclaimer.dart';
-import 'steps/step_24_program_ready.dart';
+import 'cards/card_01_goal.dart';
+import 'cards/card_02_biometrics.dart';
+import 'cards/card_03_weight_pacing.dart';
+import 'cards/card_04_activity_training.dart';
+import 'cards/card_05_diet_preferences.dart';
+import 'cards/card_06_tdee_blueprint.dart';
+import 'cards/card_07_save_strategy.dart';
 
-/// Master 24-Step Onboarding Flow Screen
-/// Manages honest progress indicator, step persistence in app_settings,
-/// and profile/program synthesis into SQLite.
+/// Master 7-Card Streamlined Onboarding Flow Screen (AUD-37, AUD-38).
+/// Replaces legacy 24-step marathon with 7 cohesive, high-craft Apple HIG cards.
+/// Card 1: Goal Selection
+/// Card 2: Biometrics
+/// Card 3: Weight Goal & Dynamic Rate Pacing
+/// Card 4: Activity & Training
+/// Card 5: Diet & Nutrition Preferences
+/// Card 6: Personalized TDEE & Macro Blueprint Reveal
+/// Card 7: 'Save Your Strategy' (Optional Google/Email Auth + Health Connect sync)
 class OnboardingFlowScreen extends ConsumerStatefulWidget {
   const OnboardingFlowScreen({super.key, this.initialStep});
 
@@ -50,7 +39,7 @@ class OnboardingFlowScreen extends ConsumerStatefulWidget {
 class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
   late final PageController _pageController;
   int _currentStep = 0;
-  static const int _totalSteps = 24;
+  static const int _totalSteps = 7;
 
   // Onboarding Profile State
   String _name = 'Athlete';
@@ -61,7 +50,6 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
   double _weightHistoryMax = 80.0;
   String _recentWeightTrend = 'stable';
   String _bodyFatRange = '15 – 19%';
-  String _exerciseFrequency = '1-3';
   String _dailyActivity = 'moderate';
   String _liftingExperience = 'beginner';
   String _cardioExperience = 'beginner';
@@ -71,11 +59,14 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
   double _targetWeightKg = 70.0;
   double _ratePct = -0.50;
 
-  String _dietType = 'standard';
+  String _dietType = 'pure_veg';
+  String _staplePreference = 'balanced';
+  String _oilDefault = 'standard';
   String _calorieFloorType = 'standard';
   Set<int> _workoutDays = {1, 3, 5};
   String _distributionMode = 'even';
   ProteinPreference _proteinPref = ProteinPreference.high;
+
   MacroProgramStyle get _programStyle {
     if (_proteinPref == ProteinPreference.extraHigh) {
       return MacroProgramStyle.highProtein;
@@ -134,7 +125,6 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     _weightHistoryMax = profile.weightHistoryMax ?? _currentWeightKg;
     _recentWeightTrend = profile.recentWeightTrend;
     _bodyFatRange = profile.bodyFatRange ?? (_isMale ? '15 – 19%' : '22 – 26%');
-    _exerciseFrequency = profile.exerciseFrequency;
     _dailyActivity = profile.dailyActivity;
     _liftingExperience = profile.liftingExperience;
     _cardioExperience = profile.cardioExperience;
@@ -147,7 +137,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         profile.targetWeightKg > 0 ? profile.targetWeightKg : 70.0;
     _ratePct = profile.weeklyRateOfChangePct;
 
-    _dietType = profile.dietType;
+    _dietType = profile.dietType.isNotEmpty ? profile.dietType : 'pure_veg';
     _calorieFloorType = profile.calorieFloorType;
     _distributionMode = profile.distributionMode;
     _proteinPref = profile.proteinPreference;
@@ -165,6 +155,12 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         _workoutDays = parsedDays;
       }
     }
+
+    final savedStaple = db.getSetting('staple_preference', 'balanced');
+    _staplePreference = savedStaple;
+    final savedOil = db.getSetting('default_oil_modifier', 'standard');
+    _oilDefault = savedOil;
+
     final savedStepStr = db.getSetting('onboarding_step', '0');
     final savedStep = int.tryParse(savedStepStr) ?? 0;
     _currentStep = (widget.initialStep ?? savedStep).clamp(0, _totalSteps - 1);
@@ -228,14 +224,27 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
 
     double activityMult = 1.35;
     if (_dailyActivity == 'sedentary') activityMult = 1.20;
-    if (_dailyActivity == 'very_active') activityMult = 1.55;
+    if (_dailyActivity == 'light') activityMult = 1.35;
+    if (_dailyActivity == 'moderate') activityMult = 1.50;
+    if (_dailyActivity == 'very_active') activityMult = 1.70;
 
     double exerciseBoost = 0.0;
-    if (_exerciseFrequency == '1-3') exerciseBoost = 100.0;
-    if (_exerciseFrequency == '4-6') exerciseBoost = 220.0;
-    if (_exerciseFrequency == '7+') exerciseBoost = 350.0;
+    if (_workoutDays.isNotEmpty && _workoutDays.length <= 3) {
+      exerciseBoost = 100.0;
+    } else if (_workoutDays.length >= 4 && _workoutDays.length <= 6) {
+      exerciseBoost = 220.0;
+    } else if (_workoutDays.length >= 7) {
+      exerciseBoost = 350.0;
+    }
 
     return (bmr * activityMult + exerciseBoost).roundToDouble();
+  }
+
+  double _calculateBmr() {
+    return (10.0 * _currentWeightKg) +
+        (6.25 * _heightCm) -
+        (5.0 * _age) +
+        (_isMale ? 5.0 : -161.0);
   }
 
   void _persistCurrentProfile() {
@@ -243,7 +252,6 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     if (_calorieFloorType == 'aggressive') {
       floorCalories = _isMale ? 1300.0 : 1000.0;
     } else {
-      // Coached programs lock minimum clinical floor to 1200 kcal F / 1500 kcal M (AUD-05)
       floorCalories = _isMale ? 1500.0 : 1200.0;
     }
 
@@ -274,13 +282,16 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
       weightHistoryMax: _weightHistoryMax,
       distributionMode: _distributionMode,
       recentWeightTrend: _recentWeightTrend,
-      exerciseFrequency: _exerciseFrequency,
+      exerciseFrequency: '${_workoutDays.length}',
       dailyActivity: _dailyActivity,
     );
 
     ref.read(userProfileProvider.notifier).updateProfile(updatedProfile);
     final db = ref.read(databaseProvider);
     db.setSetting('onboarding_workout_days', _workoutDays.join(','));
+    db.setSetting('dietary_preference', _dietType);
+    db.setSetting('staple_preference', _staplePreference);
+    db.setSetting('default_oil_modifier', _oilDefault);
   }
 
   void _buildAndActivateProgram() {
@@ -308,9 +319,37 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     _nextStep();
   }
 
+  void _finishOnboarding() {
+    _persistCurrentProfile();
+    final program = _ensureProgram();
+    final db = ref.read(databaseProvider);
+    db.saveCoachingProgram(program);
+    db.setSetting('onboarding_completed', 'true');
+    db.setSetting('onboarding_step', '0');
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const ScaffoldWithNavBar()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final progress = (_currentStep + 1) / _totalSteps;
+    final tdee = _calculateBaselineTDEE();
+    final bmr = _calculateBmr();
+
+    // Compute live macro targets for preview
+    final targetCals = _goalType == GoalType.maintenance
+        ? tdee
+        : (_goalType == GoalType.fatLoss
+            ? tdee - (_currentWeightKg * (_ratePct.abs() / 100.0) * 7700 / 7)
+            : tdee + (_currentWeightKg * (_ratePct.abs() / 100.0) * 7700 / 7));
+    final proteinGrams = _currentWeightKg * _proteinPref.gramsPerKg;
+    final fatGrams = (targetCals * 0.25 / 9.0).clamp(30.0, 150.0);
+    final carbsGrams =
+        ((targetCals - (proteinGrams * 4.0) - (fatGrams * 9.0)) / 4.0)
+            .clamp(50.0, 800.0);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -353,211 +392,139 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
           _persistStepProgress(idx);
         },
         children: [
-          // Step 1: Health Connect (Optional)
-          Step01HealthConnect(onNext: _nextStep),
-          // Step 2: Sex
-          Step02Sex(
+          // Card 1: Goal Selection
+          Card01Goal(
+            selectedGoal: _goalType,
+            onGoalSelected: (goal) {
+              setState(() {
+                _goalType = goal;
+                if (goal == GoalType.maintenance) {
+                  _targetWeightKg = _currentWeightKg;
+                  _ratePct = 0.0;
+                } else if (goal == GoalType.fatLoss) {
+                  _ratePct = -0.50;
+                  if (_targetWeightKg >= _currentWeightKg) {
+                    _targetWeightKg =
+                        (_currentWeightKg - 5.0).clamp(40.0, 300.0);
+                  }
+                } else if (goal == GoalType.muscleGain) {
+                  _ratePct = 0.25;
+                  if (_targetWeightKg <= _currentWeightKg) {
+                    _targetWeightKg =
+                        (_currentWeightKg + 3.0).clamp(40.0, 300.0);
+                  }
+                }
+              });
+            },
+            onNext: _nextStep,
+          ),
+
+          // Card 2: Biometrics
+          Card02Biometrics(
             initialIsMale: _isMale,
-            onNext: (isMale) {
-              _isMale = isMale;
-              _nextStep();
-            },
-          ),
-          // Step 3: Date of Birth (Age 18+ Lock)
-          Step03Dob(
             initialAge: _age,
-            onNext: (age) {
-              _age = age;
-              _nextStep();
-            },
-          ),
-          // Step 4: Height (cm / ft-in toggle)
-          Step04Height(
             initialHeightCm: _heightCm,
-            onNext: (h) {
-              _heightCm = h;
-              _nextStep();
-            },
-          ),
-          // Step 5: Current Weight (kg / lb toggle, slider + numeric)
-          Step05Weight(
             initialWeightKg: _currentWeightKg,
-            onNext: (w) {
-              _currentWeightKg = w;
-              _nextStep();
+            onBiometricsChanged: ({
+              required isMale,
+              required age,
+              required heightCm,
+              required weightKg,
+            }) {
+              setState(() {
+                _isMale = isMale;
+                _age = age;
+                _heightCm = heightCm;
+                _currentWeightKg = weightKg;
+              });
             },
+            onNext: _nextStep,
           ),
-          // Step 6: Weight History
-          Step06WeightHistory(
-            currentWeightKg: _currentWeightKg,
-            initialMaxWeightKg: _weightHistoryMax,
-            onNext: (maxW) {
-              _weightHistoryMax = maxW;
-              _nextStep();
-            },
-          ),
-          // Step 7: Recent Weight Trend (seeds Kalman prior)
-          Step07WeightTrend(
-            initialTrend: _recentWeightTrend,
-            onNext: (trend) {
-              _recentWeightTrend = trend;
-              _nextStep();
-            },
-          ),
-          // Step 8: Body Fat (Optional)
-          Step08BodyFat(
-            initialBodyFatRange: _bodyFatRange,
-            isMale: _isMale,
-            onNext: (range) {
-              _bodyFatRange = range;
-              _nextStep();
-            },
-          ),
-          // Step 9: Exercise Frequency
-          Step09ExerciseFrequency(
-            initialFrequency: _exerciseFrequency,
-            onNext: (freq) {
-              _exerciseFrequency = freq;
-              _nextStep();
-            },
-          ),
-          // Step 10: Daily Activity
-          Step10DailyActivity(
-            initialActivity: _dailyActivity,
-            onNext: (activity) {
-              _dailyActivity = activity;
-              _nextStep();
-            },
-          ),
-          // Step 11: Lifting Experience
-          Step11LiftingExperience(
-            initialExperience: _liftingExperience,
-            onNext: (exp) {
-              _liftingExperience = exp;
-              _nextStep();
-            },
-          ),
-          // Step 12: Cardio Experience
-          Step12CardioExperience(
-            initialExperience: _cardioExperience,
-            onNext: (cardio) {
-              _cardioExperience = cardio;
-              _nextStep();
-            },
-          ),
-          // Step 13: TDEE Reveal (Mifflin-St Jeor + Activity/Exercise + Override)
-          Step13TdeeReveal(
-            weightKg: _currentWeightKg,
-            heightCm: _heightCm,
-            age: _age,
-            isMale: _isMale,
-            activityLevel: _dailyActivity,
-            exerciseFrequency: _exerciseFrequency,
-            initialOverrideKcal: _customTdeeOverride,
-            onNext: (tdee) {
-              _customTdeeOverride = tdee;
-              _nextStep();
-            },
-          ),
-          // Step 14: Goal Type
-          Step14GoalType(
-            initialGoalType: _goalType,
-            onNext: (g) {
-              _goalType = g;
-              _nextStep();
-            },
-          ),
-          // Step 15: Target Weight (BMI >= 18.5 guardrail)
-          Step15TargetWeight(
+
+          // Card 3: Weight Goal & Dynamic Rate Pacing
+          Card03WeightPacing(
             goalType: _goalType,
             currentWeightKg: _currentWeightKg,
             heightCm: _heightCm,
             initialTargetWeightKg: _targetWeightKg,
-            onNext: (targetW) {
-              _targetWeightKg = targetW;
-              _nextStep();
-            },
-          ),
-          // Step 16: Goal Rate
-          Step16GoalRate(
-            goalType: _goalType,
-            currentWeightKg: _currentWeightKg,
             initialRatePct: _ratePct,
-            onNext: (rate) {
-              _ratePct = rate;
-              _nextStep();
+            onPacingChanged: ({
+              required targetWeightKg,
+              required ratePct,
+            }) {
+              setState(() {
+                _targetWeightKg = targetWeightKg;
+                _ratePct = ratePct;
+              });
             },
-          ),
-          // Step 17: Goal Summary
-          Step17GoalSummary(
-            goalType: _goalType,
-            currentWeightKg: _currentWeightKg,
-            targetWeightKg: _targetWeightKg,
-            ratePct: _ratePct,
             onNext: _nextStep,
           ),
-          // Step 18: Diet Type
-          Step18DietType(
+
+          // Card 4: Activity & Training
+          Card04ActivityTraining(
+            initialActivity: _dailyActivity,
+            initialWorkoutDays: _workoutDays,
+            onActivityTrainingChanged: ({
+              required dailyActivity,
+              required workoutDays,
+            }) {
+              setState(() {
+                _dailyActivity = dailyActivity;
+                _workoutDays = workoutDays;
+              });
+            },
+            onNext: _nextStep,
+          ),
+
+          // Card 5: Diet & Nutrition Preferences
+          Card05DietPreferences(
             initialDietType: _dietType,
-            onNext: (diet) {
-              _dietType = diet;
-              _nextStep();
+            initialStaple: _staplePreference,
+            initialProteinPref: _proteinPref,
+            initialOilDefault: _oilDefault,
+            onPreferencesChanged: ({
+              required dietType,
+              required staplePreference,
+              required proteinPreference,
+              required oilDefault,
+            }) {
+              setState(() {
+                _dietType = dietType;
+                _staplePreference = staplePreference;
+                _proteinPref = proteinPreference;
+                _oilDefault = oilDefault;
+              });
             },
+            onNext: _nextStep,
           ),
-          // Step 19: Calorie Floor
-          Step19CalorieFloor(
-            isMale: _isMale,
-            initialFloorType: _calorieFloorType == 'disabled'
-                ? 'standard'
-                : _calorieFloorType,
-            onNext: (floor) {
-              _calorieFloorType = floor;
-              _nextStep();
+
+          // Card 6: Personalized TDEE & Macro Blueprint Reveal
+          Card06TdeeBlueprint(
+            tdeeKcal: tdee,
+            bmrKcal: bmr,
+            targetCalories: targetCals,
+            proteinGrams: proteinGrams,
+            carbsGrams: carbsGrams,
+            fatGrams: fatGrams,
+            initialOverrideKcal: _customTdeeOverride,
+            initialDistributionMode: _distributionMode,
+            workoutDays: _workoutDays,
+            onBlueprintChanged: ({
+              required customTdeeOverride,
+              required distributionMode,
+            }) {
+              setState(() {
+                _customTdeeOverride = customTdeeOverride;
+                _distributionMode = distributionMode;
+              });
             },
-          ),
-          // Step 20: Training Schedule
-          Step20Training(
-            initialWorkoutDays: _workoutDays,
-            onNext: (days) {
-              _workoutDays = days;
-              _nextStep();
-            },
-          ),
-          // Step 21: Distribution Mode (Even vs Shifted)
-          Step21DistributionMode(
-            initialMode: _distributionMode,
-            initialWorkoutDays: _workoutDays,
-            onNext: (mode, days) {
-              _distributionMode = mode;
-              _workoutDays = days;
-              _nextStep();
-            },
-          ),
-          // Step 22: Protein Preference
-          Step22ProteinPreference(
-            currentWeightKg: _currentWeightKg,
-            initialPreference: _proteinPref,
-            onNext: (pref) {
-              _proteinPref = pref;
-              _nextStep();
-            },
-          ),
-          // Step 23: Medical Disclaimer
-          Step23MedicalDisclaimer(
             onNext: _buildAndActivateProgram,
           ),
-          // Step 24: Program Ready Screen
-          Step24ProgramReady(
+
+          // Card 7: Save Your Strategy (Optional Google/Email Auth + Health Connect sync)
+          Card07SaveStrategy(
             program: _ensureProgram(),
-            onCompleted: () {
-              final db = ref.read(databaseProvider);
-              db.setSetting('onboarding_completed', 'true');
-              db.setSetting('onboarding_step', '0');
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const ScaffoldWithNavBar()),
-                (route) => false,
-              );
-            },
+            onFinish: _finishOnboarding,
           ),
         ],
       ),

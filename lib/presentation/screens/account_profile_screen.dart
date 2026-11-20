@@ -10,7 +10,7 @@ import 'package:sique/presentation/widgets/recent_workout_card.dart';
 import 'package:sique/presentation/widgets/workout_consistency_tracker.dart';
 import 'package:sique/presentation/widgets/workout_stats_hero_grid.dart';
 
-/// Complete Account & Hevy Training Profile Screen.
+/// Complete Account & Workout Training Profile Screen.
 /// Composes 6 modular widgets into an Apple Obsidian Dark scroll view.
 class AccountProfileScreen extends ConsumerWidget {
   const AccountProfileScreen({super.key});
