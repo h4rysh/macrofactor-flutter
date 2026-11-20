@@ -32,6 +32,7 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
 
   void _updateSetting(String key, String value, VoidCallback onUpdate) {
     ref.read(databaseProvider).setSetting(key, value);
+    ref.read(foodLogsRevisionProvider.notifier).state++;
     setState(onUpdate);
   }
 
@@ -48,6 +49,7 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
         ),
       ),
       body: ListView(
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           _buildPortionUnitCard(),
@@ -87,12 +89,14 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
             children: [
               Icon(Icons.scale_rounded, size: 20, color: AppTheme.activeBlue),
               SizedBox(width: 8),
-              Text(
-                'Default Portion Unit',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+              Expanded(
+                child: Text(
+                  'Default Portion Unit',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -185,12 +189,14 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
             children: [
               Icon(Icons.water_drop_outlined, size: 20, color: AppTheme.fat),
               SizedBox(width: 8),
-              Text(
-                'Default Cooking Oil Modifier',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+              Expanded(
+                child: Text(
+                  'Default Cooking Oil Modifier',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -275,12 +281,14 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
               Icon(Icons.view_timeline_rounded,
                   size: 20, color: AppTheme.expenditure),
               SizedBox(width: 8),
-              Text(
-                'Timeline & Display',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+              Expanded(
+                child: Text(
+                  'Timeline & Display',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
               ),
             ],
@@ -415,14 +423,18 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'Last synced: ${syncState.formattedLastSync}',
-                key: const Key('settings_last_sync_text'),
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: AppTheme.textMuted,
+              Expanded(
+                child: Text(
+                  'Last synced: ${syncState.formattedLastSync}',
+                  key: const Key('settings_last_sync_text'),
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.textMuted,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               ElevatedButton.icon(
                 key: const Key('settings_sync_now_btn'),
                 onPressed: syncState.isSyncing

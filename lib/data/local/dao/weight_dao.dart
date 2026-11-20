@@ -32,6 +32,28 @@ class WeightDao {
       DateTime.now().toIso8601String(),
     ]);
     stmt.dispose();
+
+    // Synchronize user_profile.current_weight to the latest logged scale weight (ISS-5-05)
+    _syncUserProfileWeight();
+  }
+
+  /// Synchronizes user_profile.current_weight with the most recent scale weight entry (ISS-5-05).
+  void _syncUserProfileWeight() {
+    try {
+      final stmt = _db.prepare('''
+        UPDATE user_profile
+        SET current_weight = (
+          SELECT scale_weight FROM weight_logs
+          ORDER BY date DESC, logged_at DESC
+          LIMIT 1
+        )
+        WHERE EXISTS (SELECT 1 FROM weight_logs);
+      ''');
+      stmt.execute();
+      stmt.dispose();
+    } catch (_) {
+      // Table may not exist yet or is being initialized
+    }
   }
 
   /// Convenience method to insert scale weight from DateTime.
@@ -117,5 +139,6 @@ class WeightDao {
     final stmt = _db.prepare('DELETE FROM weight_logs WHERE date = ?;');
     stmt.execute([date]);
     stmt.dispose();
+    _syncUserProfileWeight();
   }
 }

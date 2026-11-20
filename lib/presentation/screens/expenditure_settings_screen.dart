@@ -46,6 +46,7 @@ class _ExpenditureSettingsScreenState
         ),
       ),
       body: ListView(
+        physics: const ClampingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           _buildLiveMetricsCard(
@@ -193,14 +194,17 @@ class _ExpenditureSettingsScreenState
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Baseline Expenditure Prior',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+              const Expanded(
+                child: Text(
+                  'Baseline Expenditure Prior',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 '${baseline.toStringAsFixed(0)} kcal',
                 style: const TextStyle(
@@ -367,12 +371,14 @@ class _ExpenditureSettingsScreenState
             children: [
               Icon(Icons.shield_outlined, size: 20, color: AppTheme.activeBlue),
               SizedBox(width: 8),
-              Text(
-                'Adherence Neutrality Guarantee',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary,
+              Expanded(
+                child: Text(
+                  'Adherence Neutrality Guarantee',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
               ),
             ],

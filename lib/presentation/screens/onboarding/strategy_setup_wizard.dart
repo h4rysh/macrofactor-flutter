@@ -105,9 +105,8 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
             ? (_currentWeightKg * 1.08).roundToDouble()
             : _currentWeightKg;
 
-    final tempProfile = UserProfile(
-      id: 'usr_me',
-      name: 'Athlete',
+    final existingProfile = ref.read(userProfileProvider);
+    final tempProfile = existingProfile.copyWith(
       currentWeightKg: _currentWeightKg,
       targetWeightKg: targetWeight,
       heightCm: _heightCm,
@@ -117,7 +116,9 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
       programMode: _programMode,
       weeklyRateOfChangePct: _targetRatePct,
       proteinPreference: _proteinPref,
-      calorieFloor: 1200.0,
+      calorieFloor: existingProfile.calorieFloor > 0
+          ? existingProfile.calorieFloor
+          : (_isMale ? 1500.0 : 1200.0),
       baselineExpenditureKcal: tdee,
     );
 
@@ -138,9 +139,8 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
             ? (_currentWeightKg * 1.08).roundToDouble()
             : _currentWeightKg;
 
-    final finalProfile = UserProfile(
-      id: 'usr_me',
-      name: 'Athlete',
+    final existingProfile = ref.read(userProfileProvider);
+    final finalProfile = existingProfile.copyWith(
       currentWeightKg: _currentWeightKg,
       targetWeightKg: targetWeight,
       heightCm: _heightCm,
@@ -150,7 +150,9 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
       programMode: _programMode,
       weeklyRateOfChangePct: _targetRatePct,
       proteinPreference: _proteinPref,
-      calorieFloor: 1200.0,
+      calorieFloor: existingProfile.calorieFloor > 0
+          ? existingProfile.calorieFloor
+          : (_isMale ? 1500.0 : 1200.0),
       baselineExpenditureKcal: tdee,
     );
 
@@ -169,10 +171,14 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
     final db = ref.read(databaseProvider);
     db.setSetting('dietary_preference', _dietaryPref);
 
-    // Navigate to Auth Gate
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AuthGateScreen()),
-    );
+    // Return to calling screen (e.g. StrategyScreen / Dashboard)
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const AuthGateScreen()),
+      );
+    }
   }
 
   @override
@@ -239,6 +245,7 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
                 bottomPadding > 0 ? bottomPadding : 16,
               ),
               child: AppleTactileCard(
+                key: const Key('wizard_continue_btn'),
                 onTap: _nextPage,
                 backgroundColor: AppTheme.calories,
                 borderRadius: 16,
@@ -246,14 +253,17 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      _currentStep == _totalSteps - 1
-                          ? 'Confirm Strategy & Continue'
-                          : 'Continue',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                    Flexible(
+                      child: Text(
+                        _currentStep == _totalSteps - 1
+                            ? 'Confirm Strategy & Continue'
+                            : 'Continue',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                     const SizedBox(width: 8),

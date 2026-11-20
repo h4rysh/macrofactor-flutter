@@ -8,6 +8,7 @@ import 'package:sique/presentation/screens/auth/delete_account_dialog.dart';
 import 'package:sique/presentation/screens/data_export_screen.dart';
 import 'package:sique/presentation/screens/expenditure_settings_screen.dart';
 import 'package:sique/presentation/screens/food_log_settings_screen.dart';
+import 'package:sique/presentation/screens/health_sync_settings_screen.dart';
 import 'package:sique/presentation/screens/profile_targets_screen.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/animated_primitives.dart';
@@ -45,6 +46,18 @@ class MoreScreen extends ConsumerWidget {
               title: 'Profile & Targets',
               subtitle: 'Caloric balance, height, weight, target macros',
               destination: const ProfileTargetsScreen(),
+            ),
+          ),
+          AppleStaggeredEntrance(
+            index: 2,
+            child: _buildSettingsTile(
+              context: context,
+              icon: Icons.sync_rounded,
+              iconColor: const Color(0xFF34C759),
+              title: 'Health Connect Sync',
+              subtitle:
+                  'Scale weight, workout sessions, permission diagnostics',
+              destination: const HealthSyncSettingsScreen(),
             ),
           ),
           AppleStaggeredEntrance(

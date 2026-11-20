@@ -159,6 +159,7 @@ class ExpenditureKalmanV4 {
   ExpenditureKalmanV4({
     required double initialExpenditureKcal,
     double? initialWeightKg,
+    this.bmrKcal,
     this.sigmaW0 = 0.5,
     this.sigmaE0 = 300.0,
     this.qW = 0.0016, // 0.04^2 kg^2
@@ -177,6 +178,7 @@ class ExpenditureKalmanV4 {
         _pWE = 0.0,
         _baselineExpenditure = initialExpenditureKcal;
 
+  final double? bmrKcal;
   final double sigmaW0;
   final double sigmaE0;
   final double qW;
@@ -224,6 +226,23 @@ class ExpenditureKalmanV4 {
 
   /// Whether updates are currently paused.
   bool get isPaused => _isPaused;
+
+  /// Effective Basal Metabolic Rate (BMR) used for physiological safety bounding (ISS-5-01).
+  /// If [bmrKcal] is provided, uses it directly; otherwise estimates BMR from
+  /// current body mass (Mifflin standard ~20 kcal/kg) or baseline expenditure (~1.5x BMR).
+  double get effectiveBmr {
+    if (bmrKcal != null && bmrKcal! > 0) {
+      return bmrKcal!;
+    }
+    if (_weightKg > 0.0) {
+      return _weightKg * 20.0;
+    }
+    return _baselineExpenditure / 1.5;
+  }
+
+  /// Physiological safety bounds: [0.8x BMR to 2.5x BMR].
+  double get minExpenditureBound => 0.8 * effectiveBmr;
+  double get maxExpenditureBound => 2.5 * effectiveBmr;
 
   /// Processes a single observation sequentially via step parameters.
   ExpenditureState step({
@@ -328,6 +347,9 @@ class ExpenditureKalmanV4 {
       // Joint update of weight and expenditure
       _weightKg += kW * clippedInnovation;
       _expenditureKcal += kE * clippedInnovation;
+      // Clamp latent expenditure within physiological range [0.8x to 2.5x BMR] (ISS-5-01)
+      _expenditureKcal =
+          _expenditureKcal.clamp(minExpenditureBound, maxExpenditureBound);
 
       // Joseph-form Huber covariance update
       final oneMinusPsiKw = 1.0 - (psi * kW);
@@ -413,7 +435,8 @@ class ExpenditureKalmanV4 {
 
     return ExpenditureState(
       date: date,
-      expenditureKcal: _expenditureKcal,
+      expenditureKcal:
+          _expenditureKcal.clamp(minExpenditureBound, maxExpenditureBound),
       trendWeightKg: _weightKg,
       variance: _pEE,
       weightVariance: _pWW,
@@ -430,11 +453,13 @@ class ExpenditureKalmanV4 {
   static List<ExpenditureState> batchProcess({
     required double initialExpenditureKcal,
     double? initialWeightKg,
+    double? bmrKcal,
     required List<DailyExpenditureInput> inputs,
   }) {
     final filter = ExpenditureKalmanV4(
       initialExpenditureKcal: initialExpenditureKcal,
       initialWeightKg: initialWeightKg,
+      bmrKcal: bmrKcal,
     );
     final results = <ExpenditureState>[];
     for (final dayInput in inputs) {

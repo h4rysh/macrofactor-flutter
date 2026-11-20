@@ -6,6 +6,7 @@ import 'package:sique/domain/algorithms/coaching_engine.dart';
 import 'package:sique/domain/models/macro_program.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/screens/scaffold_with_nav_bar.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
 import 'steps/step_01_health_connect.dart';
@@ -75,8 +76,50 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
   Set<int> _workoutDays = {1, 3, 5};
   String _distributionMode = 'even';
   ProteinPreference _proteinPref = ProteinPreference.high;
-  final MacroProgramStyle _programStyle = MacroProgramStyle.balanced;
+  MacroProgramStyle get _programStyle {
+    if (_proteinPref == ProteinPreference.extraHigh) {
+      return MacroProgramStyle.highProtein;
+    }
+    if (_dietType == 'keto') {
+      return MacroProgramStyle.keto;
+    }
+    if (_dietType == 'low_carb') {
+      return MacroProgramStyle.lowCarb;
+    }
+    if (_dietType == 'low_fat') {
+      return MacroProgramStyle.lowFat;
+    }
+    return MacroProgramStyle.balanced;
+  }
+
   WeeklyMacroProgram? _generatedProgram;
+
+  WeeklyMacroProgram _computeFallbackProgram() {
+    final profile = ref.read(userProfileProvider);
+    final baselineTdee = _calculateBaselineTDEE();
+    return CoachingEngine.buildWeeklyProgram(
+      profile: profile,
+      expenditureKcal: baselineTdee,
+      style: _programStyle,
+      allocationType: _distributionMode == 'shifted'
+          ? DayAllocationType.shiftedWorkout
+          : DayAllocationType.even,
+      workoutDays: _workoutDays,
+    );
+  }
+
+  WeeklyMacroProgram _ensureProgram() {
+    if (_generatedProgram != null) return _generatedProgram!;
+    final db = ref.read(databaseProvider);
+    final saved = db.getCoachingProgram();
+    if (saved != null) {
+      _generatedProgram = saved;
+      return saved;
+    }
+    final fallback = _computeFallbackProgram();
+    _generatedProgram = fallback;
+    return fallback;
+  }
 
   @override
   void initState() {
@@ -109,11 +152,29 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     _distributionMode = profile.distributionMode;
     _proteinPref = profile.proteinPreference;
 
-    // Load persisted step
+    // Load persisted step and workout days
     final db = ref.read(databaseProvider);
+    final savedWorkoutDays = db.getSetting('onboarding_workout_days', '');
+    if (savedWorkoutDays.isNotEmpty) {
+      final parsedDays = savedWorkoutDays
+          .split(',')
+          .map((s) => int.tryParse(s.trim()))
+          .whereType<int>()
+          .toSet();
+      if (parsedDays.isNotEmpty) {
+        _workoutDays = parsedDays;
+      }
+    }
     final savedStepStr = db.getSetting('onboarding_step', '0');
     final savedStep = int.tryParse(savedStepStr) ?? 0;
     _currentStep = (widget.initialStep ?? savedStep).clamp(0, _totalSteps - 1);
+
+    if (_currentStep == _totalSteps - 1) {
+      _generatedProgram = db.getCoachingProgram();
+      if (_generatedProgram == null) {
+        _ensureProgram();
+      }
+    }
 
     _pageController = PageController(initialPage: _currentStep);
   }
@@ -187,9 +248,14 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
       floorCalories = _isMale ? 1500.0 : 1200.0;
     }
 
+    final currentProfile = ref.read(userProfileProvider);
+    final profileName = _name.isNotEmpty && _name != 'Athlete'
+        ? _name
+        : (currentProfile.name.isNotEmpty ? currentProfile.name : 'Athlete');
+
     final updatedProfile = UserProfile(
       id: 'active_user',
-      name: _name,
+      name: profileName,
       currentWeightKg: _currentWeightKg,
       targetWeightKg: _targetWeightKg,
       heightCm: _heightCm,
@@ -214,6 +280,8 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     );
 
     ref.read(userProfileProvider.notifier).updateProfile(updatedProfile);
+    final db = ref.read(databaseProvider);
+    db.setSetting('onboarding_workout_days', _workoutDays.join(','));
   }
 
   void _buildAndActivateProgram() {
@@ -478,10 +546,18 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
             onNext: _buildAndActivateProgram,
           ),
           // Step 24: Program Ready Screen
-          if (_generatedProgram != null)
-            Step24ProgramReady(program: _generatedProgram!)
-          else
-            const Center(child: CircularProgressIndicator()),
+          Step24ProgramReady(
+            program: _ensureProgram(),
+            onCompleted: () {
+              final db = ref.read(databaseProvider);
+              db.setSetting('onboarding_completed', 'true');
+              db.setSetting('onboarding_step', '0');
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const ScaffoldWithNavBar()),
+                (route) => false,
+              );
+            },
+          ),
         ],
       ),
     );

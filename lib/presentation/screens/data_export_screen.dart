@@ -1,7 +1,12 @@
 import 'dart:convert';
+import 'dart:developer' as developer;
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:sique/data/utils/csv_sanitizer.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
@@ -16,6 +21,10 @@ class DataExportScreen extends ConsumerStatefulWidget {
 }
 
 class _DataExportScreenState extends ConsumerState<DataExportScreen> {
+  // Safe payload threshold to prevent Android Binder TransactionTooLargeException crashes (ISS-6-02)
+  static const int _kMaxBinderPayloadChars = 200 * 1024; // ~200 KB safe limit
+  static const int _kMaxPreviewChars = 40 * 1024; // ~40 KB preview limit
+
   int _foodCatalogCount = 0;
   int _totalFoodLogs = 0;
   int _totalWeightLogs = 0;
@@ -86,31 +95,136 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     return buffer.toString();
   }
 
+  /// Exports large string content to local storage in chunks to prevent memory/binder issues (ISS-6-02).
+  Future<File?> _saveExportToFile(String filename, String content) async {
+    try {
+      final docsDir = await getApplicationDocumentsDirectory();
+      final exportDir = Directory(p.join(docsDir.path, 'exports'));
+      if (!await exportDir.exists()) {
+        await exportDir.create(recursive: true);
+      }
+      final file = File(p.join(exportDir.path, filename));
+      final sink = file.openWrite();
+
+      // Chunked stream write
+      const chunkSize = 16 * 1024;
+      for (var i = 0; i < content.length; i += chunkSize) {
+        final end =
+            (i + chunkSize < content.length) ? i + chunkSize : content.length;
+        sink.write(content.substring(i, end));
+      }
+      await sink.flush();
+      await sink.close();
+      return file;
+    } catch (e, st) {
+      developer.log(
+        'Failed to save export to file',
+        name: 'DataExportScreen',
+        error: e,
+        stackTrace: st,
+      );
+      return null;
+    }
+  }
+
+  /// Copies text to system clipboard with binder-safe chunking and fallback to file (ISS-6-02).
+  Future<void> _safeCopyToClipboard({
+    required String content,
+    required String successMessage,
+    required Color color,
+    required String filename,
+  }) async {
+    try {
+      if (content.length > _kMaxBinderPayloadChars) {
+        // Prevent Android TransactionTooLargeException: write full export to file first
+        final savedFile = await _saveExportToFile(filename, content);
+        final safeChunk = content.substring(0, _kMaxBinderPayloadChars);
+
+        await Clipboard.setData(ClipboardData(text: safeChunk));
+
+        if (mounted) {
+          final locationInfo =
+              savedFile != null ? 'Full file saved to ${savedFile.path}. ' : '';
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'Large payload chunked. ${locationInfo}First chunk copied to clipboard.',
+              ),
+              backgroundColor: color,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      } else {
+        await Clipboard.setData(ClipboardData(text: content));
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(successMessage),
+              backgroundColor: color,
+            ),
+          );
+        }
+      }
+    } on PlatformException catch (e, st) {
+      developer.log(
+        'PlatformException during clipboard setData; attempting file fallback',
+        name: 'DataExportScreen',
+        error: e,
+        stackTrace: st,
+      );
+      final savedFile = await _saveExportToFile(filename, content);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              savedFile != null
+                  ? 'Clipboard unavailable. Saved to ${savedFile.path}'
+                  : 'Clipboard transaction exceeded platform limits.',
+            ),
+            backgroundColor: AppTheme.calories,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Export error: $e'),
+            backgroundColor: AppTheme.calories,
+          ),
+        );
+      }
+    }
+  }
+
   void _copyFoodLogs() {
     final jsonStr = _generateFoodLogsJson();
-    Clipboard.setData(ClipboardData(text: jsonStr));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            Text('Food logs copied to clipboard ($_totalFoodLogs entries)'),
-        backgroundColor: AppTheme.activeBlue,
-      ),
+    _safeCopyToClipboard(
+      content: jsonStr,
+      successMessage: 'Food logs copied to clipboard ($_totalFoodLogs entries)',
+      color: AppTheme.activeBlue,
+      filename: 'food_logs_export.json',
     );
   }
 
   void _copyWeightLogs() {
     final csvStr = _generateWeightLogsCsv();
-    Clipboard.setData(ClipboardData(text: csvStr));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content:
-            Text('Weight logs copied to clipboard ($_totalWeightLogs entries)'),
-        backgroundColor: AppTheme.trendWeight,
-      ),
+    _safeCopyToClipboard(
+      content: csvStr,
+      successMessage:
+          'Weight logs copied to clipboard ($_totalWeightLogs entries)',
+      color: AppTheme.trendWeight,
+      filename: 'weight_logs_export.csv',
     );
   }
 
   void _showPreviewDialog(String title, String content) {
+    final isTruncated = content.length > _kMaxPreviewChars;
+    final displayContent = isTruncated
+        ? '${content.substring(0, _kMaxPreviewChars)}\n\n--- [Preview truncated for performance. Full content: ${content.length} characters] ---'
+        : (content.isEmpty ? 'No entries found.' : content);
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -121,7 +235,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           height: 320,
           child: SingleChildScrollView(
             child: Text(
-              content.isEmpty ? 'No entries found.' : content,
+              displayContent,
               style: const TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondary,
@@ -136,13 +250,12 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           ),
           TextButton(
             onPressed: () {
-              Clipboard.setData(ClipboardData(text: content));
               Navigator.of(ctx).pop();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Copied to clipboard'),
-                  backgroundColor: AppTheme.activeBlue,
-                ),
+              _safeCopyToClipboard(
+                content: content,
+                successMessage: 'Copied to clipboard',
+                color: AppTheme.activeBlue,
+                filename: 'preview_export.txt',
               );
             },
             child: const Text('Copy All',

@@ -4,9 +4,20 @@ import 'package:sqlite3/common.dart';
 
 /// Data Access Object managing foods catalog, portion units, full-text search, and food logs.
 class FoodDao {
-  FoodDao(this._db);
+  FoodDao(this._db) {
+    _ensureIndexes();
+  }
 
   final CommonDatabase _db;
+
+  /// Ensures SQLite index on portion_units(food_id) exists for high-speed portion queries (ISS-8-07).
+  void _ensureIndexes() {
+    try {
+      _db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_portion_units_food_id ON portion_units(food_id);',
+      );
+    } catch (_) {}
+  }
 
   /// Sanitizes an input search string for SQLite FTS5 by stripping control operators
   /// and enclosing each search term in double-quotes with wildcard prefix.
@@ -34,28 +45,34 @@ class FoodDao {
   }
 
   /// Searches foods using SQLite FTS5 with operator escaping and rank ordering, falling back to LIKE.
+  /// Guarantees prepared statement disposal in try/finally (ISS-8-04).
   List<FoodItem> searchFoods(String query, {int limit = 30}) {
     final ftsQuery = sanitizeFts5Query(query);
     if (ftsQuery.isEmpty) {
       final stmt = _db.prepare('SELECT * FROM foods LIMIT ?;');
-      final result = stmt.select([limit]);
-      stmt.dispose();
-      return result.map(_mapFoodRow).toList();
+      try {
+        final result = stmt.select([limit]);
+        return result.map(_mapFoodRow).toList();
+      } finally {
+        stmt.dispose();
+      }
     }
 
     try {
-      final stmt = _db.prepare('''
+      final ftsStmt = _db.prepare('''
         SELECT f.* FROM foods f
         JOIN foods_fts fts ON f.id = fts.rowid
         WHERE foods_fts MATCH ?
         ORDER BY fts.rank
         LIMIT ?;
       ''');
-      final result = stmt.select([ftsQuery, limit]);
-      stmt.dispose();
-
-      if (result.isNotEmpty) {
-        return result.map(_mapFoodRow).toList();
+      try {
+        final result = ftsStmt.select([ftsQuery, limit]);
+        if (result.isNotEmpty) {
+          return result.map(_mapFoodRow).toList();
+        }
+      } finally {
+        ftsStmt.dispose();
       }
     } on SqliteException catch (e, st) {
       developer.log(
@@ -74,19 +91,25 @@ class FoodDao {
       WHERE name LIKE ? OR aliases LIKE ? OR category LIKE ?
       LIMIT ?;
     ''');
-    final fallbackResult =
-        fallbackStmt.select([likePattern, likePattern, likePattern, limit]);
-    fallbackStmt.dispose();
-    return fallbackResult.map(_mapFoodRow).toList();
+    try {
+      final fallbackResult =
+          fallbackStmt.select([likePattern, likePattern, likePattern, limit]);
+      return fallbackResult.map(_mapFoodRow).toList();
+    } finally {
+      fallbackStmt.dispose();
+    }
   }
 
   /// Gets a specific food item by its ID with portion units.
   FoodItem? getFoodById(int id) {
     final stmt = _db.prepare('SELECT * FROM foods WHERE id = ? LIMIT 1;');
-    final result = stmt.select([id]);
-    stmt.dispose();
-    if (result.isEmpty) return null;
-    return _mapFoodRow(result.first);
+    try {
+      final result = stmt.select([id]);
+      if (result.isEmpty) return null;
+      return _mapFoodRow(result.first);
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Fetches portion units for a given food.
@@ -94,17 +117,20 @@ class FoodDao {
     final stmt = _db.prepare('''
       SELECT * FROM portion_units WHERE food_id = ? ORDER BY is_default DESC, id ASC;
     ''');
-    final result = stmt.select([foodId]);
-    stmt.dispose();
-    return result.map((row) {
-      return PortionUnit(
-        id: row['id'] as int,
-        foodId: row['food_id'] as int,
-        unitName: row['unit_name'] as String,
-        gramWeight: (row['gram_weight'] as num).toDouble(),
-        isDefault: (row['is_default'] as int) == 1,
-      );
-    }).toList();
+    try {
+      final result = stmt.select([foodId]);
+      return result.map((row) {
+        return PortionUnit(
+          id: row['id'] as int,
+          foodId: row['food_id'] as int,
+          unitName: row['unit_name'] as String,
+          gramWeight: (row['gram_weight'] as num).toDouble(),
+          isDefault: (row['is_default'] as int) == 1,
+        );
+      }).toList();
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Inserts a FoodItem into the database and updates FTS index.
@@ -128,34 +154,40 @@ class FoodDao {
         aliases = excluded.aliases,
         is_verified = excluded.is_verified;
     ''');
-    stmt.execute([
-      food.id,
-      food.uuid,
-      food.name,
-      food.category,
-      food.region,
-      food.caloriesPer100g,
-      food.proteinPer100g,
-      food.carbsPer100g,
-      food.fatPer100g,
-      food.fiberPer100g,
-      food.iconSvg,
-      food.source,
-      food.aliases,
-      food.isVerified ? 1 : 0,
-    ]);
-    stmt.dispose();
+    try {
+      stmt.execute([
+        food.id,
+        food.uuid,
+        food.name,
+        food.category,
+        food.region,
+        food.caloriesPer100g,
+        food.proteinPer100g,
+        food.carbsPer100g,
+        food.fatPer100g,
+        food.fiberPer100g,
+        food.iconSvg,
+        food.source,
+        food.aliases,
+        food.isVerified ? 1 : 0,
+      ]);
+    } finally {
+      stmt.dispose();
+    }
 
     try {
       final ftsStmt = _db.prepare('''
         INSERT INTO foods_fts (rowid, name, aliases, category)
         VALUES (?, ?, ?, ?);
       ''');
-      ftsStmt.execute([food.id, food.name, food.aliases, food.category]);
-      ftsStmt.dispose();
+      try {
+        ftsStmt.execute([food.id, food.name, food.aliases, food.category]);
+      } finally {
+        ftsStmt.dispose();
+      }
     } on SqliteException catch (e, st) {
       developer.log(
-        'Failed to insert into foods_fts for food ${food.id}',
+        'FTS manual insertion note for food ${food.id}',
         name: 'FoodDao',
         error: e,
         stackTrace: st,
@@ -169,14 +201,17 @@ class FoodDao {
       INSERT INTO portion_units (id, food_id, unit_name, gram_weight, is_default)
       VALUES (?, ?, ?, ?, ?);
     ''');
-    stmt.execute([
-      unit.id,
-      unit.foodId,
-      unit.unitName,
-      unit.gramWeight,
-      unit.isDefault ? 1 : 0,
-    ]);
-    stmt.dispose();
+    try {
+      stmt.execute([
+        unit.id,
+        unit.foodId,
+        unit.unitName,
+        unit.gramWeight,
+        unit.isDefault ? 1 : 0,
+      ]);
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Logs a food entry.
@@ -188,27 +223,28 @@ class FoodDao {
         fat, fiber, oil_modifier, logged_at, icon_svg
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     ''');
-
-    stmt.execute([
-      entry.date,
-      entry.mealType.name,
-      entry.foodId,
-      entry.foodName,
-      entry.servingQuantity,
-      entry.unitName,
-      entry.gramWeight,
-      entry.calories,
-      entry.protein,
-      entry.carbs,
-      entry.fat,
-      entry.fiber,
-      entry.oilModifier.name,
-      entry.loggedAt.toIso8601String(),
-      entry.iconSvg,
-    ]);
-    stmt.dispose();
-
-    return _db.lastInsertRowId;
+    try {
+      stmt.execute([
+        entry.date,
+        entry.mealType.name,
+        entry.foodId,
+        entry.foodName,
+        entry.servingQuantity,
+        entry.unitName,
+        entry.gramWeight,
+        entry.calories,
+        entry.protein,
+        entry.carbs,
+        entry.fat,
+        entry.fiber,
+        entry.oilModifier.name,
+        entry.loggedAt.toIso8601String(),
+        entry.iconSvg,
+      ]);
+      return _db.lastInsertRowId;
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Restores a previously deleted food entry, preserving its original id,
@@ -224,28 +260,29 @@ class FoodDao {
         fat, fiber, oil_modifier, logged_at, icon_svg
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     ''');
-
-    stmt.execute([
-      entry.id,
-      entry.date,
-      entry.mealType.name,
-      entry.foodId,
-      entry.foodName,
-      entry.servingQuantity,
-      entry.unitName,
-      entry.gramWeight,
-      entry.calories,
-      entry.protein,
-      entry.carbs,
-      entry.fat,
-      entry.fiber,
-      entry.oilModifier.name,
-      entry.loggedAt.toIso8601String(),
-      entry.iconSvg,
-    ]);
-    stmt.dispose();
-
-    return entry.id!;
+    try {
+      stmt.execute([
+        entry.id,
+        entry.date,
+        entry.mealType.name,
+        entry.foodId,
+        entry.foodName,
+        entry.servingQuantity,
+        entry.unitName,
+        entry.gramWeight,
+        entry.calories,
+        entry.protein,
+        entry.carbs,
+        entry.fat,
+        entry.fiber,
+        entry.oilModifier.name,
+        entry.loggedAt.toIso8601String(),
+        entry.iconSvg,
+      ]);
+      return entry.id!;
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Retrieves all logged food items for a date (YYYY-MM-DD).
@@ -253,17 +290,22 @@ class FoodDao {
     final stmt = _db.prepare('''
       SELECT * FROM food_logs WHERE date = ? ORDER BY logged_at ASC, id ASC;
     ''');
-    final result = stmt.select([date]);
-    stmt.dispose();
-
-    return result.map(_mapFoodLogEntryRow).toList();
+    try {
+      final result = stmt.select([date]);
+      return result.map(_mapFoodLogEntryRow).toList();
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Deletes a food log entry by id.
   void deleteFoodLog(int id) {
     final stmt = _db.prepare('DELETE FROM food_logs WHERE id = ?;');
-    stmt.execute([id]);
-    stmt.dispose();
+    try {
+      stmt.execute([id]);
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Retrieves all logged food entries across all dates.
@@ -271,18 +313,24 @@ class FoodDao {
     final stmt = _db.prepare('''
       SELECT * FROM food_logs ORDER BY date DESC, logged_at DESC;
     ''');
-    final result = stmt.select();
-    stmt.dispose();
-    return result.map(_mapFoodLogEntryRow).toList();
+    try {
+      final result = stmt.select();
+      return result.map(_mapFoodLogEntryRow).toList();
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Returns total count of indexed foods.
   int getFoodCount() {
     try {
       final stmt = _db.prepare('SELECT COUNT(*) as count FROM foods;');
-      final result = stmt.select();
-      stmt.dispose();
-      return (result.first['count'] as num).toInt();
+      try {
+        final result = stmt.select();
+        return (result.first['count'] as num).toInt();
+      } finally {
+        stmt.dispose();
+      }
     } on SqliteException catch (e, st) {
       developer.log(
         'Failed to get food count',
@@ -301,13 +349,16 @@ class FoodDao {
       FROM food_logs
       GROUP BY date;
     ''');
-    final result = stmt.select();
-    stmt.dispose();
-    final map = <String, double>{};
-    for (final row in result) {
-      map[row['date'] as String] = (row['total_cals'] as num).toDouble();
+    try {
+      final result = stmt.select();
+      final map = <String, double>{};
+      for (final row in result) {
+        map[row['date'] as String] = (row['total_cals'] as num).toDouble();
+      }
+      return map;
+    } finally {
+      stmt.dispose();
     }
-    return map;
   }
 
   FoodItem _mapFoodRow(Row row) {

@@ -34,6 +34,19 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     return DateTime.tryParse(str) ?? ref.read(clockProvider)();
   }
 
+  DateTime get _selectedDateWithCurrentTime {
+    final current = _selectedDate;
+    final now = ref.read(clockProvider)();
+    return DateTime(
+      current.year,
+      current.month,
+      current.day,
+      now.hour,
+      now.minute,
+      now.second,
+    );
+  }
+
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
@@ -233,8 +246,12 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
       );
     });
 
-    // Fetch yesterday's logs for Copy Yesterday feature
-    final yesterday = selectedDate.subtract(const Duration(days: 1));
+    // Fetch yesterday's logs for Copy Yesterday feature (calendar math is DST-safe)
+    final yesterday = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day - 1,
+    );
     final yesterdayStr = DateFormat('yyyy-MM-dd').format(yesterday);
     final db = ref.read(databaseProvider);
     final yesterdayLogs = db.getFoodLogsForDate(yesterdayStr);
@@ -350,8 +367,8 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                   ),
                 ),
 
-                // Bottom padding to avoid persistent search bar and navigation dock overlap
-                const SliverToBoxAdapter(child: SizedBox(height: 80)),
+                // Bottom padding to avoid persistent search bar and navigation dock overlap (ISS-7-01)
+                const SliverToBoxAdapter(child: SizedBox(height: 110)),
               ],
             ),
 
@@ -360,7 +377,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
               left: 0,
               right: 0,
               bottom: 0,
-              child: SizedBox(height: 80),
+              child: SizedBox(height: 110),
             ),
 
             // 5. Docked Persistent Quick Search Bar (above Bottom Nav)
@@ -370,11 +387,12 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
               bottom: 4,
               child: PersistentSearchBar(
                 onSearchTap: () {
+                  final nowHour = ref.read(clockProvider)().hour;
                   Navigator.push(
                     context,
                     FoodSearchScreen.route(
-                      mealType: _getMealTypeForHour(DateTime.now().hour),
-                      initialLoggedAt: _selectedDate,
+                      mealType: _getMealTypeForHour(nowHour),
+                      initialLoggedAt: _selectedDateWithCurrentTime,
                     ),
                   );
                 },
@@ -387,11 +405,12 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                   );
                 },
                 onCustomFoodTap: () {
+                  final nowHour = ref.read(clockProvider)().hour;
                   Navigator.push(
                     context,
                     FoodSearchScreen.route(
-                      mealType: _getMealTypeForHour(DateTime.now().hour),
-                      initialLoggedAt: _selectedDate,
+                      mealType: _getMealTypeForHour(nowHour),
+                      initialLoggedAt: _selectedDateWithCurrentTime,
                     ),
                   );
                 },

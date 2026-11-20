@@ -99,7 +99,9 @@ class FoodItem {
     OilModifier oilModifier = OilModifier.standard,
     double? oilGrams,
   }) {
-    final totalGrams = quantity * unit.gramWeight;
+    final clampedQuantity = math.max(0.0, quantity);
+    final unitWeight = unit.gramWeight > 0 ? unit.gramWeight : 100.0;
+    final totalGrams = clampedQuantity * unitWeight;
     final ratio = totalGrams / 100.0;
 
     final baseCalories = math.max(0.0, caloriesPer100g * ratio);
@@ -113,11 +115,11 @@ class FoodItem {
     final double addedCalories;
     if (oilGrams != null) {
       final clampedOil = math.max(0.0, oilGrams);
-      addedFat = clampedOil * quantity;
+      addedFat = clampedOil * clampedQuantity;
       addedCalories = addedFat * 9.0;
     } else {
-      addedFat = oilModifier.additionalFatGrams * quantity;
-      addedCalories = oilModifier.additionalCalories * quantity;
+      addedFat = oilModifier.additionalFatGrams * clampedQuantity;
+      addedCalories = oilModifier.additionalCalories * clampedQuantity;
     }
 
     final adjustedCalories = math.max(0.0, baseCalories + addedCalories);
@@ -320,22 +322,31 @@ class FoodLogEntry {
   double get effectiveFiber => fiber;
   double get quantity => servingQuantity;
   double get grams => gramWeight;
-  FoodItem get food => FoodItem(
-        id: foodId,
-        uuid: 'food_$foodId',
-        name: foodName,
-        category: 'Food',
-        region: 'All',
-        caloriesPer100g:
-            gramWeight > 0 ? (calories / gramWeight) * 100 : calories,
-        proteinPer100g: gramWeight > 0 ? (protein / gramWeight) * 100 : protein,
-        carbsPer100g: gramWeight > 0 ? (carbs / gramWeight) * 100 : carbs,
-        fatPer100g: gramWeight > 0 ? (fat / gramWeight) * 100 : fat,
-        fiberPer100g: gramWeight > 0 ? (fiber / gramWeight) * 100 : fiber,
-        iconSvg: iconSvg,
-        source: 'Catalog',
-        aliases: foodName,
-      );
+  FoodItem get food {
+    final effectiveQuantity = math.max(0.0, servingQuantity);
+    final oilCals = oilModifier.additionalCalories * effectiveQuantity;
+    final oilFat = oilModifier.additionalFatGrams * effectiveQuantity;
+    final baseCalories = math.max(0.0, calories - oilCals);
+    final baseFat = math.max(0.0, fat - oilFat);
+    return FoodItem(
+      id: foodId,
+      uuid: 'food_$foodId',
+      name: foodName,
+      category: 'Food',
+      region: 'All',
+      caloriesPer100g:
+          gramWeight > 0 ? (baseCalories / gramWeight) * 100 : baseCalories,
+      proteinPer100g: gramWeight > 0 ? (protein / gramWeight) * 100 : protein,
+      carbsPer100g: gramWeight > 0 ? (carbs / gramWeight) * 100 : carbs,
+      fatPer100g: gramWeight > 0 ? (baseFat / gramWeight) * 100 : baseFat,
+      fiberPer100g: gramWeight > 0 ? (fiber / gramWeight) * 100 : fiber,
+      iconSvg: iconSvg,
+      source: 'Catalog',
+      aliases: foodName,
+      portionUnits: [portionUnit],
+    );
+  }
+
   PortionUnit get portionUnit => PortionUnit(
         id: id ?? 0,
         foodId: foodId,

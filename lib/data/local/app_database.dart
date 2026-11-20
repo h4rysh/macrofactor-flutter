@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'dart:io';
 
 import 'package:flutter/services.dart' show rootBundle;
@@ -38,6 +39,9 @@ class AppDatabase {
         expenditureDao = ExpenditureDao(_db),
         settingsDao = SettingsDao(_db) {
     DatabaseMigrations.initializeAndMigrate(_db, isInMemory: isInMemory);
+    _initializeFtsAndTriggers();
+    _initializeIndexes();
+    _ensureMultiTenancySupport();
   }
 
   final Database _db;
@@ -48,12 +52,148 @@ class AppDatabase {
   final ExpenditureDao expenditureDao;
   final SettingsDao settingsDao;
 
+  String _currentUserId = 'default_user';
+
+  /// Active user tenant identifier (ISS-6-03).
+  String get currentUserId => _currentUserId;
+  set currentUserId(String value) {
+    if (value.trim().isNotEmpty) {
+      _currentUserId = value.trim();
+    }
+  }
+
+  /// Sets active tenant user id for multi-user session isolation.
+  void setUserId(String userId) => currentUserId = userId;
+
   /// Underlying raw sqlite3 database handle for low-level or test operations.
   Database get rawDb => _db;
 
   /// Legacy initializer - retained for compatibility.
   void initUserTables() {
     DatabaseMigrations.initializeAndMigrate(_db, isInMemory: true);
+    _initializeFtsAndTriggers();
+    _initializeIndexes();
+    _ensureMultiTenancySupport();
+  }
+
+  /// Configures FTS5 full text search with Porter stemmer and synchronization triggers (ISS-3-02, ISS-8-06).
+  void _initializeFtsAndTriggers() {
+    try {
+      final foodsTableCheck = _db.select(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='foods';",
+      );
+      if (foodsTableCheck.isEmpty) return;
+
+      final ftsCheck = _db.select(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='foods_fts';",
+      );
+
+      final hasFts = ftsCheck.isNotEmpty;
+      final ftsSql = hasFts ? (ftsCheck.first['sql'] as String? ?? '') : '';
+      final hasPorter = ftsSql.toLowerCase().contains('porter');
+
+      if (!hasFts || !hasPorter) {
+        if (hasFts) {
+          _db.execute('DROP TABLE IF EXISTS foods_fts;');
+        }
+        _db.execute('''
+          CREATE VIRTUAL TABLE IF NOT EXISTS foods_fts USING fts5(
+            name, aliases, category, content='foods', content_rowid='id', tokenize='porter unicode61'
+          );
+        ''');
+        try {
+          _db.execute("INSERT INTO foods_fts(foods_fts) VALUES('rebuild');");
+        } catch (_) {}
+      }
+
+      // Triggers to automatically synchronize foods_fts on all mutations (ISS-3-02, ISS-8-06)
+      _db.execute('''
+        CREATE TRIGGER IF NOT EXISTS foods_ai AFTER INSERT ON foods BEGIN
+          INSERT INTO foods_fts(rowid, name, aliases, category) VALUES (new.id, new.name, new.aliases, new.category);
+        END;
+      ''');
+      _db.execute('''
+        CREATE TRIGGER IF NOT EXISTS foods_ad AFTER DELETE ON foods BEGIN
+          INSERT INTO foods_fts(foods_fts, rowid, name, aliases, category) VALUES('delete', old.id, old.name, old.aliases, old.category);
+        END;
+      ''');
+      _db.execute('''
+        CREATE TRIGGER IF NOT EXISTS foods_au AFTER UPDATE ON foods BEGIN
+          INSERT INTO foods_fts(foods_fts, rowid, name, aliases, category) VALUES('delete', old.id, old.name, old.aliases, old.category);
+          INSERT INTO foods_fts(rowid, name, aliases, category) VALUES (new.id, new.name, new.aliases, new.category);
+        END;
+      ''');
+    } catch (e, st) {
+      developer.log(
+        'FTS5 Porter stemmer triggers initialization note',
+        name: 'AppDatabase',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  /// Creates indexes on secondary lookup keys including portion_units(food_id) (ISS-8-07).
+  void _initializeIndexes() {
+    try {
+      _db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_portion_units_food_id ON portion_units(food_id);',
+      );
+    } catch (e, st) {
+      developer.log(
+        'Failed to create idx_portion_units_food_id',
+        name: 'AppDatabase',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  /// Ensures multi-tenancy user_id column and indices exist across user entity tables (ISS-6-03).
+  void _ensureMultiTenancySupport() {
+    final tables = [
+      'food_logs',
+      'weight_logs',
+      'workout_sessions',
+      'expenditure_history',
+      'day_completions',
+      'coaching_check_ins',
+    ];
+
+    for (final table in tables) {
+      try {
+        final tableCheck = _db.select(
+          "SELECT name FROM sqlite_master WHERE type='table' AND name='$table';",
+        );
+        if (tableCheck.isEmpty) continue;
+
+        final cols = _getTableColumns(table);
+        if (!cols.contains('user_id')) {
+          _db.execute(
+            "ALTER TABLE $table ADD COLUMN user_id TEXT NOT NULL DEFAULT 'default_user';",
+          );
+        }
+        _db.execute(
+          'CREATE INDEX IF NOT EXISTS idx_${table}_user_id ON $table(user_id);',
+        );
+      } catch (e, st) {
+        developer.log(
+          'Multi-tenancy setup note for table $table',
+          name: 'AppDatabase',
+          error: e,
+          stackTrace: st,
+        );
+      }
+    }
+  }
+
+  Set<String> _getTableColumns(String tableName) {
+    try {
+      final rows = _db.select("PRAGMA table_info('$tableName');");
+      return rows.map((r) => (r['name'] as String).toLowerCase()).toSet();
+    } catch (_) {
+      return <String>{};
+    }
   }
 
   // ==========================================
@@ -185,7 +325,7 @@ class AppDatabase {
         gram_weight REAL NOT NULL, is_default INTEGER NOT NULL DEFAULT 0
       );
       CREATE VIRTUAL TABLE IF NOT EXISTS foods_fts USING fts5(
-        name, aliases, category, content='foods', content_rowid='id'
+        name, aliases, category, content='foods', content_rowid='id', tokenize='porter unicode61'
       );
     ''');
     final appDb = AppDatabase(rawDb, isInMemory: true);

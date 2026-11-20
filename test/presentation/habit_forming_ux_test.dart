@@ -97,7 +97,7 @@ void main() {
     });
 
     test(
-        'returns 0 when yesterday has food logged but today has no food logged',
+        'preserves yesterday streak (1) when today has no food logged yet (grace period before breakfast)',
         () {
       final food = createTestFood();
       db.insertFood(food);
@@ -107,6 +107,28 @@ void main() {
         loggedAt: fixedClock.subtract(const Duration(days: 1)),
       );
       db.insertFoodLog(yesterdayLog);
+
+      final container = ProviderContainer(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          clockProvider.overrideWithValue(() => fixedClock),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final streak = container.read(loggingStreakProvider);
+      expect(streak, 1);
+    });
+
+    test('returns 0 when neither today nor yesterday has food logged', () {
+      final food = createTestFood();
+      db.insertFood(food);
+      final oldLog = createTestLogEntry(
+        id: 1,
+        food: food,
+        loggedAt: fixedClock.subtract(const Duration(days: 2)),
+      );
+      db.insertFoodLog(oldLog);
 
       final container = ProviderContainer(
         overrides: [

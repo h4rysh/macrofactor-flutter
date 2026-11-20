@@ -30,10 +30,12 @@ class DateCarouselRibbon extends StatelessWidget {
     if (_isSameDay(date, currentNow)) {
       return 'Today';
     }
-    if (_isSameDay(date, currentNow.subtract(const Duration(days: 1)))) {
+    if (_isSameDay(date,
+        DateTime(currentNow.year, currentNow.month, currentNow.day - 1))) {
       return 'Yesterday';
     }
-    if (_isSameDay(date, currentNow.add(const Duration(days: 1)))) {
+    if (_isSameDay(date,
+        DateTime(currentNow.year, currentNow.month, currentNow.day + 1))) {
       return 'Tomorrow';
     }
     return DateFormat('EEE, MMM d').format(date);
@@ -43,9 +45,14 @@ class DateCarouselRibbon extends StatelessWidget {
   Widget build(BuildContext context) {
     final currentNow = now ?? DateTime.now();
 
-    // Generate a 7-day window centered or ending around today/selectedDate
+    // Generate a 7-day window centered around selectedDate (calendar math is DST-safe)
     final days = List.generate(7, (i) {
-      return selectedDate.subtract(Duration(days: 3 - i));
+      final offset = i - 3;
+      return DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day + offset,
+      );
     });
 
     return Column(
@@ -74,7 +81,11 @@ class DateCarouselRibbon extends StatelessWidget {
                         onPressed: () {
                           HapticFeedback.selectionClick();
                           onDateSelected(
-                            selectedDate.subtract(const Duration(days: 1)),
+                            DateTime(
+                              selectedDate.year,
+                              selectedDate.month,
+                              selectedDate.day - 1,
+                            ),
                           );
                         },
                       ),
@@ -133,7 +144,11 @@ class DateCarouselRibbon extends StatelessWidget {
                         onPressed: () {
                           HapticFeedback.selectionClick();
                           onDateSelected(
-                            selectedDate.add(const Duration(days: 1)),
+                            DateTime(
+                              selectedDate.year,
+                              selectedDate.month,
+                              selectedDate.day + 1,
+                            ),
                           );
                         },
                       ),

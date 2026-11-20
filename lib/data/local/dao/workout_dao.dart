@@ -9,6 +9,7 @@ class WorkoutDao {
   final CommonDatabase _db;
 
   /// Inserts or updates a list of workout sessions within an atomic transaction.
+  /// Enforces try/finally statement disposal and comprehensive rollback safety (ISS-8-04, ISS-8-05).
   void insertWorkoutSessions(List<WorkoutSession> sessions) {
     if (sessions.isEmpty) return;
     final stmt = _db.prepare(
@@ -17,31 +18,42 @@ class WorkoutDao {
       'ON CONFLICT(id) DO UPDATE SET source = excluded.source, title = excluded.title, start_time = excluded.start_time, end_time = excluded.end_time, duration_minutes = excluded.duration_minutes, calories_burned = excluded.calories_burned, notes = excluded.notes;',
     );
 
-    _db.execute('BEGIN TRANSACTION;');
     try {
-      for (final session in sessions) {
-        stmt.execute([
-          session.id,
-          session.source,
-          session.title,
-          session.startTime.toIso8601String(),
-          session.endTime.toIso8601String(),
-          session.durationMinutes,
-          session.caloriesBurned,
-          session.notes,
-          session.createdAt.toIso8601String(),
-        ]);
+      _db.execute('BEGIN TRANSACTION;');
+      try {
+        for (final session in sessions) {
+          stmt.execute([
+            session.id,
+            session.source,
+            session.title,
+            session.startTime.toIso8601String(),
+            session.endTime.toIso8601String(),
+            session.durationMinutes,
+            session.caloriesBurned,
+            session.notes,
+            session.createdAt.toIso8601String(),
+          ]);
+        }
+        _db.execute('COMMIT;');
+      } catch (e, st) {
+        developer.log(
+          'Transaction failed during insertWorkoutSessions; executing rollback',
+          name: 'WorkoutDao',
+          error: e,
+          stackTrace: st,
+        );
+        try {
+          _db.execute('ROLLBACK;');
+        } catch (rollbackErr, rollbackSt) {
+          developer.log(
+            'Rollback failed during insertWorkoutSessions',
+            name: 'WorkoutDao',
+            error: rollbackErr,
+            stackTrace: rollbackSt,
+          );
+        }
+        rethrow;
       }
-      _db.execute('COMMIT;');
-    } on SqliteException catch (e, st) {
-      developer.log(
-        'Transaction failed during insertWorkoutSessions; executing rollback',
-        name: 'WorkoutDao',
-        error: e,
-        stackTrace: st,
-      );
-      _db.execute('ROLLBACK;');
-      rethrow;
     } finally {
       stmt.dispose();
     }
@@ -52,9 +64,12 @@ class WorkoutDao {
     final stmt = _db.prepare(
       'SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at FROM workout_sessions ORDER BY start_time DESC;',
     );
-    final result = stmt.select();
-    stmt.dispose();
-    return result.map(_mapWorkoutSessionRow).toList();
+    try {
+      final result = stmt.select();
+      return result.map(_mapWorkoutSessionRow).toList();
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Retrieves workout sessions whose start_time is between [start] and [end] (inclusive).
@@ -62,17 +77,23 @@ class WorkoutDao {
     final stmt = _db.prepare(
       'SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at FROM workout_sessions WHERE start_time >= ? AND start_time <= ? ORDER BY start_time DESC;',
     );
-    final result =
-        stmt.select([start.toIso8601String(), end.toIso8601String()]);
-    stmt.dispose();
-    return result.map(_mapWorkoutSessionRow).toList();
+    try {
+      final result =
+          stmt.select([start.toIso8601String(), end.toIso8601String()]);
+      return result.map(_mapWorkoutSessionRow).toList();
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Deletes a workout session by its identifier.
   void deleteWorkoutSession(dynamic id) {
     final stmt = _db.prepare('DELETE FROM workout_sessions WHERE id = ?;');
-    stmt.execute([id.toString()]);
-    stmt.dispose();
+    try {
+      stmt.execute([id.toString()]);
+    } finally {
+      stmt.dispose();
+    }
   }
 
   WorkoutSession _mapWorkoutSessionRow(Row row) {

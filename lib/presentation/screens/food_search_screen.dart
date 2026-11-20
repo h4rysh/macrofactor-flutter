@@ -52,6 +52,7 @@ class FoodSearchScreen extends ConsumerStatefulWidget {
 class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   final TextEditingController _searchController = TextEditingController();
   Timer? _debounceTimer;
+  int _searchSequence = 0;
   List<FoodItem> _searchResults = [];
   bool _isLoading = false;
   FoodFilterType _selectedFilter = FoodFilterType.all;
@@ -77,10 +78,11 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   }
 
   Future<void> _performSearch(String query) async {
+    final searchId = ++_searchSequence;
     setState(() => _isLoading = true);
     final db = ref.read(databaseProvider);
     var results = await db.searchFoodsAsync(query, limit: 60);
-    if (!mounted) return;
+    if (!mounted || searchId != _searchSequence) return;
 
     // Apply active filter
     if (_selectedFilter == FoodFilterType.southIndian) {
@@ -106,6 +108,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
           .toList();
     }
 
+    if (!mounted || searchId != _searchSequence) return;
     setState(() {
       _searchResults = results;
       _isLoading = false;
@@ -212,6 +215,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                   keyboardType: TextInputType.text,
                   textInputAction: TextInputAction.search,
                   onSubmitted: (query) {
+                    _debounceTimer?.cancel();
                     _performSearch(query);
                     FocusScope.of(context).unfocus();
                   },
@@ -236,6 +240,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                               color: AppTheme.textSecondary,
                             ),
                             onPressed: () {
+                              _debounceTimer?.cancel();
                               _searchController.clear();
                               _performSearch('');
                             },
@@ -281,6 +286,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                       child: AppleBouncy(
                         scaleDown: 0.94,
                         onTap: () {
+                          _debounceTimer?.cancel();
                           setState(() => _selectedFilter = filter);
                           _performSearch(_searchController.text);
                         },
@@ -352,7 +358,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
               ),
             ),
             SizedBox(
-              height: 42,
+              height: 46,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -384,12 +390,17 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                         children: [
                           FoodSvgIcon(iconName: food.iconName, size: 22),
                           const SizedBox(width: 6),
-                          Text(
-                            food.name,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 160),
+                            child: Text(
+                              food.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary,
+                              ),
                             ),
                           ),
                           const SizedBox(width: 6),

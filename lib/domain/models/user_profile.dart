@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 
 /// Primary goal for diet configuration.
@@ -136,9 +137,13 @@ class UserProfile {
     if (customCalories != null) {
       final pG = customProteinGrams ??
           (proteinPreference.gramsPerKg * currentWeightKg).roundToDouble();
+      final lowerFatBound = customCalories! * 0.25 / 9.0;
+      final upperFatBound = math.max(
+          lowerFatBound, math.max(150.0, customCalories! * 0.35 / 9.0));
       final fG = customFatGrams ??
           (currentWeightKg * 0.7)
-              .clamp(customCalories! * 0.25 / 9.0, 150.0)
+              .clamp(math.min(lowerFatBound, upperFatBound),
+                  math.max(lowerFatBound, upperFatBound))
               .roundToDouble();
       final remainingCals = (customCalories! - (pG * 4.0) - (fG * 9.0))
           .clamp(0.0, double.infinity);
@@ -174,17 +179,25 @@ class UserProfile {
     }
 
     final rawTargetCalories = currentExpenditureKcal + dailyEnergyDeltaKcal;
-    final targetCalories = rawTargetCalories.clamp(calorieFloor, 6000.0);
+    final effectiveFloor = math.min(calorieFloor, 6000.0);
+    final targetCalories = rawTargetCalories.clamp(
+        effectiveFloor, math.max(effectiveFloor, 6000.0));
 
     // Protein Target: gramsPerKg * currentWeightKg
     final proteinGrams =
         (proteinPreference.gramsPerKg * currentWeightKg).roundToDouble();
     final proteinCalories = proteinGrams * 4.0;
 
-    // Fat minimum: 25% of total calories, or 0.7g/kg minimum
+    // Fat minimum: 25% of total calories, or 0.7g/kg minimum.
+    // Dynamically adjust upper bound so upper >= lower and never throws ArgumentError.
     final minFatCalories = targetCalories * 0.25;
-    final minFatGrams =
-        (currentWeightKg * 0.7).clamp(minFatCalories / 9.0, 150.0);
+    final lowerFatBound = minFatCalories / 9.0;
+    final upperFatBound =
+        math.max(lowerFatBound, math.max(150.0, targetCalories * 0.35 / 9.0));
+    final minFatGrams = (currentWeightKg * 0.7).clamp(
+      math.min(lowerFatBound, upperFatBound),
+      math.max(lowerFatBound, upperFatBound),
+    );
     final fatCalories = minFatGrams * 9.0;
 
     // Remaining calories allocated to carbohydrates

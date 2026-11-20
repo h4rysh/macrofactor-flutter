@@ -21,6 +21,9 @@ class OnboardingCoordinator extends ConsumerWidget {
     }
 
     final savedStep = int.tryParse(db.getSetting('onboarding_step', '0')) ?? 0;
+    if (savedStep >= 24) {
+      return const ScaffoldWithNavBar();
+    }
     if (savedStep > 0) {
       return OnboardingFlowScreen(initialStep: savedStep);
     }
