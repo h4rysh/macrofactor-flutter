@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/strategy_providers.dart';
 import '../../theme/app_theme.dart';
@@ -17,6 +18,16 @@ class SevenDayDistributionChart extends ConsumerStatefulWidget {
 class _SevenDayDistributionChartState
     extends ConsumerState<SevenDayDistributionChart> {
   int _selectedDayIndex = 0;
+
+  void _handleScrub(Offset localPos, double width, int count) {
+    if (width <= 0 || count <= 0) return;
+    final barW = width / count;
+    final idx = (localPos.dx / barW).floor().clamp(0, count - 1);
+    if (idx != _selectedDayIndex) {
+      HapticFeedback.selectionClick();
+      setState(() => _selectedDayIndex = idx);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -88,107 +99,180 @@ class _SevenDayDistributionChartState
                 ),
               ],
             ),
-            const SizedBox(height: 18),
+            const SizedBox(height: 12),
 
-            // 7 Bars
-            SizedBox(
-              height: 140,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: List.generate(days.length, (idx) {
-                  final day = days[idx];
-                  final isSelected = idx == _selectedDayIndex;
-                  final isWorkout = day.isWorkoutDay;
+            // Floating Tooltip above scrubbable bars
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: AppTheme.cardElevated,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppTheme.cardBorder, width: 0.8),
+              ),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '${selectedDay.dayName.substring(0, 3)}: ',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      '${selectedDay.calories.round()} kcal',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.calories,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '(${selectedDay.proteinGrams.round()}P · ${selectedDay.fatGrams.round()}F · ${selectedDay.carbsGrams.round()}C)',
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textSecondary,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
 
-                  // Normalize bar height between 0.35 and 1.0
-                  final heightFactor =
-                      0.4 + (0.6 * ((day.calories - minCal) / range));
+            // 7 Scrubbable / Tappable Bars
+            LayoutBuilder(
+              builder: (context, constraints) {
+                return GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onHorizontalDragDown: (d) => _handleScrub(
+                    d.localPosition,
+                    constraints.maxWidth,
+                    days.length,
+                  ),
+                  onHorizontalDragUpdate: (d) => _handleScrub(
+                    d.localPosition,
+                    constraints.maxWidth,
+                    days.length,
+                  ),
+                  child: SizedBox(
+                    height: 140,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: List.generate(days.length, (idx) {
+                        final day = days[idx];
+                        final isSelected = idx == _selectedDayIndex;
+                        final isWorkout = day.isWorkoutDay;
 
-                  return Expanded(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () => setState(() => _selectedDayIndex = idx),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text(
-                              '${day.calories.round()}',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: isSelected
-                                    ? FontWeight.w800
-                                    : FontWeight.w600,
-                                color: isSelected
-                                    ? AppTheme.calories
-                                    : AppTheme.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Expanded(
-                              child: Align(
-                                alignment: Alignment.bottomCenter,
-                                child: FractionallySizedBox(
-                                  heightFactor: heightFactor.clamp(0.2, 1.0),
-                                  widthFactor: 1.0,
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? AppTheme.calories
-                                          : isWorkout
-                                              ? AppTheme.calories
-                                                  .withValues(alpha: 0.45)
-                                              : AppTheme.cardElevated,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: isSelected
-                                          ? Border.all(
-                                              color: Colors.white, width: 1.5)
-                                          : null,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            FittedBox(
-                              fit: BoxFit.scaleDown,
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
+                        // Normalize bar height between 0.35 and 1.0
+                        final heightFactor =
+                            0.4 + (0.6 * ((day.calories - minCal) / range));
+
+                        return Expanded(
+                          child: GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _selectedDayIndex = idx);
+                            },
+                            child: Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 4),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
-                                  if (isWorkout) ...[
-                                    Container(
-                                      width: 4,
-                                      height: 4,
-                                      decoration: const BoxDecoration(
-                                        color: AppTheme.calories,
-                                        shape: BoxShape.circle,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 2),
-                                  ],
                                   Text(
-                                    day.dayName.substring(0, 3),
+                                    '${day.calories.round()}',
                                     style: TextStyle(
-                                      fontSize: 11,
+                                      fontSize: 10,
                                       fontWeight: isSelected
                                           ? FontWeight.w800
                                           : FontWeight.w600,
                                       color: isSelected
-                                          ? AppTheme.textPrimary
+                                          ? AppTheme.calories
                                           : AppTheme.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Expanded(
+                                    child: Align(
+                                      alignment: Alignment.bottomCenter,
+                                      child: FractionallySizedBox(
+                                        heightFactor:
+                                            heightFactor.clamp(0.2, 1.0),
+                                        widthFactor: 1.0,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color: isSelected
+                                                ? AppTheme.calories
+                                                : isWorkout
+                                                    ? AppTheme.calories
+                                                        .withValues(alpha: 0.45)
+                                                    : AppTheme.cardElevated,
+                                            borderRadius:
+                                                BorderRadius.circular(8),
+                                            border: isSelected
+                                                ? Border.all(
+                                                    color: Colors.white,
+                                                    width: 1.5)
+                                                : null,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        if (isWorkout) ...[
+                                          Container(
+                                            width: 4,
+                                            height: 4,
+                                            decoration: const BoxDecoration(
+                                              color: AppTheme.calories,
+                                              shape: BoxShape.circle,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 2),
+                                        ],
+                                        Text(
+                                          day.dayName.substring(0, 3),
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: isSelected
+                                                ? FontWeight.w800
+                                                : FontWeight.w600,
+                                            color: isSelected
+                                                ? AppTheme.textPrimary
+                                                : AppTheme.textSecondary,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                      ),
+                          ),
+                        );
+                      }),
                     ),
-                  );
-                }),
-              ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 20),
 

@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:sique/domain/legal/legal_copy.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/presentation/widgets/sique_frosted_chrome.dart';
 
 /// Card 6: Personalized TDEE & Macro Blueprint Reveal (Value delivery).
 class Card06TdeeBlueprint extends StatefulWidget {
@@ -78,349 +79,380 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+    return Column(
       children: [
-        const Text(
-          'YOUR BLUEPRINT',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.activeBlue,
-            letterSpacing: 0.8,
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Personalized Metabolic Profile',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.textPrimary,
-            letterSpacing: -0.4,
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Calculated from your resting metabolic rate and activity priors.',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppTheme.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 18),
-
-        // Section A: TDEE & Target Calories Hero Container
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                AppTheme.calories.withValues(alpha: 0.15),
-                AppTheme.cardSurface,
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppTheme.calories.withValues(alpha: 0.35),
-            ),
-          ),
-          child: Column(
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             children: [
               const Text(
-                'DAILY TARGET CALORIES',
+                'YOUR BLUEPRINT',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
-                  letterSpacing: 1.2,
-                  color: AppTheme.calories,
+                  color: AppTheme.activeBlue,
+                  letterSpacing: 0.8,
                 ),
               ),
               const SizedBox(height: 6),
-              Text(
-                '${widget.targetCalories.round()}',
-                style: const TextStyle(
-                  fontSize: 48,
-                  fontWeight: FontWeight.w900,
+              const Text(
+                'Personalized Metabolic Profile',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
                   color: AppTheme.textPrimary,
-                  fontFeatures: [FontFeature.tabularFigures()],
-                  height: 1.0,
+                  letterSpacing: -0.4,
                 ),
               ),
-              const SizedBox(height: 4),
-              const Text('kcal / day',
-                  style:
-                      TextStyle(fontSize: 13, color: AppTheme.textSecondary)),
-              const SizedBox(height: 16),
-              const Divider(color: AppTheme.cardBorder, height: 1),
-              const SizedBox(height: 14),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _buildSubMetric(
-                    label: 'Resting BMR',
-                    value: '${widget.bmrKcal.round()} kcal',
-                    color: AppTheme.textSecondary,
+              const SizedBox(height: 6),
+              const Text(
+                'Calculated from your resting metabolic rate and activity priors.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // Section A: TDEE & Target Calories Hero Container
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppTheme.calories.withValues(alpha: 0.15),
+                      AppTheme.cardSurface,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
                   ),
-                  Container(width: 1, height: 28, color: AppTheme.cardBorder),
-                  _buildSubMetric(
-                    label: 'Calculated TDEE',
-                    value: '${_effectiveTdee.round()} kcal',
-                    color: AppTheme.expenditure,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: AppTheme.calories.withValues(alpha: 0.35),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'DAILY TARGET CALORIES',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.2,
+                        color: AppTheme.calories,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${widget.targetCalories.round()}',
+                      style: const TextStyle(
+                        fontSize: 48,
+                        fontWeight: FontWeight.w900,
+                        color: AppTheme.textPrimary,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                        height: 1.0,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('kcal / day',
+                        style: TextStyle(
+                            fontSize: 13, color: AppTheme.textSecondary)),
+                    const SizedBox(height: 16),
+                    const Divider(color: AppTheme.cardBorder, height: 1),
+                    const SizedBox(height: 14),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildSubMetric(
+                          label: 'Resting BMR',
+                          value: '${widget.bmrKcal.round()} kcal',
+                          color: AppTheme.textSecondary,
+                        ),
+                        Container(
+                            width: 1, height: 28, color: AppTheme.cardBorder),
+                        _buildSubMetric(
+                          label: 'Calculated TDEE',
+                          value: '${_effectiveTdee.round()} kcal',
+                          color: AppTheme.expenditure,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Section B: Optional TDEE Override Toggle
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.cardBorder),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Known TDEE Override',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Enable if you already know your accurate daily maintenance burn.',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: AppTheme.textSecondary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Switch.adaptive(
+                          key: const Key('step_13_override_toggle'),
+                          value: _hasOverride,
+                          activeTrackColor: AppTheme.activeBlue,
+                          onChanged: (val) {
+                            setState(() {
+                              _hasOverride = val;
+                              if (!val) _customTdee = null;
+                            });
+                            _notifyUpdate();
+                          },
+                        ),
+                      ],
+                    ),
+                    if (_hasOverride) ...[
+                      const SizedBox(height: 12),
+                      TextField(
+                        key: const Key('step_13_override_input'),
+                        controller: _overrideController,
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                            fontFeatures: [FontFeature.tabularFigures()]),
+                        decoration: InputDecoration(
+                          labelText: 'Enter known expenditure (kcal/day)',
+                          labelStyle: const TextStyle(
+                              fontSize: 12, color: AppTheme.textSecondary),
+                          filled: true,
+                          fillColor: AppTheme.cardElevated,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide:
+                                const BorderSide(color: AppTheme.cardBorder),
+                          ),
+                        ),
+                        onChanged: (val) {
+                          final parsed = double.tryParse(val);
+                          if (parsed != null &&
+                              parsed >= 1000 &&
+                              parsed <= 6000) {
+                            _customTdee = parsed;
+                            _notifyUpdate();
+                          }
+                        },
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Section C: Macronutrient Breakdown
+              const Text('Target Macronutrients',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary)),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildMacroCard(
+                      label: 'Protein',
+                      grams: widget.proteinGrams,
+                      color: AppTheme.protein,
+                      icon: Icons.egg_alt_rounded,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildMacroCard(
+                      label: 'Carbs',
+                      grams: widget.carbsGrams,
+                      color: AppTheme.carbs,
+                      icon: Icons.grain_rounded,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildMacroCard(
+                      label: 'Fat',
+                      grams: widget.fatGrams,
+                      color: AppTheme.fat,
+                      icon: Icons.opacity_rounded,
+                    ),
                   ),
                 ],
               ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-        // Section B: Optional TDEE Override Toggle
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppTheme.cardSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.cardBorder),
-          ),
-          child: Column(
-            children: [
+              // Section D: Calorie Distribution Mode (Even vs Shifted)
+              const Text('Calorie Distribution',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary)),
+              const SizedBox(height: 8),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                  Expanded(
+                    child: _buildDistributionOption(
+                      key: const Key('step_21_mode_even'),
+                      title: 'Even Daily',
+                      subtitle: 'Identical calories & macros every day',
+                      mode: 'even',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildDistributionOption(
+                      key: const Key('step_21_mode_shifted'),
+                      title: 'Workout Shifted',
+                      subtitle: 'More carbs & cals on training days',
+                      mode: 'shifted',
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+
+              // Section E: Medical Disclaimer Informational Notice
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.cardBorder),
+                ),
+                child: const Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
+                        Icon(Icons.health_and_safety_rounded,
+                            color: AppTheme.activeBlue, size: 20),
+                        SizedBox(width: 8),
                         Text(
-                          'Known TDEE Override',
+                          LegalCopy.onboardingNoticeTitle,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w700,
                             color: AppTheme.textPrimary,
                           ),
                         ),
-                        SizedBox(height: 2),
-                        Text(
-                          'Enable if you already know your accurate daily maintenance burn.',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: AppTheme.textSecondary,
+                      ],
+                    ),
+                    SizedBox(height: 6),
+                    Text(
+                      LegalCopy.onboardingNoticeSubtitle,
+                      style: TextStyle(
+                          fontSize: 12, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        ),
+
+        // Pinned sticky bottom CTA bar: disclaimer checkbox + continue button guaranteed visible without scrolling
+        SiqueFrostedChrome(
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    key: const Key('step_23_checkbox'),
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(
+                          () => _disclaimerAccepted = !_disclaimerAccepted);
+                    },
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: _disclaimerAccepted,
+                          activeColor: AppTheme.activeBlue,
+                          onChanged: (val) {
+                            setState(() => _disclaimerAccepted = val ?? false);
+                          },
+                        ),
+                        const Expanded(
+                          child: Text(
+                            LegalCopy.onboardingDisclaimerAgreement,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.textPrimary,
+                            ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Switch.adaptive(
-                    key: const Key('step_13_override_toggle'),
-                    value: _hasOverride,
-                    activeTrackColor: AppTheme.activeBlue,
-                    onChanged: (val) {
-                      setState(() {
-                        _hasOverride = val;
-                        if (!val) _customTdee = null;
-                      });
-                      _notifyUpdate();
-                    },
-                  ),
-                ],
-              ),
-              if (_hasOverride) ...[
-                const SizedBox(height: 12),
-                TextField(
-                  key: const Key('step_13_override_input'),
-                  controller: _overrideController,
-                  keyboardType: TextInputType.number,
-                  style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
-                      fontFeatures: [FontFeature.tabularFigures()]),
-                  decoration: InputDecoration(
-                    labelText: 'Enter known expenditure (kcal/day)',
-                    labelStyle: const TextStyle(
-                        fontSize: 12, color: AppTheme.textSecondary),
-                    filled: true,
-                    fillColor: AppTheme.cardElevated,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: AppTheme.cardBorder),
-                    ),
-                  ),
-                  onChanged: (val) {
-                    final parsed = double.tryParse(val);
-                    if (parsed != null && parsed >= 1000 && parsed <= 6000) {
-                      _customTdee = parsed;
-                      _notifyUpdate();
-                    }
-                  },
-                ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-
-        // Section C: Macronutrient Breakdown
-        const Text('Target Macronutrients',
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary)),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _buildMacroCard(
-                label: 'Protein',
-                grams: widget.proteinGrams,
-                color: AppTheme.protein,
-                icon: Icons.egg_alt_rounded,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildMacroCard(
-                label: 'Carbs',
-                grams: widget.carbsGrams,
-                color: AppTheme.carbs,
-                icon: Icons.grain_rounded,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildMacroCard(
-                label: 'Fat',
-                grams: widget.fatGrams,
-                color: AppTheme.fat,
-                icon: Icons.opacity_rounded,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // Section D: Calorie Distribution Mode (Even vs Shifted)
-        const Text('Calorie Distribution',
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary)),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _buildDistributionOption(
-                key: const Key('step_21_mode_even'),
-                title: 'Even Daily',
-                subtitle: 'Identical calories & macros every day',
-                mode: 'even',
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _buildDistributionOption(
-                key: const Key('step_21_mode_shifted'),
-                title: 'Workout Shifted',
-                subtitle: 'More carbs & cals on training days',
-                mode: 'shifted',
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-
-        // Section E: Medical Disclaimer Gate Checkbox
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppTheme.cardSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.cardBorder),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.health_and_safety_rounded,
-                      color: AppTheme.activeBlue, size: 20),
-                  SizedBox(width: 8),
-                  Text(
-                    LegalCopy.onboardingNoticeTitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              const Text(
-                LegalCopy.onboardingNoticeSubtitle,
-                style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
-              ),
-              const SizedBox(height: 10),
-              GestureDetector(
-                key: const Key('step_23_checkbox'),
-                onTap: () {
-                  HapticFeedback.selectionClick();
-                  setState(() => _disclaimerAccepted = !_disclaimerAccepted);
-                },
-                child: Row(
-                  children: [
-                    Checkbox(
-                      value: _disclaimerAccepted,
-                      activeColor: AppTheme.activeBlue,
-                      onChanged: (val) {
-                        setState(() => _disclaimerAccepted = val ?? false);
-                      },
-                    ),
-                    const Expanded(
-                      child: Text(
-                        LegalCopy.onboardingDisclaimerAgreement,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary,
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    width: double.infinity,
+                    child: AppleTactileCard(
+                      key: const Key('onboarding_card_6_continue_btn'),
+                      onTap: _disclaimerAccepted
+                          ? () {
+                              HapticFeedback.lightImpact();
+                              _notifyUpdate();
+                              widget.onNext();
+                            }
+                          : null,
+                      backgroundColor: _disclaimerAccepted
+                          ? const Color(0xFFFAFAFA)
+                          : AppTheme.cardElevated,
+                      borderRadius: 14,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      child: Center(
+                        child: Text(
+                          _disclaimerAccepted
+                              ? 'Continue to save strategy'
+                              : 'Acknowledge disclaimer to proceed',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: _disclaimerAccepted
+                                ? const Color(0xFF09090B)
+                                : AppTheme.textMuted,
+                          ),
                         ),
                       ),
                     ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 28),
-
-        // Continue Button
-        AppleTactileCard(
-          key: const Key('onboarding_card_6_continue_btn'),
-          onTap: _disclaimerAccepted
-              ? () {
-                  HapticFeedback.lightImpact();
-                  _notifyUpdate();
-                  widget.onNext();
-                }
-              : null,
-          backgroundColor:
-              _disclaimerAccepted ? AppTheme.activeBlue : AppTheme.cardElevated,
-          borderRadius: 14,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Center(
-            child: Text(
-              _disclaimerAccepted
-                  ? 'Continue to Save Strategy'
-                  : 'Acknowledge Disclaimer to Proceed',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: _disclaimerAccepted ? Colors.white : AppTheme.textMuted,
+                  ),
+                ],
               ),
             ),
           ),

@@ -3,11 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/food_models.dart';
+import '../../domain/models/user_profile.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/date_carousel_ribbon.dart';
 import '../widgets/nutrition_summary_banner.dart';
 import '../widgets/persistent_search_bar.dart';
+import '../widgets/sique_frosted_chrome.dart';
 import '../widgets/timeline_hour_slot.dart';
 import 'food_search_screen.dart';
 import 'plate_serving_sheet.dart';
@@ -273,6 +275,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                   child: DateCarouselRibbon(
                     selectedDate: selectedDate,
                     now: now,
+                    loggedDates: allLogs.map((e) => e.date).toSet(),
                     onDateSelected: (date) {
                       ScaffoldMessenger.of(context).hideCurrentSnackBar();
                       ref.read(selectedDateProvider.notifier).state =
@@ -304,9 +307,20 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-                // 3. Nutrition Summary Progress Banner (with streak)
+                // 2. Nutrition Summary Progress Banner
                 SliverToBoxAdapter(
                   child: NutritionSummaryBanner(
+                    consumed: dailyAggregate,
+                    targets: macroTargets,
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+                // 3. Sticky collapsing 44dp remaining-macros strip pinned on scroll
+                SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _StickyMacroHeaderDelegate(
                     consumed: dailyAggregate,
                     targets: macroTargets,
                   ),
@@ -339,6 +353,38 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                           selectedDate,
                           hour,
                         ),
+                        onEntryDuplicate: (entry) {
+                          HapticFeedback.lightImpact();
+                          final newLoggedAt = ref.read(clockProvider)();
+                          ref.read(dailyFoodLogsProvider.notifier).addEntry(
+                                food: entry.food,
+                                portionUnit: entry.portionUnit,
+                                quantity: entry.quantity,
+                                mealType: entry.mealType,
+                                oilModifier: entry.oilModifier,
+                                loggedAt: newLoggedAt,
+                              );
+                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Duplicated ${entry.foodName}'),
+                              action: SnackBarAction(
+                                label: 'Undo',
+                                textColor: AppTheme.activeBlue,
+                                onPressed: () {
+                                  final logs = ref.read(dailyFoodLogsProvider);
+                                  if (logs.isNotEmpty) {
+                                    ref
+                                        .read(dailyFoodLogsProvider.notifier)
+                                        .removeEntry(logs.last.id);
+                                  }
+                                },
+                              ),
+                              behavior: SnackBarBehavior.floating,
+                              duration: const Duration(seconds: 5),
+                            ),
+                          );
+                        },
                         onEntryDelete: (entry) {
                           HapticFeedback.heavyImpact();
                           ref
@@ -413,5 +459,130 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
         ),
       ),
     );
+  }
+}
+
+/// Sticky collapsing 44dp remaining-macros strip pinned at the top on scroll.
+class _StickyMacroHeaderDelegate extends SliverPersistentHeaderDelegate {
+  _StickyMacroHeaderDelegate({
+    required this.consumed,
+    required this.targets,
+  });
+
+  final DailyNutritionAggregate consumed;
+  final MacroTargets targets;
+
+  @override
+  double get minExtent => 44.0;
+
+  @override
+  double get maxExtent => 44.0;
+
+  @override
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
+    final remCals = (targets.targetCalories - consumed.totalCalories).round();
+    final isOver = remCals < 0;
+    final calsText = isOver
+        ? '+${remCals.abs()} kcal · Adapts automatically'
+        : '$remCals kcal left';
+    final calsColor = isOver ? const Color(0xFF818CF8) : AppTheme.calories;
+
+    final remP = (targets.targetProteinGrams - consumed.totalProtein)
+        .clamp(0.0, 999.0)
+        .round();
+    final remF =
+        (targets.targetFatGrams - consumed.totalFat).clamp(0.0, 999.0).round();
+    final remC = (targets.targetCarbsGrams - consumed.totalCarbs)
+        .clamp(0.0, 999.0)
+        .round();
+
+    return SiqueFrostedChrome(
+      child: Container(
+        height: 44,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: AppTheme.cardSurface.withValues(alpha: 0.90),
+          border: const Border(
+            bottom: BorderSide(color: AppTheme.cardBorder, width: 0.5),
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isOver
+                        ? Icons.auto_mode_rounded
+                        : Icons.local_fire_department_rounded,
+                    size: 16,
+                    color: calsColor,
+                  ),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      calsText,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: calsColor,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  '${remP}P',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.protein,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${remF}F',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.fat,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  '${remC}C',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.carbs,
+                    fontFeatures: [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant _StickyMacroHeaderDelegate oldDelegate) {
+    return oldDelegate.consumed != consumed || oldDelegate.targets != targets;
   }
 }

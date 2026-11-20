@@ -23,7 +23,7 @@ void main() {
 
     // Fresh install routes to WelcomeScreen
     expect(find.text('SIQUE'), findsOneWidget);
-    expect(find.text('Configure My Strategy'), findsOneWidget);
+    expect(find.text('Build my strategy — 2 min'), findsOneWidget);
 
     db.close();
   });

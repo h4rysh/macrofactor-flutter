@@ -16,6 +16,7 @@ class TimelineHourSlot extends StatelessWidget {
     required this.onAddTap,
     required this.onEntryTap,
     required this.onEntryDelete,
+    this.onEntryDuplicate,
     this.yesterdayEntries = const [],
     this.onCopyYesterday,
   });
@@ -26,6 +27,7 @@ class TimelineHourSlot extends StatelessWidget {
   final VoidCallback onAddTap;
   final ValueChanged<DailyFoodLogEntry> onEntryTap;
   final ValueChanged<DailyFoodLogEntry> onEntryDelete;
+  final ValueChanged<DailyFoodLogEntry>? onEntryDuplicate;
 
   /// Entries from the same hour slot on the previous day, used for Copy Yesterday.
   final List<DailyFoodLogEntry> yesterdayEntries;
@@ -67,7 +69,7 @@ class TimelineHourSlot extends StatelessWidget {
     return Container(
       margin: EdgeInsets.symmetric(
         horizontal: 16,
-        vertical: isEmptySlot ? 3 : 8,
+        vertical: isEmptySlot ? 1.5 : 8,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -87,7 +89,7 @@ class TimelineHourSlot extends StatelessWidget {
                 child: Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: isEmptySlot ? 8 : 10,
-                    vertical: isEmptySlot ? 3 : 5,
+                    vertical: isEmptySlot ? 2 : 5,
                   ),
                   decoration: BoxDecoration(
                     color: isEmptySlot
@@ -211,6 +213,9 @@ class TimelineHourSlot extends StatelessWidget {
                   entry: entry,
                   onTap: () => onEntryTap(entry),
                   onDelete: () => onEntryDelete(entry),
+                  onDuplicate: onEntryDuplicate != null
+                      ? () => onEntryDuplicate!(entry)
+                      : null,
                 ),
               ),
           ] else ...[

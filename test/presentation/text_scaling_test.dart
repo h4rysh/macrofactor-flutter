@@ -119,7 +119,8 @@ void main() {
 
         expect(tester.takeException(), isNull);
         expect(find.text('SIQUE'), findsOneWidget);
-        expect(find.text('Configure My Strategy'), findsOneWidget);
+        expect(find.byKey(const Key('welcome_configure_strategy_btn')),
+            findsOneWidget);
       });
 
       testWidgets('DashboardScreen renders with 0 overflows at ${scale}x scale',

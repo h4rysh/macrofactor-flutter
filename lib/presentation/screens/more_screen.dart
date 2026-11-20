@@ -16,13 +16,22 @@ import 'package:sique/presentation/widgets/auth_legal_footer.dart';
 import 'package:sique/presentation/widgets/profile_avatar_button.dart';
 
 /// Hub screen for the "More" bottom navigation destination.
-/// Provides access to user profile, nutrition settings, expenditure engine tuning, data export, and app provenance.
+/// Grouped into 4 obsidian cards:
+/// 1. ACCOUNT & PROFILE
+/// 2. COACHING & LOGGING
+/// 3. DATA & INTEGRATIONS
+/// 4. LEGAL & DANGER ZONE
 class MoreScreen extends ConsumerWidget {
   const MoreScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(currentUserProvider);
+    final profile = ref.watch(userProfileProvider);
+    final targets = ref.watch(macroTargetProvider);
+
+    final profileSummary =
+        '${profile.currentWeightKg.toStringAsFixed(1)} kg · ${targets.targetCalories.round()} kcal/day';
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -32,40 +41,33 @@ class MoreScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
+          // 1. ACCOUNT & PROFILE
+          _buildSectionHeader('ACCOUNT & PROFILE'),
           AppleStaggeredEntrance(
             index: 0,
             child: _buildAccountCard(context, user),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           AppleStaggeredEntrance(
             index: 1,
             child: _buildSettingsTile(
               context: context,
               icon: Icons.account_circle_outlined,
-              iconColor: AppTheme.activeBlue,
               title: 'Profile & Targets',
-              subtitle: 'Caloric balance, height, weight, target macros',
+              subtitle: profileSummary,
               destination: const ProfileTargetsScreen(),
             ),
           ),
+
+          const SizedBox(height: 16),
+
+          // 2. COACHING & LOGGING
+          _buildSectionHeader('COACHING & LOGGING'),
           AppleStaggeredEntrance(
             index: 2,
             child: _buildSettingsTile(
               context: context,
-              icon: Icons.sync_rounded,
-              iconColor: const Color(0xFF34C759),
-              title: 'Health Connect Sync',
-              subtitle:
-                  'Scale weight, workout sessions, permission diagnostics',
-              destination: const HealthSyncSettingsScreen(),
-            ),
-          ),
-          AppleStaggeredEntrance(
-            index: 3,
-            child: _buildSettingsTile(
-              context: context,
               icon: Icons.restaurant_outlined,
-              iconColor: AppTheme.calories,
               title: 'Food Log Settings',
               subtitle:
                   'Timeline display, portion units, cooking oil modifiers',
@@ -73,15 +75,30 @@ class MoreScreen extends ConsumerWidget {
             ),
           ),
           AppleStaggeredEntrance(
-            index: 4,
+            index: 3,
             child: _buildSettingsTile(
               context: context,
               icon: Icons.monitor_weight_outlined,
-              iconColor: AppTheme.expenditure,
               title: 'Expenditure & Weight Settings',
               subtitle:
                   'Bayesian Kalman sensitivity, trend weight noise smoothing',
               destination: const ExpenditureSettingsScreen(),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // 3. DATA & INTEGRATIONS
+          _buildSectionHeader('DATA & INTEGRATIONS'),
+          AppleStaggeredEntrance(
+            index: 4,
+            child: _buildSettingsTile(
+              context: context,
+              icon: Icons.sync_rounded,
+              title: 'Health Connect Sync',
+              subtitle:
+                  'Scale weight, workout sessions, permission diagnostics',
+              destination: const HealthSyncSettingsScreen(),
             ),
           ),
           AppleStaggeredEntrance(
@@ -89,35 +106,52 @@ class MoreScreen extends ConsumerWidget {
             child: _buildSettingsTile(
               context: context,
               icon: Icons.download_rounded,
-              iconColor: AppTheme.trendWeight,
               title: 'Data Export & Diagnostics',
               subtitle: 'Export logs to JSON or CSV, inspect database health',
               destination: const DataExportScreen(),
             ),
           ),
+
+          const SizedBox(height: 16),
+
+          // 4. LEGAL & DANGER ZONE
+          _buildSectionHeader('LEGAL & DANGER ZONE'),
           AppleStaggeredEntrance(
             index: 6,
             child: _buildSettingsTile(
               context: context,
               icon: Icons.info_outline_rounded,
-              iconColor: AppTheme.textSecondary,
               title: 'About Sique',
               subtitle: 'v2.0.0 • Clean-Room Adherence-Neutral',
               destination: const AboutScreen(),
             ),
           ),
-          const SizedBox(height: 8),
           AppleStaggeredEntrance(
             index: 7,
             child: _buildAttributionAndLegalCard(context),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
           AppleStaggeredEntrance(
             index: 8,
             child: _buildDeleteDataTile(context, user),
           ),
           const SizedBox(height: 110),
         ],
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, bottom: 8, top: 4),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          color: AppTheme.textMuted,
+          letterSpacing: 0.8,
+        ),
       ),
     );
   }
@@ -136,7 +170,7 @@ class MoreScreen extends ConsumerWidget {
           const Row(
             children: [
               Icon(Icons.restaurant_menu_rounded,
-                  size: 16, color: AppTheme.activeBlue),
+                  size: 16, color: Color(0xFFA1A1AA)),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -354,7 +388,6 @@ class MoreScreen extends ConsumerWidget {
   Widget _buildSettingsTile({
     required BuildContext context,
     required IconData icon,
-    required Color iconColor,
     required String title,
     required String subtitle,
     required Widget destination,
@@ -380,10 +413,14 @@ class MoreScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: iconColor.withAlpha(25),
+                color: AppTheme.cardElevated,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: iconColor, size: 22),
+              child: Icon(
+                icon,
+                color: const Color(0xFFA1A1AA),
+                size: 20,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(

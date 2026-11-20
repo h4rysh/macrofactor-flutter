@@ -107,13 +107,13 @@ class MacroGaugeRing extends StatelessWidget {
                           child: Text(
                             remainingCalories >= 0
                                 ? '$remainingCalories left'
-                                : '+${remainingCalories.abs()} over',
+                                : '+${remainingCalories.abs()} kcal · Adapts automatically',
                             style: AppTypography.numericSmall.copyWith(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                               color: remainingCalories >= 0
                                   ? AppTheme.calories
-                                  : AppTheme.neutralInfo,
+                                  : const Color(0xFF818CF8),
                             ),
                           ),
                         ),

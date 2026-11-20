@@ -115,6 +115,7 @@ class _ExpenditureSettingsScreenState
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: AppTheme.textPrimary,
+                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -159,6 +160,7 @@ class _ExpenditureSettingsScreenState
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                           color: AppTheme.textPrimary,
+                          fontFeatures: [FontFeature.tabularFigures()],
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -212,6 +214,7 @@ class _ExpenditureSettingsScreenState
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                   color: AppTheme.expenditure,
+                  fontFeatures: [FontFeature.tabularFigures()],
                 ),
               ),
             ],
@@ -287,7 +290,35 @@ class _ExpenditureSettingsScreenState
               color: AppTheme.textPrimary,
             ),
           ),
+          const SizedBox(height: 6),
+          const Text(
+            'Configures the algorithmic variance sensitivity to shifts in caloric intake and scale trends.',
+            style: TextStyle(
+              fontSize: 12,
+              color: AppTheme.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Interactive Sensitivity Curve Preview
+          Container(
+            height: 90,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppTheme.cardElevated,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppTheme.cardBorder),
+            ),
+            child: CustomPaint(
+              painter: _SensitivityCurvePainter(
+                sensitivity: _sensitivityMode,
+                curveColor: AppTheme.expenditure,
+              ),
+            ),
+          ),
           const SizedBox(height: 12),
+
           ...modes.map((item) {
             final name = item['name']!;
             final desc = item['desc']!;
@@ -428,5 +459,106 @@ class _ExpenditureSettingsScreenState
         ],
       ),
     );
+  }
+}
+
+/// Custom painter rendering a smooth Bézier response curve reflecting
+/// the selected Kalman filter sensitivity (Conservative, Standard, Dynamic).
+class _SensitivityCurvePainter extends CustomPainter {
+  const _SensitivityCurvePainter({
+    required this.sensitivity,
+    required this.curveColor,
+  });
+
+  final String sensitivity;
+  final Color curveColor;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+
+    // Draw horizontal dashed reference line (midline)
+    final gridPaint = Paint()
+      ..color = AppTheme.cardBorder.withValues(alpha: 0.7)
+      ..strokeWidth = 1;
+
+    for (double x = 0; x < w; x += 10) {
+      canvas.drawLine(Offset(x, h * 0.5), Offset(x + 5, h * 0.5), gridPaint);
+    }
+
+    // Determine curve control points based on sensitivity
+    final path = Path();
+    final fillPath = Path();
+
+    // Amplitude and frequency modulation
+    double p1y, p2y, p3y, p4y;
+    if (sensitivity == 'Conservative') {
+      // Gentle, low-variance smooth line
+      p1y = h * 0.55;
+      p2y = h * 0.48;
+      p3y = h * 0.52;
+      p4y = h * 0.46;
+    } else if (sensitivity == 'Dynamic') {
+      // Rapid, responsive curve with sharper adaptation
+      p1y = h * 0.75;
+      p2y = h * 0.20;
+      p3y = h * 0.80;
+      p4y = h * 0.25;
+    } else {
+      // Standard: Authentic balanced Kalman adaptation
+      p1y = h * 0.65;
+      p2y = h * 0.35;
+      p3y = h * 0.65;
+      p4y = h * 0.35;
+    }
+
+    path.moveTo(0, h * 0.5);
+    path.cubicTo(w * 0.25, p1y, w * 0.35, p2y, w * 0.5, h * 0.5);
+    path.cubicTo(w * 0.65, p3y, w * 0.75, p4y, w, h * 0.5);
+
+    fillPath.addPath(path, Offset.zero);
+    fillPath.lineTo(w, h);
+    fillPath.lineTo(0, h);
+    fillPath.close();
+
+    // Draw gradient area underneath
+    final gradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        curveColor.withValues(alpha: 0.25),
+        curveColor.withValues(alpha: 0.0),
+      ],
+    );
+
+    final fillPaint = Paint()
+      ..shader = gradient.createShader(Rect.fromLTWH(0, 0, w, h));
+    canvas.drawPath(fillPath, fillPaint);
+
+    // Draw curve stroke
+    final strokePaint = Paint()
+      ..color = curveColor
+      ..strokeWidth = 2.5
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(path, strokePaint);
+
+    // Draw tracking dot indicator at mid-point
+    final dotPaint = Paint()
+      ..color = curveColor
+      ..style = PaintingStyle.fill;
+    final dotGlow = Paint()
+      ..color = curveColor.withValues(alpha: 0.3)
+      ..style = PaintingStyle.fill;
+
+    canvas.drawCircle(Offset(w * 0.5, h * 0.5), 6, dotGlow);
+    canvas.drawCircle(Offset(w * 0.5, h * 0.5), 3, dotPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _SensitivityCurvePainter oldDelegate) {
+    return oldDelegate.sensitivity != sensitivity ||
+        oldDelegate.curveColor != curveColor;
   }
 }

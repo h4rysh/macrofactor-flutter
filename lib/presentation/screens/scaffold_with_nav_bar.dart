@@ -132,20 +132,12 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                                 width: 50,
                                 height: 50,
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: const Color(0xFFFAFAFA),
                                   shape: BoxShape.circle,
-                                  gradient: const LinearGradient(
-                                    colors: [
-                                      Colors.white,
-                                      Color(0xFFE2E4EB),
-                                    ],
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                  ),
                                   boxShadow: [
                                     BoxShadow(
                                       color:
-                                          Colors.white.withValues(alpha: 0.22),
+                                          Colors.white.withValues(alpha: 0.15),
                                       blurRadius: 14,
                                       spreadRadius: 1,
                                     ),
@@ -158,7 +150,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                                 ),
                                 child: const Icon(
                                   Icons.add_rounded,
-                                  color: Color(0xFF141418),
+                                  color: Color(0xFF09090B),
                                   size: 30,
                                 ),
                               ),
@@ -200,7 +192,8 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
     required String label,
   }) {
     final isSelected = _currentIndex == index;
-    final color = isSelected ? AppTheme.activeBlue : AppTheme.textSecondary;
+    final color =
+        isSelected ? const Color(0xFFFAFAFA) : const Color(0xFFA1A1AA);
     final effectiveIcon =
         (isSelected && selectedIcon != null) ? selectedIcon : icon;
 
@@ -215,12 +208,12 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
           padding: const EdgeInsets.symmetric(vertical: 4),
           decoration: BoxDecoration(
             color: isSelected
-                ? AppTheme.activeBlue.withValues(alpha: 0.12)
+                ? Colors.white.withValues(alpha: 0.08)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isSelected
-                  ? AppTheme.activeBlue.withValues(alpha: 0.25)
+                  ? Colors.white.withValues(alpha: 0.16)
                   : Colors.transparent,
               width: 0.8,
             ),

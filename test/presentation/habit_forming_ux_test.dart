@@ -450,8 +450,8 @@ void main() {
 
       await tester.pumpAndSettle();
 
-      // Look for streak badge
-      expect(find.text('3d'), findsOneWidget);
+      // Look for weekly coverage badge (adherence-neutral)
+      expect(find.text('3/7d logged'), findsOneWidget);
     });
   });
 

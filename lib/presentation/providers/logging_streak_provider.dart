@@ -57,3 +57,26 @@ final loggingStreakProvider = Provider<int>((ref) {
 
   return streak;
 });
+
+/// Computes adherence-neutral weekly data coverage (number of days logged
+/// out of the last 7 calendar days up to today).
+final weeklyDataCoverageProvider = Provider<int>((ref) {
+  ref.watch(userDataEpochProvider);
+  ref.watch(foodLogsRevisionProvider);
+
+  final clock = ref.watch(clockProvider);
+  final db = ref.watch(databaseProvider);
+  final fmt = DateFormat('yyyy-MM-dd');
+  final dailyCalories = db.getDailyCalorieTotals();
+  final today = clock();
+
+  int count = 0;
+  for (int offset = 0; offset < 7; offset++) {
+    final day = DateTime(today.year, today.month, today.day - offset);
+    final key = fmt.format(day);
+    if ((dailyCalories[key] ?? 0.0) > 0) {
+      count++;
+    }
+  }
+  return count;
+});

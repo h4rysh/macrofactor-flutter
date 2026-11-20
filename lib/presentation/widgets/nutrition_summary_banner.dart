@@ -8,7 +8,7 @@ import 'animated_primitives.dart';
 
 /// Authentic Sique Nutrition Summary Banner right below the Date Carousel.
 /// Shows consumed vs target for Calories, Protein (P), Fat (F), and Carbs (C).
-/// Also renders a 🔥 logging streak badge when the user has a multi-day streak.
+/// Adherence-neutral: displays weekly data coverage instead of streaks.
 class NutritionSummaryBanner extends ConsumerWidget {
   const NutritionSummaryBanner({
     super.key,
@@ -21,7 +21,7 @@ class NutritionSummaryBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final streak = ref.watch(loggingStreakProvider);
+    final coverage = ref.watch(weeklyDataCoverageProvider);
 
     final proteinProgress = targets.targetProteinGrams > 0
         ? (consumed.totalProtein / targets.targetProteinGrams).clamp(0.0, 1.0)
@@ -33,13 +33,17 @@ class NutritionSummaryBanner extends ConsumerWidget {
         ? (consumed.totalCarbs / targets.targetCarbsGrams).clamp(0.0, 1.0)
         : 0.0;
 
+    final isOverTarget = consumed.totalCalories > targets.targetCalories;
+    final calorieTextColor =
+        isOverTarget ? const Color(0xFF818CF8) : AppTheme.textPrimary;
+
     final semanticsLabel =
         'Daily Nutrition: ${consumed.totalCalories.round()} of ${targets.targetCalories.round()} calories consumed, '
         '${(targets.targetCalories - consumed.totalCalories).round()} calories remaining. '
         'Protein: ${consumed.totalProtein.round()}g of ${targets.targetProteinGrams.round()}g. '
         'Carbs: ${consumed.totalCarbs.round()}g of ${targets.targetCarbsGrams.round()}g. '
-        'Fat: ${consumed.totalFat.round()}g of ${targets.targetFatGrams.round()}g.'
-        '${streak > 1 ? ' Logging streak: $streak days.' : ''}';
+        'Fat: ${consumed.totalFat.round()}g of ${targets.targetFatGrams.round()}g. '
+        'Weekly data coverage: $coverage of 7 days logged.';
 
     return Semantics(
       label: semanticsLabel,
@@ -50,7 +54,7 @@ class NutritionSummaryBanner extends ConsumerWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Single Sleek Horizontal Row: 🔥 Cal | P | F | C | streak badge
+            // Single Sleek Horizontal Row: 🔥 Cal | P | F | C | Weekly coverage
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -71,7 +75,7 @@ class NutritionSummaryBanner extends ConsumerWidget {
                           style: AppTypography.numericSmall.copyWith(
                             fontSize: 12,
                             fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
+                            color: calorieTextColor,
                           ),
                         ),
                       ],
@@ -124,10 +128,10 @@ class NutritionSummaryBanner extends ConsumerWidget {
                   ),
                 ),
 
-                // 5. Streak Badge (shown when streak >= 2 days)
-                if (streak >= 2) ...[
+                // 5. Weekly Coverage Badge (calm adherence-neutral)
+                if (coverage > 0) ...[
                   const SizedBox(width: 6),
-                  _StreakBadge(streak: streak),
+                  _WeeklyCoverageBadge(coverage: coverage),
                 ],
               ],
             ),
@@ -210,48 +214,30 @@ class NutritionSummaryBanner extends ConsumerWidget {
   }
 }
 
-/// Animated streak badge pill shown in the nutrition banner.
-class _StreakBadge extends StatelessWidget {
-  const _StreakBadge({required this.streak});
+/// Calm weekly data coverage pill badge.
+class _WeeklyCoverageBadge extends StatelessWidget {
+  const _WeeklyCoverageBadge({required this.coverage});
 
-  final int streak;
+  final int coverage;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 300),
-      child: Container(
-        key: ValueKey(streak),
-        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xFFFF6B2B), Color(0xFFFFB347)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFFF6B2B).withAlpha(80),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: AppTheme.cardBorder,
+          width: 0.8,
         ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('🔥', style: TextStyle(fontSize: 10)),
-            const SizedBox(width: 2),
-            Text(
-              '${streak}d',
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-              ),
-            ),
-          ],
+      ),
+      child: Text(
+        '$coverage/7d logged',
+        style: AppTypography.labelSmall.copyWith(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: AppTheme.textSecondary,
         ),
       ),
     );

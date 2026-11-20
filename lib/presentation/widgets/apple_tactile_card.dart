@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:ui';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -181,8 +180,8 @@ class _AppleBouncyState extends State<AppleBouncy> {
   }
 }
 
-/// Frosted glass card following Apple Human Interface Guidelines Liquid Glass standards.
-/// Combines [BackdropFilter] gaussian blur with translucent specular border highlights.
+/// Obsidian card adhering to Apple Human Interface Guidelines standards.
+/// Pure matte-obsidian surface with translucent specular border highlights and zero blur overhead.
 class AppleGlassCard extends StatelessWidget {
   const AppleGlassCard({
     super.key,
@@ -228,17 +227,11 @@ class AppleGlassCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: effectiveShadow,
         border: effectiveBorder,
-        color: backgroundColor ?? AppTheme.cardSurface.withValues(alpha: 0.75),
+        color: backgroundColor ?? AppTheme.cardSurface,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-          child: Padding(
-            padding: padding,
-            child: child,
-          ),
-        ),
+      child: Padding(
+        padding: padding,
+        child: child,
       ),
     );
   }
@@ -340,16 +333,6 @@ class AppleTactileCard extends StatelessWidget {
       ),
       child: child,
     );
-
-    if (blur > 0) {
-      content = ClipRRect(
-        borderRadius: BorderRadius.circular(borderRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
-          child: content,
-        ),
-      );
-    }
 
     if (margin != null) {
       content = Padding(

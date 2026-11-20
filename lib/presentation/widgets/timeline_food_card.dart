@@ -10,11 +10,13 @@ class TimelineFoodCard extends StatelessWidget {
     required this.entry,
     required this.onTap,
     required this.onDelete,
+    this.onDuplicate,
   });
 
   final DailyFoodLogEntry entry;
   final VoidCallback onTap;
   final VoidCallback onDelete;
+  final VoidCallback? onDuplicate;
 
   @override
   Widget build(BuildContext context) {
@@ -23,9 +25,41 @@ class TimelineFoodCard extends StatelessWidget {
 
     return Dismissible(
       key: ValueKey(entry.id),
-      direction: DismissDirection.endToStart,
+      direction: onDuplicate != null
+          ? DismissDirection.horizontal
+          : DismissDirection.endToStart,
+      confirmDismiss: (direction) async {
+        if (direction == DismissDirection.startToEnd) {
+          onDuplicate?.call();
+          return false;
+        }
+        return true;
+      },
       onDismissed: (_) => onDelete(),
       background: Container(
+        alignment: Alignment.centerLeft,
+        padding: const EdgeInsets.only(left: 20),
+        decoration: BoxDecoration(
+          color: AppTheme.calories.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.copy_rounded, color: AppTheme.calories, size: 20),
+            SizedBox(width: 8),
+            Text(
+              'Duplicate',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.calories,
+              ),
+            ),
+          ],
+        ),
+      ),
+      secondaryBackground: Container(
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(

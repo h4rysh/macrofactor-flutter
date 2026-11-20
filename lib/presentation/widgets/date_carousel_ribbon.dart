@@ -14,6 +14,7 @@ class DateCarouselRibbon extends StatelessWidget {
     this.leading,
     this.trailing,
     this.now,
+    this.loggedDates = const {},
   });
 
   final DateTime selectedDate;
@@ -21,6 +22,7 @@ class DateCarouselRibbon extends StatelessWidget {
   final Widget? leading;
   final Widget? trailing;
   final DateTime? now;
+  final Set<String> loggedDates;
 
   bool _isSameDay(DateTime a, DateTime b) {
     return a.year == b.year && a.month == b.month && a.day == b.day;
@@ -115,14 +117,29 @@ class DateCarouselRibbon extends StatelessWidget {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              _formatHeaderDate(selectedDate, currentNow),
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                                color: AppTheme.textPrimary,
-                                letterSpacing: -0.3,
-                                fontFeatures: [FontFeature.tabularFigures()],
+                            AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 220),
+                              transitionBuilder: (child, animation) =>
+                                  FadeTransition(
+                                opacity: animation,
+                                child: SlideTransition(
+                                  position: Tween<Offset>(
+                                    begin: const Offset(0.0, 0.15),
+                                    end: Offset.zero,
+                                  ).animate(animation),
+                                  child: child,
+                                ),
+                              ),
+                              child: Text(
+                                _formatHeaderDate(selectedDate, currentNow),
+                                key: ValueKey(selectedDate),
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.textPrimary,
+                                  letterSpacing: -0.3,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
                               ),
                             ),
                             const SizedBox(width: 2),
@@ -226,6 +243,20 @@ class DateCarouselRibbon extends StatelessWidget {
                                 : (isToday
                                     ? AppTheme.textPrimary
                                     : AppTheme.textSecondary),
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: loggedDates.contains(
+                                    DateFormat('yyyy-MM-dd').format(day))
+                                ? (isSelected
+                                    ? AppTheme.activeBlue
+                                    : AppTheme.calories)
+                                : Colors.transparent,
+                            shape: BoxShape.circle,
                           ),
                         ),
                       ],

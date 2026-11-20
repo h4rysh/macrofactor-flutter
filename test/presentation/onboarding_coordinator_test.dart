@@ -42,8 +42,10 @@ void main() {
     expect(find.byType(WelcomeScreen), findsOneWidget);
     expect(find.text('SIQUE'), findsOneWidget);
     expect(find.text('Smarter Nutrition.\nZero Guilt.'), findsOneWidget);
-    expect(find.text('Configure My Strategy'), findsOneWidget);
-    expect(find.text('Already have an account? Sign In'), findsOneWidget);
+    expect(find.byKey(const Key('welcome_configure_strategy_btn')),
+        findsOneWidget);
+    expect(find.textContaining('Already have a backup or account?'),
+        findsOneWidget);
   });
 
   testWidgets(
@@ -117,7 +119,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap Configure My Strategy
-    await tester.tap(find.text('Configure My Strategy'));
+    await tester.tap(find.byKey(const Key('welcome_configure_strategy_btn')));
     await tester.pumpAndSettle();
 
     // Verify OnboardingFlowScreen is directly displayed at Step 1 of 7 (Card 1 Goal Selection)
@@ -128,7 +130,7 @@ void main() {
   });
 
   testWidgets(
-      'Tapping "Already have an account? Sign In" navigates to AuthGateScreen',
+      'Tapping "Already have a backup or account? Sign in / Restore" navigates to AuthGateScreen',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(450, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -146,7 +148,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Tap Sign In link
-    await tester.tap(find.text('Already have an account? Sign In'));
+    await tester.tap(find.textContaining('Already have a backup or account?'));
     await tester.pumpAndSettle();
 
     // Verify AuthGateScreen is open

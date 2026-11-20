@@ -192,8 +192,8 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
       _persistStepProgress(step);
       _pageController.animateToPage(
         step,
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeInOutCubic,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
       );
     }
   }
@@ -487,6 +487,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
             initialStaple: _staplePreference,
             initialProteinPref: _proteinPref,
             initialOilDefault: _oilDefault,
+            currentWeightKg: _currentWeightKg,
             onPreferencesChanged: ({
               required dietType,
               required staplePreference,

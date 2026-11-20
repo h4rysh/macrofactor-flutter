@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/presentation/widgets/sique_frosted_chrome.dart';
 
 /// Card 2: Biometrics (Sex, DOB via date picker, Height, Weight with metric/imperial toggle).
 class Card02Biometrics extends StatefulWidget {
@@ -131,220 +132,240 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+    return Column(
       children: [
-        const Text(
-          'BIOMETRIC PROFILE',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.activeBlue,
-            letterSpacing: 0.8,
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Your Physical Foundation',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.textPrimary,
-            letterSpacing: -0.4,
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Used to compute your resting metabolic baseline (Mifflin-St Jeor).',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppTheme.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 18),
-
-        // Section A: Biological Sex
-        const Text('Biological Sex',
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary)),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _buildSexChip(
-                label: 'Male',
-                isMaleOption: true,
-                key: const Key('card_02_sex_male'),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _buildSexChip(
-                label: 'Female',
-                isMaleOption: false,
-                key: const Key('card_02_sex_female'),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 18),
-
-        // Section B: Date of Birth & Age (with 18+ guardrail)
-        const Text('Date of Birth & Age',
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary)),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: AppTheme.cardSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.cardBorder),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const Text(
+                'BIOMETRIC PROFILE',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.activeBlue,
+                  letterSpacing: 0.8,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Your Physical Foundation',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                  letterSpacing: -0.4,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Used to compute your resting metabolic baseline (Mifflin-St Jeor).',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 18),
+
+              // Section A: Biological Sex
+              const Text('Biological Sex',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary)),
+              const SizedBox(height: 8),
+              Row(
                 children: [
-                  Text(
-                    '$_age years old',
-                    key: const Key('step_03_age_display'),
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
-                      fontFeatures: [FontFeature.tabularFigures()],
+                  Expanded(
+                    child: _buildSexChip(
+                      label: 'Male',
+                      isMaleOption: true,
+                      key: const Key('card_02_sex_male'),
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    DateFormat('dd/MM/yyyy').format(_dob),
-                    style: const TextStyle(
-                        fontSize: 12, color: AppTheme.textSecondary),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildSexChip(
+                      label: 'Female',
+                      isMaleOption: false,
+                      key: const Key('card_02_sex_female'),
+                    ),
                   ),
                 ],
               ),
-              OutlinedButton.icon(
-                key: const Key('card_02_dob_picker_btn'),
-                onPressed: _pickDob,
-                icon: const Icon(Icons.calendar_today_rounded, size: 14),
-                label: const Text('Change Date'),
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.activeBlue,
-                  side: const BorderSide(color: AppTheme.cardBorder),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+              const SizedBox(height: 18),
+
+              // Section B: Date of Birth & Age (with 18+ guardrail)
+              const Text('Date of Birth & Age',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.cardBorder),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '$_age years old',
+                          key: const Key('step_03_age_display'),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.textPrimary,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          DateFormat('dd/MM/yyyy').format(_dob),
+                          style: const TextStyle(
+                              fontSize: 12, color: AppTheme.textSecondary),
+                        ),
+                      ],
+                    ),
+                    OutlinedButton.icon(
+                      key: const Key('card_02_dob_picker_btn'),
+                      onPressed: _pickDob,
+                      icon: const Icon(Icons.calendar_today_rounded, size: 14),
+                      label: const Text('Change Date'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.activeBlue,
+                        side: const BorderSide(color: AppTheme.cardBorder),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
 
-        // Adult 18+ Lock Banner
-        if (!_isAdult) ...[
-          const SizedBox(height: 10),
-          Container(
-            key: const Key('step_03_age_guardrail_banner'),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppTheme.calories.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: AppTheme.calories.withValues(alpha: 0.35),
-              ),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.shield_outlined, color: AppTheme.calories, size: 18),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Sique is designed for adults 18 and older. Metabolic algorithms require adult physiological baseline.',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.calories,
-                      fontWeight: FontWeight.w600,
+              // Adult 18+ Lock Banner
+              if (!_isAdult) ...[
+                const SizedBox(height: 10),
+                Container(
+                  key: const Key('step_03_age_guardrail_banner'),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.calories.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppTheme.calories.withValues(alpha: 0.35),
                     ),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.shield_outlined,
+                          color: AppTheme.calories, size: 18),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Sique is designed for adults 18 and older. Metabolic algorithms require adult physiological baseline.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.calories,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
-            ),
+              const SizedBox(height: 18),
+
+              // Section C: Height (Metric / Imperial Toggle)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Height',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textSecondary)),
+                  _buildUnitToggle(
+                    isFirst: _heightInCm,
+                    firstLabel: 'cm',
+                    secondLabel: 'ft/in',
+                    firstKey: const Key('step_04_unit_toggle_cm'),
+                    secondKey: const Key('step_04_unit_toggle_ft'),
+                    onToggle: (first) => setState(() => _heightInCm = first),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              _buildHeightInput(),
+              const SizedBox(height: 18),
+
+              // Section D: Current Weight (Metric / Imperial Toggle)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('Current Weight',
+                      style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textSecondary)),
+                  _buildUnitToggle(
+                    isFirst: _weightInKg,
+                    firstLabel: 'kg',
+                    secondLabel: 'lb',
+                    firstKey: const Key('step_05_unit_toggle_kg'),
+                    secondKey: const Key('step_05_unit_toggle_lb'),
+                    onToggle: (first) => setState(() => _weightInKg = first),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              _buildWeightInput(),
+              const SizedBox(height: 16),
+            ],
           ),
-        ],
-        const SizedBox(height: 18),
-
-        // Section C: Height (Metric / Imperial Toggle)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Height',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textSecondary)),
-            _buildUnitToggle(
-              isFirst: _heightInCm,
-              firstLabel: 'cm',
-              secondLabel: 'ft/in',
-              firstKey: const Key('step_04_unit_toggle_cm'),
-              secondKey: const Key('step_04_unit_toggle_ft'),
-              onToggle: (first) => setState(() => _heightInCm = first),
-            ),
-          ],
         ),
-        const SizedBox(height: 8),
-        _buildHeightInput(),
-        const SizedBox(height: 18),
-
-        // Section D: Current Weight (Metric / Imperial Toggle)
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text('Current Weight',
-                style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textSecondary)),
-            _buildUnitToggle(
-              isFirst: _weightInKg,
-              firstLabel: 'kg',
-              secondLabel: 'lb',
-              firstKey: const Key('step_05_unit_toggle_kg'),
-              secondKey: const Key('step_05_unit_toggle_lb'),
-              onToggle: (first) => setState(() => _weightInKg = first),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        _buildWeightInput(),
-        const SizedBox(height: 28),
-
-        // Continue Button
-        AppleTactileCard(
-          key: const Key('onboarding_card_2_continue_btn'),
-          onTap: _isAdult
-              ? () {
-                  HapticFeedback.lightImpact();
-                  _notifyUpdate();
-                  widget.onNext();
-                }
-              : null,
-          backgroundColor:
-              _isAdult ? AppTheme.activeBlue : AppTheme.cardElevated,
-          borderRadius: 14,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: Center(
-            child: Text(
-              _isAdult ? 'Continue to Pacing' : 'Age 18+ Required',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: _isAdult ? Colors.white : AppTheme.textMuted,
+        // Pinned sticky bottom CTA bar: guaranteed visible without scrolling
+        SiqueFrostedChrome(
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
+              child: SizedBox(
+                width: double.infinity,
+                child: AppleTactileCard(
+                  key: const Key('onboarding_card_2_continue_btn'),
+                  onTap: _isAdult
+                      ? () {
+                          HapticFeedback.lightImpact();
+                          _notifyUpdate();
+                          widget.onNext();
+                        }
+                      : null,
+                  backgroundColor: _isAdult
+                      ? const Color(0xFFFAFAFA)
+                      : AppTheme.cardElevated,
+                  borderRadius: 14,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: Center(
+                    child: Text(
+                      _isAdult ? 'Continue to pacing' : 'Age 18+ Required',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: _isAdult
+                            ? const Color(0xFF09090B)
+                            : AppTheme.textMuted,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),

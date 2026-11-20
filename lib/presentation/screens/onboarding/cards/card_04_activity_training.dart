@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/presentation/widgets/sique_frosted_chrome.dart';
 
 /// Card 4: Activity & Training (Daily activity + weekly workouts; reveals training days inline only if workouts > 0).
 class Card04ActivityTraining extends StatefulWidget {
@@ -96,254 +97,272 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+    return Column(
       children: [
-        const Text(
-          'EXPENDITURE PRIORS',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.activeBlue,
-            letterSpacing: 0.8,
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Activity & Training Schedule',
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: AppTheme.textPrimary,
-            letterSpacing: -0.4,
-          ),
-        ),
-        const SizedBox(height: 6),
-        const Text(
-          'Your baseline movement and resistance workouts seed the Bayesian expenditure filter.',
-          style: TextStyle(
-            fontSize: 14,
-            color: AppTheme.textSecondary,
-          ),
-        ),
-        const SizedBox(height: 18),
-
-        // Section 1: Daily Activity (NEAT)
-        const Text('Daily Baseline Activity (Non-Exercise)',
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary)),
-        const SizedBox(height: 8),
-        _buildActivityOption(
-          slug: 'sedentary',
-          title: 'Sedentary',
-          subtitle:
-              'Desk work, seated commute, minimal daily step count (~1.20x BMR)',
-          icon: Icons.chair_rounded,
-        ),
-        const SizedBox(height: 8),
-        _buildActivityOption(
-          slug: 'light',
-          title: 'Lightly Active',
-          subtitle:
-              'Light walking, casual movement, 5,000–7,000 steps (~1.35x BMR)',
-          icon: Icons.directions_walk_rounded,
-        ),
-        const SizedBox(height: 8),
-        _buildActivityOption(
-          slug: 'moderate',
-          title: 'Moderately Active',
-          subtitle:
-              'On your feet regularly, active job, 8,000–12,000 steps (~1.50x BMR)',
-          icon: Icons.directions_run_rounded,
-        ),
-        const SizedBox(height: 8),
-        _buildActivityOption(
-          slug: 'very_active',
-          title: 'Very Active',
-          subtitle:
-              'Physically demanding labor, high daily volume (>12,000 steps, ~1.70x BMR)',
-          icon: Icons.bolt_rounded,
-        ),
-        const SizedBox(height: 22),
-
-        // Section 2: Weekly Workouts
-        const Text('Weekly Training Frequency',
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary)),
-        const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppTheme.cardSurface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppTheme.cardBorder),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text('Weekly Workouts',
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textPrimary)),
-                  Flexible(
-                    child: Text(
-                      _workoutCount == 0
-                          ? '0 days (Rest only)'
-                          : '$_workoutCount ${_workoutCount == 1 ? "day" : "days"} / week',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.activeBlue,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                      textAlign: TextAlign.end,
-                    ),
-                  ),
-                ],
+              const Text(
+                'EXPENDITURE PRIORS',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.activeBlue,
+                  letterSpacing: 0.8,
+                ),
               ),
-              const SizedBox(height: 12),
-              // Quick count selector 0..7
-              Row(
-                children: List.generate(8, (i) {
-                  final isSelected = _workoutCount == i;
-                  return Expanded(
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        left: i == 0 ? 0 : 2,
-                        right: i == 7 ? 0 : 2,
-                      ),
-                      child: GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          _setWorkoutCount(i);
-                        },
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 160),
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppTheme.activeBlue
-                                : AppTheme.cardElevated,
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppTheme.activeBlue
-                                  : AppTheme.cardBorder,
-                            ),
-                          ),
-                          alignment: Alignment.center,
-                          child: Text(
-                            '$i',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: isSelected
-                                  ? Colors.white
-                                  : AppTheme.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+              const SizedBox(height: 6),
+              const Text(
+                'Activity & Training Schedule',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
+                  letterSpacing: -0.4,
+                ),
               ),
+              const SizedBox(height: 6),
+              const Text(
+                'Your baseline movement and resistance workouts seed the Bayesian expenditure filter.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 18),
 
-              // Inline Training Days Selector: ONLY REVEALED IF WORKOUTS > 0
-              if (_workoutCount > 0) ...[
-                const SizedBox(height: 16),
-                const Divider(color: AppTheme.cardBorder, height: 1),
-                const SizedBox(height: 14),
-                const Text(
-                  'Select Training Days',
+              // Section 1: Daily Activity (NEAT)
+              const Text('Daily Baseline Activity (Non-Exercise)',
                   style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textSecondary,
-                  ),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary)),
+              const SizedBox(height: 8),
+              _buildActivityOption(
+                slug: 'sedentary',
+                title: 'Sedentary',
+                subtitle:
+                    'Desk work, seated commute, minimal daily step count (~1.20x BMR)',
+                icon: Icons.chair_rounded,
+              ),
+              const SizedBox(height: 8),
+              _buildActivityOption(
+                slug: 'light',
+                title: 'Lightly Active',
+                subtitle:
+                    'Light walking, casual movement, 5,000–7,000 steps (~1.35x BMR)',
+                icon: Icons.directions_walk_rounded,
+              ),
+              const SizedBox(height: 8),
+              _buildActivityOption(
+                slug: 'moderate',
+                title: 'Moderately Active',
+                subtitle:
+                    'On your feet regularly, active job, 8,000–12,000 steps (~1.50x BMR)',
+                icon: Icons.directions_run_rounded,
+              ),
+              const SizedBox(height: 8),
+              _buildActivityOption(
+                slug: 'very_active',
+                title: 'Very Active',
+                subtitle:
+                    'Physically demanding labor, high daily volume (>12,000 steps, ~1.70x BMR)',
+                icon: Icons.bolt_rounded,
+              ),
+              const SizedBox(height: 22),
+
+              // Section 2: Weekly Workouts
+              const Text('Weekly Training Frequency',
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary)),
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: AppTheme.cardBorder),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: List.generate(7, (idx) {
-                    final dayNum = idx + 1; // 1 = Mon, 7 = Sun
-                    final isTraining = _workoutDays.contains(dayNum);
-                    return Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(
-                          left: idx == 0 ? 0 : 2,
-                          right: idx == 6 ? 0 : 2,
-                        ),
-                        child: GestureDetector(
-                          onTap: () {
-                            HapticFeedback.selectionClick();
-                            _toggleDay(dayNum);
-                          },
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 160),
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isTraining
-                                  ? AppTheme.activeBlue.withValues(alpha: 0.18)
-                                  : AppTheme.cardElevated,
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(
-                                color: isTraining
-                                    ? AppTheme.activeBlue
-                                    : AppTheme.cardBorder,
-                                width: isTraining ? 1.5 : 1.0,
-                              ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Weekly Workouts',
+                            style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary)),
+                        Flexible(
+                          child: Text(
+                            _workoutCount == 0
+                                ? '0 days (Rest only)'
+                                : '$_workoutCount ${_workoutCount == 1 ? "day" : "days"} / week',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.activeBlue,
                             ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              _dayNames[idx],
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: isTraining
-                                    ? FontWeight.w700
-                                    : FontWeight.w500,
-                                color: isTraining
-                                    ? AppTheme.activeBlue
-                                    : AppTheme.textSecondary,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.end,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Quick count selector 0..7
+                    Row(
+                      children: List.generate(8, (i) {
+                        final isSelected = _workoutCount == i;
+                        return Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: i == 0 ? 0 : 2,
+                              right: i == 7 ? 0 : 2,
+                            ),
+                            child: GestureDetector(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                _setWorkoutCount(i);
+                              },
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 160),
+                                height: 36,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppTheme.activeBlue
+                                      : AppTheme.cardElevated,
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? AppTheme.activeBlue
+                                        : AppTheme.cardBorder,
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  '$i',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: isSelected
+                                        ? Colors.white
+                                        : AppTheme.textSecondary,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
+                        );
+                      }),
+                    ),
+
+                    // Inline Training Days Selector: ONLY REVEALED IF WORKOUTS > 0
+                    if (_workoutCount > 0) ...[
+                      const SizedBox(height: 16),
+                      const Divider(color: AppTheme.cardBorder, height: 1),
+                      const SizedBox(height: 14),
+                      const Text(
+                        'Select Training Days',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.textSecondary,
                         ),
                       ),
-                    );
-                  }),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: List.generate(7, (idx) {
+                          final dayNum = idx + 1; // 1 = Mon, 7 = Sun
+                          final isTraining = _workoutDays.contains(dayNum);
+                          return Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                left: idx == 0 ? 0 : 2,
+                                right: idx == 6 ? 0 : 2,
+                              ),
+                              child: GestureDetector(
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  _toggleDay(dayNum);
+                                },
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 160),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: isTraining
+                                        ? AppTheme.activeBlue
+                                            .withValues(alpha: 0.18)
+                                        : AppTheme.cardElevated,
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: isTraining
+                                          ? AppTheme.activeBlue
+                                          : AppTheme.cardBorder,
+                                      width: isTraining ? 1.5 : 1.0,
+                                    ),
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    _dayNames[idx],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: isTraining
+                                          ? FontWeight.w700
+                                          : FontWeight.w500,
+                                      color: isTraining
+                                          ? AppTheme.activeBlue
+                                          : AppTheme.textSecondary,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                    ],
+                  ],
                 ),
-              ],
+              ),
+              const SizedBox(height: 16),
             ],
           ),
         ),
-        const SizedBox(height: 28),
-
-        // Continue Button
-        AppleTactileCard(
-          key: const Key('onboarding_card_4_continue_btn'),
-          onTap: () {
-            HapticFeedback.lightImpact();
-            _notifyUpdate();
-            widget.onNext();
-          },
-          backgroundColor: AppTheme.activeBlue,
-          borderRadius: 14,
-          padding: const EdgeInsets.symmetric(vertical: 16),
-          child: const Center(
-            child: Text(
-              'Continue to Nutrition Preferences',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
+        // Pinned sticky bottom CTA bar: guaranteed visible without scrolling
+        SiqueFrostedChrome(
+          child: SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 10, 20, 14),
+              child: SizedBox(
+                width: double.infinity,
+                child: AppleTactileCard(
+                  key: const Key('onboarding_card_4_continue_btn'),
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    _notifyUpdate();
+                    widget.onNext();
+                  },
+                  backgroundColor: const Color(0xFFFAFAFA),
+                  borderRadius: 14,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  child: const Center(
+                    child: Text(
+                      'Continue to nutrition preferences',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF09090B),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
