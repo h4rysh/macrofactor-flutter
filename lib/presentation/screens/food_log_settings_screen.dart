@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sique/domain/models/oil_modifier_display.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
@@ -169,7 +170,8 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
 
   Widget _buildOilModifierCard() {
     final profile = ref.watch(userProfileProvider);
-    final isVegan = profile.dietType.toLowerCase() == 'vegan';
+    final isVegan = OilModifierDisplay.isVegan(profile.dietType);
+    final fatMedium = OilModifierDisplay.fatMedium(isVegan);
 
     final modifiers = [
       'Zero Oil (Raw / Boiled / Steamed)',
@@ -210,7 +212,7 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            'In Indian cooking, hidden preparation fat (tadka, ${isVegan ? "oil" : "ghee"}) is the #1 source of calorie estimation error. This sets your default presumption.',
+            'In Indian cooking, hidden preparation fat (tadka, $fatMedium) is the #1 source of calorie estimation error. This sets your default presumption.',
             style: const TextStyle(
               fontSize: 12,
               color: AppTheme.textSecondary,

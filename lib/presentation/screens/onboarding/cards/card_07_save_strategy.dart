@@ -256,7 +256,7 @@ class _Card07SaveStrategyState extends ConsumerState<Card07SaveStrategy> {
               ),
               const SizedBox(height: 16),
 
-              // 2. Optional Account Backup Card
+              // 2. Optional Sique Account Card
               SiqueTonalCard(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -264,12 +264,12 @@ class _Card07SaveStrategyState extends ConsumerState<Card07SaveStrategy> {
                   children: [
                     const Row(
                       children: [
-                        Icon(Icons.cloud_outlined,
-                            color: AppTheme.carbs, size: 20),
+                        Icon(Icons.account_circle_outlined,
+                            color: AppTheme.activeBlue, size: 20),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Cloud Sync & Backup (Optional)',
+                            'Optional Sique Account',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
@@ -281,7 +281,7 @@ class _Card07SaveStrategyState extends ConsumerState<Card07SaveStrategy> {
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'Sique works 100% offline. Optionally sign in to back up your nutrition history across device changes.',
+                      'Local-first storage today; reserves your identity for future sync.',
                       style: TextStyle(
                           fontSize: 12,
                           color: AppTheme.textSecondary,
