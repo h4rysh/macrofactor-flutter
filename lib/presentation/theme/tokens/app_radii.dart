@@ -44,6 +44,12 @@ class AppRadii {
   static const BorderRadius pillBorderRadius =
       BorderRadius.all(Radius.circular(pill));
 
+  /// Semantic BorderRadius Aliases
+  static const BorderRadius card = lgBorderRadius;
+  static const BorderRadius cardLarge = xlBorderRadius;
+  static const BorderRadius button = mdBorderRadius;
+  static const BorderRadius pillShape = pillBorderRadius;
+
   // ===========================================================================
   // Sheet Top Rounded BorderRadius Tokens
   // ===========================================================================
