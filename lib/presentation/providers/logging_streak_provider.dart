@@ -11,6 +11,7 @@ import 'app_providers.dart';
 /// streak is preserved rather than resetting to 0 (ISS-2-06). Once food is logged
 /// today, today increments the streak. If yesterday was also unlogged, streak is 0.
 final loggingStreakProvider = Provider<int>((ref) {
+  ref.watch(userDataEpochProvider);
   // Re-compute whenever logs change or the selected date changes.
   ref.watch(foodLogsRevisionProvider);
 

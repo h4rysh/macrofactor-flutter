@@ -144,7 +144,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(WeightLogModal), findsOneWidget);
-      expect(find.text('LOG SCALE WEIGHT'), findsOneWidget);
+      expect(find.text('Log scale weight'), findsOneWidget);
 
       // Enter weight "74.8"
       final weightTextField = find.descendant(
@@ -155,7 +155,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Tap Save
-      await tester.tap(find.text('SAVE SCALE WEIGHT'));
+      await tester.tap(find.text('Save scale weight'));
       await tester.pumpAndSettle();
 
       // Verify saved in SQLite database

@@ -184,7 +184,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                             fit: BoxFit.scaleDown,
                             alignment: Alignment.centerLeft,
                             child: Text(
-                              'LOG SCALE WEIGHT',
+                              'Log scale weight',
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w800,
@@ -380,8 +380,8 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
                           child: Text(_isSubmitting
-                              ? 'SAVING...'
-                              : 'SAVE SCALE WEIGHT'),
+                              ? 'Saving...'
+                              : 'Save scale weight'),
                         ),
                       ),
                     ),

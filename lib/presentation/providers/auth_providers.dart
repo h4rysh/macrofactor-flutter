@@ -3,7 +3,6 @@ import 'dart:developer' as developer;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/data/repositories/firebase_auth_repository.dart';
@@ -279,17 +278,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     try {
       await _authRepo.deleteAccount(password: password);
       _db.clearAllData();
-      try {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.clear();
-      } catch (e, st) {
-        developer.log(
-          'SharedPreferences clear failure',
-          name: 'AuthNotifier',
-          error: e,
-          stackTrace: st,
-        );
-      }
       _invalidateUserDataProviders();
       state = AuthUnauthenticated();
       return true;
@@ -309,6 +297,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
     final ref = _ref;
     if (ref == null) return;
     try {
+      ref.read(userDataEpochProvider.notifier).state++;
       ref.invalidate(userProfileProvider);
       ref.invalidate(dayCompletionsProvider);
       ref.invalidate(foodLogsRevisionProvider);

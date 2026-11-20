@@ -572,8 +572,8 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
                           fit: BoxFit.scaleDown,
                           child: Text(
                             _isSubmitting
-                                ? 'LOGGING...'
-                                : 'LOG TO ${widget.mealType.displayName.toUpperCase()}',
+                                ? 'Logging...'
+                                : 'Log to ${widget.mealType.displayName}',
                           ),
                         ),
                       ),

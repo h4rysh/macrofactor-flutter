@@ -71,6 +71,7 @@ class WorkoutSessionsNotifier extends StateNotifier<List<WorkoutSession>> {
 /// Main workout sessions provider managing list of synced/logged sessions.
 final workoutSessionsProvider =
     StateNotifierProvider<WorkoutSessionsNotifier, List<WorkoutSession>>((ref) {
+  ref.watch(userDataEpochProvider);
   final db = ref.watch(databaseProvider);
   return WorkoutSessionsNotifier(db);
 });

@@ -222,8 +222,8 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(tester.takeException(), isNull);
-        expect(find.text('LOG SCALE WEIGHT'), findsOneWidget);
-        expect(find.text('SAVE SCALE WEIGHT'), findsOneWidget);
+        expect(find.text('Log scale weight'), findsOneWidget);
+        expect(find.text('Save scale weight'), findsOneWidget);
       });
 
       testWidgets(
@@ -384,7 +384,7 @@ void main() {
 
         expect(tester.takeException(), isNull);
         expect(find.text('Paneer Butter Masala'), findsOneWidget);
-        expect(find.text('LOG TO LUNCH'), findsOneWidget);
+        expect(find.text('Log to Lunch'), findsOneWidget);
       });
 
       testWidgets(

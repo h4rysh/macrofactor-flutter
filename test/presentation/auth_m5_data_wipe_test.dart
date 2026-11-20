@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/data/services/mock_auth_service.dart';
@@ -21,7 +20,6 @@ void main() {
     late MockAuthService mockAuth;
 
     setUp(() {
-      SharedPreferences.setMockInitialValues({'dummy_user_key': 'saved_pref'});
       appDb = AppDatabase.inMemory();
       rawDb = appDb.rawDb;
       mockAuth = MockAuthService();
@@ -100,8 +98,7 @@ void main() {
       expect(resetSeq.isEmpty, isTrue);
     });
 
-    test(
-        'AuthNotifier.deleteAccount() wipes local database, clears SharedPreferences, and resets state',
+    test('AuthNotifier.deleteAccount() wipes local database and resets state',
         () async {
       // Pre-condition: Set initial authenticated account
       final account = UserAccount.fromGoogle(
@@ -116,10 +113,6 @@ void main() {
         INSERT INTO weight_logs (date, scale_weight, source, logged_at)
         VALUES ('2026-10-24', 80.0, 'manual', 1700000000);
       ''');
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('test_athlete_key', 'persisted_val');
-      expect(prefs.getKeys().isNotEmpty, isTrue);
 
       final container = ProviderContainer(
         overrides: [
@@ -150,10 +143,6 @@ void main() {
       // Assert post-condition 3: User data tables wiped
       final weightLogs = rawDb.select('SELECT id FROM weight_logs;');
       expect(weightLogs.isEmpty, isTrue);
-
-      // Assert post-condition 4: SharedPreferences cleared
-      final postPrefs = await SharedPreferences.getInstance();
-      expect(postPrefs.getKeys().isEmpty, isTrue);
     });
 
     testWidgets(

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/data/services/mock_auth_service.dart';
 import 'package:sique/domain/models/user_account.dart';
@@ -15,7 +14,6 @@ void main() {
     late MockAuthService mockAuth;
 
     setUp(() {
-      SharedPreferences.setMockInitialValues({'athlete_pref': 'active'});
       db = AppDatabase.inMemory();
       mockAuth = MockAuthService();
     });

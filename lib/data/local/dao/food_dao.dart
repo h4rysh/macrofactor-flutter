@@ -1,16 +1,21 @@
 import 'dart:developer' as developer;
+import 'dart:isolate';
 import 'package:sique/domain/models/food_models.dart';
 import 'package:sqlite3/common.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 /// Data Access Object managing foods catalog, portion units, full-text search, and multi-tenant food logs.
 class FoodDao {
   FoodDao(this._db,
-      {this.userId = 'default_user', String Function()? userIdProvider})
+      {this.userId = 'default_user',
+      String Function()? userIdProvider,
+      this.dbPath})
       : _userIdProvider = userIdProvider {
     _ensureIndexes();
   }
 
   final CommonDatabase _db;
+  final String? dbPath;
   String userId;
   String Function()? _userIdProvider;
 
@@ -50,11 +55,39 @@ class FoodDao {
     }).join(' ');
   }
 
-  /// Asynchronously searches foods off the main UI thread.
+  /// Asynchronously searches foods off the main UI thread via worker isolate.
   Future<List<FoodItem>> searchFoodsAsync(String query,
       {int limit = 30}) async {
-    return Future<List<FoodItem>>.microtask(
-        () => searchFoods(query, limit: limit));
+    final path = dbPath;
+    if (path != null && path.isNotEmpty) {
+      try {
+        return await Isolate.run(
+          () => _isolateSearchFoods(path, query, limit),
+        );
+      } catch (e, st) {
+        developer.log(
+          'Worker isolate search failed; falling back to local query',
+          name: 'FoodDao',
+          error: e,
+          stackTrace: st,
+        );
+      }
+    }
+    return searchFoods(query, limit: limit);
+  }
+
+  static List<FoodItem> _isolateSearchFoods(
+    String path,
+    String query,
+    int limit,
+  ) {
+    final isolateDb = sqlite3.open(path);
+    try {
+      final dao = FoodDao(isolateDb, dbPath: path);
+      return dao.searchFoods(query, limit: limit);
+    } finally {
+      isolateDb.dispose();
+    }
   }
 
   /// Searches foods using SQLite FTS5 with operator escaping and rank ordering, falling back to LIKE.

@@ -666,7 +666,7 @@ class ProfileTargetsScreen extends ConsumerWidget {
               }
               Navigator.of(ctx).pop();
             },
-            child: const Text('Save',
+            child: const Text('Save changes',
                 style: TextStyle(
                     fontWeight: FontWeight.w700, color: AppTheme.activeBlue)),
           ),
@@ -731,7 +731,7 @@ class ProfileTargetsScreen extends ConsumerWidget {
                 Navigator.of(ctx).pop();
               }
             },
-            child: const Text('Save',
+            child: const Text('Save changes',
                 style: TextStyle(
                     fontWeight: FontWeight.w700, color: AppTheme.activeBlue)),
           ),
@@ -781,7 +781,7 @@ class ProfileTargetsScreen extends ConsumerWidget {
               }
               Navigator.of(ctx).pop();
             },
-            child: const Text('Save',
+            child: const Text('Save changes',
                 style: TextStyle(
                     fontWeight: FontWeight.w700, color: AppTheme.activeBlue)),
           ),

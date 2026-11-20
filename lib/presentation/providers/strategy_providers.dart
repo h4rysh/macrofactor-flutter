@@ -103,6 +103,7 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
 final weeklyMacroProgramProvider =
     StateNotifierProvider<WeeklyMacroProgramNotifier, WeeklyMacroProgram>(
         (ref) {
+  ref.watch(userDataEpochProvider);
   return WeeklyMacroProgramNotifier(ref);
 });
 
@@ -122,6 +123,7 @@ final coachingCheckInStatusProvider = Provider<CheckInRecommendation>((ref) {
 
 /// List of historical coaching check-in entries from SQLite.
 final coachingCheckInHistoryProvider = Provider<List<CoachingCheckIn>>((ref) {
+  ref.watch(userDataEpochProvider);
   final db = ref.watch(databaseProvider);
   return db.getCoachingCheckIns();
 });

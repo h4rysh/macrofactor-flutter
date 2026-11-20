@@ -42,8 +42,8 @@ class DatabaseOpenException implements Exception {
 
 /// Local high-performance SQLite database facade delegating to specialized DAOs.
 class AppDatabase {
-  AppDatabase(this._db, {bool isInMemory = false})
-      : foodDao = FoodDao(_db),
+  AppDatabase(this._db, {bool isInMemory = false, this.dbPath})
+      : foodDao = FoodDao(_db, dbPath: dbPath),
         weightDao = WeightDao(_db),
         profileDao = ProfileDao(_db),
         workoutDao = WorkoutDao(_db),
@@ -57,6 +57,7 @@ class AppDatabase {
   }
 
   final Database _db;
+  final String? dbPath;
   final FoodDao foodDao;
   final WeightDao weightDao;
   final ProfileDao profileDao;
@@ -411,7 +412,7 @@ class AppDatabase {
       }
 
       final rawDb = sqlite3.open(dbPath);
-      final appDb = AppDatabase(rawDb);
+      final appDb = AppDatabase(rawDb, dbPath: dbPath);
       return appDb;
     } catch (e, st) {
       developer.log(

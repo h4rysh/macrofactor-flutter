@@ -33,6 +33,11 @@ final selectedDateProvider = StateProvider<String>((ref) {
   return DateFormat('yyyy-MM-dd').format(clock());
 });
 
+/// Root reactive user session epoch provider incremented whenever active user
+/// logs out, deletes account, or switches sessions, forcing all user data
+/// stores to rebuild.
+final userDataEpochProvider = StateProvider<int>((ref) => 0);
+
 /// Global revision counter tracking food log additions, edits, and deletions.
 final foodLogsRevisionProvider = StateProvider<int>((ref) => 0);
 
@@ -66,6 +71,7 @@ class DayCompletionsNotifier extends StateNotifier<Map<String, bool>> {
 
 final dayCompletionsProvider =
     StateNotifierProvider<DayCompletionsNotifier, Map<String, bool>>((ref) {
+  ref.watch(userDataEpochProvider);
   final db = ref.watch(databaseProvider);
   return DayCompletionsNotifier(db);
 });
@@ -122,6 +128,7 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
 
 final userProfileProvider =
     StateNotifierProvider<UserProfileNotifier, UserProfile>((ref) {
+  ref.watch(userDataEpochProvider);
   final db = ref.watch(databaseProvider);
   return UserProfileNotifier(db, ref);
 });
@@ -212,6 +219,7 @@ class DailyFoodLogsNotifier extends StateNotifier<List<FoodLogEntry>> {
 
 final dailyFoodLogsProvider =
     StateNotifierProvider<DailyFoodLogsNotifier, List<FoodLogEntry>>((ref) {
+  ref.watch(userDataEpochProvider);
   final db = ref.watch(databaseProvider);
   final date = ref.watch(selectedDateProvider);
   return DailyFoodLogsNotifier(db, date, ref);
@@ -272,6 +280,7 @@ class WeightLogsNotifier extends StateNotifier<List<ScaleWeightEntry>> {
 
 final weightLogsProvider =
     StateNotifierProvider<WeightLogsNotifier, List<ScaleWeightEntry>>((ref) {
+  ref.watch(userDataEpochProvider);
   final db = ref.watch(databaseProvider);
   return WeightLogsNotifier(db);
 });
@@ -293,6 +302,7 @@ final latestTrendWeightProvider = Provider<WeightTrendPoint?>((ref) {
 
 /// Dynamic Joint Kalman Filter (V4) Expenditure Tracker.
 final expenditureStateProvider = Provider<ExpenditureState>((ref) {
+  ref.watch(userDataEpochProvider);
   final profile = ref.watch(userProfileProvider);
   final weights = ref.watch(weightLogsProvider);
   final db = ref.watch(databaseProvider);
@@ -446,6 +456,7 @@ final macroTargetProvider = dailyMacroTargetProvider;
 
 /// Recently and frequently logged foods for 1-tap quick logging / search suggestions.
 final recentLoggedFoodsProvider = Provider<List<FoodItem>>((ref) {
+  ref.watch(userDataEpochProvider);
   ref.watch(foodLogsRevisionProvider);
   final db = ref.watch(databaseProvider);
   final allLogs = db.getAllFoodLogs();
