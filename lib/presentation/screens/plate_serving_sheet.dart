@@ -1,10 +1,13 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../domain/models/food_models.dart';
 import '../../domain/models/user_profile.dart';
 import '../theme/app_theme.dart';
+import '../widgets/apple_sheet_grabber.dart';
 import '../widgets/apple_tactile_card.dart';
 import '../widgets/food_svg_icon.dart';
+import '../widgets/plate_metric_dials.dart';
 
 typedef PlateLogCallback = void Function({
   required PortionUnit unit,
@@ -42,10 +45,7 @@ class PlateServingSheet extends StatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (ctx) => PlateServingSheet(
         food: food,
         portionUnits: portionUnits,
@@ -203,572 +203,503 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
         : 0;
 
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(bottom: bottomInset),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top Bar: Drag Pill, Close X, Timestamp, Edit
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppTheme.cardBorder,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    tooltip: 'Close',
-                    icon: const Icon(Icons.close_rounded, size: 24),
-                    color: AppTheme.textSecondary,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardElevated,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Text(
-                          timeStr,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Flexible(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: TextButton(
-                        onPressed: () {},
-                        child: const Text(
-                          'Edit',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.activeBlue,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 8),
-
-              // Food Icon & Title
-              Row(
-                children: [
-                  FoodSvgIcon(iconName: widget.food.iconName, size: 40),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface.withValues(alpha: 0.88),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 0.5,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: bottomInset),
+              child: SingleChildScrollView(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Top Bar: Drag Pill, Close X, Timestamp, Edit
+                    const AppleSheetGrabber(margin: EdgeInsets.only(bottom: 8)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          widget.food.name,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.textPrimary,
-                          ),
+                        IconButton(
+                          tooltip: 'Close',
+                          icon: const Icon(Icons.close_rounded, size: 24),
+                          color: AppTheme.textSecondary,
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          onPressed: () => Navigator.pop(context),
                         ),
-                        if (widget.food.region.isNotEmpty)
-                          Container(
-                            margin: const EdgeInsets.only(top: 4),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: AppTheme.activeBlue.withAlpha(40),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              widget.food.region,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.activeBlue,
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppTheme.cardElevated,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                timeStr,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.textPrimary,
+                                ),
                               ),
                             ),
                           ),
+                        ),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: TextButton(
+                              onPressed: () {},
+                              child: const Text(
+                                'Edit',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.activeBlue,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                  ),
-                ],
-              ),
 
-              const SizedBox(height: 20),
+                    const SizedBox(height: 8),
 
-              // Big Calories Display & Macro Badges
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      '${_effectiveCalories.round()}',
-                      style: const TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w900,
-                        color: AppTheme.textPrimary,
-                        height: 1.0,
+                    // Food Icon & Title
+                    Row(
+                      children: [
+                        FoodSvgIcon(iconName: widget.food.iconName, size: 40),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.food.name,
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.textPrimary,
+                                ),
+                              ),
+                              if (widget.food.region.isNotEmpty)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.activeBlue.withAlpha(40),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    widget.food.region,
+                                    style: const TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.activeBlue,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Big Calories Display & Macro Badges
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text(
+                            '${_effectiveCalories.round()}',
+                            style: const TextStyle(
+                              fontSize: 40,
+                              fontWeight: FontWeight.w900,
+                              color: AppTheme.textPrimary,
+                              height: 1.0,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const Padding(
+                            padding: EdgeInsets.only(bottom: 6),
+                            child: Text(
+                              'Calories',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 6),
-                      child: Text(
-                        'Calories',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.textSecondary,
+
+                    const SizedBox(height: 12),
+
+                    // Macro Percentage Badges
+                    Row(
+                      children: [
+                        Expanded(
+                            child: PlateMacroPill(
+                                label: 'Protein',
+                                grams: _effectiveProtein,
+                                percentage: proteinPct,
+                                color: AppTheme.protein)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            child: PlateMacroPill(
+                                label: 'Fat',
+                                grams: _effectiveFat,
+                                percentage: fatPct,
+                                color: AppTheme.fat)),
+                        const SizedBox(width: 8),
+                        Expanded(
+                            child: PlateMacroPill(
+                                label: 'Carbs',
+                                grams: _effectiveCarbs,
+                                percentage: carbsPct,
+                                color: AppTheme.carbs)),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+                    const Divider(color: AppTheme.cardBorder),
+                    const SizedBox(height: 16),
+
+                    // Quantity & Portion Unit Selector
+                    const Text(
+                      'SERVING SIZE',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textSecondary,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    Row(
+                      children: [
+                        // Quantity input controls
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppTheme.cardElevated,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(color: AppTheme.cardBorder),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              AppleBouncy(
+                                scaleDown: 0.88,
+                                onTap: () {
+                                  final current = _parseQuantity(
+                                          _quantityController.text) ??
+                                      _quantity;
+                                  if (current > 0.5) {
+                                    _setQuantity(current - 0.5);
+                                  }
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 8,
+                                  ),
+                                  child: Icon(
+                                    Icons.remove,
+                                    size: 18,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                width: 58,
+                                child: TextFormField(
+                                  key: const Key('plate_serving_numeric_field'),
+                                  focusNode: _quantityFocusNode,
+                                  controller: _quantityController,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
+                                  textInputAction: TextInputAction.done,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppTheme.textPrimary,
+                                    fontFeatures: [
+                                      FontFeature.tabularFigures()
+                                    ],
+                                  ),
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                        RegExp(r'[\d.,/ ]')),
+                                  ],
+                                  decoration: const InputDecoration(
+                                    isDense: true,
+                                    contentPadding: EdgeInsets.symmetric(
+                                        vertical: 4, horizontal: 2),
+                                    border: InputBorder.none,
+                                  ),
+                                  onChanged: (val) {
+                                    final parsed = _parseQuantity(val);
+                                    if (parsed != null && parsed > 0) {
+                                      setState(() => _quantity = parsed);
+                                    }
+                                  },
+                                ),
+                              ),
+                              AppleBouncy(
+                                scaleDown: 0.88,
+                                onTap: () {
+                                  final current = _parseQuantity(
+                                          _quantityController.text) ??
+                                      _quantity;
+                                  _setQuantity(current + 0.5);
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 8,
+                                  ),
+                                  child: Icon(
+                                    Icons.add,
+                                    size: 18,
+                                    color: AppTheme.textPrimary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        // Portion Unit Dropdown
+                        Expanded(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            decoration: BoxDecoration(
+                              color: AppTheme.cardElevated,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: AppTheme.cardBorder),
+                            ),
+                            child: DropdownButtonHideUnderline(
+                              child: DropdownButton<PortionUnit>(
+                                value: _effectiveUnits.contains(_selectedUnit)
+                                    ? _selectedUnit
+                                    : _effectiveUnits.first,
+                                dropdownColor: AppTheme.cardSurface,
+                                isExpanded: true,
+                                icon: const Icon(
+                                  Icons.arrow_drop_down_rounded,
+                                  color: AppTheme.textSecondary,
+                                ),
+                                items: _effectiveUnits.map((u) {
+                                  return DropdownMenuItem(
+                                    value: u,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      alignment: Alignment.centerLeft,
+                                      child: Text(
+                                        '${u.unitName} (${u.gramsPerUnit.round()}g)',
+                                        style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppTheme.textPrimary,
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                onChanged: (u) {
+                                  if (u != null) {
+                                    HapticFeedback.selectionClick();
+                                    setState(() => _selectedUnit = u);
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // 1-Tap Oil Modifier
+                    const Text(
+                      '1-TAP OIL / GHEE MODIFIER',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textSecondary,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: OilModifier.values.map((oil) {
+                          final isSelected = _selectedOil == oil;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: AppleBouncy(
+                              scaleDown: 0.94,
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                setState(() => _selectedOil = oil);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? AppTheme.activeBlue
+                                          .withValues(alpha: 0.18)
+                                      : AppTheme.cardElevated,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? AppTheme.activeBlue
+                                        : AppTheme.cardBorder,
+                                    width: isSelected ? 1.4 : 1.0,
+                                  ),
+                                ),
+                                child: Text(
+                                  oil.displayName,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                    color: isSelected
+                                        ? AppTheme.textPrimary
+                                        : AppTheme.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+                    const Divider(color: AppTheme.cardBorder),
+                    const SizedBox(height: 16),
+
+                    // Impact on Targets Dial Badges
+                    const Text(
+                      'IMPACT ON TARGETS',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textSecondary,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        Expanded(
+                            child: PlateTargetDial(
+                                label: 'Calories',
+                                percentage: targetCalPct,
+                                color: AppTheme.calories)),
+                        Expanded(
+                            child: PlateTargetDial(
+                                label: 'Protein',
+                                percentage: targetProteinPct,
+                                color: AppTheme.protein)),
+                        Expanded(
+                            child: PlateTargetDial(
+                                label: 'Fat',
+                                percentage: targetFatPct,
+                                color: AppTheme.fat)),
+                        Expanded(
+                            child: PlateTargetDial(
+                                label: 'Carbs',
+                                percentage: targetCarbsPct,
+                                color: AppTheme.carbs)),
+                      ],
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Action Buttons: Remove / To Custom & Add to Plate
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: AppleBouncy(
+                        scaleDown: 0.96,
+                        onTap: _onConfirmLog,
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [AppTheme.activeBlue, Color(0xFF0056B3)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    AppTheme.activeBlue.withValues(alpha: 0.35),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: const FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              'Add to Plate',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ],
                 ),
               ),
-
-              const SizedBox(height: 12),
-
-              // Macro Percentage Badges
-              Row(
-                children: [
-                  Expanded(
-                      child: _buildMacroPill(
-                          label: 'Protein',
-                          grams: _effectiveProtein,
-                          percentage: proteinPct,
-                          color: AppTheme.protein)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                      child: _buildMacroPill(
-                          label: 'Fat',
-                          grams: _effectiveFat,
-                          percentage: fatPct,
-                          color: AppTheme.fat)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                      child: _buildMacroPill(
-                          label: 'Carbs',
-                          grams: _effectiveCarbs,
-                          percentage: carbsPct,
-                          color: AppTheme.carbs)),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-              const Divider(color: AppTheme.cardBorder),
-              const SizedBox(height: 16),
-
-              // Quantity & Portion Unit Selector
-              const Text(
-                'SERVING SIZE',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textSecondary,
-                  letterSpacing: 0.8,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              Row(
-                children: [
-                  // Quantity input controls
-                  Container(
-                    decoration: BoxDecoration(
-                      color: AppTheme.cardElevated,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: AppTheme.cardBorder),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AppleBouncy(
-                          scaleDown: 0.88,
-                          onTap: () {
-                            final current =
-                                _parseQuantity(_quantityController.text) ??
-                                    _quantity;
-                            if (current > 0.5) {
-                              _setQuantity(current - 0.5);
-                            }
-                          },
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 8,
-                            ),
-                            child: Icon(
-                              Icons.remove,
-                              size: 18,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                        ),
-                        SizedBox(
-                          width: 58,
-                          child: TextFormField(
-                            key: const Key('plate_serving_numeric_field'),
-                            focusNode: _quantityFocusNode,
-                            controller: _quantityController,
-                            keyboardType: const TextInputType.numberWithOptions(
-                                decimal: true),
-                            textInputAction: TextInputAction.done,
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.textPrimary,
-                            ),
-                            inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                  RegExp(r'[\d.,/ ]')),
-                            ],
-                            decoration: const InputDecoration(
-                              isDense: true,
-                              contentPadding: EdgeInsets.symmetric(
-                                  vertical: 4, horizontal: 2),
-                              border: InputBorder.none,
-                            ),
-                            onChanged: (val) {
-                              final parsed = _parseQuantity(val);
-                              if (parsed != null && parsed > 0) {
-                                setState(() => _quantity = parsed);
-                              }
-                            },
-                          ),
-                        ),
-                        AppleBouncy(
-                          scaleDown: 0.88,
-                          onTap: () {
-                            final current =
-                                _parseQuantity(_quantityController.text) ??
-                                    _quantity;
-                            _setQuantity(current + 0.5);
-                          },
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 8,
-                            ),
-                            child: Icon(
-                              Icons.add,
-                              size: 18,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(width: 12),
-
-                  // Portion Unit Dropdown
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14),
-                      decoration: BoxDecoration(
-                        color: AppTheme.cardElevated,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: AppTheme.cardBorder),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<PortionUnit>(
-                          value: _effectiveUnits.contains(_selectedUnit)
-                              ? _selectedUnit
-                              : _effectiveUnits.first,
-                          dropdownColor: AppTheme.cardSurface,
-                          isExpanded: true,
-                          icon: const Icon(
-                            Icons.arrow_drop_down_rounded,
-                            color: AppTheme.textSecondary,
-                          ),
-                          items: _effectiveUnits.map((u) {
-                            return DropdownMenuItem(
-                              value: u,
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  '${u.unitName} (${u.gramsPerUnit.round()}g)',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                                ),
-                              ),
-                            );
-                          }).toList(),
-                          onChanged: (u) {
-                            if (u != null) {
-                              HapticFeedback.lightImpact();
-                              setState(() => _selectedUnit = u);
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 20),
-
-              // 1-Tap Oil Modifier
-              const Text(
-                '1-TAP OIL / GHEE MODIFIER',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textSecondary,
-                  letterSpacing: 0.8,
-                ),
-              ),
-              const SizedBox(height: 10),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: OilModifier.values.map((oil) {
-                    final isSelected = _selectedOil == oil;
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: AppleBouncy(
-                        scaleDown: 0.94,
-                        onTap: () {
-                          HapticFeedback.lightImpact();
-                          setState(() => _selectedOil = oil);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppTheme.activeBlue.withValues(alpha: 0.18)
-                                : AppTheme.cardElevated,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppTheme.activeBlue
-                                  : AppTheme.cardBorder,
-                              width: isSelected ? 1.4 : 1.0,
-                            ),
-                          ),
-                          child: Text(
-                            oil.displayName,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
-                              color: isSelected
-                                  ? AppTheme.textPrimary
-                                  : AppTheme.textSecondary,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-
-              const SizedBox(height: 24),
-              const Divider(color: AppTheme.cardBorder),
-              const SizedBox(height: 16),
-
-              // Impact on Targets Dial Badges
-              const Text(
-                'IMPACT ON TARGETS',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.textSecondary,
-                  letterSpacing: 0.8,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  Expanded(
-                      child: _buildTargetDial(
-                          label: 'Calories',
-                          pct: targetCalPct,
-                          color: AppTheme.calories)),
-                  Expanded(
-                      child: _buildTargetDial(
-                          label: 'Protein',
-                          pct: targetProteinPct,
-                          color: AppTheme.protein)),
-                  Expanded(
-                      child: _buildTargetDial(
-                          label: 'Fat',
-                          pct: targetFatPct,
-                          color: AppTheme.fat)),
-                  Expanded(
-                      child: _buildTargetDial(
-                          label: 'Carbs',
-                          pct: targetCarbsPct,
-                          color: AppTheme.carbs)),
-                ],
-              ),
-
-              const SizedBox(height: 24),
-
-              // Action Buttons: Remove / To Custom & Add to Plate
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: AppleBouncy(
-                  scaleDown: 0.96,
-                  onTap: _onConfirmLog,
-                  child: Container(
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AppTheme.activeBlue, Color(0xFF0056B3)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.activeBlue.withValues(alpha: 0.35),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: const FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        'Add to Plate',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildMacroPill({
-    required String label,
-    required double grams,
-    required int percentage,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.cardElevated,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withAlpha(80)),
-      ),
-      child: FittedBox(
-        fit: BoxFit.scaleDown,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-              decoration: BoxDecoration(
-                  color: color.withAlpha(50),
-                  borderRadius: BorderRadius.circular(6)),
-              child: Text('$percentage%',
-                  style: TextStyle(
-                      fontSize: 10, fontWeight: FontWeight.w800, color: color)),
-            ),
-            const SizedBox(width: 6),
-            Text('${grams.toStringAsFixed(1)}g',
-                style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTargetDial({
-    required String label,
-    required int pct,
-    required Color color,
-  }) {
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              width: 44,
-              height: 44,
-              child: CircularProgressIndicator(
-                value: (pct / 100).clamp(0.0, 1.0),
-                strokeWidth: 4,
-                backgroundColor: AppTheme.cardBorder,
-                valueColor: AlwaysStoppedAnimation<Color>(color),
-              ),
-            ),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text('$pct%',
-                  style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary)),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Text(label,
-              style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w500,
-                  color: AppTheme.textSecondary)),
-        ),
-      ],
     );
   }
 }

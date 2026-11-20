@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:sique/domain/algorithms/weight_trend_v2.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/apple_sheet_grabber.dart';
 
 /// Modal bottom sheet for logging scale weight with instant trend weight preview.
 class WeightLogModal extends ConsumerStatefulWidget {
@@ -14,10 +16,7 @@ class WeightLogModal extends ConsumerStatefulWidget {
     return showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.cardSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (_) => const WeightLogModal(),
     );
   }
@@ -104,224 +103,240 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
       }
     }
 
-    return SafeArea(
-      top: false,
-      bottom: true, // Bottom SafeArea padding (ISS-7-08)
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 20,
-          bottom: mediaQuery.viewInsets.bottom + 20,
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface.withValues(alpha: 0.88),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 0.5,
         ),
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Drag handle
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppTheme.cardBorder,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: SafeArea(
+            top: false,
+            bottom: true, // Bottom SafeArea padding (ISS-7-08)
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 12,
+                bottom: mediaQuery.viewInsets.bottom + 20,
               ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Expanded(
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'LOG SCALE WEIGHT',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.textPrimary,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  TextButton.icon(
-                    onPressed: () async {
-                      final picked = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.parse(_selectedDate),
-                        firstDate: DateTime(2020),
-                        lastDate: DateTime.now().add(const Duration(days: 1)),
-                      );
-                      if (picked != null) {
-                        setState(() {
-                          _selectedDate =
-                              DateFormat('yyyy-MM-dd').format(picked);
-                        });
-                      }
-                    },
-                    icon: const Icon(Icons.calendar_today,
-                        size: 14, color: AppTheme.calories),
-                    label: Text(
-                      _selectedDate,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppTheme.calories,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Numeric Weight Input
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: AppTheme.cardBorder, width: 1),
-                ),
-                child: Row(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: TextField(
-                        controller: _weightController,
-                        keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true),
-                        textInputAction: TextInputAction.next,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d*\.?\d*')),
-                        ],
-                        autofocus: true,
-                        onChanged: (_) => setState(() {}),
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          color: AppTheme.textPrimary,
-                        ),
-                        decoration: const InputDecoration(
-                          hintText: '0.0',
-                          hintStyle: TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.w900,
-                            color: AppTheme.textMuted,
+                    // Apple Sheet Grabber
+                    const AppleSheetGrabber(
+                        margin: EdgeInsets.only(bottom: 12)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Expanded(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'LOG SCALE WEIGHT',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textPrimary,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
-                          border: InputBorder.none,
+                        ),
+                        const SizedBox(width: 8),
+                        TextButton.icon(
+                          onPressed: () async {
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: DateTime.parse(_selectedDate),
+                              firstDate: DateTime(2020),
+                              lastDate:
+                                  DateTime.now().add(const Duration(days: 1)),
+                            );
+                            if (picked != null) {
+                              setState(() {
+                                _selectedDate =
+                                    DateFormat('yyyy-MM-dd').format(picked);
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.calendar_today,
+                              size: 14, color: AppTheme.calories),
+                          label: Text(
+                            _selectedDate,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.calories,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // Numeric Weight Input
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border:
+                            Border.all(color: AppTheme.cardBorder, width: 1),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _weightController,
+                              keyboardType:
+                                  const TextInputType.numberWithOptions(
+                                      decimal: true),
+                              textInputAction: TextInputAction.next,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                    RegExp(r'^\d*\.?\d*')),
+                              ],
+                              autofocus: true,
+                              onChanged: (_) => setState(() {}),
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.w900,
+                                color: AppTheme.textPrimary,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
+                              decoration: const InputDecoration(
+                                hintText: '0.0',
+                                hintStyle: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w900,
+                                  color: AppTheme.textMuted,
+                                ),
+                                border: InputBorder.none,
+                              ),
+                            ),
+                          ),
+                          const Text(
+                            'KG',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Trend Weight Preview Pill
+                    if (previewTrendWeight != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.trendWeight.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                              color:
+                                  AppTheme.trendWeight.withValues(alpha: 0.4),
+                              width: 1),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.auto_graph,
+                                size: 18, color: AppTheme.trendWeight),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'Preview: Resulting Trend Weight will be ${previewTrendWeight.toStringAsFixed(1)} kg',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppTheme.textPrimary,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    const SizedBox(height: 14),
+
+                    // Note Input
+                    TextField(
+                      controller: _noteController,
+                      keyboardType: TextInputType.text,
+                      textInputAction: TextInputAction.done,
+                      style: const TextStyle(
+                          fontSize: 14, color: AppTheme.textPrimary),
+                      decoration: InputDecoration(
+                        hintText:
+                            'Note (optional, e.g. morning fasted, post walk)...',
+                        hintStyle: const TextStyle(
+                            fontSize: 13, color: AppTheme.textMuted),
+                        filled: true,
+                        fillColor: AppTheme.surface,
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 12),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              const BorderSide(color: AppTheme.cardBorder),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide:
+                              const BorderSide(color: AppTheme.cardBorder),
                         ),
                       ),
                     ),
-                    const Text(
-                      'KG',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.textSecondary,
+                    const SizedBox(height: 20),
+
+                    // Save Button with debouncing (ISS-8-08)
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: ElevatedButton(
+                        onPressed: (parsedWeight != null &&
+                                parsedWeight > 0 &&
+                                !_isSubmitting)
+                            ? () => _handleSave(parsedWeight)
+                            : null,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.calories,
+                          foregroundColor: AppTheme.background,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(_isSubmitting
+                              ? 'SAVING...'
+                              : 'SAVE SCALE WEIGHT'),
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
-
-              // Trend Weight Preview Pill
-              if (previewTrendWeight != null)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                  decoration: BoxDecoration(
-                    color: AppTheme.trendWeight.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: AppTheme.trendWeight.withValues(alpha: 0.4),
-                        width: 1),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.auto_graph,
-                          size: 18, color: AppTheme.trendWeight),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          'Preview: Resulting Trend Weight will be ${previewTrendWeight.toStringAsFixed(1)} kg',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: AppTheme.textPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 14),
-
-              // Note Input
-              TextField(
-                controller: _noteController,
-                keyboardType: TextInputType.text,
-                textInputAction: TextInputAction.done,
-                style:
-                    const TextStyle(fontSize: 14, color: AppTheme.textPrimary),
-                decoration: InputDecoration(
-                  hintText:
-                      'Note (optional, e.g. morning fasted, post walk)...',
-                  hintStyle:
-                      const TextStyle(fontSize: 13, color: AppTheme.textMuted),
-                  filled: true,
-                  fillColor: AppTheme.surface,
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.cardBorder),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: AppTheme.cardBorder),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 20),
-
-              // Save Button with debouncing (ISS-8-08)
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  onPressed: (parsedWeight != null &&
-                          parsedWeight > 0 &&
-                          !_isSubmitting)
-                      ? () => _handleSave(parsedWeight)
-                      : null,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.calories,
-                    foregroundColor: AppTheme.background,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14)),
-                    textStyle: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child:
-                        Text(_isSubmitting ? 'SAVING...' : 'SAVE SCALE WEIGHT'),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),

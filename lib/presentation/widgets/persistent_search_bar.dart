@@ -1,9 +1,11 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import 'apple_tactile_card.dart';
 
 /// Persistent quick search bar docked above the bottom nav bar.
+/// Styled with Apple Liquid Glass frosted obsidian blur and tactile response.
 class PersistentSearchBar extends StatelessWidget {
   const PersistentSearchBar({
     super.key,
@@ -23,15 +25,15 @@ class PersistentSearchBar extends StatelessWidget {
       child: ClipRRect(
         borderRadius: BorderRadius.circular(30),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: AppTheme.cardSurface.withValues(alpha: 0.85),
+              color: AppTheme.cardSurface.withValues(alpha: 0.75),
               borderRadius: BorderRadius.circular(30),
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.14),
-                width: 1.0,
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 0.5,
               ),
               boxShadow: [
                 BoxShadow(
@@ -46,7 +48,10 @@ class PersistentSearchBar extends StatelessWidget {
                 // Search Icon & Prompt with tactile bounce
                 Expanded(
                   child: AppleBouncy(
-                    onTap: onSearchTap,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      onSearchTap();
+                    },
                     scaleDown: 0.98,
                     child: Container(
                       color: Colors.transparent,
@@ -82,7 +87,10 @@ class PersistentSearchBar extends StatelessWidget {
                   label: 'Scan food barcode',
                   child: AppleBouncy(
                     scaleDown: 0.90,
-                    onTap: onBarcodeTap,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      onBarcodeTap();
+                    },
                     child: Container(
                       constraints: const BoxConstraints(
                         minWidth: 44,
@@ -112,7 +120,10 @@ class PersistentSearchBar extends StatelessWidget {
                   label: 'Quick custom food log',
                   child: AppleBouncy(
                     scaleDown: 0.90,
-                    onTap: onCustomFoodTap,
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      onCustomFoodTap();
+                    },
                     child: Container(
                       constraints: const BoxConstraints(
                         minWidth: 44,

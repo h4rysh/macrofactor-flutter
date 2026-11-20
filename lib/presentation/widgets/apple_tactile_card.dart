@@ -192,7 +192,7 @@ class AppleGlassCard extends StatelessWidget {
     this.borderGradient,
     this.borderColor,
     this.backgroundColor,
-    this.blurSigma = 14.0,
+    this.blurSigma = 25.0,
     this.boxShadow,
   });
 
@@ -210,8 +210,8 @@ class AppleGlassCard extends StatelessWidget {
     final effectiveBorder = borderGradient != null
         ? null
         : Border.all(
-            color: borderColor ?? AppTheme.cardBorder.withValues(alpha: 0.8),
-            width: 0.8,
+            color: borderColor ?? Colors.white.withValues(alpha: 0.12),
+            width: 0.5,
           );
 
     final effectiveShadow = boxShadow ??
@@ -228,7 +228,7 @@ class AppleGlassCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(borderRadius),
         boxShadow: effectiveShadow,
         border: effectiveBorder,
-        color: backgroundColor ?? AppTheme.cardSurface.withValues(alpha: 0.82),
+        color: backgroundColor ?? AppTheme.cardSurface.withValues(alpha: 0.75),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(borderRadius),

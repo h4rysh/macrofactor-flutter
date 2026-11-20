@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/user_profile.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
+import '../widgets/apple_sheet_grabber.dart';
 import '../widgets/apple_tactile_card.dart';
 import 'questionnaire_steps/activity_expenditure_step.dart';
 import 'questionnaire_steps/adaptive_pacing_step.dart';
@@ -212,18 +213,8 @@ class _GoalQuestionnaireSheetState
           child: Column(
             children: [
               // 1. Apple Sheet Grabber Pill
-              const SizedBox(height: 10),
-              Center(
-                child: Container(
-                  width: 36,
-                  height: 5,
-                  decoration: BoxDecoration(
-                    color: const Color(0x4DFFFFFF),
-                    borderRadius: BorderRadius.circular(2.5),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
+              const AppleSheetGrabber(
+                  margin: EdgeInsets.only(top: 10, bottom: 12)),
 
               // 2. Header with Apple-Style Step Indicator & Back Button
               Padding(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/algorithms/coaching_engine.dart';
 import '../../../domain/models/macro_program.dart';
@@ -67,6 +68,7 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
   }
 
   void _nextPage() {
+    HapticFeedback.lightImpact();
     if (_currentStep < _totalSteps - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 320),
@@ -78,6 +80,7 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
   }
 
   void _previousPage() {
+    HapticFeedback.lightImpact();
     if (_currentStep > 0) {
       _pageController.previousPage(
         duration: const Duration(milliseconds: 320),
@@ -165,6 +168,7 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
     );
 
     // Persist to Riverpod & SQLite
+    HapticFeedback.mediumImpact();
     ref.read(userProfileProvider.notifier).updateProfile(finalProfile);
     ref.read(weeklyMacroProgramProvider.notifier).updateProgram(finalProgram);
 

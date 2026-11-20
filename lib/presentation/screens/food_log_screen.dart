@@ -340,6 +340,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                           hour,
                         ),
                         onEntryDelete: (entry) {
+                          HapticFeedback.heavyImpact();
                           ref
                               .read(dailyFoodLogsProvider.notifier)
                               .removeEntry(entry.id);

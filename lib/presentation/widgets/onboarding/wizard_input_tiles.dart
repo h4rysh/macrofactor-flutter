@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../theme/app_theme.dart';
 import '../apple_tactile_card.dart';
 
@@ -24,7 +25,10 @@ class WizardSelectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppleTactileCard(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       backgroundColor:
           selected ? accentColor.withValues(alpha: 0.12) : AppTheme.cardSurface,
       border: Border.all(
@@ -141,6 +145,7 @@ class WizardSliderTile extends StatelessWidget {
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       color: AppTheme.calories,
+                      fontFeatures: [FontFeature.tabularFigures()],
                     ),
                   ),
                 ),
@@ -153,7 +158,12 @@ class WizardSliderTile extends StatelessWidget {
             max: max,
             activeColor: AppTheme.calories,
             inactiveColor: AppTheme.cardBorder,
-            onChanged: onChanged,
+            onChanged: (newVal) {
+              if (newVal.round() != value.round()) {
+                HapticFeedback.selectionClick();
+              }
+              onChanged(newVal);
+            },
           ),
         ],
       ),
@@ -179,7 +189,10 @@ class WizardChoiceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
@@ -239,7 +252,10 @@ class WizardSmallChoiceChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(

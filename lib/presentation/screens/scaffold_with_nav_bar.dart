@@ -65,17 +65,17 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
         ),
         bottomNavigationBar: Container(
           decoration: BoxDecoration(
-            color: AppTheme.surface.withValues(alpha: 0.88),
+            color: AppTheme.cardSurface.withValues(alpha: 0.75),
             border: Border(
               top: BorderSide(
-                color: Colors.white.withValues(alpha: 0.08),
-                width: 0.8,
+                color: Colors.white.withValues(alpha: 0.12),
+                width: 0.5,
               ),
             ),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x33000000),
-                blurRadius: 20,
+                color: Color(0x44000000),
+                blurRadius: 24,
                 offset: Offset(0, -4),
               ),
             ],
@@ -114,6 +114,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                             child: AppleBouncy(
                               semanticLabel: 'Open quick actions menu',
                               onTap: () {
+                                HapticFeedback.mediumImpact();
                                 QuickActionsSheet.show(context);
                               },
                               child: Container(

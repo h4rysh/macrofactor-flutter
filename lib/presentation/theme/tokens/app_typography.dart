@@ -16,75 +16,82 @@ class AppTypography {
   // Material 3 Scale Roles (Static Definitions)
   // ===========================================================================
 
-  /// Display Large: 32px, Bold 800, -0.5 letter spacing.
+  /// Display Large: 32px, Bold 800, -0.5 letter spacing, tabular figures.
   /// Used for prominent splash and welcome screen headers.
   static const TextStyle displayLarge = TextStyle(
     fontFamily: fontFamily,
     fontSize: 32,
     fontWeight: FontWeight.w800,
     color: AppColors.textPrimary,
+    fontFeatures: [FontFeature.tabularFigures()],
     letterSpacing: -0.5,
     height: 1.25,
   );
 
-  /// Display Medium: 28px, Bold 800, -0.5 letter spacing.
+  /// Display Medium: 28px, Bold 800, -0.5 letter spacing, tabular figures.
   static const TextStyle displayMedium = TextStyle(
     fontFamily: fontFamily,
     fontSize: 28,
     fontWeight: FontWeight.w800,
     color: AppColors.textPrimary,
+    fontFeatures: [FontFeature.tabularFigures()],
     letterSpacing: -0.5,
     height: 1.25,
   );
 
-  /// Display Small: 24px, Bold 800, -0.25 letter spacing.
+  /// Display Small: 24px, Bold 800, -0.25 letter spacing, tabular figures.
   static const TextStyle displaySmall = TextStyle(
     fontFamily: fontFamily,
     fontSize: 24,
     fontWeight: FontWeight.w800,
     color: AppColors.textPrimary,
+    fontFeatures: [FontFeature.tabularFigures()],
     letterSpacing: -0.25,
     height: 1.25,
   );
 
-  /// Headline Large: 28px, Bold 700.
+  /// Headline Large: 28px, Bold 700, tabular figures.
   static const TextStyle headlineLarge = TextStyle(
     fontFamily: fontFamily,
     fontSize: 28,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
+    fontFeatures: [FontFeature.tabularFigures()],
     letterSpacing: -0.25,
     height: 1.3,
   );
 
-  /// Headline Medium: 24px, Bold 700.
+  /// Headline Medium: 24px, Bold 700, tabular figures.
   /// Standard screen top-level headings and major card titles.
   static const TextStyle headlineMedium = TextStyle(
     fontFamily: fontFamily,
     fontSize: 24,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
+    fontFeatures: [FontFeature.tabularFigures()],
     letterSpacing: 0.0,
     height: 1.3,
   );
 
-  /// Headline Small: 20px, Bold 700.
+  /// Headline Small: 20px, Bold 700, tabular figures.
   static const TextStyle headlineSmall = TextStyle(
     fontFamily: fontFamily,
     fontSize: 20,
     fontWeight: FontWeight.w700,
     color: AppColors.textPrimary,
+    fontFeatures: [FontFeature.tabularFigures()],
     letterSpacing: 0.0,
     height: 1.35,
   );
 
-  /// Title Large: 18px, SemiBold 600.
+  /// Title Large: 18px, SemiBold 600, tabular figures.
   /// Card titles, dialog titles, and modal headers.
   static const TextStyle titleLarge = TextStyle(
     fontFamily: fontFamily,
     fontSize: 18,
     fontWeight: FontWeight.w600,
     color: AppColors.textPrimary,
+    fontFeatures: [FontFeature.tabularFigures()],
     letterSpacing: 0.0,
     height: 1.4,
   );
@@ -187,6 +194,9 @@ class AppTypography {
     fontFamily: fontFamily,
     fontFeatures: [FontFeature.tabularFigures()],
   );
+
+  /// Helper to enforce tabular figures on any [base] style.
+  static TextStyle tabularNumber(TextStyle base) => withTabularFigures(base);
 
   /// Wraps any given [base] style with tabular figures enabled.
   static TextStyle withTabularFigures(TextStyle base) {
