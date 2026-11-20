@@ -99,7 +99,7 @@ void main() {
   });
 
   testWidgets(
-      'Tapping "Configure My Strategy" on WelcomeScreen navigates to AuthGateScreen, proceeding enters OnboardingFlowScreen',
+      'Tapping "Configure My Strategy" on WelcomeScreen navigates directly to OnboardingFlowScreen Step 1 (deferring auth to Card 7)',
       (WidgetTester tester) async {
     tester.view.physicalSize = const Size(450, 1000);
     tester.view.devicePixelRatio = 1.0;
@@ -120,15 +120,9 @@ void main() {
     await tester.tap(find.text('Configure My Strategy'));
     await tester.pumpAndSettle();
 
-    // Verify AuthGateScreen is displayed
-    expect(find.byType(AuthGateScreen), findsOneWidget);
-    expect(find.text('Account & Device Data'), findsOneWidget);
-
-    // Tap Continue as Guest
-    await tester.tap(find.byKey(const Key('auth_gate_guest_btn')));
-    await tester.pumpAndSettle();
-
-    // Verify OnboardingFlowScreen is open at step 1
+    // Verify OnboardingFlowScreen is directly displayed at Step 1 of 7 (Card 1 Goal Selection)
+    // with NO AuthGateScreen prompt before Card 7.
+    expect(find.byType(AuthGateScreen), findsNothing);
     expect(find.byType(OnboardingFlowScreen), findsOneWidget);
     expect(find.text('Step 1 of 7'), findsOneWidget);
   });
