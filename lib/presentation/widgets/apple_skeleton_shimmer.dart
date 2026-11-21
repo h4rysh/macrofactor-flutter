@@ -25,7 +25,7 @@ class AppleSkeletonShimmer extends StatefulWidget {
     required this.child,
     this.baseColor = const Color(0xFF16161C),
     this.highlightColor = const Color(0xFF26262E),
-    this.duration = const Duration(milliseconds: 1500),
+    this.duration = AppMotion.shimmer,
   });
 
   final Widget child;

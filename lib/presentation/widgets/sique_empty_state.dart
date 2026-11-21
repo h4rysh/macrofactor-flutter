@@ -45,10 +45,13 @@ class SiqueEmptyState extends StatelessWidget {
                   width: 1,
                 ),
               ),
-              child: Icon(
-                icon,
-                size: isCompact ? iconSize * 0.75 : iconSize,
-                color: AppTheme.textMuted,
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Icon(
+                  icon,
+                  size: isCompact ? iconSize * 0.75 : iconSize,
+                  color: AppTheme.textMuted,
+                ),
               ),
             ),
             SizedBox(height: isCompact ? 10 : 16),

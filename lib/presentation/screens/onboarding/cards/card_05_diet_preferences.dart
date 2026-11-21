@@ -204,6 +204,32 @@ class _Card05DietPreferencesState extends State<Card05DietPreferences> {
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _buildChoiceChip(
+                      label: 'Millets (Jowar/Ragi)',
+                      isSelected: _staple == 'millet',
+                      onTap: () {
+                        setState(() => _staple = 'millet');
+                        _notifyUpdate();
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildChoiceChip(
+                      label: 'Poha / Upma',
+                      isSelected: _staple == 'poha_upma',
+                      onTap: () {
+                        setState(() => _staple = 'poha_upma');
+                        _notifyUpdate();
+                      },
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 18),
 
               // Section 3: Protein Preference

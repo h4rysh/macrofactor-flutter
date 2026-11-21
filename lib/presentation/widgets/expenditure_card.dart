@@ -90,7 +90,9 @@ class DynamicExpenditureCard extends StatelessWidget {
                       child: Text(
                         isPaused
                             ? 'Paused (Gaps)'
-                            : '$confidencePct% Confidence',
+                            : (confidencePct < 70
+                                ? 'Calibration Phase ($confidencePct%)'
+                                : '$confidencePct% Confidence'),
                         style: AppTypography.labelSmall.copyWith(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

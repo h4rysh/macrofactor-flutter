@@ -25,6 +25,8 @@ class MacroGaugeRing extends StatelessWidget {
         ? (consumed.calories / targets.calories).clamp(0.0, 1.5)
         : 0.0;
     final remainingCalories = (targets.calories - consumed.calories).round();
+    final isTargetAchieved =
+        remainingCalories.abs() <= 50 && targets.calories > 0;
 
     final semanticsLabel =
         'Daily Nutrition Gauge. Consumed: ${consumed.calories.round()} of ${targets.calories.round()} kcal. '
@@ -73,55 +75,73 @@ class MacroGaugeRing extends StatelessWidget {
                       );
                     },
                   ),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AnimatedCountText(
-                          value: consumed.calories,
-                          style: AppTypography.numericDisplay.copyWith(
-                            fontSize: 36,
-                            fontWeight: FontWeight.w900,
-                            color: AppTheme.textPrimary,
-                            letterSpacing: -1.0,
-                          ),
-                        ),
-                        Text(
-                          'CALORIES CONSUMED',
-                          style: AppTypography.labelSmall.copyWith(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textSecondary,
-                            letterSpacing: 0.9,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppTheme.surface.withValues(alpha: 0.9),
-                            borderRadius: AppRadii.mdBorderRadius,
-                            border: Border.all(
-                              color: AppTheme.cardBorder.withValues(alpha: 0.8),
-                              width: 0.8,
+                  Tooltip(
+                    message:
+                        'Sique targets are ranges, not strict limits. Fuel your body without judgment.',
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AnimatedCountText(
+                            value: consumed.calories,
+                            style: AppTypography.numericDisplay.copyWith(
+                              fontSize: 36,
+                              fontWeight: FontWeight.w900,
+                              color: AppTheme.textPrimary,
+                              letterSpacing: -1.0,
                             ),
                           ),
-                          child: Text(
-                            remainingCalories >= 0
-                                ? '$remainingCalories left'
-                                : '+${remainingCalories.abs()} kcal · Adapts automatically',
-                            style: AppTypography.numericSmall.copyWith(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: remainingCalories >= 0
-                                  ? AppTheme.calories
-                                  : AppTheme.calmOverBudget,
+                          Text(
+                            'CALORIES CONSUMED',
+                            style: AppTypography.labelSmall.copyWith(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textSecondary,
+                              letterSpacing: 0.9,
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppTheme.surface.withValues(alpha: 0.9),
+                              borderRadius: AppRadii.mdBorderRadius,
+                              border: Border.all(
+                                color: isTargetAchieved
+                                    ? AppTheme.calmOverBudget
+                                        .withValues(alpha: 0.8)
+                                    : AppTheme.cardBorder
+                                        .withValues(alpha: 0.8),
+                                width: isTargetAchieved ? 1.4 : 0.8,
+                              ),
+                              boxShadow: isTargetAchieved
+                                  ? [
+                                      BoxShadow(
+                                        color: AppTheme.calmOverBudget
+                                            .withValues(alpha: 0.25),
+                                        blurRadius: 10,
+                                        spreadRadius: 1,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Text(
+                              remainingCalories >= 0
+                                  ? '$remainingCalories left'
+                                  : '+${remainingCalories.abs()} kcal · Adapts automatically',
+                              style: AppTypography.numericSmall.copyWith(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: remainingCalories >= 0
+                                    ? AppTheme.calories
+                                    : AppTheme.calmOverBudget,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],

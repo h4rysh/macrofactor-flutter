@@ -117,8 +117,8 @@ class MoreScreen extends ConsumerWidget {
 
           const SizedBox(height: 16),
 
-          // 4. LEGAL & DANGER ZONE
-          _buildSectionHeader('LEGAL & DANGER ZONE'),
+          // 4. DATA MANAGEMENT & LEGAL
+          _buildSectionHeader('DATA MANAGEMENT & LEGAL'),
           AppleStaggeredEntrance(
             index: 6,
             child: _buildSettingsTile(

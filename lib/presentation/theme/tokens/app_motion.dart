@@ -33,6 +33,9 @@ class AppMotion {
   /// 750ms. Count-up numerical animation duration.
   static const Duration countUp = Duration(milliseconds: 750);
 
+  /// 1400ms. Standardized skeleton shimmer sweep duration.
+  static const Duration shimmer = Duration(milliseconds: 1400);
+
   // ===========================================================================
   // Standard Animation Curves
   // ===========================================================================

@@ -235,7 +235,7 @@ enum MealType {
   breakfast('Breakfast', '08:00'),
   lunch('Lunch', '13:00'),
   dinner('Dinner', '20:00'),
-  snacks('Snacks & Extras', '17:00');
+  snacks('Snacks & Chai', '17:00');
 
   const MealType(this.displayName, this.defaultTime);
   final String displayName;

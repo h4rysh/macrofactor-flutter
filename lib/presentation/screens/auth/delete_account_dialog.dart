@@ -111,8 +111,8 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
             children: [
               Text(
                 isEmail
-                    ? 'Permanently delete your account (${widget.user.email}). All local workout, nutrition, and weight data will be permanently wiped. This cannot be undone. Enter your password to confirm:'
-                    : 'Permanently delete your account (${widget.user.displayName}). All local workout, nutrition, and weight data will be permanently wiped. This cannot be undone. You may be prompted to re-authenticate with Google.',
+                    ? 'Permanently delete your account (${widget.user.email}). All local workout, nutrition, and weight data will be permanently wiped. This cannot be undone. Only your personal logs and profile are cleared; the verified Indian food catalog is preserved. Enter your password to confirm:'
+                    : 'Permanently delete your account (${widget.user.displayName}). All local workout, nutrition, and weight data will be permanently wiped. This cannot be undone. Only your personal logs and profile are cleared; the verified Indian food catalog is preserved. You may be prompted to re-authenticate with Google.',
                 style: const TextStyle(
                   fontSize: 14,
                   color: AppTheme.textSecondary,

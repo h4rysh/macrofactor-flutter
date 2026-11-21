@@ -7,7 +7,7 @@ import '../theme/app_theme.dart';
 import '../utils/quantity_parser.dart';
 import '../widgets/apple_sheet_grabber.dart';
 import '../widgets/apple_tactile_card.dart';
-import '../widgets/food_svg_icon.dart';
+import '../widgets/indian_serving_controls.dart';
 import '../widgets/plate_metric_dials.dart';
 import '../widgets/sique_frosted_chrome.dart';
 
@@ -83,17 +83,67 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
   late TextEditingController _quantityController;
   late FocusNode _quantityFocusNode;
   bool _isSubmitting = false;
+  bool _isRaw = false;
 
-  List<PortionUnit> get _effectiveUnits => widget.portionUnits.isNotEmpty
-      ? widget.portionUnits
-      : [
-          widget.food.defaultPortionUnit,
-          PortionUnit(
-              id: 0,
-              foodId: widget.food.id,
-              unitName: 'Grams',
-              gramWeight: 1.0),
-        ];
+  bool get _isGrainOrLentil {
+    final name = widget.food.name.toLowerCase();
+    return name.contains('rice') ||
+        name.contains('dal') ||
+        name.contains('khichdi') ||
+        name.contains('lentil') ||
+        name.contains('chana') ||
+        name.contains('rajma') ||
+        name.contains('beans') ||
+        name.contains('oats');
+  }
+
+  List<PortionUnit> get _effectiveUnits {
+    final list = List<PortionUnit>.from(widget.portionUnits);
+    if (list.isEmpty) {
+      list.add(widget.food.defaultPortionUnit);
+    }
+    if (!list.any((u) => u.unitName.toLowerCase().contains('gram'))) {
+      list.add(PortionUnit(
+        id: 0,
+        foodId: widget.food.id,
+        unitName: 'Grams',
+        gramWeight: 1.0,
+      ));
+    }
+    if (!list.any((u) => u.unitName.toLowerCase().contains('katori'))) {
+      list.add(PortionUnit(
+        id: 0,
+        foodId: widget.food.id,
+        unitName: 'Katori',
+        gramWeight: 150.0,
+      ));
+    }
+    if (!list.any((u) => u.unitName.toLowerCase().contains('ladle'))) {
+      list.add(PortionUnit(
+        id: 0,
+        foodId: widget.food.id,
+        unitName: 'Ladle',
+        gramWeight: 60.0,
+      ));
+    }
+    final nameLower = widget.food.name.toLowerCase();
+    if (nameLower.contains('roti') ||
+        nameLower.contains('chapati') ||
+        nameLower.contains('phulka') ||
+        nameLower.contains('paratha')) {
+      if (!list.any((u) =>
+          u.unitName.toLowerCase().contains('roti') ||
+          u.unitName.toLowerCase().contains('piece'))) {
+        list.add(PortionUnit(
+          id: 0,
+          foodId: widget.food.id,
+          unitName: 'Roti (Piece)',
+          gramWeight: 35.0,
+        ));
+      }
+    }
+    return list;
+  }
 
   static double? _parseQuantity(String text) => QuantityParser.parse(text);
   String _formatQuantity(double q) => QuantityParser.format(q);
@@ -157,11 +207,24 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
     }
   }
 
-  NutritionalValues get _nutrition => widget.food.calculateNutrition(
-        quantity: _quantity,
-        unit: _selectedUnit,
-        oilModifier: _selectedOil,
+  NutritionalValues get _nutrition {
+    final base = widget.food.calculateNutrition(
+      quantity: _quantity,
+      unit: _selectedUnit,
+      oilModifier: _selectedOil,
+    );
+    if (_isGrainOrLentil && _isRaw) {
+      return NutritionalValues(
+        calories: base.calories * 2.5,
+        protein: base.protein * 2.5,
+        carbs: base.carbs * 2.5,
+        fat: base.fat * 2.5,
+        fiber: base.fiber * 2.5,
+        totalGrams: base.totalGrams,
       );
+    }
+    return base;
+  }
 
   double get _effectiveCalories => math.max(0.0, _nutrition.calories);
   double get _effectiveProtein => math.max(0.0, _nutrition.protein);
@@ -355,96 +418,12 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
 
                         const SizedBox(height: 8),
 
-                        // Food Icon & Title
-                        Row(
-                          children: [
-                            FoodSvgIcon(
-                                iconName: widget.food.iconName, size: 40),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.food.name,
-                                    style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppTheme.textPrimary,
-                                    ),
-                                  ),
-                                  if (widget.food.region.isNotEmpty)
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 4),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.activeBlue
-                                            .withValues(alpha: 0.16),
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Text(
-                                        widget.food.region,
-                                        style: const TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppTheme.activeBlue,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        const SizedBox(height: 18),
-
-                        // Big Calories Display & Macro Badges
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerLeft,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                '${_effectiveCalories.round()}',
-                                style: const TextStyle(
-                                  fontSize: 40,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppTheme.textPrimary,
-                                  height: 1.0,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Padding(
-                                padding: EdgeInsets.only(bottom: 6),
-                                child: Text(
-                                  'Calories',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color: AppTheme.textSecondary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            budgetText,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: budgetColor,
-                              fontFeatures: const [
-                                FontFeature.tabularFigures()
-                              ],
-                            ),
-                          ),
+                        // Food Header Summary
+                        PlateHeaderSummary(
+                          food: widget.food,
+                          effectiveCalories: _effectiveCalories,
+                          budgetText: budgetText,
+                          budgetColor: budgetColor,
                         ),
 
                         const SizedBox(height: 12),
@@ -490,6 +469,20 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                           ),
                         ),
                         const SizedBox(height: 10),
+
+                        if (_isGrainOrLentil)
+                          PreparationStateSelector(
+                            isRaw: _isRaw,
+                            onChanged: (raw) => setState(() => _isRaw = raw),
+                          ),
+
+                        IndianServingChips(
+                          selectedUnit: _selectedUnit,
+                          availableUnits: _effectiveUnits,
+                          onUnitSelected: (unit) {
+                            setState(() => _selectedUnit = unit);
+                          },
+                        ),
 
                         // 1-Tap Preset Quantity Pills
                         PlatePresetRow(

@@ -45,7 +45,7 @@ class AboutScreen extends StatelessWidget {
             color: AppTheme.fat,
             title: 'ICMR-NIN IFCT 2017 Database',
             description:
-                'Nutritional values are directly sourced and transcribed from the Indian Council of Medical Research and National Institute of Nutrition (ICMR-NIN Indian Food Composition Tables 2017). Features authentic Indian staples and verified macro profiles.',
+                'Nutritional values are directly sourced and transcribed from the Indian Council of Medical Research and National Institute of Nutrition (ICMR-NIN Indian Food Composition Tables 2017). Features 528 verified Indian foods from National Institute of Nutrition, Hyderabad with authentic regional staples and verified macro profiles.',
           ),
           const SizedBox(height: 12),
           _buildPillarTile(

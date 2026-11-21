@@ -216,6 +216,15 @@ class PlateOilModifierSelector extends StatelessWidget {
             letterSpacing: 0.8,
           ),
         ),
+        const SizedBox(height: 4),
+        Text(
+          OilModifierDisplay.getTierSubtitle(selectedOil),
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: AppTheme.textSecondary,
+          ),
+        ),
         const SizedBox(height: 10),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,

@@ -413,6 +413,27 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                     ),
                   ],
                 ),
+                const SizedBox(height: 8),
+                const Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline_rounded,
+                      size: 13,
+                      color: AppTheme.textSecondary,
+                    ),
+                    SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        'Scale weight fluctuates with hydration and salt. Trend weight smooths the noise.',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textSecondary,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
                 const SizedBox(height: 12),
 
                 // Trend Weight Preview Pill with Dot

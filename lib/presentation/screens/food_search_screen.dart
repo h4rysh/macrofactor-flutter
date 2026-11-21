@@ -7,10 +7,9 @@ import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/apple_tactile_card.dart';
 import '../widgets/food_search_highlight.dart';
+import '../widgets/food_search_indian_staples.dart';
 import '../widgets/food_svg_icon.dart';
 import '../widgets/sique_empty_state.dart';
-import '../widgets/sique_entrance.dart';
-import '../widgets/sique_frosted_chrome.dart';
 import 'plate_serving_sheet.dart';
 
 enum FoodFilterType {
@@ -155,6 +154,12 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     setState(() => _isLoading = true);
     final db = ref.read(databaseProvider);
     var results = await db.searchFoodsAsync(query, limit: 60);
+    if (results.isEmpty && query.trim().isNotEmpty) {
+      final alias = IndianFoodAliases.resolveAlias(query);
+      if (alias != null && alias.toLowerCase() != query.trim().toLowerCase()) {
+        results = await db.searchFoodsAsync(alias, limit: 60);
+      }
+    }
     if (!mounted || searchId != _searchSequence) return;
 
     // Apply active filter
@@ -519,25 +524,29 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
               ],
               Expanded(
                 child: _isLoading
-                    ? const Center(
-                        child: CircularProgressIndicator(
-                            color: AppTheme.activeBlue),
-                      )
+                    ? const FoodSearchSkeletonList()
                     : _searchResults.isEmpty
-                        ? SiqueEmptyState(
-                            icon: Icons.search_off_rounded,
-                            title: 'No foods found',
-                            message:
-                                'No items match "${_searchController.text}". Try a different search term.',
-                            actionLabel: _searchController.text
-                                    .trim()
-                                    .isNotEmpty
-                                ? 'Quick add "${_searchController.text.trim()}" manually'
-                                : null,
-                            onAction: _searchController.text.trim().isNotEmpty
-                                ? _openManualFoodSheet
-                                : null,
-                          )
+                        ? (_searchController.text.isEmpty
+                            ? IndianStapleChips(
+                                onStapleSelected: (staple) {
+                                  _searchController.text = staple;
+                                  _performSearch(staple);
+                                },
+                              )
+                            : SiqueEmptyState(
+                                icon: Icons.search_off_rounded,
+                                title: 'No foods found',
+                                message:
+                                    'Couldn\'t find "${_searchController.text}". You can quick-add it in 5 seconds.',
+                                actionLabel: _searchController.text
+                                        .trim()
+                                        .isNotEmpty
+                                    ? 'Quick add "${_searchController.text.trim()}" manually'
+                                    : null,
+                                onAction: _searchController.text.trim().isNotEmpty
+                                    ? _openManualFoodSheet
+                                    : null,
+                              ))
                         : ListView.separated(
                             padding: EdgeInsets.fromLTRB(
                               16,
@@ -696,87 +705,11 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
           ],
         ),
         if (_plateItems.isNotEmpty)
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: MediaQuery.of(context).padding.bottom + 16,
-            child: SiqueEntrance(
-              child: Semantics(
-                button: true,
-                label:
-                    'Review Plate: ${_plateItems.length} items, $_totalPlateKcal calories total',
-                child: SiqueFrostedChrome(
-                borderRadius: AppRadii.xlBorderRadius,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: const BoxDecoration(
-                        color: AppTheme.cardElevated,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.restaurant_menu_rounded,
-                        size: 18,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            '${_plateItems.length} ${_plateItems.length == 1 ? 'item' : 'items'} on Plate',
-                            style: const TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          Text(
-                            '$_totalPlateKcal kcal total',
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: AppTheme.textSecondary,
-                              fontFeatures: [FontFeature.tabularFigures()],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    AppleBouncy(
-                      scaleDown: 0.94,
-                      onTap: () => Navigator.pop(context),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 10,
-                        ),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.buttonBackground,
-                          borderRadius: AppRadii.lgBorderRadius,
-                        ),
-                        child: const Text(
-                          'Done',
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: AppTheme.buttonText,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          PlateReviewBar(
+            itemCount: _plateItems.length,
+            totalCalories: _totalPlateKcal,
+            onDone: () => Navigator.pop(context),
           ),
-        ),
       ],
     ),
   );

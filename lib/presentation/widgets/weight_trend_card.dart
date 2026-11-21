@@ -185,6 +185,24 @@ class WeightTrendCard extends StatelessWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  const Icon(
+                    Icons.auto_graph_rounded,
+                    size: 14,
+                    color: AppTheme.textSecondary,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Steady progress · Pacing adapts to actual trend',
+                    style: AppTypography.numericCaption.copyWith(
+                      fontSize: 11,
+                      color: AppTheme.textSecondary,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ],
         ),

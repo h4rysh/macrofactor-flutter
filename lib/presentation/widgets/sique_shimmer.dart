@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sique/presentation/theme/tokens/app_colors.dart';
+import 'package:sique/presentation/theme/tokens/app_motion.dart';
 import 'package:sique/presentation/theme/tokens/app_radii.dart';
 
 /// Clean obsidian bone shimmer skeleton loader for asynchronous states.
@@ -35,7 +36,7 @@ class _SiqueShimmerState extends State<SiqueShimmer>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1400),
+      duration: AppMotion.shimmer,
     )..repeat();
   }
 

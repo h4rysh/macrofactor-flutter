@@ -81,7 +81,7 @@ class CoachingCheckinCard extends ConsumerWidget {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'Weekly Metabolic Review',
+                        'Your Weekly Strategy Review is Ready!',
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
