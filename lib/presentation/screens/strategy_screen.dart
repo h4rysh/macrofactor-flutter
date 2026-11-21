@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/user_profile.dart';
 import '../providers/app_providers.dart';
@@ -110,7 +109,7 @@ class StrategyScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppTheme.cardSurface,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: AppRadii.xlBorderRadius,
                   border: Border.all(
                     color: AppTheme.activeBlue.withValues(alpha: 0.25),
                     width: 1.0,
@@ -160,7 +159,7 @@ class StrategyScreen extends ConsumerWidget {
                           child: AppleBouncy(
                             scaleDown: 0.96,
                             onTap: () {
-                              HapticFeedback.lightImpact();
+                              AppHaptics.lightImpact();
                               _openQuestionnaire(context);
                             },
                             child: Container(
@@ -170,7 +169,7 @@ class StrategyScreen extends ConsumerWidget {
                               decoration: BoxDecoration(
                                 color:
                                     AppTheme.activeBlue.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: AppRadii.mdBorderRadius,
                                 border: Border.all(
                                   color: AppTheme.activeBlue
                                       .withValues(alpha: 0.35),
@@ -204,16 +203,16 @@ class StrategyScreen extends ConsumerWidget {
                           child: AppleBouncy(
                             scaleDown: 0.96,
                             onTap: () {
-                              HapticFeedback.lightImpact();
+                              AppHaptics.lightImpact();
                               _openSetupWizard(context);
                             },
                             child: Container(
                               key: const Key('strategy_refigure_program_btn'),
                               padding: const EdgeInsets.symmetric(
                                   vertical: 12, horizontal: 4),
-                              decoration: BoxDecoration(
+                              decoration: const BoxDecoration(
                                 color: AppTheme.calories,
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: AppRadii.mdBorderRadius,
                               ),
                               child: const FittedBox(
                                 fit: BoxFit.scaleDown,
@@ -263,7 +262,7 @@ class StrategyScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
               color: AppTheme.expenditure.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: AppRadii.mdBorderRadius,
             ),
             child: const Icon(
               Icons.psychology_rounded,
@@ -311,7 +310,7 @@ class StrategyScreen extends ConsumerWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadii.xlBorderRadius,
         border: Border.all(color: AppTheme.cardBorder, width: 1),
       ),
       child: Column(
@@ -389,7 +388,7 @@ class StrategyScreen extends ConsumerWidget {
       child: AppleBouncy(
         scaleDown: 0.94,
         onTap: () {
-          HapticFeedback.selectionClick();
+          AppHaptics.selectionClick();
           final program = ref.read(weeklyMacroProgramProvider);
           final updatedProgram = program.copyWith(mode: mode);
           ref
@@ -409,7 +408,7 @@ class StrategyScreen extends ConsumerWidget {
             color: isSelected
                 ? AppTheme.calories.withValues(alpha: 0.16)
                 : AppTheme.cardElevated,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadii.mdBorderRadius,
             border: Border.all(
               color: isSelected ? AppTheme.calories : Colors.transparent,
               width: 1.5,

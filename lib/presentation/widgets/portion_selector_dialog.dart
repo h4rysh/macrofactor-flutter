@@ -94,9 +94,9 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       backgroundColor: AppTheme.cardSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: AppTheme.cardBorder),
+      shape: const RoundedRectangleBorder(
+        borderRadius: AppRadii.xlBorderRadius,
+        side: BorderSide(color: AppTheme.cardBorder),
       ),
       title: const Text(
         'Serving Size',
@@ -128,7 +128,7 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 decoration: BoxDecoration(
                   color: AppTheme.cardElevated,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadii.mdBorderRadius,
                   border: Border.all(color: AppTheme.cardBorder),
                 ),
                 child: DropdownButtonHideUnderline(
@@ -209,24 +209,24 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
                     inputFormatters: [
                       FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
                     ],
-                    decoration: InputDecoration(
-                      contentPadding: const EdgeInsets.symmetric(
+                    decoration: const InputDecoration(
+                      contentPadding: EdgeInsets.symmetric(
                           vertical: 10, horizontal: 8),
                       filled: true,
                       fillColor: AppTheme.cardElevated,
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppRadii.mdBorderRadius,
                         borderSide:
-                            const BorderSide(color: AppTheme.cardBorder),
+                            BorderSide(color: AppTheme.cardBorder),
                       ),
                       enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppRadii.mdBorderRadius,
                         borderSide:
-                            const BorderSide(color: AppTheme.cardBorder),
+                            BorderSide(color: AppTheme.cardBorder),
                       ),
                       focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
+                        borderRadius: AppRadii.mdBorderRadius,
+                        borderSide: BorderSide(
                             color: AppTheme.activeBlue, width: 1.5),
                       ),
                     ),
@@ -284,8 +284,8 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
           key: const Key('portion_confirm_btn'),
           style: FilledButton.styleFrom(
             backgroundColor: AppTheme.activeBlue,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+            shape: const RoundedRectangleBorder(
+              borderRadius: AppRadii.mdBorderRadius,
             ),
           ),
           onPressed: () {

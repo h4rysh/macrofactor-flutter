@@ -65,7 +65,7 @@ class _EmptyWorkoutsCard extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder),
       ),
       child: const Column(
@@ -116,7 +116,7 @@ class RecentWorkoutCard extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadii.lgBorderRadius,
           border: Border.all(color: AppTheme.cardBorder),
         ),
         child: Column(

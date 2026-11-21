@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
@@ -95,20 +94,24 @@ class Card01Goal extends StatelessWidget {
                 width: double.infinity,
                 child: AppleTactileCard(
                   key: const Key('onboarding_card_1_continue_btn'),
+                  semanticLabel: 'Continue to biometrics',
                   onTap: () {
-                    HapticFeedback.lightImpact();
+                    AppHaptics.lightImpact();
                     onNext();
                   },
-                  backgroundColor: const Color(0xFFFAFAFA),
-                  borderRadius: 14,
+                  backgroundColor: AppTheme.buttonBackground,
+                  borderRadius: AppRadii.lg,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: const Center(
-                    child: Text(
-                      'Continue to biometrics',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF09090B),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'Continue to biometrics',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.buttonText,
+                        ),
                       ),
                     ),
                   ),
@@ -130,34 +133,38 @@ class Card01Goal extends StatelessWidget {
   }) {
     final isSelected = selectedGoal == goal;
 
-    return AppleBouncy(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onGoalSelected(goal);
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? color.withValues(alpha: 0.12)
-              : AppTheme.surface.withValues(alpha: 0.7),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? color : AppTheme.cardBorder,
-            width: isSelected ? 1.5 : 1.0,
+    return Semantics(
+      selected: isSelected,
+      button: true,
+      label: '$title. $subtitle',
+      child: AppleBouncy(
+        onTap: () {
+          AppHaptics.selectionClick();
+          onGoalSelected(goal);
+        },
+        child: AnimatedContainer(
+          duration: AppMotion.normal,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? color.withValues(alpha: 0.12)
+                : AppTheme.surface.withValues(alpha: 0.7),
+            borderRadius: AppRadii.lgBorderRadius,
+            border: Border.all(
+              color: isSelected ? color : AppTheme.cardBorder,
+              width: isSelected ? 1.5 : 1.0,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? color.withValues(alpha: 0.25)
-                    : AppTheme.cardElevated,
-                borderRadius: BorderRadius.circular(12),
-              ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? color.withValues(alpha: 0.25)
+                      : AppTheme.cardElevated,
+                  borderRadius: AppRadii.mdBorderRadius,
+                ),
               child: Icon(
                 icon,
                 size: 24,
@@ -194,6 +201,7 @@ class Card01Goal extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }

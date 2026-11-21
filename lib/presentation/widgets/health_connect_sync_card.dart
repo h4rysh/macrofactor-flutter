@@ -101,7 +101,7 @@ class HealthConnectSyncCard extends ConsumerWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppTheme.calories.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadii.mdBorderRadius,
                 border: Border.all(
                   color: AppTheme.calories.withValues(alpha: 0.35),
                 ),
@@ -195,7 +195,7 @@ class HealthConnectSyncCard extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
                 color: isSyncing ? AppTheme.cardElevated : AppTheme.activeBlue,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadii.mdBorderRadius,
                 border:
                     isSyncing ? Border.all(color: AppTheme.cardBorder) : null,
               ),

@@ -41,7 +41,7 @@ class ExportCardTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder),
       ),
       child: Column(
@@ -99,8 +99,8 @@ class ExportCardTile extends StatelessWidget {
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppTheme.textPrimary,
                       side: const BorderSide(color: AppTheme.cardBorder),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadii.mdBorderRadius),
                     ),
                     onPressed: onSecondaryPressed,
                   ),
@@ -116,8 +116,8 @@ class ExportCardTile extends StatelessWidget {
                     foregroundColor: color,
                     elevation: 0,
                     side: BorderSide(color: color.withAlpha(90)),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
+                    shape: const RoundedRectangleBorder(
+                        borderRadius: AppRadii.mdBorderRadius),
                   ),
                   onPressed: onPrimaryPressed,
                 ),

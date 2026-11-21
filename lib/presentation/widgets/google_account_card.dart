@@ -66,7 +66,7 @@ class GoogleAccountCard extends ConsumerWidget {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: AppTheme.calories.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadii.mdBorderRadius,
                 border: Border.all(
                   color: AppTheme.calories.withValues(alpha: 0.35),
                   width: 1,
@@ -231,7 +231,7 @@ class GoogleAccountCard extends ConsumerWidget {
                 padding: const EdgeInsets.symmetric(vertical: 11),
                 decoration: BoxDecoration(
                   color: AppTheme.cardElevated,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadii.mdBorderRadius,
                   border: Border.all(color: AppTheme.cardBorder, width: 1),
                 ),
                 alignment: Alignment.center,
@@ -293,7 +293,7 @@ class GoogleAccountCard extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: 11),
               decoration: BoxDecoration(
                 color: AppTheme.calories.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadii.mdBorderRadius,
                 border: Border.all(
                     color: AppTheme.calories.withValues(alpha: 0.4), width: 1),
               ),
@@ -365,7 +365,7 @@ class GoogleAccountCard extends ConsumerWidget {
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppTheme.warning.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadii.mdBorderRadius,
               border: Border.all(
                 color: AppTheme.warning.withValues(alpha: 0.4),
                 width: 1,
@@ -412,7 +412,7 @@ class GoogleAccountCard extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 11),
             decoration: BoxDecoration(
               color: isConfigured ? AppTheme.activeBlue : AppTheme.cardElevated,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadii.mdBorderRadius,
               border: isConfigured
                   ? null
                   : Border.all(color: AppTheme.cardBorder, width: 1),
@@ -479,7 +479,7 @@ class GoogleAccountCard extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
               color: AppTheme.cardElevated,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadii.mdBorderRadius,
               border: Border.all(
                 color: AppTheme.cardBorder,
                 width: 1,

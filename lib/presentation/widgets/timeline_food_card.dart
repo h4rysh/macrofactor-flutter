@@ -41,7 +41,7 @@ class TimelineFoodCard extends StatelessWidget {
         padding: const EdgeInsets.only(left: 20),
         decoration: BoxDecoration(
           color: AppTheme.calories.withValues(alpha: 0.15),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadii.lgBorderRadius,
         ),
         child: const Row(
           mainAxisSize: MainAxisSize.min,
@@ -64,7 +64,7 @@ class TimelineFoodCard extends StatelessWidget {
         padding: const EdgeInsets.only(right: 20),
         decoration: BoxDecoration(
           color: AppTheme.protein.withAlpha(50),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadii.lgBorderRadius,
         ),
         child:
             const Icon(Icons.delete_outline_rounded, color: AppTheme.protein),
@@ -76,7 +76,7 @@ class TimelineFoodCard extends StatelessWidget {
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: AppTheme.cardSurface,
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: AppRadii.lgBorderRadius,
             border: Border.all(color: AppTheme.cardBorder.withAlpha(120)),
           ),
           child: Row(

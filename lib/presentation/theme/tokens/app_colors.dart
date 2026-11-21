@@ -60,6 +60,24 @@ class AppColors {
   /// Ensures 6.21:1 contrast on flame orange ([calories]) button backgrounds.
   static const Color buttonForeground = Color(0xFF0B0B0E);
 
+  /// Primary CTA button background (#FAFAFA).
+  static const Color buttonBackground = Color(0xFFFAFAFA);
+
+  /// Primary CTA button dark text (#09090B).
+  static const Color buttonText = Color(0xFF09090B);
+
+  /// Secondary peach orange for calorie gradients and accents (#FF8A65).
+  static const Color caloriesSecondary = Color(0xFFFF8A65);
+
+  /// Calming indigo/lavender for adherence-neutral over-target calorie states (#818CF8).
+  static const Color calmOverBudget = Color(0xFF818CF8);
+
+  /// Elevated dark chip and tile background (#27272A).
+  static const Color chipBackground = Color(0xFF27272A);
+
+  /// Subtle chip and tag border (#3F3F46).
+  static const Color chipBorder = Color(0xFF3F3F46);
+
   /// Primary theme accent, aliased to [calories] (#FF5722).
   static const Color primary = calories;
 

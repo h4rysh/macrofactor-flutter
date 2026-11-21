@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/food_models.dart';
 import '../providers/app_providers.dart';
@@ -74,7 +73,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   }
 
   void _quickAddFromSearch(FoodItem food) {
-    HapticFeedback.mediumImpact();
+    AppHaptics.mediumImpact();
     final db = ref.read(databaseProvider);
     final portionUnits = db.getPortionUnits(food.id);
     final defaultUnit =
@@ -146,7 +145,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     const matchStyle = TextStyle(
         fontSize: 15,
         fontWeight: FontWeight.w900,
-        color: Color(0xFFFAFAFA),
+        color: AppTheme.buttonBackground,
         backgroundColor: Color(0x33FAFAFA));
 
     while (start < name.length) {
@@ -269,7 +268,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   }
 
   void _quickLogFood(FoodItem food) {
-    HapticFeedback.mediumImpact();
+    AppHaptics.mediumImpact();
     final db = ref.read(databaseProvider);
     final portionUnits = db.getPortionUnits(food.id);
     final defaultUnit =
@@ -363,17 +362,17 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                     fillColor: AppTheme.cardSurface,
                     contentPadding: const EdgeInsets.symmetric(
                         vertical: 12, horizontal: 16),
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                    border: const OutlineInputBorder(
+                        borderRadius: AppRadii.lgBorderRadius,
                         borderSide:
-                            const BorderSide(color: AppTheme.cardBorder)),
-                    enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
+                            BorderSide(color: AppTheme.cardBorder)),
+                    enabledBorder: const OutlineInputBorder(
+                        borderRadius: AppRadii.lgBorderRadius,
                         borderSide:
-                            const BorderSide(color: AppTheme.cardBorder)),
-                    focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: const BorderSide(
+                            BorderSide(color: AppTheme.cardBorder)),
+                    focusedBorder: const OutlineInputBorder(
+                        borderRadius: AppRadii.lgBorderRadius,
+                        borderSide: BorderSide(
                             color: AppTheme.activeBlue, width: 1.5)),
                   ),
                   onChanged: _onSearchChanged,
@@ -407,7 +406,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                             color: isSelected
                                 ? AppTheme.activeBlue.withValues(alpha: 0.16)
                                 : AppTheme.cardSurface,
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: AppRadii.xlBorderRadius,
                             border: Border.all(
                               color: isSelected
                                   ? AppTheme.activeBlue
@@ -479,7 +478,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                       return AppleBouncy(
                         scaleDown: 0.94,
                         onTap: () {
-                          HapticFeedback.lightImpact();
+                          AppHaptics.lightImpact();
                           _openPlateSheet(food);
                         },
                         child: Container(
@@ -489,7 +488,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                           ),
                           decoration: BoxDecoration(
                             color: AppTheme.cardSurface,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: AppRadii.mdBorderRadius,
                             border: Border.all(
                               color: AppTheme.cardBorder,
                               width: 0.8,
@@ -589,7 +588,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: AppTheme.cardSurface,
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: AppRadii.lgBorderRadius,
                                     border: Border.all(
                                       color: AppTheme.cardBorder,
                                       width: 0.8,
@@ -719,7 +718,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
               right: 16,
               bottom: MediaQuery.of(context).padding.bottom + 16,
               child: SiqueFrostedChrome(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: AppRadii.xlBorderRadius,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
@@ -770,16 +769,16 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                           horizontal: 20,
                           vertical: 10,
                         ),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFAFAFA),
-                          borderRadius: BorderRadius.circular(16),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.buttonBackground,
+                          borderRadius: AppRadii.lgBorderRadius,
                         ),
                         child: const Text(
                           'Done',
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF09090B),
+                            color: AppTheme.buttonText,
                           ),
                         ),
                       ),

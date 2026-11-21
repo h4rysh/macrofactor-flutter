@@ -88,7 +88,7 @@ class SiqueEmptyState extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.activeBlue.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: AppRadii.xlBorderRadius,
                     border: Border.all(
                       color: AppTheme.activeBlue.withValues(alpha: 0.6),
                       width: 1,

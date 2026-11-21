@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../domain/models/food_models.dart';
 import '../theme/app_theme.dart';
 import 'apple_tactile_card.dart';
@@ -83,7 +82,7 @@ class TimelineHourSlot extends StatelessWidget {
                 scaleDown: 0.94,
                 semanticLabel: 'Add food at ${_formatHour(hour)}',
                 onTap: () {
-                  HapticFeedback.lightImpact();
+                  AppHaptics.lightImpact();
                   onAddTap();
                 },
                 child: Container(
@@ -95,7 +94,7 @@ class TimelineHourSlot extends StatelessWidget {
                     color: isEmptySlot
                         ? AppTheme.cardSurface.withAlpha(140)
                         : AppTheme.cardSurface,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: AppRadii.lgBorderRadius,
                     border: Border.all(
                       color: isEmptySlot
                           ? AppTheme.cardBorder.withAlpha(80)
@@ -184,7 +183,7 @@ class TimelineHourSlot extends StatelessWidget {
                     const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
                 decoration: BoxDecoration(
                   color: AppTheme.cardSurface.withAlpha(150),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: AppRadii.mdBorderRadius,
                   border: Border.all(color: AppTheme.cardBorder.withAlpha(80)),
                 ),
                 child: SingleChildScrollView(
@@ -224,7 +223,7 @@ class TimelineHourSlot extends StatelessWidget {
               _CopyYesterdayButton(
                 count: yesterdayEntries.length,
                 onTap: () {
-                  HapticFeedback.mediumImpact();
+                  AppHaptics.mediumImpact();
                   onCopyYesterday!(yesterdayEntries);
                 },
               )
@@ -264,7 +263,7 @@ class _CopyYesterdayButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: AppTheme.activeBlue.withAlpha(18),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: AppRadii.mdBorderRadius,
             border: Border.all(
               color: AppTheme.activeBlue.withAlpha(60),
               width: 0.8,

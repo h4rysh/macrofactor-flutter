@@ -119,7 +119,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
   void _onConfirmLog() {
     if (_isSubmitting) return;
     _isSubmitting = true;
-    HapticFeedback.mediumImpact();
+    AppHaptics.mediumImpact();
     Navigator.of(context).pop();
     widget.onMealChanged?.call(_selectedMeal);
     widget.onLogConfirmed(
@@ -165,7 +165,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
 
   void _setQuantity(double newQ) {
     if (newQ > 0) {
-      HapticFeedback.lightImpact();
+      AppHaptics.lightImpact();
       setState(() {
         _quantity = (newQ * 100).roundToDouble() / 100.0;
         _quantityController.text = _formatQuantity(_quantity);
@@ -227,7 +227,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
         ? 'Remaining today: +${(-remainingKcal).round()} kcal over · Adapts automatically'
         : 'Remaining today: ${remainingKcal.round()} kcal left';
     final budgetColor =
-        isOverBudget ? const Color(0xFF818CF8) : AppTheme.textSecondary;
+        isOverBudget ? AppTheme.calmOverBudget : AppTheme.textSecondary;
 
     final isGrams = _selectedUnit.unitName.toLowerCase().contains('gram') ||
         _selectedUnit.gramsPerUnit == 1.0;
@@ -280,9 +280,9 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
+                                  decoration: const BoxDecoration(
                                     color: AppTheme.cardElevated,
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: AppRadii.mdBorderRadius,
                                   ),
                                   child: Text(
                                     timeStr,
@@ -302,13 +302,13 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                   initialValue: _selectedMeal,
                                   tooltip: 'Select meal',
                                   color: AppTheme.cardElevated,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(14),
-                                    side: const BorderSide(
+                                  shape: const RoundedRectangleBorder(
+                                    borderRadius: AppRadii.lgBorderRadius,
+                                    side: BorderSide(
                                         color: AppTheme.cardBorder),
                                   ),
                                   onSelected: (meal) {
-                                    HapticFeedback.selectionClick();
+                                    AppHaptics.selectionClick();
                                     setState(() => _selectedMeal = meal);
                                   },
                                   itemBuilder: (context) =>
@@ -333,7 +333,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                         horizontal: 10, vertical: 4),
                                     decoration: BoxDecoration(
                                       color: AppTheme.cardElevated,
-                                      borderRadius: BorderRadius.circular(12),
+                                      borderRadius: AppRadii.mdBorderRadius,
                                       border: Border.all(
                                           color: AppTheme.cardBorder,
                                           width: 0.8),
@@ -517,7 +517,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                             Container(
                               decoration: BoxDecoration(
                                 color: AppTheme.cardElevated,
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: AppRadii.lgBorderRadius,
                                 border: Border.all(color: AppTheme.cardBorder),
                               ),
                               child: Row(
@@ -616,7 +616,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                     const EdgeInsets.symmetric(horizontal: 14),
                                 decoration: BoxDecoration(
                                   color: AppTheme.cardElevated,
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: AppRadii.lgBorderRadius,
                                   border:
                                       Border.all(color: AppTheme.cardBorder),
                                 ),
@@ -651,7 +651,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                     }).toList(),
                                     onChanged: (u) {
                                       if (u != null) {
-                                        HapticFeedback.selectionClick();
+                                        AppHaptics.selectionClick();
                                         setState(() => _selectedUnit = u);
                                       }
                                     },
@@ -728,9 +728,9 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                       onTap: _onConfirmLog,
                       child: Container(
                         alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFAFAFA),
-                          borderRadius: BorderRadius.circular(16),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.buttonBackground,
+                          borderRadius: AppRadii.lgBorderRadius,
                         ),
                         child: FittedBox(
                           fit: BoxFit.scaleDown,
@@ -742,7 +742,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w800,
-                                  color: Color(0xFF09090B),
+                                  color: AppTheme.buttonText,
                                 ),
                               ),
                               Text(
@@ -750,7 +750,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                 style: const TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(0xFF52525B),
+                                  color: AppTheme.textMuted,
                                 ),
                               ),
                             ],

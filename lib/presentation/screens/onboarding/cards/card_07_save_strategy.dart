@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/domain/models/macro_program.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
-import 'package:sique/presentation/theme/tokens/app_haptics.dart';
 import 'package:sique/presentation/widgets/sique_controls.dart';
 import 'package:sique/presentation/widgets/sique_frosted_chrome.dart';
 import 'package:sique/presentation/widgets/sique_tonal_card.dart';
@@ -100,7 +99,7 @@ class _Card07SaveStrategyState extends ConsumerState<Card07SaveStrategy> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: AppRadii.xlBorderRadius,
                   border: Border.all(
                     color: AppTheme.activeBlue.withValues(alpha: 0.35),
                     width: 1,
@@ -294,7 +293,7 @@ class _Card07SaveStrategyState extends ConsumerState<Card07SaveStrategy> {
                             horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
                           color: AppTheme.activeBlue.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: AppRadii.mdBorderRadius,
                         ),
                         child: Row(
                           children: [
@@ -333,8 +332,8 @@ class _Card07SaveStrategyState extends ConsumerState<Card07SaveStrategy> {
                             foregroundColor: AppTheme.textPrimary,
                             side: const BorderSide(color: AppTheme.cardBorder),
                             padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: AppRadii.mdBorderRadius,
                             ),
                           ),
                         ),

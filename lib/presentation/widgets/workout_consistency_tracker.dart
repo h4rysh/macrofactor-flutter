@@ -110,7 +110,7 @@ class WorkoutConsistencyTracker extends ConsumerWidget {
             color: isActive
                 ? AppTheme.activeBlue.withValues(alpha: 0.25)
                 : AppTheme.cardElevated,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: AppRadii.mdBorderRadius,
             border: Border.all(
               color: isActive
                   ? AppTheme.activeBlue

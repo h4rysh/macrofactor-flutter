@@ -35,7 +35,7 @@ class NutritionSummaryBanner extends ConsumerWidget {
 
     final isOverTarget = consumed.totalCalories > targets.targetCalories;
     final calorieTextColor =
-        isOverTarget ? const Color(0xFF818CF8) : AppTheme.textPrimary;
+        isOverTarget ? AppTheme.calmOverBudget : AppTheme.textPrimary;
 
     final semanticsLabel =
         'Daily Nutrition: ${consumed.totalCalories.round()} of ${targets.targetCalories.round()} calories consumed, '

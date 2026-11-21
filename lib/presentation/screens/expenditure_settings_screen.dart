@@ -71,7 +71,7 @@ class _ExpenditureSettingsScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder),
       ),
       child: Column(
@@ -93,7 +93,7 @@ class _ExpenditureSettingsScreenState
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppTheme.cardElevated,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadii.mdBorderRadius,
                     border:
                         Border.all(color: AppTheme.expenditure.withAlpha(50)),
                   ),
@@ -136,7 +136,7 @@ class _ExpenditureSettingsScreenState
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppTheme.cardElevated,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadii.mdBorderRadius,
                     border:
                         Border.all(color: AppTheme.trendWeight.withAlpha(50)),
                   ),
@@ -188,7 +188,7 @@ class _ExpenditureSettingsScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder),
       ),
       child: Column(
@@ -276,7 +276,7 @@ class _ExpenditureSettingsScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder),
       ),
       child: Column(
@@ -307,7 +307,7 @@ class _ExpenditureSettingsScreenState
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: AppTheme.cardElevated,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadii.mdBorderRadius,
               border: Border.all(color: AppTheme.cardBorder),
             ),
             child: CustomPaint(
@@ -325,7 +325,7 @@ class _ExpenditureSettingsScreenState
             final isSelected = _sensitivityMode == name;
             return InkWell(
               onTap: () => _updateSensitivity(name),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: AppRadii.mdBorderRadius,
               child: Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding:
@@ -334,7 +334,7 @@ class _ExpenditureSettingsScreenState
                   color: isSelected
                       ? AppTheme.expenditure.withAlpha(25)
                       : AppTheme.cardElevated,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadii.mdBorderRadius,
                   border: Border.all(
                     color:
                         isSelected ? AppTheme.expenditure : AppTheme.cardBorder,
@@ -393,7 +393,7 @@ class _ExpenditureSettingsScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder),
       ),
       child: const Column(
@@ -437,7 +437,7 @@ class _ExpenditureSettingsScreenState
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardElevated,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder),
       ),
       child: Row(

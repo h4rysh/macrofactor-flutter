@@ -268,7 +268,7 @@ class _MacroSplitPill extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadii.mdBorderRadius,
           border: Border.all(color: color.withValues(alpha: 0.25)),
         ),
         child: FittedBox(

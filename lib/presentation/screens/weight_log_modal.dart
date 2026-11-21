@@ -51,7 +51,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
   }
 
   void _adjustWeight(double delta) {
-    HapticFeedback.lightImpact();
+    AppHaptics.lightImpact();
     final current = double.tryParse(_weightController.text) ?? 70.0;
     final updated = (current + delta).clamp(10.0, 500.0);
     setState(() {
@@ -60,7 +60,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
   }
 
   void _toggleContextChip(String tag) {
-    HapticFeedback.selectionClick();
+    AppHaptics.selectionClick();
     final current = _noteController.text;
     if (current.contains(tag)) {
       final updated = current
@@ -80,7 +80,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
     setState(() => _isSubmitting = true);
 
     try {
-      HapticFeedback.mediumImpact();
+      AppHaptics.mediumImpact();
       final note = _noteController.text.trim();
       ref.read(weightLogsProvider.notifier).logWeight(
             _selectedDate,
@@ -109,7 +109,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
     setState(() => _isSubmitting = true);
 
     try {
-      HapticFeedback.mediumImpact();
+      AppHaptics.mediumImpact();
       final dateStr = DateFormat('yyyy-MM-dd').format(entry.date);
       ref.read(weightLogsProvider.notifier).deleteWeight(dateStr);
       Navigator.of(context).pop();
@@ -266,7 +266,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                         height: 52,
                         decoration: BoxDecoration(
                           color: AppTheme.cardElevated,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: AppRadii.lgBorderRadius,
                           border: Border.all(
                               color: AppTheme.cardBorder, width: 0.8),
                         ),
@@ -290,7 +290,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                             horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
                           color: AppTheme.surface,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: AppRadii.lgBorderRadius,
                           border:
                               Border.all(color: AppTheme.cardBorder, width: 1),
                         ),
@@ -347,7 +347,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                         height: 52,
                         decoration: BoxDecoration(
                           color: AppTheme.cardElevated,
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: AppRadii.lgBorderRadius,
                           border: Border.all(
                               color: AppTheme.cardBorder, width: 0.8),
                         ),
@@ -375,7 +375,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                         horizontal: 14, vertical: 10),
                     decoration: BoxDecoration(
                       color: AppTheme.trendWeight.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppRadii.mdBorderRadius,
                       border: Border.all(
                           color: AppTheme.trendWeight.withValues(alpha: 0.4),
                           width: 1),
@@ -425,12 +425,12 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                             horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
                           color: isSelected
-                              ? const Color(0xFFFAFAFA)
+                              ? AppTheme.buttonBackground
                               : AppTheme.cardElevated,
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: AppRadii.xlBorderRadius,
                           border: Border.all(
                             color: isSelected
-                                ? const Color(0xFFFAFAFA)
+                                ? AppTheme.buttonBackground
                                 : AppTheme.cardBorder,
                             width: 0.8,
                           ),
@@ -442,7 +442,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                             fontWeight:
                                 isSelected ? FontWeight.w700 : FontWeight.w500,
                             color: isSelected
-                                ? const Color(0xFF09090B)
+                                ? AppTheme.buttonText
                                 : AppTheme.textSecondary,
                           ),
                         ),
@@ -459,22 +459,22 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                   textInputAction: TextInputAction.done,
                   style: const TextStyle(
                       fontSize: 14, color: AppTheme.textPrimary),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText:
                         'Note (optional, e.g. morning fasted, post walk)...',
-                    hintStyle: const TextStyle(
+                    hintStyle: TextStyle(
                         fontSize: 13, color: AppTheme.textMuted),
                     filled: true,
                     fillColor: AppTheme.surface,
-                    contentPadding: const EdgeInsets.symmetric(
+                    contentPadding: EdgeInsets.symmetric(
                         horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppTheme.cardBorder),
+                      borderRadius: AppRadii.mdBorderRadius,
+                      borderSide: BorderSide(color: AppTheme.cardBorder),
                     ),
                     enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(color: AppTheme.cardBorder),
+                      borderRadius: AppRadii.mdBorderRadius,
+                      borderSide: BorderSide(color: AppTheme.cardBorder),
                     ),
                   ),
                 ),
@@ -491,13 +491,13 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                         ? () => _handleSave(parsedWeight)
                         : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFAFAFA),
-                      foregroundColor: const Color(0xFF09090B),
+                      backgroundColor: AppTheme.buttonBackground,
+                      foregroundColor: AppTheme.buttonText,
                       disabledBackgroundColor: AppTheme.cardBorder,
                       disabledForegroundColor: AppTheme.textMuted,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadii.lgBorderRadius),
                       textStyle: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,

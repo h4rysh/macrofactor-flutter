@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 import 'apple_tactile_card.dart';
 
@@ -47,7 +46,7 @@ class PersistentSearchBar extends StatelessWidget {
                 Expanded(
                   child: AppleBouncy(
                     onTap: () {
-                      HapticFeedback.lightImpact();
+                      AppHaptics.lightImpact();
                       onSearchTap();
                     },
                     scaleDown: 0.98,
@@ -87,7 +86,7 @@ class PersistentSearchBar extends StatelessWidget {
                   child: AppleBouncy(
                     scaleDown: 0.90,
                     onTap: () {
-                      HapticFeedback.lightImpact();
+                      AppHaptics.lightImpact();
                       onCustomFoodTap();
                     },
                     child: Container(

@@ -53,7 +53,7 @@ class CoachingCheckinCard extends ConsumerWidget {
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: AppTheme.calories.withValues(alpha: 0.18),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadii.mdBorderRadius,
                   ),
                   child: const Icon(
                     Icons.auto_awesome_rounded,
@@ -111,9 +111,9 @@ class CoachingCheckinCard extends ConsumerWidget {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppTheme.calories,
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: AppRadii.lgBorderRadius,
               ),
               alignment: Alignment.center,
               child: const Row(
@@ -154,7 +154,7 @@ class CoachingCheckinCard extends ConsumerWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: AppTheme.expenditure.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadii.mdBorderRadius,
             ),
             child: const Icon(
               Icons.event_available_rounded,

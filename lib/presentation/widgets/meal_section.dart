@@ -116,7 +116,7 @@ class _FoodLogRowItem extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: AppRadii.mdBorderRadius,
         border: Border.all(color: AppTheme.cardBorder, width: 1),
       ),
       child: Row(

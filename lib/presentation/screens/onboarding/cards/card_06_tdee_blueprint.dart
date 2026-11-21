@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:sique/domain/legal/legal_copy.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
@@ -126,7 +125,7 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: AppRadii.xlBorderRadius,
                   border: Border.all(
                     color: AppTheme.calories.withValues(alpha: 0.35),
                   ),
@@ -187,7 +186,7 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: AppTheme.cardSurface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: AppRadii.lgBorderRadius,
                   border: Border.all(color: AppTheme.cardBorder),
                 ),
                 child: Column(
@@ -244,16 +243,16 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                             fontWeight: FontWeight.w800,
                             color: AppTheme.textPrimary,
                             fontFeatures: [FontFeature.tabularFigures()]),
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Enter known expenditure (kcal/day)',
-                          labelStyle: const TextStyle(
+                          labelStyle: TextStyle(
                               fontSize: 12, color: AppTheme.textSecondary),
                           filled: true,
                           fillColor: AppTheme.cardElevated,
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: AppRadii.mdBorderRadius,
                             borderSide:
-                                const BorderSide(color: AppTheme.cardBorder),
+                                BorderSide(color: AppTheme.cardBorder),
                           ),
                         ),
                         onChanged: (val) {
@@ -346,7 +345,7 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: AppTheme.cardSurface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: AppRadii.lgBorderRadius,
                   border: Border.all(color: AppTheme.cardBorder),
                 ),
                 child: const Column(
@@ -393,7 +392,7 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                   GestureDetector(
                     key: const Key('step_23_checkbox'),
                     onTap: () {
-                      HapticFeedback.selectionClick();
+                      AppHaptics.selectionClick();
                       setState(
                           () => _disclaimerAccepted = !_disclaimerAccepted);
                     },
@@ -426,15 +425,15 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                       key: const Key('onboarding_card_6_continue_btn'),
                       onTap: _disclaimerAccepted
                           ? () {
-                              HapticFeedback.lightImpact();
+                              AppHaptics.lightImpact();
                               _notifyUpdate();
                               widget.onNext();
                             }
                           : null,
                       backgroundColor: _disclaimerAccepted
-                          ? const Color(0xFFFAFAFA)
+                          ? AppTheme.buttonBackground
                           : AppTheme.cardElevated,
-                      borderRadius: 14,
+                      borderRadius: AppRadii.lg,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: Center(
                         child: Text(
@@ -445,7 +444,7 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
                             color: _disclaimerAccepted
-                                ? const Color(0xFF09090B)
+                                ? AppTheme.buttonText
                                 : AppTheme.textMuted,
                           ),
                         ),
@@ -495,7 +494,7 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
       padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 10),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
@@ -535,7 +534,7 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
     return GestureDetector(
       key: key,
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick();
         setState(() => _distributionMode = mode);
         _notifyUpdate();
       },
@@ -546,7 +545,7 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
           color: isSelected
               ? AppTheme.activeBlue.withValues(alpha: 0.15)
               : AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadii.mdBorderRadius,
           border: Border.all(
             color: isSelected ? AppTheme.activeBlue : AppTheme.cardBorder,
             width: isSelected ? 1.5 : 1.0,

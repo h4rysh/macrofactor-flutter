@@ -103,7 +103,7 @@ class WorkoutStatsHeroGrid extends ConsumerWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder),
       ),
       child: Column(

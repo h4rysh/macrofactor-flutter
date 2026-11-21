@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 import 'package:sique/presentation/widgets/sique_frosted_chrome.dart';
@@ -183,7 +182,7 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppTheme.cardSurface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: AppRadii.lgBorderRadius,
                   border: Border.all(color: AppTheme.cardBorder),
                 ),
                 child: Column(
@@ -226,7 +225,7 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
                             ),
                             child: GestureDetector(
                               onTap: () {
-                                HapticFeedback.selectionClick();
+                                AppHaptics.selectionClick();
                                 _setWorkoutCount(i);
                               },
                               child: AnimatedContainer(
@@ -287,7 +286,7 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
                               ),
                               child: GestureDetector(
                                 onTap: () {
-                                  HapticFeedback.selectionClick();
+                                  AppHaptics.selectionClick();
                                   _toggleDay(dayNum);
                                 },
                                 child: AnimatedContainer(
@@ -345,12 +344,12 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
                 child: AppleTactileCard(
                   key: const Key('onboarding_card_4_continue_btn'),
                   onTap: () {
-                    HapticFeedback.lightImpact();
+                    AppHaptics.lightImpact();
                     _notifyUpdate();
                     widget.onNext();
                   },
-                  backgroundColor: const Color(0xFFFAFAFA),
-                  borderRadius: 14,
+                  backgroundColor: AppTheme.buttonBackground,
+                  borderRadius: AppRadii.lg,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: const Center(
                     child: Text(
@@ -358,7 +357,7 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF09090B),
+                        color: AppTheme.buttonText,
                       ),
                     ),
                   ),
@@ -381,7 +380,7 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
 
     return AppleBouncy(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick();
         setState(() => _dailyActivity = slug);
         _notifyUpdate();
       },
@@ -392,7 +391,7 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
           color: isSelected
               ? AppTheme.activeBlue.withValues(alpha: 0.12)
               : AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadii.lgBorderRadius,
           border: Border.all(
             color: isSelected ? AppTheme.activeBlue : AppTheme.cardBorder,
             width: isSelected ? 1.5 : 1.0,
@@ -406,7 +405,7 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
                 color: isSelected
                     ? AppTheme.activeBlue.withValues(alpha: 0.25)
                     : AppTheme.cardElevated,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadii.mdBorderRadius,
               ),
               child: Icon(
                 icon,

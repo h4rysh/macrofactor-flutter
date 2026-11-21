@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/algorithms/coaching_engine.dart';
 import '../../providers/strategy_providers.dart';
@@ -88,7 +87,7 @@ class CheckinReviewSheet extends ConsumerWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: AppTheme.calories.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppRadii.mdBorderRadius,
                       ),
                       child: const Icon(
                         Icons.auto_awesome_rounded,
@@ -259,7 +258,7 @@ class CheckinReviewSheet extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppTheme.background,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: AppRadii.lgBorderRadius,
                     border: Border.all(color: AppTheme.cardBorder, width: 1),
                   ),
                   child: Column(
@@ -309,7 +308,7 @@ class CheckinReviewSheet extends ConsumerWidget {
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: AppTheme.expenditure.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: AppRadii.lgBorderRadius,
                     border: Border.all(
                       color: AppTheme.expenditure.withValues(alpha: 0.25),
                     ),
@@ -356,7 +355,7 @@ class CheckinReviewSheet extends ConsumerWidget {
                 AppleBouncy(
                   scaleDown: 0.97,
                   onTap: () {
-                    HapticFeedback.mediumImpact();
+                    AppHaptics.mediumImpact();
                     ref
                         .read(weeklyMacroProgramProvider.notifier)
                         .applyCheckIn(recommendation);
@@ -370,9 +369,9 @@ class CheckinReviewSheet extends ConsumerWidget {
                   },
                   child: Container(
                     height: 52,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFAFAFA),
-                      borderRadius: BorderRadius.circular(16),
+                    decoration: const BoxDecoration(
+                      color: AppTheme.buttonBackground,
+                      borderRadius: AppRadii.lgBorderRadius,
                     ),
                     child: const Center(
                       child: FittedBox(
@@ -382,7 +381,7 @@ class CheckinReviewSheet extends ConsumerWidget {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF09090B),
+                            color: AppTheme.buttonText,
                           ),
                         ),
                       ),
@@ -410,7 +409,7 @@ class CheckinReviewSheet extends ConsumerWidget {
                     height: 48,
                     decoration: BoxDecoration(
                       color: AppTheme.cardElevated,
-                      borderRadius: BorderRadius.circular(16),
+                      borderRadius: AppRadii.lgBorderRadius,
                       border: Border.all(color: AppTheme.cardBorder),
                     ),
                     child: const Center(

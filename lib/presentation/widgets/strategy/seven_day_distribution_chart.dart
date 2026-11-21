@@ -1,6 +1,5 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/strategy_providers.dart';
 import '../../theme/app_theme.dart';
@@ -24,7 +23,7 @@ class _SevenDayDistributionChartState
     final barW = width / count;
     final idx = (localPos.dx / barW).floor().clamp(0, count - 1);
     if (idx != _selectedDayIndex) {
-      HapticFeedback.selectionClick();
+      AppHaptics.selectionClick();
       setState(() => _selectedDayIndex = idx);
     }
   }
@@ -107,7 +106,7 @@ class _SevenDayDistributionChartState
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: AppTheme.cardElevated,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadii.mdBorderRadius,
                 border: Border.all(color: AppTheme.cardBorder, width: 0.8),
               ),
               child: FittedBox(
@@ -181,7 +180,7 @@ class _SevenDayDistributionChartState
                           child: GestureDetector(
                             behavior: HitTestBehavior.opaque,
                             onTap: () {
-                              HapticFeedback.selectionClick();
+                              AppHaptics.selectionClick();
                               setState(() => _selectedDayIndex = idx);
                             },
                             child: Padding(
@@ -281,7 +280,7 @@ class _SevenDayDistributionChartState
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
                 color: AppTheme.background,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: AppRadii.lgBorderRadius,
                 border: Border.all(color: AppTheme.cardBorder, width: 1),
               ),
               child: Row(

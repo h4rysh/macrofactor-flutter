@@ -73,7 +73,7 @@ class CheckinHistorySheet extends ConsumerWidget {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
                     color: AppTheme.cardElevated,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: AppRadii.lgBorderRadius,
                     border: Border.all(
                       color: AppTheme.cardBorder,
                       width: 1,
@@ -150,7 +150,7 @@ class CheckinHistorySheet extends ConsumerWidget {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: AppTheme.background,
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: AppRadii.lgBorderRadius,
                           border:
                               Border.all(color: AppTheme.cardBorder, width: 1),
                         ),

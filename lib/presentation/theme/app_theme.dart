@@ -8,6 +8,7 @@ import 'package:sique/presentation/theme/tokens/app_typography.dart';
 
 export 'extensions/macro_colors.dart';
 export 'tokens/app_colors.dart';
+export 'tokens/app_haptics.dart';
 export 'tokens/app_motion.dart';
 export 'tokens/app_radii.dart';
 export 'tokens/app_spacing.dart';
@@ -40,6 +41,12 @@ class AppTheme {
   static const Color trendWeight = AppColors.trendWeight;
   static const Color activeBlue = AppColors.activeBlue;
   static const Color buttonForeground = AppColors.buttonForeground;
+  static const Color buttonBackground = AppColors.buttonBackground;
+  static const Color buttonText = AppColors.buttonText;
+  static const Color caloriesSecondary = AppColors.caloriesSecondary;
+  static const Color calmOverBudget = AppColors.calmOverBudget;
+  static const Color chipBackground = AppColors.chipBackground;
+  static const Color chipBorder = AppColors.chipBorder;
 
   // ===========================================================================
   // Neutral Text Tokens (Forwarded from AppColors)

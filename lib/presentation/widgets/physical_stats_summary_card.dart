@@ -116,9 +116,9 @@ class PhysicalStatsSummaryCard extends ConsumerWidget {
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppTheme.cardElevated,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: AppRadii.mdBorderRadius,
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

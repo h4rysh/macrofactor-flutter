@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:clock/clock.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
 
 /// Tactile micro-interaction bouncy wrapper inspired by Apple iOS design.
@@ -105,7 +104,7 @@ class _AppleBouncyState extends State<AppleBouncy> {
 
   void _handleTap() {
     if (widget.enableHaptics) {
-      HapticFeedback.lightImpact();
+      AppHaptics.lightImpact();
     }
     widget.onTap?.call();
   }
@@ -157,7 +156,7 @@ class _AppleBouncyState extends State<AppleBouncy> {
         child: DecoratedBox(
           position: DecorationPosition.foreground,
           decoration: BoxDecoration(
-            borderRadius: widget.focusBorderRadius ?? BorderRadius.circular(16),
+            borderRadius: widget.focusBorderRadius ?? AppRadii.lgBorderRadius,
             border: _isFocused
                 ? Border.all(color: AppColors.activeBlue, width: 2.0)
                 : null,
@@ -258,7 +257,7 @@ class AppleBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: AppRadii.xlBorderRadius,
         border: Border.all(color: color.withValues(alpha: 0.35), width: 0.8),
       ),
       child: Row(

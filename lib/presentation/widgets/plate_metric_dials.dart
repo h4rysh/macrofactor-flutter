@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../domain/models/food_models.dart';
 import '../../domain/models/oil_modifier_display.dart';
 import '../theme/app_theme.dart';
@@ -26,7 +25,7 @@ class PlateMacroPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppTheme.cardElevated,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: AppRadii.mdBorderRadius,
         border: Border.all(color: color.withAlpha(80)),
       ),
       child: FittedBox(
@@ -162,12 +161,12 @@ class PlatePresetRow extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
                   color: isSelected
-                      ? const Color(0xFFFAFAFA)
+                      ? AppTheme.buttonBackground
                       : AppTheme.cardElevated,
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadii.mdBorderRadius,
                   border: Border.all(
                     color: isSelected
-                        ? const Color(0xFFFAFAFA)
+                        ? AppTheme.buttonBackground
                         : AppTheme.cardBorder,
                     width: 0.8,
                   ),
@@ -178,7 +177,7 @@ class PlatePresetRow extends StatelessWidget {
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
                     color: isSelected
-                        ? const Color(0xFF09090B)
+                        ? AppTheme.buttonText
                         : AppTheme.textSecondary,
                     fontFeatures: const [FontFeature.tabularFigures()],
                   ),
@@ -228,7 +227,7 @@ class PlateOilModifierSelector extends StatelessWidget {
                 child: AppleBouncy(
                   scaleDown: 0.94,
                   onTap: () {
-                    HapticFeedback.selectionClick();
+                    AppHaptics.selectionClick();
                     onSelected(oil);
                   },
                   child: Container(
@@ -238,7 +237,7 @@ class PlateOilModifierSelector extends StatelessWidget {
                       color: isSelected
                           ? AppTheme.activeBlue.withValues(alpha: 0.18)
                           : AppTheme.cardElevated,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: AppRadii.mdBorderRadius,
                       border: Border.all(
                         color: isSelected
                             ? AppTheme.activeBlue

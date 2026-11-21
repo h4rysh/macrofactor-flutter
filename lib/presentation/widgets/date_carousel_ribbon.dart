@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../theme/app_theme.dart';
 import 'animated_primitives.dart';
@@ -81,7 +80,7 @@ class DateCarouselRibbon extends StatelessWidget {
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () {
-                          HapticFeedback.selectionClick();
+                          AppHaptics.selectionClick();
                           onDateSelected(
                             DateTime(
                               selectedDate.year,
@@ -94,7 +93,7 @@ class DateCarouselRibbon extends StatelessWidget {
                       const SizedBox(width: 6),
                       GestureDetector(
                         onTap: () async {
-                          HapticFeedback.selectionClick();
+                          AppHaptics.selectionClick();
                           final picked = await showDatePicker(
                             context: context,
                             initialDate: selectedDate,
@@ -159,7 +158,7 @@ class DateCarouselRibbon extends StatelessWidget {
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: () {
-                          HapticFeedback.selectionClick();
+                          AppHaptics.selectionClick();
                           onDateSelected(
                             DateTime(
                               selectedDate.year,
@@ -194,7 +193,7 @@ class DateCarouselRibbon extends StatelessWidget {
               return AppleBouncy(
                 scaleDown: 0.94,
                 onTap: () {
-                  HapticFeedback.lightImpact();
+                  AppHaptics.lightImpact();
                   onDateSelected(day);
                 },
                 child: AnimatedContainer(

@@ -28,7 +28,7 @@ class SiqueErrorState extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: AppTheme.calories.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadii.mdBorderRadius,
           border: Border.all(
             color: AppTheme.calories.withValues(alpha: 0.35),
             width: 1,
@@ -142,7 +142,7 @@ class SiqueErrorState extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.calories.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: AppRadii.xlBorderRadius,
                     border: Border.all(
                       color: AppTheme.calories.withValues(alpha: 0.6),
                       width: 1,

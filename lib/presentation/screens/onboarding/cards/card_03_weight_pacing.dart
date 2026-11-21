@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/domain/validation/domain_validator.dart';
@@ -157,7 +156,7 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppTheme.cardSurface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: AppRadii.lgBorderRadius,
                   border: Border.all(color: AppTheme.cardBorder),
                 ),
                 child: Row(
@@ -223,7 +222,7 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppTheme.cardSurface,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: AppRadii.lgBorderRadius,
                     border: Border.all(
                       color: _isUnderweightWarning
                           ? AppTheme.calories
@@ -274,7 +273,7 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppTheme.calories.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadii.mdBorderRadius,
                     border: Border.all(
                       color: AppTheme.calories.withValues(alpha: 0.35),
                     ),
@@ -304,7 +303,7 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                       const SizedBox(height: 8),
                       InkWell(
                         onTap: () {
-                          HapticFeedback.lightImpact();
+                          AppHaptics.lightImpact();
                           final minSafe =
                               DomainValidator.minSafeWeightKg(widget.heightCm);
                           setState(() {
@@ -396,7 +395,7 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: AppTheme.cardSurface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: AppRadii.lgBorderRadius,
                   border: Border.all(color: AppTheme.cardBorder),
                 ),
                 child: Column(
@@ -436,9 +435,9 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                     Container(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 10),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: AppTheme.cardElevated,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: AppRadii.mdBorderRadius,
                       ),
                       child: Column(
                         children: [
@@ -520,15 +519,15 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                   key: const Key('step_15_continue_btn'),
                   onTap: _isValid
                       ? () {
-                          HapticFeedback.lightImpact();
+                          AppHaptics.lightImpact();
                           _notifyUpdate();
                           widget.onNext();
                         }
                       : null,
                   backgroundColor: _isValid
-                      ? const Color(0xFFFAFAFA)
+                      ? AppTheme.buttonBackground
                       : AppTheme.cardElevated,
-                  borderRadius: 14,
+                  borderRadius: AppRadii.lg,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Center(
                     child: Text(
@@ -539,7 +538,7 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: _isValid
-                            ? const Color(0xFF09090B)
+                            ? AppTheme.buttonText
                             : AppTheme.textMuted,
                       ),
                     ),
@@ -563,7 +562,7 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
     return Expanded(
       child: AppleBouncy(
         onTap: () {
-          HapticFeedback.selectionClick();
+          AppHaptics.selectionClick();
           setState(() => _ratePct = rate);
           _notifyUpdate();
         },
@@ -573,7 +572,7 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
             color: isSelected
                 ? AppTheme.calories.withValues(alpha: 0.15)
                 : AppTheme.cardSurface,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: AppRadii.mdBorderRadius,
             border: Border.all(
               color: isSelected ? AppTheme.calories : AppTheme.cardBorder,
               width: isSelected ? 1.5 : 1.0,

@@ -161,7 +161,7 @@ class MoreScreen extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder),
       ),
       child: Column(
@@ -170,7 +170,7 @@ class MoreScreen extends ConsumerWidget {
           const Row(
             children: [
               Icon(Icons.restaurant_menu_rounded,
-                  size: 16, color: Color(0xFFA1A1AA)),
+                  size: 16, color: AppTheme.textSecondary),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -237,7 +237,7 @@ class MoreScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
           color: AppTheme.calories.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadii.lgBorderRadius,
           border: Border.all(
             color: AppTheme.calories.withValues(alpha: 0.3),
             width: 1,
@@ -304,7 +304,7 @@ class MoreScreen extends ConsumerWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadii.lgBorderRadius,
           border: Border.all(color: AppTheme.cardBorder),
         ),
         child: Row(
@@ -404,7 +404,7 @@ class MoreScreen extends ConsumerWidget {
         margin: const EdgeInsets.only(bottom: 10),
         decoration: BoxDecoration(
           color: AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadii.lgBorderRadius,
           border: Border.all(color: AppTheme.cardBorder),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -412,13 +412,13 @@ class MoreScreen extends ConsumerWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppTheme.cardElevated,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadii.mdBorderRadius,
               ),
               child: Icon(
                 icon,
-                color: const Color(0xFFA1A1AA),
+                color: AppTheme.textSecondary,
                 size: 20,
               ),
             ),

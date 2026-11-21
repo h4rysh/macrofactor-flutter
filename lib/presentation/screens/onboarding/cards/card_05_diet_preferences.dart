@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
@@ -250,7 +249,7 @@ class _Card05DietPreferencesState extends State<Card05DietPreferences> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: AppTheme.cardSurface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: AppRadii.lgBorderRadius,
                   border: Border.all(color: AppTheme.cardBorder),
                 ),
                 child: Column(
@@ -297,7 +296,7 @@ class _Card05DietPreferencesState extends State<Card05DietPreferences> {
                     margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
                       color: AppTheme.cardElevated,
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: AppRadii.mdBorderRadius,
                       border:
                           Border.all(color: AppTheme.cardBorder, width: 0.5),
                     ),
@@ -344,12 +343,12 @@ class _Card05DietPreferencesState extends State<Card05DietPreferences> {
                     child: AppleTactileCard(
                       key: const Key('onboarding_card_5_continue_btn'),
                       onTap: () {
-                        HapticFeedback.lightImpact();
+                        AppHaptics.lightImpact();
                         _notifyUpdate();
                         widget.onNext();
                       },
-                      backgroundColor: const Color(0xFFFAFAFA),
-                      borderRadius: 14,
+                      backgroundColor: AppTheme.buttonBackground,
+                      borderRadius: AppRadii.lg,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       child: const Center(
                         child: Text(
@@ -357,7 +356,7 @@ class _Card05DietPreferencesState extends State<Card05DietPreferences> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF09090B),
+                            color: AppTheme.buttonText,
                           ),
                         ),
                       ),
@@ -379,7 +378,7 @@ class _Card05DietPreferencesState extends State<Card05DietPreferences> {
   }) {
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick();
         onTap();
       },
       child: AnimatedContainer(
@@ -389,7 +388,7 @@ class _Card05DietPreferencesState extends State<Card05DietPreferences> {
           color: isSelected
               ? AppTheme.activeBlue.withValues(alpha: 0.15)
               : AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: AppRadii.mdBorderRadius,
           border: Border.all(
             color: isSelected ? AppTheme.activeBlue : AppTheme.cardBorder,
             width: isSelected ? 1.5 : 1.0,
@@ -417,7 +416,7 @@ class _Card05DietPreferencesState extends State<Card05DietPreferences> {
 
     return AppleBouncy(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick();
         setState(() => _proteinPref = pref);
         _notifyUpdate();
       },
@@ -428,7 +427,7 @@ class _Card05DietPreferencesState extends State<Card05DietPreferences> {
           color: isSelected
               ? AppTheme.protein.withValues(alpha: 0.12)
               : AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadii.lgBorderRadius,
           border: Border.all(
             color: isSelected ? AppTheme.protein : AppTheme.cardBorder,
             width: isSelected ? 1.5 : 1.0,
@@ -484,7 +483,7 @@ class _Card05DietPreferencesState extends State<Card05DietPreferences> {
 
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick();
         setState(() => _oilDefault = slug);
         _notifyUpdate();
       },

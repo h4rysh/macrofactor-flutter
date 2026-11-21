@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
@@ -206,7 +205,7 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
                   color: AppTheme.cardSurface,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: AppRadii.lgBorderRadius,
                   border: Border.all(color: AppTheme.cardBorder),
                 ),
                 child: Row(
@@ -241,8 +240,8 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.activeBlue,
                         side: const BorderSide(color: AppTheme.cardBorder),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: AppRadii.mdBorderRadius),
                       ),
                     ),
                   ],
@@ -257,7 +256,7 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppTheme.calories.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: AppRadii.mdBorderRadius,
                     border: Border.all(
                       color: AppTheme.calories.withValues(alpha: 0.35),
                     ),
@@ -343,15 +342,15 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                   key: const Key('onboarding_card_2_continue_btn'),
                   onTap: _isAdult
                       ? () {
-                          HapticFeedback.lightImpact();
+                          AppHaptics.lightImpact();
                           _notifyUpdate();
                           widget.onNext();
                         }
                       : null,
                   backgroundColor: _isAdult
-                      ? const Color(0xFFFAFAFA)
+                      ? AppTheme.buttonBackground
                       : AppTheme.cardElevated,
-                  borderRadius: 14,
+                  borderRadius: AppRadii.lg,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   child: Center(
                     child: Text(
@@ -360,7 +359,7 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: _isAdult
-                            ? const Color(0xFF09090B)
+                            ? AppTheme.buttonText
                             : AppTheme.textMuted,
                       ),
                     ),
@@ -383,7 +382,7 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
     return GestureDetector(
       key: key,
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick();
         setState(() => _isMale = isMaleOption);
         _notifyUpdate();
       },
@@ -394,7 +393,7 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
           color: isSelected
               ? AppTheme.activeBlue.withValues(alpha: 0.15)
               : AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadii.lgBorderRadius,
           border: Border.all(
             color: isSelected ? AppTheme.activeBlue : AppTheme.cardBorder,
             width: isSelected ? 1.5 : 1.0,
@@ -482,7 +481,7 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder),
       ),
       child: _heightInCm
@@ -587,7 +586,7 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder),
       ),
       child: Column(

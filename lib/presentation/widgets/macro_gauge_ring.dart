@@ -98,7 +98,7 @@ class MacroGaugeRing extends StatelessWidget {
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
                             color: AppTheme.surface.withValues(alpha: 0.9),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: AppRadii.mdBorderRadius,
                             border: Border.all(
                               color: AppTheme.cardBorder.withValues(alpha: 0.8),
                               width: 0.8,
@@ -113,7 +113,7 @@ class MacroGaugeRing extends StatelessWidget {
                               fontWeight: FontWeight.w600,
                               color: remainingCalories >= 0
                                   ? AppTheme.calories
-                                  : const Color(0xFF818CF8),
+                                  : AppTheme.calmOverBudget,
                             ),
                           ),
                         ),

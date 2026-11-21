@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../theme/app_theme.dart';
 import '../apple_tactile_card.dart';
 
@@ -26,7 +25,7 @@ class WizardSelectionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppleTactileCard(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick();
         onTap();
       },
       backgroundColor:
@@ -46,7 +45,7 @@ class WizardSelectionCard extends StatelessWidget {
               color: selected
                   ? accentColor.withValues(alpha: 0.25)
                   : AppTheme.cardElevated,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadii.mdBorderRadius,
             ),
             child: Icon(
               icon,
@@ -112,7 +111,7 @@ class WizardSliderTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder, width: 1),
       ),
       child: Column(
@@ -160,7 +159,7 @@ class WizardSliderTile extends StatelessWidget {
             inactiveColor: AppTheme.cardBorder,
             onChanged: (newVal) {
               if (newVal.round() != value.round()) {
-                HapticFeedback.selectionClick();
+                AppHaptics.selectionClick();
               }
               onChanged(newVal);
             },
@@ -190,7 +189,7 @@ class WizardChoiceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick();
         onTap();
       },
       child: Container(
@@ -199,7 +198,7 @@ class WizardChoiceChip extends StatelessWidget {
           color: selected
               ? AppTheme.calories.withValues(alpha: 0.15)
               : AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadii.lgBorderRadius,
           border: Border.all(
             color: selected ? AppTheme.calories : AppTheme.cardBorder,
             width: 1.5,
@@ -253,7 +252,7 @@ class WizardSmallChoiceChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
-        HapticFeedback.selectionClick();
+        AppHaptics.selectionClick();
         onTap();
       },
       child: Container(
@@ -262,7 +261,7 @@ class WizardSmallChoiceChip extends StatelessWidget {
           color: selected
               ? AppTheme.calories.withValues(alpha: 0.15)
               : AppTheme.cardSurface,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: AppRadii.mdBorderRadius,
           border: Border.all(
             color: selected ? AppTheme.calories : AppTheme.cardBorder,
             width: 1,

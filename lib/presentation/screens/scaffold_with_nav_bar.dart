@@ -1,8 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../theme/app_theme.dart';
-import '../theme/tokens/app_haptics.dart';
 import '../widgets/app_lifecycle_sync_observer.dart';
 import '../widgets/apple_tactile_card.dart';
 import '../widgets/sique_bouncy.dart';
@@ -40,7 +38,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
 
   void _onTabSelected(int index) {
     if (_currentIndex != index) {
-      HapticFeedback.selectionClick();
+      AppHaptics.selectionClick();
       setState(() => _currentIndex = index);
     }
   }
@@ -132,7 +130,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                                 width: 50,
                                 height: 50,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFAFAFA),
+                                  color: AppTheme.buttonBackground,
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
@@ -150,7 +148,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                                 ),
                                 child: const Icon(
                                   Icons.add_rounded,
-                                  color: Color(0xFF09090B),
+                                  color: AppTheme.buttonText,
                                   size: 30,
                                 ),
                               ),
@@ -193,7 +191,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
   }) {
     final isSelected = _currentIndex == index;
     final color =
-        isSelected ? const Color(0xFFFAFAFA) : const Color(0xFFA1A1AA);
+        isSelected ? AppTheme.buttonBackground : AppTheme.textSecondary;
     final effectiveIcon =
         (isSelected && selectedIcon != null) ? selectedIcon : icon;
 
@@ -210,7 +208,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
             color: isSelected
                 ? Colors.white.withValues(alpha: 0.08)
                 : Colors.transparent,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: AppRadii.lgBorderRadius,
             border: Border.all(
               color: isSelected
                   ? Colors.white.withValues(alpha: 0.16)

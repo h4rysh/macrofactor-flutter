@@ -58,7 +58,7 @@ class WizardPreviewStep extends StatelessWidget {
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: AppTheme.cardSurface,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: AppRadii.xlBorderRadius,
             border: Border.all(color: AppTheme.cardBorder, width: 1),
           ),
           child: Column(
@@ -165,7 +165,7 @@ class WizardPreviewStep extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(
           color: isWorkout
               ? AppTheme.calories.withValues(alpha: 0.35)

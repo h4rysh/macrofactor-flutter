@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
-import '../theme/tokens/app_haptics.dart';
 import '../widgets/animated_primitives.dart';
 import '../widgets/expenditure_card.dart';
 import '../widgets/macro_gauge_ring.dart';

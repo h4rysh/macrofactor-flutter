@@ -19,11 +19,11 @@ class WelcomeScreen extends StatelessWidget {
           height: 44,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [AppTheme.calories, Color(0xFFFF8A65)],
+              colors: [AppTheme.calories, AppTheme.caloriesSecondary],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: AppRadii.mdBorderRadius,
             boxShadow: [
               BoxShadow(
                 color: AppTheme.calories.withValues(alpha: 0.35),
@@ -75,14 +75,16 @@ class WelcomeScreen extends StatelessWidget {
 
     final primaryCta = AppleTactileCard(
       key: const Key('welcome_configure_strategy_btn'),
+      semanticLabel: 'Build my strategy — 2 minutes',
       onTap: () {
+        AppHaptics.lightImpact();
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => const OnboardingFlowScreen(),
           ),
         );
       },
-      backgroundColor: const Color(0xFFFAFAFA),
+      backgroundColor: AppTheme.buttonBackground,
       borderRadius: 16,
       padding: const EdgeInsets.symmetric(vertical: 18),
       child: const FittedBox(
@@ -95,13 +97,13 @@ class WelcomeScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: Color(0xFF09090B),
+                color: AppTheme.buttonText,
               ),
             ),
             SizedBox(width: 8),
             Icon(
               Icons.arrow_forward_rounded,
-              color: Color(0xFF09090B),
+              color: AppTheme.buttonText,
               size: 20,
             ),
           ],
@@ -206,13 +208,17 @@ class _LiveMiniPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.cardBorder, width: 1),
-      ),
+    return Semantics(
+      label:
+          'Dynamic Bayesian Expenditure preview showing adaptive calorie and macro target rings',
+      container: true,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.cardSurface,
+          borderRadius: AppRadii.lgBorderRadius,
+          border: Border.all(color: AppTheme.cardBorder, width: 1),
+        ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -222,7 +228,7 @@ class _LiveMiniPreviewCard extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
                   color: AppTheme.expenditure.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: AppRadii.mdBorderRadius,
                 ),
                 child: const Icon(
                   Icons.trending_up_rounded,
@@ -246,9 +252,9 @@ class _LiveMiniPreviewCard extends StatelessWidget {
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: AppTheme.cardElevated,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadii.mdBorderRadius,
             ),
             child: Row(
               children: [
@@ -321,7 +327,8 @@ class _LiveMiniPreviewCard extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -399,7 +406,7 @@ class _FeatureTile extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: AppRadii.lgBorderRadius,
         border: Border.all(color: AppTheme.cardBorder, width: 1),
       ),
       child: Row(
@@ -409,7 +416,7 @@ class _FeatureTile extends StatelessWidget {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: AppRadii.mdBorderRadius,
             ),
             child: Icon(icon, color: iconColor, size: 22),
           ),

@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:sique/presentation/widgets/sique_bouncy.dart';
 import '../../domain/models/food_models.dart';
 import '../theme/app_theme.dart';
@@ -176,14 +175,14 @@ class QuickActionsSheet extends StatelessWidget {
   }) {
     return SiqueBouncy(
       onTap: () {
-        HapticFeedback.lightImpact();
+        AppHaptics.lightImpact();
         onTap();
       },
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: AppTheme.cardElevated,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: AppRadii.lgBorderRadius,
           border: Border.all(color: AppTheme.cardBorder, width: 0.8),
         ),
         child: Column(
@@ -194,7 +193,7 @@ class QuickActionsSheet extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: AppRadii.mdBorderRadius,
               ),
               child: Icon(icon, color: color, size: 22),
             ),
@@ -231,14 +230,14 @@ class QuickActionsSheet extends StatelessWidget {
   }) {
     return SiqueBouncy(
       onTap: () {
-        HapticFeedback.lightImpact();
+        AppHaptics.lightImpact();
         onTap();
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
         decoration: BoxDecoration(
           color: AppTheme.cardElevated,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: AppRadii.lgBorderRadius,
           border: Border.all(color: AppTheme.cardBorder, width: 0.8),
         ),
         child: Column(
@@ -249,7 +248,7 @@ class QuickActionsSheet extends StatelessWidget {
               height: 34,
               decoration: BoxDecoration(
                 color: color.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: AppRadii.mdBorderRadius,
               ),
               child: Icon(icon, color: color, size: 18),
             ),
