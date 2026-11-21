@@ -630,7 +630,7 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                     hintText: '75.0',
                   ),
                   onChanged: (val) {
-                    final parsed = double.tryParse(val);
+                    final parsed = double.tryParse(val.replaceAll(',', '.'));
                     if (parsed != null && parsed >= 30.0 && parsed <= 300.0) {
                       setState(() {
                         _weightKg = _weightInKg ? parsed : parsed / 2.20462;

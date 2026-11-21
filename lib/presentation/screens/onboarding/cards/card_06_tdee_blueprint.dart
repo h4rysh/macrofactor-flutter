@@ -269,13 +269,16 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                         ),
                         onChanged: (val) {
                           setState(() {});
-                          final parsed = double.tryParse(val);
+                          final sanitized = val.replaceAll(',', '.');
+                          final parsed = double.tryParse(sanitized);
                           if (parsed != null &&
                               parsed >= 800 &&
                               parsed <= 6000) {
                             _customTdee = parsed;
-                            _notifyUpdate();
+                          } else {
+                            _customTdee = null;
                           }
+                          _notifyUpdate();
                         },
                       ),
                     ],

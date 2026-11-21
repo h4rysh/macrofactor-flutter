@@ -173,8 +173,12 @@ class FirebaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> deleteAccount({String? password}) async {
-    if (_currentCachedUser == null) {
-      throw StateError('No active user session');
+    if (_currentCachedUser == null ||
+        _currentCachedUser!.authProvider == AuthProviderType.guest) {
+      _db.clearAccountSession();
+      _currentCachedUser = null;
+      _authStateController.add(null);
+      return;
     }
 
     // Provider-aware re-authentication check
