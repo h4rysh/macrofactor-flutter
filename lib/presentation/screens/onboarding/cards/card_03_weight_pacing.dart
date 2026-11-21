@@ -85,8 +85,21 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
     return DomainValidator.isUnderweightBmi(_targetWeightKg, widget.heightCm);
   }
 
+  bool get _isDirectionWarning {
+    if (widget.goalType == GoalType.fatLoss &&
+        _targetWeightKg > widget.currentWeightKg) {
+      return true;
+    }
+    if (widget.goalType == GoalType.muscleGain &&
+        _targetWeightKg < widget.currentWeightKg) {
+      return true;
+    }
+    return false;
+  }
+
   bool get _isValid {
     if (_isUnderweightWarning) return false;
+    if (_isDirectionWarning) return false;
     if (_targetWeightKg < DomainValidator.minWeightKg ||
         _targetWeightKg > DomainValidator.maxWeightKg) {
       return false;
@@ -260,6 +273,41 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textSecondary)),
+                    ],
+                  ),
+                ),
+              ],
+
+              // Goal Direction Consistency Guardrail Banner
+              if (_isDirectionWarning) ...[
+                const SizedBox(height: 10),
+                Container(
+                  key: const Key('step_15_direction_guardrail_banner'),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.calories.withValues(alpha: 0.12),
+                    borderRadius: AppRadii.mdBorderRadius,
+                    border: Border.all(
+                      color: AppTheme.calories.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline_rounded,
+                          color: AppTheme.calories, size: 18),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          widget.goalType == GoalType.fatLoss
+                              ? 'Fat loss goal requires target weight lower than current weight (${widget.currentWeightKg.toStringAsFixed(1)} kg).'
+                              : 'Muscle gain goal requires target weight higher than current weight (${widget.currentWeightKg.toStringAsFixed(1)} kg).',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.calories,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),

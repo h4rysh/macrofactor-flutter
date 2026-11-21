@@ -38,8 +38,11 @@ class MoreScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('More'),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           // 1. ACCOUNT & PROFILE
           _buildSectionHeader('ACCOUNT & PROFILE'),
@@ -138,7 +141,9 @@ class MoreScreen extends ConsumerWidget {
           const SizedBox(height: 110),
         ],
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildSectionHeader(String title) {

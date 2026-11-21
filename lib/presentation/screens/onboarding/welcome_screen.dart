@@ -219,9 +219,9 @@ class _LiveMiniPreviewCard extends StatelessWidget {
           borderRadius: AppRadii.lgBorderRadius,
           border: Border.all(color: AppTheme.cardBorder, width: 1),
         ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           Row(
             children: [
               Container(

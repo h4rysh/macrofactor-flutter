@@ -29,25 +29,30 @@ class ProfileTargetsScreen extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        children: [
-          PhysicalStatsCard(ref: ref, profile: profile),
-          const SizedBox(height: 16),
-          GoalSelectionCard(ref: ref, profile: profile),
-          const SizedBox(height: 16),
-          CalorieTargetCard(
-            ref: ref,
-            profile: profile,
-            expenditureKcal: expenditureState.expenditureKcal,
-            target: macroTarget,
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            children: [
+              PhysicalStatsCard(ref: ref, profile: profile),
+              const SizedBox(height: 16),
+              GoalSelectionCard(ref: ref, profile: profile),
+              const SizedBox(height: 16),
+              CalorieTargetCard(
+                ref: ref,
+                profile: profile,
+                expenditureKcal: expenditureState.expenditureKcal,
+                target: macroTarget,
+              ),
+              const SizedBox(height: 16),
+              ProteinPreferenceCard(ref: ref, profile: profile),
+              const SizedBox(height: 16),
+              MacroDistributionCard(target: macroTarget),
+              const SizedBox(height: 32),
+            ],
           ),
-          const SizedBox(height: 16),
-          ProteinPreferenceCard(ref: ref, profile: profile),
-          const SizedBox(height: 16),
-          MacroDistributionCard(target: macroTarget),
-          const SizedBox(height: 32),
-        ],
+        ),
       ),
     );
   }

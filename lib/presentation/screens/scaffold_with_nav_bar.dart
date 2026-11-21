@@ -46,7 +46,16 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
   @override
   Widget build(BuildContext context) {
     return AppLifecycleSyncObserver(
-      child: Scaffold(
+      child: PopScope(
+        canPop: _currentIndex == 0,
+        onPopInvokedWithResult: (didPop, result) {
+          if (didPop) return;
+          if (_currentIndex != 0) {
+            AppHaptics.lightImpact();
+            setState(() => _currentIndex = 0);
+          }
+        },
+        child: Scaffold(
         extendBody: true,
         backgroundColor: AppTheme.background,
         body: AnimatedSwitcher(
@@ -182,7 +191,8 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 
   Widget _buildNavItem({

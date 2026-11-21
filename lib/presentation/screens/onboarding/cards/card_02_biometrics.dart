@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
@@ -501,7 +502,9 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                   child: TextField(
                     key: const Key('step_04_height_input'),
                     controller: _heightController,
-                    keyboardType: TextInputType.number,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: false),
+                    textInputAction: TextInputAction.next,
                     style: const TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w800,
@@ -607,8 +610,16 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                 child: TextField(
                   key: const Key('step_05_weight_input'),
                   controller: _weightController,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                    signed: false,
+                  ),
+                  textInputAction: TextInputAction.done,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.allow(
+                      RegExp(r'^\d*[\.,]?\d{0,1}'),
+                    ),
+                  ],
                   style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,

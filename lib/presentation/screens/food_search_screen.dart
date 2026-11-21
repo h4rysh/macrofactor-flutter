@@ -293,6 +293,8 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                   autofocus: true,
                   keyboardType: TextInputType.text,
                   textInputAction: TextInputAction.search,
+                  textCapitalization: TextCapitalization.none,
+                  scrollPadding: const EdgeInsets.only(bottom: 250),
                   onSubmitted: (query) {
                     _debounceTimer?.cancel();
                     _performSearch(query);

@@ -243,22 +243,35 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                             fontWeight: FontWeight.w800,
                             color: AppTheme.textPrimary,
                             fontFeatures: [FontFeature.tabularFigures()]),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Enter known expenditure (kcal/day)',
-                          labelStyle: TextStyle(
+                          labelStyle: const TextStyle(
                               fontSize: 12, color: AppTheme.textSecondary),
+                          errorText: (_hasOverride &&
+                                  _overrideController.text.isNotEmpty &&
+                                  (double.tryParse(_overrideController.text) ==
+                                          null ||
+                                      double.tryParse(
+                                              _overrideController.text)! <
+                                          800 ||
+                                      double.tryParse(
+                                              _overrideController.text)! >
+                                          6000))
+                              ? 'Must be between 800 and 6,000 kcal/day'
+                              : null,
                           filled: true,
                           fillColor: AppTheme.cardElevated,
-                          border: OutlineInputBorder(
+                          border: const OutlineInputBorder(
                             borderRadius: AppRadii.mdBorderRadius,
                             borderSide:
                                 BorderSide(color: AppTheme.cardBorder),
                           ),
                         ),
                         onChanged: (val) {
+                          setState(() {});
                           final parsed = double.tryParse(val);
                           if (parsed != null &&
-                              parsed >= 1000 &&
+                              parsed >= 800 &&
                               parsed <= 6000) {
                             _customTdee = parsed;
                             _notifyUpdate();

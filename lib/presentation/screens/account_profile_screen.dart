@@ -54,22 +54,27 @@ class AccountProfileScreen extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        children: const [
-          GoogleAccountCard(),
-          SizedBox(height: 16),
-          WorkoutStatsHeroGrid(),
-          SizedBox(height: 16),
-          WorkoutConsistencyTracker(),
-          SizedBox(height: 16),
-          RecentWorkoutsFeed(),
-          SizedBox(height: 16),
-          PhysicalStatsSummaryCard(),
-          SizedBox(height: 16),
-          HealthConnectSyncCard(),
-          SizedBox(height: 32),
-        ],
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 640),
+          child: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            children: const [
+              GoogleAccountCard(),
+              SizedBox(height: 16),
+              WorkoutStatsHeroGrid(),
+              SizedBox(height: 16),
+              WorkoutConsistencyTracker(),
+              SizedBox(height: 16),
+              RecentWorkoutsFeed(),
+              SizedBox(height: 16),
+              PhysicalStatsSummaryCard(),
+              SizedBox(height: 16),
+              HealthConnectSyncCard(),
+              SizedBox(height: 32),
+            ],
+          ),
+        ),
       ),
     );
   }

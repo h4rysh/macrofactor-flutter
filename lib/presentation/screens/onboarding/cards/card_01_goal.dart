@@ -187,6 +187,7 @@ class Card01Goal extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
+                    softWrap: true,
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.textSecondary,

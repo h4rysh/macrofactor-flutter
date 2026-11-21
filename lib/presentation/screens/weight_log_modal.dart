@@ -73,7 +73,8 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
 
   void _adjustWeight(double delta) {
     AppHaptics.lightImpact();
-    final current = double.tryParse(_weightController.text) ?? 70.0;
+    final current =
+        double.tryParse(_weightController.text.replaceAll(',', '.')) ?? 70.0;
     final updated = (current + delta).clamp(10.0, 500.0);
     setState(() {
       _weightController.text = updated.toStringAsFixed(1);
@@ -163,7 +164,8 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
 
   @override
   Widget build(BuildContext context) {
-    final double? parsedWeight = double.tryParse(_weightController.text);
+    final double? parsedWeight =
+        double.tryParse(_weightController.text.replaceAll(',', '.'));
     final existingWeights = ref.watch(weightLogsProvider);
     final mediaQuery = MediaQuery.of(context);
     final existingEntryForDate = existingWeights
@@ -333,11 +335,14 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                                   controller: _weightController,
                                   keyboardType:
                                       const TextInputType.numberWithOptions(
-                                          decimal: true),
+                                    decimal: true,
+                                    signed: false,
+                                  ),
                                   textInputAction: TextInputAction.next,
                                   inputFormatters: [
                                     FilteringTextInputFormatter.allow(
-                                        RegExp(r'^\d*\.?\d*')),
+                                      RegExp(r'^\d*[\.,]?\d*'),
+                                    ),
                                   ],
                                   autofocus: true,
                                   onChanged: (_) => setState(() {}),

@@ -267,6 +267,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
         child: Stack(
           children: [
             CustomScrollView(
+              key: const PageStorageKey('timeline_scroll_view'),
               slivers: [
                 // 1. Signature Date Carousel Ribbon with Authentic Header:
                 // [ ≡ ]           < Today ▾ >           [ ☰ ]

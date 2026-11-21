@@ -123,7 +123,12 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
     );
     _quantityFocusNode = FocusNode();
     _quantityFocusNode.addListener(() {
-      if (!_quantityFocusNode.hasFocus) {
+      if (_quantityFocusNode.hasFocus) {
+        _quantityController.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: _quantityController.text.length,
+        );
+      } else {
         final parsed = _parseQuantity(_quantityController.text);
         if (parsed == null || parsed <= 0) {
           _quantityController.text = _formatQuantity(_quantity);

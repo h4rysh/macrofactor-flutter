@@ -390,6 +390,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
         ),
       ),
       body: PageView(
+        key: const PageStorageKey('onboarding_pageview'),
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
         onPageChanged: (idx) {

@@ -60,9 +60,14 @@ class StrategyScreen extends ConsumerWidget {
           const SizedBox(width: 4),
         ],
       ),
-      body: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 580),
+          child: SingleChildScrollView(
+            key: const PageStorageKey('strategy_scroll_view'),
+            physics: const BouncingScrollPhysics(),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -246,7 +251,9 @@ class StrategyScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildAdherenceNeutralCard() {

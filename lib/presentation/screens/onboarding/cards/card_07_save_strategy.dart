@@ -228,6 +228,7 @@ class _Card07SaveStrategyState extends ConsumerState<Card07SaveStrategy> {
                         const Expanded(
                           child: Text(
                             'Enable Automatic Ingestion',
+                            softWrap: true,
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,

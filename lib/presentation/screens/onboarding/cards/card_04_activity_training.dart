@@ -308,16 +308,19 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
                                     ),
                                   ),
                                   alignment: Alignment.center,
-                                  child: Text(
-                                    _dayNames[idx],
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: isTraining
-                                          ? FontWeight.w700
-                                          : FontWeight.w500,
-                                      color: isTraining
-                                          ? AppTheme.activeBlue
-                                          : AppTheme.textSecondary,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      _dayNames[idx],
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: isTraining
+                                            ? FontWeight.w700
+                                            : FontWeight.w500,
+                                        color: isTraining
+                                            ? AppTheme.activeBlue
+                                            : AppTheme.textSecondary,
+                                      ),
                                     ),
                                   ),
                                 ),
