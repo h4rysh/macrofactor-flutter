@@ -113,15 +113,19 @@ class _SevenDayDistributionChartState
             ),
             const SizedBox(height: 12),
 
-            // Floating Tooltip above scrubbable bars
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 180),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: AppTheme.cardElevated,
-                borderRadius: AppRadii.mdBorderRadius,
-                border: Border.all(color: AppTheme.cardBorder, width: 0.8),
-              ),
+            // Floating Tooltip smoothly tracking active scrubbed column
+            AnimatedAlign(
+              alignment: Alignment(-1.0 + (_selectedDayIndex / 3.0), 0),
+              duration: const Duration(milliseconds: 160),
+              curve: Curves.easeOutCubic,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardElevated,
+                  borderRadius: AppRadii.mdBorderRadius,
+                  border: Border.all(color: AppTheme.cardBorder, width: 0.8),
+                ),
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 alignment: Alignment.centerLeft,
@@ -158,6 +162,7 @@ class _SevenDayDistributionChartState
                   ],
                 ),
               ),
+            ),
             ),
             const SizedBox(height: 12),
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,11 +44,31 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
     }
   }
 
+  Timer? _stepperTimer;
+
   @override
   void dispose() {
+    _stepperTimer?.cancel();
     _weightController.dispose();
     _noteController.dispose();
     super.dispose();
+  }
+
+  void _startStepperHold(double delta) {
+    _stepperTimer?.cancel();
+    int ticks = 0;
+    _adjustWeight(delta);
+    _stepperTimer = Timer.periodic(const Duration(milliseconds: 140), (timer) {
+      ticks++;
+      final step =
+          (ticks > 12) ? (delta * 5) : (ticks > 5 ? (delta * 2) : delta);
+      _adjustWeight(step);
+    });
+  }
+
+  void _stopStepperHold() {
+    _stepperTimer?.cancel();
+    _stepperTimer = null;
   }
 
   void _adjustWeight(double delta) {
@@ -80,7 +101,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
     setState(() => _isSubmitting = true);
 
     try {
-      AppHaptics.mediumImpact();
+      AppHaptics.successFeedback();
       final note = _noteController.text.trim();
       ref.read(weightLogsProvider.notifier).logWeight(
             _selectedDate,
@@ -261,26 +282,31 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                     Semantics(
                       button: true,
                       label: 'Decrease weight by 0.1 kilograms',
-                      child: AppleBouncy(
-                        scaleDown: 0.90,
-                        onTap: () => _adjustWeight(-0.1),
-                        child: Container(
-                          width: 48,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: AppTheme.cardElevated,
-                            borderRadius: AppRadii.lgBorderRadius,
-                            border: Border.all(
-                                color: AppTheme.cardBorder, width: 0.8),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              '-0.1',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textSecondary,
-                                fontFeatures: [FontFeature.tabularFigures()],
+                      child: GestureDetector(
+                        onLongPressStart: (_) => _startStepperHold(-0.1),
+                        onLongPressEnd: (_) => _stopStepperHold(),
+                        onLongPressCancel: _stopStepperHold,
+                        child: AppleBouncy(
+                          scaleDown: 0.90,
+                          onTap: () => _adjustWeight(-0.1),
+                          child: Container(
+                            width: 48,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: AppTheme.cardElevated,
+                              borderRadius: AppRadii.lgBorderRadius,
+                              border: Border.all(
+                                  color: AppTheme.cardBorder, width: 0.8),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                '-0.1',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.textSecondary,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
                               ),
                             ),
                           ),
@@ -349,26 +375,31 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                     Semantics(
                       button: true,
                       label: 'Increase weight by 0.1 kilograms',
-                      child: AppleBouncy(
-                        scaleDown: 0.90,
-                        onTap: () => _adjustWeight(0.1),
-                        child: Container(
-                          width: 48,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: AppTheme.cardElevated,
-                            borderRadius: AppRadii.lgBorderRadius,
-                            border: Border.all(
-                                color: AppTheme.cardBorder, width: 0.8),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              '+0.1',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textSecondary,
-                                fontFeatures: [FontFeature.tabularFigures()],
+                      child: GestureDetector(
+                        onLongPressStart: (_) => _startStepperHold(0.1),
+                        onLongPressEnd: (_) => _stopStepperHold(),
+                        onLongPressCancel: _stopStepperHold,
+                        child: AppleBouncy(
+                          scaleDown: 0.90,
+                          onTap: () => _adjustWeight(0.1),
+                          child: Container(
+                            width: 48,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              color: AppTheme.cardElevated,
+                              borderRadius: AppRadii.lgBorderRadius,
+                              border: Border.all(
+                                  color: AppTheme.cardBorder, width: 0.8),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                '+0.1',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppTheme.textSecondary,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
                               ),
                             ),
                           ),

@@ -89,11 +89,14 @@ class TimelineHourSlot extends StatelessWidget {
                     onAddTap();
                   },
                   child: Container(
-                    constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+                    constraints: BoxConstraints(
+                      minHeight: isEmptySlot ? 24 : 36,
+                      minWidth: 44,
+                    ),
                     alignment: Alignment.center,
                     padding: EdgeInsets.symmetric(
                       horizontal: isEmptySlot ? 8 : 10,
-                      vertical: isEmptySlot ? 4 : 6,
+                      vertical: isEmptySlot ? 2 : 5,
                     ),
                     decoration: BoxDecoration(
                       color: isEmptySlot
@@ -180,67 +183,77 @@ class TimelineHourSlot extends StatelessWidget {
           if (entries.isNotEmpty || showCopyYesterday)
             const SizedBox(height: 8),
 
-          // Body: Collapsed Icon Row OR Detailed Cards OR Copy Yesterday
-          if (entries.isNotEmpty) ...[
-            if (isCollapsed)
-              // Collapsed mode: horizontal scroll of food icons
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardSurface.withAlpha(150),
-                  borderRadius: AppRadii.mdBorderRadius,
-                  border: Border.all(color: AppTheme.cardBorder.withAlpha(80)),
-                ),
-                child: SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: entries.map((entry) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 10),
-                        child: AppleBouncy(
-                          scaleDown: 0.90,
-                          onTap: () => onEntryTap(entry),
-                          child: FoodSvgIcon(
-                            iconName: entry.food.iconName,
-                            size: 26,
-                          ),
+          // Body: Animated expansion/collapse for icons, cards, or copy yesterday
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOutCubicEmphasized,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (entries.isNotEmpty) ...[
+                  if (isCollapsed)
+                    // Collapsed mode: horizontal scroll of food icons
+                    Container(
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: AppTheme.cardSurface.withAlpha(150),
+                        borderRadius: AppRadii.mdBorderRadius,
+                        border: Border.all(color: AppTheme.cardBorder.withAlpha(80)),
+                      ),
+                      child: SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: entries.map((entry) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 10),
+                              child: AppleBouncy(
+                                scaleDown: 0.90,
+                                onTap: () => onEntryTap(entry),
+                                child: FoodSvgIcon(
+                                  iconName: entry.food.iconName,
+                                  size: 26,
+                                ),
+                              ),
+                            );
+                          }).toList(),
                         ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              )
-            else
-              // Detailed mode: full food cards
-              ...entries.map(
-                (entry) => TimelineFoodCard(
-                  entry: entry,
-                  onTap: () => onEntryTap(entry),
-                  onDelete: () => onEntryDelete(entry),
-                  onDuplicate: onEntryDuplicate != null
-                      ? () => onEntryDuplicate!(entry)
-                      : null,
-                ),
-              ),
-          ] else ...[
-            if (showCopyYesterday)
-              // "Copy Yesterday" subtle action button
-              _CopyYesterdayButton(
-                count: yesterdayEntries.length,
-                onTap: () {
-                  AppHaptics.mediumImpact();
-                  onCopyYesterday!(yesterdayEntries);
-                },
-              )
-            else
-              // Compact hairline for continuous 24h timeline
-              Container(
-                margin: const EdgeInsets.only(top: 4),
-                height: 0.6,
-                color: AppTheme.cardBorder.withAlpha(25),
-              ),
-          ],
+                      ),
+                    )
+                  else
+                    // Detailed mode: full food cards
+                    ...entries.map(
+                      (entry) => TimelineFoodCard(
+                        entry: entry,
+                        onTap: () => onEntryTap(entry),
+                        onDelete: () => onEntryDelete(entry),
+                        onDuplicate: onEntryDuplicate != null
+                            ? () => onEntryDuplicate!(entry)
+                            : null,
+                      ),
+                    ),
+                ] else ...[
+                  if (showCopyYesterday)
+                    // "Copy Yesterday" subtle action button
+                    _CopyYesterdayButton(
+                      count: yesterdayEntries.length,
+                      onTap: () {
+                        AppHaptics.mediumImpact();
+                        onCopyYesterday!(yesterdayEntries);
+                      },
+                    )
+                  else
+                    // Compact hairline for continuous 24h timeline
+                    Container(
+                      margin: const EdgeInsets.only(top: 4),
+                      height: 0.6,
+                      color: AppTheme.cardBorder.withAlpha(25),
+                    ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );

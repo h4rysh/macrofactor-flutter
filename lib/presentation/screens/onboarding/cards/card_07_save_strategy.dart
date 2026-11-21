@@ -384,6 +384,8 @@ class _MacroDonutChart extends StatelessWidget {
     final proteinCal = (proteinGrams * 4.0).round();
     final carbsCal = (carbsGrams * 4.0).round();
     final fatCal = (fatGrams * 9.0).round();
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+
     return SizedBox(
       width: 100,
       height: 100,
@@ -391,12 +393,21 @@ class _MacroDonutChart extends StatelessWidget {
         label:
             'Calorie distribution: $proteinCal kcal protein, $carbsCal kcal carbs, $fatCal kcal fat',
         container: true,
-        child: CustomPaint(
-          painter: _DonutChartPainter(
-            protein: proteinGrams * 4.0,
-            carbs: carbsGrams * 4.0,
-            fat: fatGrams * 9.0,
-          ),
+        child: TweenAnimationBuilder<double>(
+          tween: Tween<double>(begin: 0.0, end: 1.0),
+          duration: disableAnimations
+              ? Duration.zero
+              : const Duration(milliseconds: 900),
+          curve: Curves.easeOutCubic,
+          builder: (context, progress, child) {
+            return CustomPaint(
+              painter: _DonutChartPainter(
+                protein: (proteinGrams * 4.0) * progress,
+                carbs: (carbsGrams * 4.0) * progress,
+                fat: (fatGrams * 9.0) * progress,
+              ),
+            );
+          },
         ),
       ),
     );

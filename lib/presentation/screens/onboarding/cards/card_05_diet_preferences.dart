@@ -481,49 +481,56 @@ class _Card05DietPreferencesState extends State<Card05DietPreferences> {
   }) {
     final isSelected = _oilDefault == slug;
 
-    return GestureDetector(
-      onTap: () {
-        AppHaptics.selectionClick();
-        setState(() => _oilDefault = slug);
-        _notifyUpdate();
-      },
-      child: Container(
-        color: Colors.transparent,
-        child: Row(
-          children: [
-            Icon(
-              isSelected
-                  ? Icons.radio_button_checked_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              size: 18,
-              color: isSelected ? AppTheme.activeBlue : AppTheme.textMuted,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: isSelected
-                          ? AppTheme.textPrimary
-                          : AppTheme.textSecondary,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: AppTheme.textMuted,
-                    ),
-                  ),
-                ],
+    return Semantics(
+      inMutuallyExclusiveGroup: true,
+      selected: isSelected,
+      button: true,
+      label: '$title. $subtitle',
+      child: AppleBouncy(
+        scaleDown: 0.95,
+        onTap: () {
+          AppHaptics.selectionClick();
+          setState(() => _oilDefault = slug);
+          _notifyUpdate();
+        },
+        child: Container(
+          color: Colors.transparent,
+          child: Row(
+            children: [
+              Icon(
+                isSelected
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                size: 18,
+                color: isSelected ? AppTheme.activeBlue : AppTheme.textMuted,
               ),
-            ),
-          ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: isSelected
+                            ? AppTheme.textPrimary
+                            : AppTheme.textSecondary,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:sique/domain/legal/legal_copy.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
-import 'package:sique/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/presentation/widgets/animated_primitives.dart';
 import 'package:sique/presentation/widgets/sique_frosted_chrome.dart';
 
 /// Card 6: Personalized TDEE & Macro Blueprint Reveal (Value delivery).
@@ -142,8 +142,8 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(
-                      '${widget.targetCalories.round()}',
+                    AnimatedCountText(
+                      value: widget.targetCalories,
                       style: const TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.w900,

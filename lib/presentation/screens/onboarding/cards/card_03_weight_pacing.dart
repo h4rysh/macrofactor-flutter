@@ -415,6 +415,11 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                             : AppTheme.trendWeight,
                         inactiveColor: AppTheme.cardBorder,
                         onChanged: (val) {
+                          final oldStep = (_ratePct / 0.05).round();
+                          final newStep = (val / 0.05).round();
+                          if (oldStep != newStep) {
+                            AppHaptics.selectionClick();
+                          }
                           setState(() => _ratePct = val);
                           _notifyUpdate();
                         },

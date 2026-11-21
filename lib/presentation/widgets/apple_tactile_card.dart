@@ -299,6 +299,7 @@ class AppleTactileCard extends StatelessWidget {
     this.semanticLabel,
     this.focusNode,
     this.autofocus = false,
+    this.scaleDown = 0.982,
   });
 
   final Widget child;
@@ -314,6 +315,7 @@ class AppleTactileCard extends StatelessWidget {
   final String? semanticLabel;
   final FocusNode? focusNode;
   final bool autofocus;
+  final double scaleDown;
 
   @override
   Widget build(BuildContext context) {
@@ -343,6 +345,7 @@ class AppleTactileCard extends StatelessWidget {
     return AppleBouncy(
       onTap: onTap,
       enabled: enabled,
+      scaleDown: scaleDown,
       semanticLabel: semanticLabel,
       focusNode: focusNode,
       autofocus: autofocus,

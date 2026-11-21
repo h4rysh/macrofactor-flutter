@@ -85,6 +85,8 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: SafeArea(
+                top: false,
+                bottom: true,
                 child: SizedBox(
                   height: 66,
                   child: Row(

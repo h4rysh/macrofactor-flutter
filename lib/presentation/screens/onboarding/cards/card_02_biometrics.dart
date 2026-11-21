@@ -441,8 +441,13 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
         children: [
           GestureDetector(
             key: firstKey,
-            onTap: () => onToggle(true),
-            child: Container(
+            onTap: () {
+              AppHaptics.selectionClick();
+              onToggle(true);
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: isFirst ? AppTheme.activeBlue : Colors.transparent,
@@ -457,8 +462,13 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
           ),
           GestureDetector(
             key: secondKey,
-            onTap: () => onToggle(false),
-            child: Container(
+            onTap: () {
+              AppHaptics.selectionClick();
+              onToggle(false);
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOutCubic,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: !isFirst ? AppTheme.activeBlue : Colors.transparent,

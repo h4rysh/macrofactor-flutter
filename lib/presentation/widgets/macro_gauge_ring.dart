@@ -56,7 +56,7 @@ class MacroGaugeRing extends StatelessWidget {
                   TweenAnimationBuilder<double>(
                     tween: Tween<double>(begin: 0.0, end: calorieRatio),
                     duration: sweepDuration,
-                    curve: Curves.easeOutCubic,
+                    curve: Curves.easeOutBack,
                     builder: (context, animatedRatio, child) {
                       return Semantics(
                         value:

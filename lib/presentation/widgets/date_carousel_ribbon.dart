@@ -179,6 +179,7 @@ class DateCarouselRibbon extends StatelessWidget {
 
         // Carousel of 7 Day Pills (e.g. M 12, T 13, W 14...)
         SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Row(

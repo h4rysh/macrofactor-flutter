@@ -284,7 +284,8 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
                                 left: idx == 0 ? 0 : 2,
                                 right: idx == 6 ? 0 : 2,
                               ),
-                              child: GestureDetector(
+                              child: AppleBouncy(
+                                scaleDown: 0.90,
                                 onTap: () {
                                   AppHaptics.selectionClick();
                                   _toggleDay(dayNum);

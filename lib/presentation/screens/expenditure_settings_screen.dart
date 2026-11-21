@@ -313,11 +313,22 @@ class _ExpenditureSettingsScreenState
                 borderRadius: AppRadii.mdBorderRadius,
                 border: Border.all(color: AppTheme.cardBorder),
               ),
-              child: CustomPaint(
-                painter: _SensitivityCurvePainter(
-                  sensitivity: _sensitivityMode,
-                  curveColor: AppTheme.expenditure,
+              child: TweenAnimationBuilder<double>(
+                tween: Tween<double>(
+                  end: _sensitivityMode == 'Conservative'
+                      ? 0.0
+                      : (_sensitivityMode == 'Dynamic' ? 1.0 : 0.5),
                 ),
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeOutCubic,
+                builder: (context, progress, child) {
+                  return CustomPaint(
+                    painter: _SensitivityCurvePainter(
+                      progress: progress,
+                      curveColor: AppTheme.expenditure,
+                    ),
+                  );
+                },
               ),
             ),
           ),
@@ -476,11 +487,11 @@ class _ExpenditureSettingsScreenState
 /// the selected Kalman filter sensitivity (Conservative, Standard, Dynamic).
 class _SensitivityCurvePainter extends CustomPainter {
   const _SensitivityCurvePainter({
-    required this.sensitivity,
+    required this.progress,
     required this.curveColor,
   });
 
-  final String sensitivity;
+  final double progress;
   final Color curveColor;
 
   @override
@@ -497,31 +508,15 @@ class _SensitivityCurvePainter extends CustomPainter {
       canvas.drawLine(Offset(x, h * 0.5), Offset(x + 5, h * 0.5), gridPaint);
     }
 
-    // Determine curve control points based on sensitivity
+    // Determine curve control points based on smoothly tweened progress
     final path = Path();
     final fillPath = Path();
 
-    // Amplitude and frequency modulation
-    double p1y, p2y, p3y, p4y;
-    if (sensitivity == 'Conservative') {
-      // Gentle, low-variance smooth line
-      p1y = h * 0.55;
-      p2y = h * 0.48;
-      p3y = h * 0.52;
-      p4y = h * 0.46;
-    } else if (sensitivity == 'Dynamic') {
-      // Rapid, responsive curve with sharper adaptation
-      p1y = h * 0.75;
-      p2y = h * 0.20;
-      p3y = h * 0.80;
-      p4y = h * 0.25;
-    } else {
-      // Standard: Authentic balanced Kalman adaptation
-      p1y = h * 0.65;
-      p2y = h * 0.35;
-      p3y = h * 0.65;
-      p4y = h * 0.35;
-    }
+    // Amplitude and frequency modulation interpolated between Conservative (0.0) and Dynamic (1.0)
+    final p1y = h * (0.55 + 0.20 * progress);
+    final p2y = h * (0.48 - 0.28 * progress);
+    final p3y = h * (0.52 + 0.28 * progress);
+    final p4y = h * (0.46 - 0.21 * progress);
 
     path.moveTo(0, h * 0.5);
     path.cubicTo(w * 0.25, p1y, w * 0.35, p2y, w * 0.5, h * 0.5);
@@ -568,7 +563,7 @@ class _SensitivityCurvePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _SensitivityCurvePainter oldDelegate) {
-    return oldDelegate.sensitivity != sensitivity ||
+    return oldDelegate.progress != progress ||
         oldDelegate.curveColor != curveColor;
   }
 }

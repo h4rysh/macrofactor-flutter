@@ -9,6 +9,7 @@ import '../widgets/apple_tactile_card.dart';
 import '../widgets/food_search_highlight.dart';
 import '../widgets/food_svg_icon.dart';
 import '../widgets/sique_empty_state.dart';
+import '../widgets/sique_entrance.dart';
 import '../widgets/sique_frosted_chrome.dart';
 import 'plate_serving_sheet.dart';
 
@@ -697,11 +698,12 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
             left: 16,
             right: 16,
             bottom: MediaQuery.of(context).padding.bottom + 16,
-            child: Semantics(
-              button: true,
-              label:
-                  'Review Plate: ${_plateItems.length} items, $_totalPlateKcal calories total',
-              child: SiqueFrostedChrome(
+            child: SiqueEntrance(
+              child: Semantics(
+                button: true,
+                label:
+                    'Review Plate: ${_plateItems.length} items, $_totalPlateKcal calories total',
+                child: SiqueFrostedChrome(
                 borderRadius: AppRadii.xlBorderRadius,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -772,6 +774,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
               ),
             ),
           ),
+        ),
       ],
     ),
   );

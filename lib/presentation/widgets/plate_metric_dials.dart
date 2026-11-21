@@ -235,7 +235,9 @@ class PlateOilModifierSelector extends StatelessWidget {
                       AppHaptics.selectionClick();
                       onSelected(oil);
                     },
-                    child: Container(
+                    child: AnimatedContainer(
+                      duration: AppMotion.normal,
+                      curve: Curves.easeOutCubic,
                       padding:
                           const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(

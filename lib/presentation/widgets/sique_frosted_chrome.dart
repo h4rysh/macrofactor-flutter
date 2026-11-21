@@ -20,6 +20,7 @@ class SiqueFrostedChrome extends StatelessWidget {
     this.showTopBorder = true,
     this.showBottomBorder = false,
     this.borderRadius,
+    this.elevation = 0.0,
   });
 
   final Widget child;
@@ -31,10 +32,14 @@ class SiqueFrostedChrome extends StatelessWidget {
   final bool showTopBorder;
   final bool showBottomBorder;
   final BorderRadius? borderRadius;
+  final double elevation;
 
   @override
   Widget build(BuildContext context) {
     final effectiveRadius = borderRadius ?? BorderRadius.zero;
+    final double effectiveAlpha =
+        ((backgroundColor.a) + (elevation * 0.05)).clamp(0.0, 1.0);
+    final effectiveBg = backgroundColor.withValues(alpha: effectiveAlpha);
 
     return ClipRRect(
       borderRadius: effectiveRadius,
@@ -43,7 +48,7 @@ class SiqueFrostedChrome extends StatelessWidget {
         child: Container(
           padding: padding,
           decoration: BoxDecoration(
-            color: backgroundColor,
+            color: effectiveBg,
             borderRadius: effectiveRadius,
             border: Border(
               top: showTopBorder
