@@ -559,8 +559,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                   height: 52,
                   child: ElevatedButton(
                     onPressed: (parsedWeight != null &&
-                            parsedWeight >= 20.0 &&
-                            parsedWeight <= 350.0 &&
+                            parsedWeight > 0 &&
                             !_isSubmitting)
                         ? () => _handleSave(parsedWeight)
                         : null,
