@@ -1,10 +1,12 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/food_models.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/apple_tactile_card.dart';
+import '../widgets/food_search_highlight.dart';
 import '../widgets/food_svg_icon.dart';
 import '../widgets/sique_empty_state.dart';
 import '../widgets/sique_frosted_chrome.dart';
@@ -92,6 +94,11 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
       _plateItems.add(food);
       _recentlyAddedIds.add(food.id);
     });
+    SemanticsService.sendAnnouncement(
+      View.of(context),
+      'Added ${food.name} to plate. ${_plateItems.length} items on plate, $_totalPlateKcal calories total',
+      TextDirection.ltr,
+    );
   }
 
   void _openManualFoodSheet() {
@@ -120,52 +127,6 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
       ],
     );
     _openPlateSheet(customFood);
-  }
-
-  Widget _buildHighlightedTitle(String name, String query) {
-    final trimmed = query.trim();
-    if (trimmed.isEmpty ||
-        !name.toLowerCase().contains(trimmed.toLowerCase())) {
-      return Text(
-        name,
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          color: AppTheme.textPrimary,
-        ),
-      );
-    }
-
-    final lowerName = name.toLowerCase();
-    final lowerQuery = trimmed.toLowerCase();
-    final spans = <TextSpan>[];
-    int start = 0;
-    const baseStyle = TextStyle(
-        fontSize: 15, fontWeight: FontWeight.w700, color: AppTheme.textPrimary);
-    const matchStyle = TextStyle(
-        fontSize: 15,
-        fontWeight: FontWeight.w900,
-        color: AppTheme.buttonBackground,
-        backgroundColor: Color(0x33FAFAFA));
-
-    while (start < name.length) {
-      final index = lowerName.indexOf(lowerQuery, start);
-      if (index < 0) {
-        spans.add(TextSpan(text: name.substring(start), style: baseStyle));
-        break;
-      }
-      if (index > start) {
-        spans.add(
-            TextSpan(text: name.substring(start, index), style: baseStyle));
-      }
-      spans.add(TextSpan(
-          text: name.substring(index, index + trimmed.length),
-          style: matchStyle));
-      start = index + trimmed.length;
-    }
-
-    return Text.rich(TextSpan(children: spans),
-        maxLines: 2, overflow: TextOverflow.ellipsis);
   }
 
   @override
@@ -224,6 +185,11 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
       _searchResults = results;
       _isLoading = false;
     });
+    SemanticsService.sendAnnouncement(
+      View.of(context),
+      '${results.length} food items found for "$query"',
+      TextDirection.ltr,
+    );
   }
 
   void _openPlateSheet(FoodItem food) {
@@ -347,6 +313,10 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                     suffixIcon: _searchController.text.isNotEmpty
                         ? IconButton(
                             tooltip: 'Clear search',
+                            constraints: const BoxConstraints(
+                              minWidth: 48,
+                              minHeight: 48,
+                            ),
                             icon: const Icon(
                               Icons.clear_rounded,
                               color: AppTheme.textSecondary,
@@ -390,40 +360,45 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                     final isSelected = _selectedFilter == filter;
                     return Padding(
                       padding: const EdgeInsets.only(right: 8),
-                      child: AppleBouncy(
-                        scaleDown: 0.94,
-                        onTap: () {
-                          _debounceTimer?.cancel();
-                          setState(() => _selectedFilter = filter);
-                          _performSearch(_searchController.text);
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 7,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSelected
-                                ? AppTheme.activeBlue.withValues(alpha: 0.16)
-                                : AppTheme.cardSurface,
-                            borderRadius: AppRadii.xlBorderRadius,
-                            border: Border.all(
-                              color: isSelected
-                                  ? AppTheme.activeBlue
-                                  : AppTheme.cardBorder,
-                              width: isSelected ? 1.2 : 0.8,
+                      child: Semantics(
+                        button: true,
+                        selected: isSelected,
+                        label: 'Filter: ${filter.displayName}',
+                        child: AppleBouncy(
+                          scaleDown: 0.94,
+                          onTap: () {
+                            _debounceTimer?.cancel();
+                            setState(() => _selectedFilter = filter);
+                            _performSearch(_searchController.text);
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 7,
                             ),
-                          ),
-                          child: Text(
-                            filter.displayName,
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w500,
+                            decoration: BoxDecoration(
                               color: isSelected
-                                  ? AppTheme.activeBlue
-                                  : AppTheme.textSecondary,
+                                  ? AppTheme.activeBlue.withValues(alpha: 0.16)
+                                  : AppTheme.cardSurface,
+                              borderRadius: AppRadii.xlBorderRadius,
+                              border: Border.all(
+                                color: isSelected
+                                    ? AppTheme.activeBlue
+                                    : AppTheme.cardBorder,
+                                width: isSelected ? 1.2 : 0.8,
+                              ),
+                            ),
+                            child: Text(
+                              filter.displayName,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? AppTheme.activeBlue
+                                    : AppTheme.textSecondary,
+                              ),
                             ),
                           ),
                         ),
@@ -578,39 +553,43 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                               );
                               final isAdded =
                                   _recentlyAddedIds.contains(food.id);
-                              return AppleBouncy(
-                                scaleDown: 0.98,
-                                onTap: () => _openPlateSheet(food),
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 14,
-                                    vertical: 12,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.cardSurface,
-                                    borderRadius: AppRadii.lgBorderRadius,
-                                    border: Border.all(
-                                      color: AppTheme.cardBorder,
-                                      width: 0.8,
+                              return Semantics(
+                                button: true,
+                                label:
+                                    '${food.name}, ${defaultNutrition.calories.round()} calories, ${defaultNutrition.protein.toStringAsFixed(1)} grams protein, item ${index + 1} of ${_searchResults.length}',
+                                child: AppleBouncy(
+                                  scaleDown: 0.98,
+                                  onTap: () => _openPlateSheet(food),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 12,
                                     ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      FoodSvgIcon(
-                                        iconName: food.iconName,
-                                        size: 34,
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.cardSurface,
+                                      borderRadius: AppRadii.lgBorderRadius,
+                                      border: Border.all(
+                                        color: AppTheme.cardBorder,
+                                        width: 0.8,
                                       ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            _buildHighlightedTitle(
-                                              food.name,
-                                              _searchController.text,
-                                            ),
-                                            const SizedBox(height: 6),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        FoodSvgIcon(
+                                          iconName: food.iconName,
+                                          size: 34,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              FoodSearchHighlight(
+                                                name: food.name,
+                                                query: _searchController.text,
+                                              ),
+                                              const SizedBox(height: 6),
                                             Wrap(
                                               spacing: 6,
                                               runSpacing: 4,
@@ -706,17 +685,22 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                                     ],
                                   ),
                                 ),
-                              );
-                            },
-                          ),
-              ),
-            ],
-          ),
-          if (_plateItems.isNotEmpty)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.of(context).padding.bottom + 16,
+                              ),
+                            );
+                          },
+                        ),
+            ),
+          ],
+        ),
+        if (_plateItems.isNotEmpty)
+          Positioned(
+            left: 16,
+            right: 16,
+            bottom: MediaQuery.of(context).padding.bottom + 16,
+            child: Semantics(
+              button: true,
+              label:
+                  'Review Plate: ${_plateItems.length} items, $_totalPlateKcal calories total',
               child: SiqueFrostedChrome(
                 borderRadius: AppRadii.xlBorderRadius,
                 padding:
@@ -787,8 +771,9 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                 ),
               ),
             ),
-        ],
-      ),
-    );
-  }
+          ),
+      ],
+    ),
+  );
+}
 }

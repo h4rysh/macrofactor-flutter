@@ -78,7 +78,7 @@ class DateCarouselRibbon extends StatelessWidget {
                         color: AppTheme.textSecondary,
                         tooltip: 'Previous day',
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                         onPressed: () {
                           AppHaptics.selectionClick();
                           onDateSelected(
@@ -156,7 +156,7 @@ class DateCarouselRibbon extends StatelessWidget {
                         color: AppTheme.textSecondary,
                         tooltip: 'Next day',
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                         onPressed: () {
                           AppHaptics.selectionClick();
                           onDateSelected(
@@ -190,75 +190,81 @@ class DateCarouselRibbon extends StatelessWidget {
                   DateFormat('E').format(day)[0]; // 'M', 'T', 'W'...
               final dayNumber = day.day.toString();
 
-              return AppleBouncy(
-                scaleDown: 0.94,
-                onTap: () {
-                  AppHaptics.lightImpact();
-                  onDateSelected(day);
-                },
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 220),
-                  curve: Curves.easeOutCubic,
-                  margin: const EdgeInsets.symmetric(horizontal: 6),
-                  width: 44,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: isSelected
-                        ? AppTheme.activeBlue.withValues(alpha: 0.16)
-                        : Colors.transparent,
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(
+              return Semantics(
+                button: true,
+                selected: isSelected,
+                label:
+                    '${DateFormat('EEEE, MMMM d').format(day)}${isSelected ? ', selected' : ''}${isToday ? ', today' : ''}',
+                child: AppleBouncy(
+                  scaleDown: 0.94,
+                  onTap: () {
+                    AppHaptics.lightImpact();
+                    onDateSelected(day);
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    curve: Curves.easeOutCubic,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: 48,
+                    height: 56,
+                    decoration: BoxDecoration(
                       color: isSelected
-                          ? AppTheme.activeBlue
-                          : (isToday
-                              ? AppTheme.cardBorder
-                              : Colors.transparent),
-                      width: isSelected ? 2.0 : 1.0,
+                          ? AppTheme.activeBlue.withValues(alpha: 0.16)
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(
+                        color: isSelected
+                            ? AppTheme.activeBlue
+                            : (isToday
+                                ? AppTheme.cardBorder
+                                : Colors.transparent),
+                        width: isSelected ? 2.0 : 1.0,
+                      ),
                     ),
-                  ),
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          dayInitial,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: isSelected
-                                ? AppTheme.activeBlue
-                                : AppTheme.textSecondary,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            dayInitial,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: isSelected
+                                  ? AppTheme.activeBlue
+                                  : AppTheme.textSecondary,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          dayNumber,
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w800,
-                            color: isSelected
-                                ? AppTheme.textPrimary
-                                : (isToday
-                                    ? AppTheme.textPrimary
-                                    : AppTheme.textSecondary),
+                          const SizedBox(height: 2),
+                          Text(
+                            dayNumber,
+                            style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              color: isSelected
+                                  ? AppTheme.textPrimary
+                                  : (isToday
+                                      ? AppTheme.textPrimary
+                                      : AppTheme.textSecondary),
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 2),
-                        Container(
-                          width: 4,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color: loggedDates.contains(
-                                    DateFormat('yyyy-MM-dd').format(day))
-                                ? (isSelected
-                                    ? AppTheme.activeBlue
-                                    : AppTheme.calories)
-                                : Colors.transparent,
-                            shape: BoxShape.circle,
+                          const SizedBox(height: 2),
+                          Container(
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: loggedDates.contains(
+                                      DateFormat('yyyy-MM-dd').format(day))
+                                  ? (isSelected
+                                      ? AppTheme.activeBlue
+                                      : AppTheme.calories)
+                                  : Colors.transparent,
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

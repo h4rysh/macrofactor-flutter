@@ -301,19 +301,23 @@ class _ExpenditureSettingsScreenState
           const SizedBox(height: 14),
 
           // Interactive Sensitivity Curve Preview
-          Container(
-            height: 90,
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: AppTheme.cardElevated,
-              borderRadius: AppRadii.mdBorderRadius,
-              border: Border.all(color: AppTheme.cardBorder),
-            ),
-            child: CustomPaint(
-              painter: _SensitivityCurvePainter(
-                sensitivity: _sensitivityMode,
-                curveColor: AppTheme.expenditure,
+          Semantics(
+            label:
+                'Kalman Filter Responsiveness Curve for $_sensitivityMode sensitivity mode',
+            child: Container(
+              height: 90,
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppTheme.cardElevated,
+                borderRadius: AppRadii.mdBorderRadius,
+                border: Border.all(color: AppTheme.cardBorder),
+              ),
+              child: CustomPaint(
+                painter: _SensitivityCurvePainter(
+                  sensitivity: _sensitivityMode,
+                  curveColor: AppTheme.expenditure,
+                ),
               ),
             ),
           ),
@@ -323,51 +327,56 @@ class _ExpenditureSettingsScreenState
             final name = item['name']!;
             final desc = item['desc']!;
             final isSelected = _sensitivityMode == name;
-            return InkWell(
-              onTap: () => _updateSensitivity(name),
-              borderRadius: AppRadii.mdBorderRadius,
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: isSelected
-                      ? AppTheme.expenditure.withAlpha(25)
-                      : AppTheme.cardElevated,
-                  borderRadius: AppRadii.mdBorderRadius,
-                  border: Border.all(
-                    color:
-                        isSelected ? AppTheme.expenditure : AppTheme.cardBorder,
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      isSelected
-                          ? Icons.radio_button_checked_rounded
-                          : Icons.radio_button_off_rounded,
-                      size: 18,
-                      color: isSelected
-                          ? AppTheme.expenditure
-                          : AppTheme.textMuted,
+            return Semantics(
+              inMutuallyExclusiveGroup: true,
+              selected: isSelected,
+              button: true,
+              label: '$name: $desc',
+              child: InkWell(
+                onTap: () => _updateSensitivity(name),
+                borderRadius: AppRadii.mdBorderRadius,
+                child: Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppTheme.expenditure.withAlpha(25)
+                        : AppTheme.cardElevated,
+                    borderRadius: AppRadii.mdBorderRadius,
+                    border: Border.all(
+                      color:
+                          isSelected ? AppTheme.expenditure : AppTheme.cardBorder,
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: isSelected
-                                  ? FontWeight.w700
-                                  : FontWeight.w600,
-                              color: isSelected
-                                  ? AppTheme.textPrimary
-                                  : AppTheme.textSecondary,
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isSelected
+                            ? Icons.radio_button_checked_rounded
+                            : Icons.radio_button_off_rounded,
+                        size: 18,
+                        color: isSelected
+                            ? AppTheme.expenditure
+                            : AppTheme.textMuted,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              name,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w600,
+                                color: isSelected
+                                    ? AppTheme.textPrimary
+                                    : AppTheme.textSecondary,
+                              ),
                             ),
-                          ),
                           Text(
                             desc,
                             style: const TextStyle(
@@ -381,8 +390,9 @@ class _ExpenditureSettingsScreenState
                   ],
                 ),
               ),
-            );
-          }),
+            ),
+          );
+        }),
         ],
       ),
     );

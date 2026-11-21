@@ -35,8 +35,12 @@ class CoachingCheckinCard extends ConsumerWidget {
     final isDue = recommendation.isDue;
 
     if (isDue) {
-      return AppleTactileCard(
-        onTap: () => _openCheckInSheet(context, recommendation),
+      return Semantics(
+        button: true,
+        label:
+            'Weekly coaching check-in ready. Tap to review calorie adjustments and metabolic review.',
+        child: AppleTactileCard(
+          onTap: () => _openCheckInSheet(context, recommendation),
         backgroundColor: AppTheme.cardSurface,
         borderRadius: 20,
         border: Border.all(
@@ -138,11 +142,16 @@ class CoachingCheckinCard extends ConsumerWidget {
             ),
           ],
         ),
-      );
-    }
+      ),
+    );
+  }
 
-    // Not due yet: Countdown state
-    return AppleTactileCard(
+  // Not due yet: Countdown state
+  return Semantics(
+    button: true,
+    label:
+        'Weekly coaching check-in. ${recommendation.daysUntilNextCheckIn} days until next review.',
+    child: AppleTactileCard(
       onTap: () => _openHistorySheet(context),
       backgroundColor: AppTheme.cardSurface,
       borderRadius: 18,
@@ -197,6 +206,7 @@ class CoachingCheckinCard extends ConsumerWidget {
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }

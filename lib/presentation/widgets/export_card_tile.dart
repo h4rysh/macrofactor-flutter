@@ -91,35 +91,43 @@ class ExportCardTile extends StatelessWidget {
               if (secondaryButtonLabel != null &&
                   onSecondaryPressed != null) ...[
                 Expanded(
-                  child: OutlinedButton.icon(
-                    key: secondaryButtonKey,
-                    icon: Icon(secondaryButtonIcon ?? Icons.preview_rounded,
-                        size: 16),
-                    label: Text(secondaryButtonLabel!),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.textPrimary,
-                      side: const BorderSide(color: AppTheme.cardBorder),
-                      shape: const RoundedRectangleBorder(
-                          borderRadius: AppRadii.mdBorderRadius),
+                  child: Semantics(
+                    button: true,
+                    label: '$secondaryButtonLabel for $title',
+                    child: OutlinedButton.icon(
+                      key: secondaryButtonKey,
+                      icon: Icon(secondaryButtonIcon ?? Icons.preview_rounded,
+                          size: 16),
+                      label: Text(secondaryButtonLabel!),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppTheme.textPrimary,
+                        side: const BorderSide(color: AppTheme.cardBorder),
+                        shape: const RoundedRectangleBorder(
+                            borderRadius: AppRadii.mdBorderRadius),
+                      ),
+                      onPressed: onSecondaryPressed,
                     ),
-                    onPressed: onSecondaryPressed,
                   ),
                 ),
                 const SizedBox(width: 10),
               ],
               Expanded(
-                child: ElevatedButton.icon(
-                  icon: Icon(primaryButtonIcon, size: 16),
-                  label: Text(primaryButtonLabel),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: color.withAlpha(40),
-                    foregroundColor: color,
-                    elevation: 0,
-                    side: BorderSide(color: color.withAlpha(90)),
-                    shape: const RoundedRectangleBorder(
-                        borderRadius: AppRadii.mdBorderRadius),
+                child: Semantics(
+                  button: true,
+                  label: '$primaryButtonLabel for $title',
+                  child: ElevatedButton.icon(
+                    icon: Icon(primaryButtonIcon, size: 16),
+                    label: Text(primaryButtonLabel),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: color.withAlpha(40),
+                      foregroundColor: color,
+                      elevation: 0,
+                      side: BorderSide(color: color.withAlpha(90)),
+                      shape: const RoundedRectangleBorder(
+                          borderRadius: AppRadii.mdBorderRadius),
+                    ),
+                    onPressed: onPrimaryPressed,
                   ),
-                  onPressed: onPrimaryPressed,
                 ),
               ),
             ],

@@ -224,36 +224,42 @@ class PlateOilModifierSelector extends StatelessWidget {
               final isSelected = selectedOil == oil;
               return Padding(
                 padding: const EdgeInsets.only(right: 8),
-                child: AppleBouncy(
-                  scaleDown: 0.94,
-                  onTap: () {
-                    AppHaptics.selectionClick();
-                    onSelected(oil);
-                  },
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppTheme.activeBlue.withValues(alpha: 0.18)
-                          : AppTheme.cardElevated,
-                      borderRadius: AppRadii.mdBorderRadius,
-                      border: Border.all(
+                child: Semantics(
+                  inMutuallyExclusiveGroup: true,
+                  selected: isSelected,
+                  button: true,
+                  label: OilModifierDisplay.getTierLabel(oil),
+                  child: AppleBouncy(
+                    scaleDown: 0.94,
+                    onTap: () {
+                      AppHaptics.selectionClick();
+                      onSelected(oil);
+                    },
+                    child: Container(
+                      padding:
+                          const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
                         color: isSelected
-                            ? AppTheme.activeBlue
-                            : AppTheme.cardBorder,
-                        width: isSelected ? 1.4 : 1.0,
+                            ? AppTheme.activeBlue.withValues(alpha: 0.18)
+                            : AppTheme.cardElevated,
+                        borderRadius: AppRadii.mdBorderRadius,
+                        border: Border.all(
+                          color: isSelected
+                              ? AppTheme.activeBlue
+                              : AppTheme.cardBorder,
+                          width: isSelected ? 1.4 : 1.0,
+                        ),
                       ),
-                    ),
-                    child: Text(
-                      OilModifierDisplay.getTierLabel(oil),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight:
-                            isSelected ? FontWeight.w700 : FontWeight.w500,
-                        color: isSelected
-                            ? AppTheme.textPrimary
-                            : AppTheme.textSecondary,
+                      child: Text(
+                        OilModifierDisplay.getTierLabel(oil),
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight:
+                              isSelected ? FontWeight.w700 : FontWeight.w500,
+                          color: isSelected
+                              ? AppTheme.textPrimary
+                              : AppTheme.textSecondary,
+                        ),
                       ),
                     ),
                   ),

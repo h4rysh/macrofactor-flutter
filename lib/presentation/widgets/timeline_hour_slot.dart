@@ -78,51 +78,57 @@ class TimelineHourSlot extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Time capsule with plus button
-              AppleBouncy(
-                scaleDown: 0.94,
-                semanticLabel: 'Add food at ${_formatHour(hour)}',
-                onTap: () {
-                  AppHaptics.lightImpact();
-                  onAddTap();
-                },
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isEmptySlot ? 8 : 10,
-                    vertical: isEmptySlot ? 2 : 5,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isEmptySlot
-                        ? AppTheme.cardSurface.withAlpha(140)
-                        : AppTheme.cardSurface,
-                    borderRadius: AppRadii.lgBorderRadius,
-                    border: Border.all(
-                      color: isEmptySlot
-                          ? AppTheme.cardBorder.withAlpha(80)
-                          : AppTheme.cardBorder,
-                      width: 0.8,
+              Semantics(
+                button: true,
+                label: 'Add food at ${_formatHour(hour)}',
+                child: AppleBouncy(
+                  scaleDown: 0.94,
+                  semanticLabel: 'Add food at ${_formatHour(hour)}',
+                  onTap: () {
+                    AppHaptics.lightImpact();
+                    onAddTap();
+                  },
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+                    alignment: Alignment.center,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isEmptySlot ? 8 : 10,
+                      vertical: isEmptySlot ? 4 : 6,
                     ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _formatHour(hour),
-                        style: TextStyle(
-                          fontSize: isEmptySlot ? 11 : 12,
-                          fontWeight:
-                              isEmptySlot ? FontWeight.w600 : FontWeight.w700,
-                          color: isEmptySlot
-                              ? AppTheme.textSecondary
-                              : AppTheme.textPrimary,
+                    decoration: BoxDecoration(
+                      color: isEmptySlot
+                          ? AppTheme.cardSurface.withAlpha(140)
+                          : AppTheme.cardSurface,
+                      borderRadius: AppRadii.lgBorderRadius,
+                      border: Border.all(
+                        color: isEmptySlot
+                            ? AppTheme.cardBorder.withAlpha(80)
+                            : AppTheme.cardBorder,
+                        width: 0.8,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          _formatHour(hour),
+                          style: TextStyle(
+                            fontSize: isEmptySlot ? 11 : 12,
+                            fontWeight:
+                                isEmptySlot ? FontWeight.w600 : FontWeight.w700,
+                            color: isEmptySlot
+                                ? AppTheme.textSecondary
+                                : AppTheme.textPrimary,
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.add_rounded,
-                        size: isEmptySlot ? 12 : 14,
-                        color: AppTheme.activeBlue,
-                      ),
-                    ],
+                        const SizedBox(width: 4),
+                        Icon(
+                          Icons.add_rounded,
+                          size: isEmptySlot ? 12 : 14,
+                          color: AppTheme.activeBlue,
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),

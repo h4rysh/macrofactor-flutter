@@ -45,7 +45,13 @@ class QuickActionsSheet extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const AppleSheetGrabber(margin: EdgeInsets.only(bottom: 8)),
+                    Semantics(
+                      label: 'Close sheet',
+                      hint: 'Double tap to dismiss',
+                      button: true,
+                      onTap: () => Navigator.pop(context),
+                      child: const AppleSheetGrabber(margin: EdgeInsets.only(bottom: 8)),
+                    ),
                     const Text(
                       'Quick Actions',
                       style: TextStyle(
@@ -173,49 +179,53 @@ class QuickActionsSheet extends StatelessWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return SiqueBouncy(
-      onTap: () {
-        AppHaptics.lightImpact();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: AppTheme.cardElevated,
-          borderRadius: AppRadii.lgBorderRadius,
-          border: Border.all(color: AppTheme.cardBorder, width: 0.8),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: AppRadii.mdBorderRadius,
+    return Semantics(
+      button: true,
+      label: '$title. $subtitle',
+      child: SiqueBouncy(
+        onTap: () {
+          AppHaptics.lightImpact();
+          onTap();
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppTheme.cardElevated,
+            borderRadius: AppRadii.lgBorderRadius,
+            border: Border.all(color: AppTheme.cardBorder, width: 0.8),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: AppRadii.mdBorderRadius,
+                ),
+                child: Icon(icon, color: color, size: 22),
               ),
-              child: Icon(icon, color: color, size: 22),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              title,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textPrimary,
-                height: 1.25,
+              const SizedBox(height: 14),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.textPrimary,
+                  height: 1.25,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 11,
-                color: AppTheme.textSecondary,
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.textSecondary,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -228,43 +238,47 @@ class QuickActionsSheet extends StatelessWidget {
     required Color color,
     required VoidCallback onTap,
   }) {
-    return SiqueBouncy(
-      onTap: () {
-        AppHaptics.lightImpact();
-        onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-        decoration: BoxDecoration(
-          color: AppTheme.cardElevated,
-          borderRadius: AppRadii.lgBorderRadius,
-          border: Border.all(color: AppTheme.cardBorder, width: 0.8),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 34,
-              height: 34,
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
-                borderRadius: AppRadii.mdBorderRadius,
+    return Semantics(
+      button: true,
+      label: title,
+      child: SiqueBouncy(
+        onTap: () {
+          AppHaptics.lightImpact();
+          onTap();
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+          decoration: BoxDecoration(
+            color: AppTheme.cardElevated,
+            borderRadius: AppRadii.lgBorderRadius,
+            border: Border.all(color: AppTheme.cardBorder, width: 0.8),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.15),
+                  borderRadius: AppRadii.mdBorderRadius,
+                ),
+                child: Icon(icon, color: color, size: 18),
               ),
-              child: Icon(icon, color: color, size: 18),
-            ),
-            const SizedBox(height: 8),
-            FittedBox(
-              fit: BoxFit.scaleDown,
-              child: Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.textPrimary,
+              const SizedBox(height: 8),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.textPrimary,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

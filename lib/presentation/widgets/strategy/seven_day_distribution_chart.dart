@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/strategy_providers.dart';
 import '../../theme/app_theme.dart';
@@ -18,13 +19,20 @@ class _SevenDayDistributionChartState
     extends ConsumerState<SevenDayDistributionChart> {
   int _selectedDayIndex = 0;
 
-  void _handleScrub(Offset localPos, double width, int count) {
-    if (width <= 0 || count <= 0) return;
-    final barW = width / count;
-    final idx = (localPos.dx / barW).floor().clamp(0, count - 1);
+  void _handleScrub(
+      BuildContext context, Offset localPos, double width, List<dynamic> days) {
+    if (width <= 0 || days.isEmpty) return;
+    final barW = width / days.length;
+    final idx = (localPos.dx / barW).floor().clamp(0, days.length - 1);
     if (idx != _selectedDayIndex) {
       AppHaptics.selectionClick();
       setState(() => _selectedDayIndex = idx);
+      final day = days[idx];
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        '${day.dayName}: ${day.calories.round()} calories',
+        TextDirection.ltr,
+      );
     }
   }
 
@@ -39,9 +47,14 @@ class _SevenDayDistributionChartState
     final minCal = days.map((d) => d.calories).fold<double>(9999.0, min);
     final range = max(maxCal - minCal, 200.0);
 
+    final dayBreakdowns = days
+        .map((d) =>
+            '${d.dayName}: ${d.calories.round()} kcal, ${d.proteinGrams.round()}g protein, ${d.fatGrams.round()}g fat, ${d.carbsGrams.round()}g carbs')
+        .join('. ');
     final semanticsLabel =
         '7-Day Energy Allocation Chart. Total weekly calories: ${program.weeklyTotalCalories.round()} kcal. '
-        'Selected day: ${selectedDay.dayName}, ${selectedDay.calories.round()} kcal.';
+        'Selected day: ${selectedDay.dayName}, ${selectedDay.calories.round()} kcal. '
+        'Daily breakdown: $dayBreakdowns';
 
     return Semantics(
       label: semanticsLabel,
@@ -154,14 +167,16 @@ class _SevenDayDistributionChartState
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onHorizontalDragDown: (d) => _handleScrub(
+                    context,
                     d.localPosition,
                     constraints.maxWidth,
-                    days.length,
+                    days,
                   ),
                   onHorizontalDragUpdate: (d) => _handleScrub(
+                    context,
                     d.localPosition,
                     constraints.maxWidth,
-                    days.length,
+                    days,
                   ),
                   child: SizedBox(
                     height: 140,

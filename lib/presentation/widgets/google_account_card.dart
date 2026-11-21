@@ -42,16 +42,20 @@ class GoogleAccountCard extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      user.email.isNotEmpty
-                          ? user.email
-                          : 'Local Guest Account',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: AppTheme.textSecondary,
+                    Semantics(
+                      readOnly: true,
+                      label: 'Account email: ${user.email.isNotEmpty ? user.email : "Local Guest Account"}',
+                      child: Text(
+                        user.email.isNotEmpty
+                            ? user.email
+                            : 'Local Guest Account',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.textSecondary,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                     _buildAuthProviderBadge(user),
                   ],
@@ -172,16 +176,23 @@ class GoogleAccountCard extends ConsumerWidget {
   }
 
   Widget _buildAvatar(UserAccount user) {
-    if (user.photoUrl != null && user.photoUrl!.isNotEmpty) {
-      return CircleAvatar(
-        radius: 26,
-        backgroundColor: AppTheme.cardElevated,
-        backgroundImage: NetworkImage(user.photoUrl!),
-        onBackgroundImageError: (_, __) {},
-        child: user.photoUrl == null ? _buildFallbackInitial(user) : null,
-      );
-    }
-    return _buildFallbackInitial(user);
+    return Semantics(
+      label: 'Profile avatar',
+      child: SizedBox(
+        width: 52,
+        height: 52,
+        child: user.photoUrl != null && user.photoUrl!.isNotEmpty
+            ? CircleAvatar(
+                radius: 26,
+                backgroundColor: AppTheme.cardElevated,
+                backgroundImage: NetworkImage(user.photoUrl!),
+                onBackgroundImageError: (_, __) {},
+                child:
+                    user.photoUrl == null ? _buildFallbackInitial(user) : null,
+              )
+            : _buildFallbackInitial(user),
+      ),
+    );
   }
 
   Widget _buildFallbackInitial(UserAccount user) {

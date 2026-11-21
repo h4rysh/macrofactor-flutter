@@ -48,28 +48,33 @@ class ProteinPreferenceCard extends StatelessWidget {
             spacing: 8,
             children: ProteinPreference.values.map((pref) {
               final isSelected = profile.proteinPreference == pref;
-              return ChoiceChip(
-                label: Text(
-                  pref.displayName,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? Colors.white : AppTheme.textSecondary,
-                  ),
-                ),
+              return Semantics(
                 selected: isSelected,
-                selectedColor: AppTheme.protein,
-                backgroundColor: AppTheme.cardElevated,
-                side: BorderSide(
-                  color: isSelected ? AppTheme.protein : AppTheme.cardBorder,
+                button: true,
+                label: 'Protein preference: ${pref.displayName}',
+                child: ChoiceChip(
+                  label: Text(
+                    pref.displayName,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected ? Colors.white : AppTheme.textSecondary,
+                    ),
+                  ),
+                  selected: isSelected,
+                  selectedColor: AppTheme.protein,
+                  backgroundColor: AppTheme.cardElevated,
+                  side: BorderSide(
+                    color: isSelected ? AppTheme.protein : AppTheme.cardBorder,
+                  ),
+                  onSelected: (selected) {
+                    if (selected) {
+                      ref.read(userProfileProvider.notifier).updateProfile(
+                            profile.copyWith(proteinPreference: pref),
+                          );
+                    }
+                  },
                 ),
-                onSelected: (selected) {
-                  if (selected) {
-                    ref.read(userProfileProvider.notifier).updateProfile(
-                          profile.copyWith(proteinPreference: pref),
-                        );
-                  }
-                },
               );
             }).toList(),
           ),

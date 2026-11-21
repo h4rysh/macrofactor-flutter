@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../../domain/models/food_models.dart';
 import '../../domain/models/user_profile.dart';
 import '../theme/app_theme.dart';
+import '../utils/quantity_parser.dart';
 import '../widgets/apple_sheet_grabber.dart';
 import '../widgets/apple_tactile_card.dart';
 import '../widgets/food_svg_icon.dart';
@@ -94,27 +95,8 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
               gramWeight: 1.0),
         ];
 
-  static double? _parseQuantity(String text) {
-    final clean = text.trim().replaceAll(',', '.');
-    if (clean.isEmpty) return null;
-    if (clean.contains(' ') && clean.contains('/')) {
-      final p = clean.split(RegExp(r'\s+'));
-      if (p.length == 2) {
-        final w = double.tryParse(p[0]), f = _parseQuantity(p[1]);
-        if (w != null && f != null) return w + f;
-      }
-    }
-    if (clean.contains('/')) {
-      final p = clean.split('/');
-      if (p.length == 2) {
-        final n = double.tryParse(p[0].trim()),
-            d = double.tryParse(p[1].trim());
-        if (n != null && d != null && d > 0) return n / d;
-      }
-      return null;
-    }
-    return double.tryParse(clean);
-  }
+  static double? _parseQuantity(String text) => QuantityParser.parse(text);
+  String _formatQuantity(double q) => QuantityParser.format(q);
 
   void _onConfirmLog() {
     if (_isSubmitting) return;
@@ -159,9 +141,6 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
     _quantityController.dispose();
     super.dispose();
   }
-
-  String _formatQuantity(double q) =>
-      q.truncateToDouble() == q ? q.toInt().toString() : q.toStringAsFixed(1);
 
   void _setQuantity(double newQ) {
     if (newQ > 0) {
@@ -328,34 +307,39 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                       ),
                                     );
                                   }).toList(),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.cardElevated,
-                                      borderRadius: AppRadii.mdBorderRadius,
-                                      border: Border.all(
-                                          color: AppTheme.cardBorder,
-                                          width: 0.8),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          _selectedMeal.displayName,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppTheme.textPrimary,
+                                  child: Semantics(
+                                    button: true,
+                                    hint:
+                                        'Double tap to change meal slot, currently set to ${_selectedMeal.displayName}',
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 10, vertical: 4),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.cardElevated,
+                                        borderRadius: AppRadii.mdBorderRadius,
+                                        border: Border.all(
+                                            color: AppTheme.cardBorder,
+                                            width: 0.8),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(
+                                            _selectedMeal.displayName,
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w700,
+                                              color: AppTheme.textPrimary,
+                                            ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        const Icon(
-                                          Icons.arrow_drop_down_rounded,
-                                          size: 18,
-                                          color: AppTheme.textSecondary,
-                                        ),
-                                      ],
+                                          const SizedBox(width: 4),
+                                          const Icon(
+                                            Icons.arrow_drop_down_rounded,
+                                            size: 18,
+                                            color: AppTheme.textSecondary,
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -523,83 +507,98 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  AppleBouncy(
-                                    scaleDown: 0.88,
-                                    onTap: () {
-                                      final current = _parseQuantity(
-                                              _quantityController.text) ??
-                                          _quantity;
-                                      if (current > 0.5) {
-                                        _setQuantity(current - 0.5);
-                                      }
-                                    },
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 8,
-                                      ),
-                                      child: Icon(
-                                        Icons.remove,
-                                        size: 18,
-                                        color: AppTheme.textPrimary,
+                                  Semantics(
+                                    button: true,
+                                    label: 'Decrease quantity by 0.5',
+                                    child: AppleBouncy(
+                                      scaleDown: 0.88,
+                                      onTap: () {
+                                        final current = _parseQuantity(
+                                                _quantityController.text) ??
+                                            _quantity;
+                                        if (current > 0.5) {
+                                          _setQuantity(current - 0.5);
+                                        }
+                                      },
+                                      child: Container(
+                                        constraints: const BoxConstraints(
+                                          minWidth: 48,
+                                          minHeight: 48,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: const Icon(
+                                          Icons.remove,
+                                          size: 18,
+                                          color: AppTheme.textPrimary,
+                                        ),
                                       ),
                                     ),
                                   ),
                                   SizedBox(
                                     width: 58,
-                                    child: TextFormField(
-                                      key: const Key(
-                                          'plate_serving_numeric_field'),
-                                      focusNode: _quantityFocusNode,
-                                      controller: _quantityController,
-                                      keyboardType:
-                                          const TextInputType.numberWithOptions(
-                                              decimal: true),
-                                      textInputAction: TextInputAction.done,
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppTheme.textPrimary,
-                                        fontFeatures: [
-                                          FontFeature.tabularFigures()
+                                    child: Semantics(
+                                      label: 'Serving quantity',
+                                      hint: 'Enter quantity or serving amount',
+                                      child: TextFormField(
+                                        key: const Key(
+                                            'plate_serving_numeric_field'),
+                                        focusNode: _quantityFocusNode,
+                                        controller: _quantityController,
+                                        keyboardType:
+                                            const TextInputType.numberWithOptions(
+                                                decimal: true),
+                                        textInputAction: TextInputAction.done,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppTheme.textPrimary,
+                                          fontFeatures: [
+                                            FontFeature.tabularFigures()
+                                          ],
+                                        ),
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.allow(
+                                              RegExp(r'[\d.,/ ]'))
                                         ],
+                                        decoration: const InputDecoration(
+                                          isDense: true,
+                                          hintText: 'Qty',
+                                          contentPadding: EdgeInsets.symmetric(
+                                              vertical: 4, horizontal: 2),
+                                          border: InputBorder.none,
+                                        ),
+                                        onChanged: (val) {
+                                          final parsed = _parseQuantity(val);
+                                          if (parsed != null && parsed > 0) {
+                                            setState(() => _quantity = parsed);
+                                          }
+                                        },
                                       ),
-                                      inputFormatters: [
-                                        FilteringTextInputFormatter.allow(
-                                            RegExp(r'[\d.,/ ]'))
-                                      ],
-                                      decoration: const InputDecoration(
-                                        isDense: true,
-                                        contentPadding: EdgeInsets.symmetric(
-                                            vertical: 4, horizontal: 2),
-                                        border: InputBorder.none,
-                                      ),
-                                      onChanged: (val) {
-                                        final parsed = _parseQuantity(val);
-                                        if (parsed != null && parsed > 0) {
-                                          setState(() => _quantity = parsed);
-                                        }
-                                      },
                                     ),
                                   ),
-                                  AppleBouncy(
-                                    scaleDown: 0.88,
-                                    onTap: () {
-                                      final current = _parseQuantity(
-                                              _quantityController.text) ??
-                                          _quantity;
-                                      _setQuantity(current + 0.5);
-                                    },
-                                    child: const Padding(
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 8,
-                                      ),
-                                      child: Icon(
-                                        Icons.add,
-                                        size: 18,
-                                        color: AppTheme.textPrimary,
+                                  Semantics(
+                                    button: true,
+                                    label: 'Increase quantity by 0.5',
+                                    child: AppleBouncy(
+                                      scaleDown: 0.88,
+                                      onTap: () {
+                                        final current = _parseQuantity(
+                                                _quantityController.text) ??
+                                            _quantity;
+                                        _setQuantity(current + 0.5);
+                                      },
+                                      child: Container(
+                                        constraints: const BoxConstraints(
+                                          minWidth: 48,
+                                          minHeight: 48,
+                                        ),
+                                        alignment: Alignment.center,
+                                        child: const Icon(
+                                          Icons.add,
+                                          size: 18,
+                                          color: AppTheme.textPrimary,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -726,34 +725,39 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                     child: AppleBouncy(
                       scaleDown: 0.97,
                       onTap: _onConfirmLog,
-                      child: Container(
-                        alignment: Alignment.center,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.buttonBackground,
-                          borderRadius: AppRadii.lgBorderRadius,
-                        ),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Text(
-                                'Add to Plate',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppTheme.buttonText,
+                      child: Semantics(
+                        button: true,
+                        label:
+                            'Add to Plate, ${_effectiveCalories.round()} calories to ${_selectedMeal.displayName}',
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: const BoxDecoration(
+                            color: AppTheme.buttonBackground,
+                            borderRadius: AppRadii.lgBorderRadius,
+                          ),
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text(
+                                  'Add to Plate',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppTheme.buttonText,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '${_effectiveCalories.round()} kcal to ${_selectedMeal.displayName}',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
-                                  color: AppTheme.textMuted,
+                                Text(
+                                  '${_effectiveCalories.round()} kcal to ${_selectedMeal.displayName}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textMuted,
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ),

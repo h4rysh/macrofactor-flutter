@@ -58,13 +58,17 @@ class MacroGaugeRing extends StatelessWidget {
                     duration: sweepDuration,
                     curve: Curves.easeOutCubic,
                     builder: (context, animatedRatio, child) {
-                      return CustomPaint(
-                        size: const Size(184, 184),
-                        painter: _AnimatedRingPainter(
-                          progress: animatedRatio,
-                          trackColor:
-                              AppTheme.cardBorder.withValues(alpha: 0.7),
-                          progressColor: AppTheme.calories,
+                      return Semantics(
+                        value:
+                            '${consumed.calories.round()} of ${targets.calories.round()} kcal consumed, ${remainingCalories >= 0 ? "$remainingCalories left" : "${remainingCalories.abs()} over"}',
+                        child: CustomPaint(
+                          size: const Size(184, 184),
+                          painter: _AnimatedRingPainter(
+                            progress: animatedRatio,
+                            trackColor:
+                                AppTheme.cardBorder.withValues(alpha: 0.7),
+                            progressColor: AppTheme.calories,
+                          ),
                         ),
                       );
                     },
@@ -180,55 +184,59 @@ class _AnimatedMacroProgressItem extends StatelessWidget {
     final ratio =
         targetGrams > 0 ? (consumedGrams / targetGrams).clamp(0.0, 1.0) : 0.0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        FittedBox(
-          fit: BoxFit.scaleDown,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                label,
-                style: AppTypography.labelMedium.copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                  letterSpacing: 0.5,
+    return Semantics(
+      label:
+          '$label: ${consumedGrams.round()} grams of ${targetGrams.round()} grams target, ${(ratio * 100).round()}%',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  label,
+                  style: AppTypography.labelMedium.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: color,
+                    letterSpacing: 0.5,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 4),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  AnimatedCountText(
-                    value: consumedGrams,
-                    style: AppTypography.numericCaption.copyWith(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textSecondary,
+                const SizedBox(width: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    AnimatedCountText(
+                      value: consumedGrams,
+                      style: AppTypography.numericCaption.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
-                  ),
-                  Text(
-                    '/${targetGrams.round()}g',
-                    style: AppTypography.numericCaption.copyWith(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                      color: AppTheme.textMuted,
+                    Text(
+                      '/${targetGrams.round()}g',
+                      style: AppTypography.numericCaption.copyWith(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        color: AppTheme.textMuted,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: 7),
-        AnimatedMacroBar(
-          ratio: ratio,
-          color: color,
-          height: 6.5,
-        ),
-      ],
+          const SizedBox(height: 7),
+          AnimatedMacroBar(
+            ratio: ratio,
+            color: color,
+            height: 6.5,
+          ),
+        ],
+      ),
     );
   }
 }

@@ -75,52 +75,60 @@ class AboutScreen extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
-          ListTile(
-            key: const Key('about_medical_disclaimer_btn'),
-            leading: const Icon(Icons.health_and_safety_outlined,
-                color: AppTheme.activeBlue),
-            title: const Text(
-              LegalCopy.medicalDisclaimerTitle,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
+          Semantics(
+            link: true,
+            label: 'Open Medical Disclaimer',
+            child: ListTile(
+              key: const Key('about_medical_disclaimer_btn'),
+              leading: const Icon(Icons.health_and_safety_outlined,
+                  color: AppTheme.activeBlue),
+              title: const Text(
+                LegalCopy.medicalDisclaimerTitle,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
               ),
-            ),
-            subtitle: const Text(
-              LegalCopy.medicalDisclaimerSubtitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: AppTheme.textSecondary,
+              subtitle: const Text(
+                LegalCopy.medicalDisclaimerSubtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
               ),
+              trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                  size: 14, color: AppTheme.textMuted),
+              onTap: () => AuthLegalFooter.showMedicalDisclaimer(context),
             ),
-            trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: AppTheme.textMuted),
-            onTap: () => AuthLegalFooter.showMedicalDisclaimer(context),
           ),
           const Divider(height: 1, indent: 56, color: AppTheme.cardBorder),
-          ListTile(
-            key: const Key('about_privacy_policy_btn'),
-            leading: const Icon(Icons.privacy_tip_outlined,
-                color: AppTheme.activeBlue),
-            title: const Text(
-              LegalCopy.privacyPolicyTitle,
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.textPrimary,
+          Semantics(
+            link: true,
+            label: 'Open Privacy Policy',
+            child: ListTile(
+              key: const Key('about_privacy_policy_btn'),
+              leading: const Icon(Icons.privacy_tip_outlined,
+                  color: AppTheme.activeBlue),
+              title: const Text(
+                LegalCopy.privacyPolicyTitle,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.textPrimary,
+                ),
               ),
-            ),
-            subtitle: const Text(
-              LegalCopy.privacyPolicySubtitle,
-              style: TextStyle(
-                fontSize: 12,
-                color: AppTheme.textSecondary,
+              subtitle: const Text(
+                LegalCopy.privacyPolicySubtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppTheme.textSecondary,
+                ),
               ),
+              trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                  size: 14, color: AppTheme.textMuted),
+              onTap: () => AuthLegalFooter.showPrivacyPolicy(context),
             ),
-            trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: AppTheme.textMuted),
-            onTap: () => AuthLegalFooter.showPrivacyPolicy(context),
           ),
         ],
       ),

@@ -258,26 +258,30 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                 // Numeric Weight Input with Flanking Steppers (-0.1 / +0.1)
                 Row(
                   children: [
-                    AppleBouncy(
-                      scaleDown: 0.90,
-                      onTap: () => _adjustWeight(-0.1),
-                      child: Container(
-                        width: 44,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardElevated,
-                          borderRadius: AppRadii.lgBorderRadius,
-                          border: Border.all(
-                              color: AppTheme.cardBorder, width: 0.8),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            '-0.1',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textSecondary,
-                              fontFeatures: [FontFeature.tabularFigures()],
+                    Semantics(
+                      button: true,
+                      label: 'Decrease weight by 0.1 kilograms',
+                      child: AppleBouncy(
+                        scaleDown: 0.90,
+                        onTap: () => _adjustWeight(-0.1),
+                        child: Container(
+                          width: 48,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: AppTheme.cardElevated,
+                            borderRadius: AppRadii.lgBorderRadius,
+                            border: Border.all(
+                                color: AppTheme.cardBorder, width: 0.8),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              '-0.1',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textSecondary,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
                             ),
                           ),
                         ),
@@ -297,32 +301,35 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                         child: Row(
                           children: [
                             Expanded(
-                              child: TextField(
-                                controller: _weightController,
-                                keyboardType:
-                                    const TextInputType.numberWithOptions(
-                                        decimal: true),
-                                textInputAction: TextInputAction.next,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.allow(
-                                      RegExp(r'^\d*\.?\d*')),
-                                ],
-                                autofocus: true,
-                                onChanged: (_) => setState(() {}),
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w900,
-                                  color: AppTheme.textPrimary,
-                                  fontFeatures: [FontFeature.tabularFigures()],
-                                ),
-                                decoration: const InputDecoration(
-                                  hintText: '0.0',
-                                  hintStyle: TextStyle(
+                              child: Semantics(
+                                label: 'Scale weight in kilograms',
+                                child: TextField(
+                                  controller: _weightController,
+                                  keyboardType:
+                                      const TextInputType.numberWithOptions(
+                                          decimal: true),
+                                  textInputAction: TextInputAction.next,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.allow(
+                                        RegExp(r'^\d*\.?\d*')),
+                                  ],
+                                  autofocus: true,
+                                  onChanged: (_) => setState(() {}),
+                                  style: const TextStyle(
                                     fontSize: 32,
                                     fontWeight: FontWeight.w900,
-                                    color: AppTheme.textMuted,
+                                    color: AppTheme.textPrimary,
+                                    fontFeatures: [FontFeature.tabularFigures()],
                                   ),
-                                  border: InputBorder.none,
+                                  decoration: const InputDecoration(
+                                    hintText: '0.0',
+                                    hintStyle: TextStyle(
+                                      fontSize: 32,
+                                      fontWeight: FontWeight.w900,
+                                      color: AppTheme.textMuted,
+                                    ),
+                                    border: InputBorder.none,
+                                  ),
                                 ),
                               ),
                             ),
@@ -339,26 +346,30 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    AppleBouncy(
-                      scaleDown: 0.90,
-                      onTap: () => _adjustWeight(0.1),
-                      child: Container(
-                        width: 44,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardElevated,
-                          borderRadius: AppRadii.lgBorderRadius,
-                          border: Border.all(
-                              color: AppTheme.cardBorder, width: 0.8),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            '+0.1',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.textSecondary,
-                              fontFeatures: [FontFeature.tabularFigures()],
+                    Semantics(
+                      button: true,
+                      label: 'Increase weight by 0.1 kilograms',
+                      child: AppleBouncy(
+                        scaleDown: 0.90,
+                        onTap: () => _adjustWeight(0.1),
+                        child: Container(
+                          width: 48,
+                          height: 52,
+                          decoration: BoxDecoration(
+                            color: AppTheme.cardElevated,
+                            borderRadius: AppRadii.lgBorderRadius,
+                            border: Border.all(
+                                color: AppTheme.cardBorder, width: 0.8),
+                          ),
+                          child: const Center(
+                            child: Text(
+                              '+0.1',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textSecondary,
+                                fontFeatures: [FontFeature.tabularFigures()],
+                              ),
                             ),
                           ),
                         ),
@@ -417,33 +428,38 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                   children: const ['Fasted', 'Post-meal', 'High salt', 'Travel']
                       .map((chip) {
                     final isSelected = _noteController.text.contains(chip);
-                    return AppleBouncy(
-                      scaleDown: 0.94,
-                      onTap: () => _toggleContextChip(chip),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? AppTheme.buttonBackground
-                              : AppTheme.cardElevated,
-                          borderRadius: AppRadii.xlBorderRadius,
-                          border: Border.all(
+                    return Semantics(
+                      button: true,
+                      selected: isSelected,
+                      label: chip,
+                      child: AppleBouncy(
+                        scaleDown: 0.94,
+                        onTap: () => _toggleContextChip(chip),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
                             color: isSelected
                                 ? AppTheme.buttonBackground
-                                : AppTheme.cardBorder,
-                            width: 0.8,
+                                : AppTheme.cardElevated,
+                            borderRadius: AppRadii.xlBorderRadius,
+                            border: Border.all(
+                              color: isSelected
+                                  ? AppTheme.buttonBackground
+                                  : AppTheme.cardBorder,
+                              width: 0.8,
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          chip,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight:
-                                isSelected ? FontWeight.w700 : FontWeight.w500,
-                            color: isSelected
-                                ? AppTheme.buttonText
-                                : AppTheme.textSecondary,
+                          child: Text(
+                            chip,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight:
+                                  isSelected ? FontWeight.w700 : FontWeight.w500,
+                              color: isSelected
+                                  ? AppTheme.buttonText
+                                  : AppTheme.textSecondary,
+                            ),
                           ),
                         ),
                       ),

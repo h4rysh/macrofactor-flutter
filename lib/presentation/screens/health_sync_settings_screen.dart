@@ -56,15 +56,18 @@ class _HealthSyncSettingsScreenState
         ? 'Not Available'
         : (connected ? 'Connected' : 'Action Required');
 
-    return Container(
-      key: const Key('health_sync_status_card'),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.cardSurface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppTheme.cardBorder),
-      ),
-      child: Column(
+    return Semantics(
+      liveRegion: true,
+      label: 'Health Connect Status: $label',
+      child: Container(
+        key: const Key('health_sync_status_card'),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.cardSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppTheme.cardBorder),
+        ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -128,8 +131,9 @@ class _HealthSyncSettingsScreenState
           ],
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildSyncActionCard(HealthSyncState st) {
     return Container(
@@ -265,50 +269,56 @@ class _HealthSyncSettingsScreenState
             ),
           ],
           const SizedBox(height: 14),
-          ElevatedButton(
-            key: const Key('health_sync_trigger_btn'),
-            onPressed: st.isSyncing
-                ? null
-                : () => ref
-                    .read(healthConnectSyncProvider.notifier)
-                    .syncNow(trailingDays: _selectedDays),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.activeBlue,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: AppTheme.cardElevated,
-              minimumSize: const Size(double.infinity, 44),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10)),
-            ),
-            child: st.isSyncing
-                ? const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
+          Semantics(
+            button: true,
+            label: st.isSyncing
+                ? 'Syncing health data...'
+                : 'Sync Now ($_selectedDays days)',
+            child: ElevatedButton(
+              key: const Key('health_sync_trigger_btn'),
+              onPressed: st.isSyncing
+                  ? null
+                  : () => ref
+                      .read(healthConnectSyncProvider.notifier)
+                      .syncNow(trailingDays: _selectedDays),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.activeBlue,
+                foregroundColor: Colors.white,
+                disabledBackgroundColor: AppTheme.cardElevated,
+                minimumSize: const Size(double.infinity, 44),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+              ),
+              child: st.isSyncing
+                  ? const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
                         ),
-                      ),
-                      SizedBox(width: 8),
-                      Text('Syncing...',
-                          style: TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w700)),
-                    ],
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.sync_rounded, size: 16),
-                      const SizedBox(width: 6),
-                      Text('Sync Now (${_selectedDays}d)',
-                          style: const TextStyle(
-                              fontSize: 13, fontWeight: FontWeight.w700)),
-                    ],
-                  ),
+                        SizedBox(width: 8),
+                        Text('Syncing...',
+                            style: TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w700)),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.sync_rounded, size: 16),
+                        const SizedBox(width: 6),
+                        Text('Sync Now (${_selectedDays}d)',
+                            style: const TextStyle(
+                                fontSize: 13, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+            ),
           ),
         ],
       ),

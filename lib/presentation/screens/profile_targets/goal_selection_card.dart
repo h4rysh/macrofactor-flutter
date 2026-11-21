@@ -49,36 +49,41 @@ class GoalSelectionCard extends StatelessWidget {
               return Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 4),
-                  child: ChoiceChip(
-                    label: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Text(
-                        name,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight:
-                              isSelected ? FontWeight.w700 : FontWeight.w500,
-                          color: isSelected
-                              ? Colors.white
-                              : AppTheme.textSecondary,
+                  child: Semantics(
+                    selected: isSelected,
+                    button: true,
+                    label: 'Goal: $name',
+                    child: ChoiceChip(
+                      label: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          name,
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight:
+                                isSelected ? FontWeight.w700 : FontWeight.w500,
+                            color: isSelected
+                                ? Colors.white
+                                : AppTheme.textSecondary,
+                          ),
                         ),
                       ),
+                      selected: isSelected,
+                      selectedColor: AppTheme.activeBlue,
+                      backgroundColor: AppTheme.cardElevated,
+                      side: BorderSide(
+                        color: isSelected
+                            ? AppTheme.activeBlue
+                            : AppTheme.cardBorder,
+                      ),
+                      onSelected: (selected) {
+                        if (selected) {
+                          ref.read(userProfileProvider.notifier).updateProfile(
+                                profile.copyWith(goalType: goal),
+                              );
+                        }
+                      },
                     ),
-                    selected: isSelected,
-                    selectedColor: AppTheme.activeBlue,
-                    backgroundColor: AppTheme.cardElevated,
-                    side: BorderSide(
-                      color: isSelected
-                          ? AppTheme.activeBlue
-                          : AppTheme.cardBorder,
-                    ),
-                    onSelected: (selected) {
-                      if (selected) {
-                        ref.read(userProfileProvider.notifier).updateProfile(
-                              profile.copyWith(goalType: goal),
-                            );
-                      }
-                    },
                   ),
                 ),
               );
@@ -125,21 +130,26 @@ class GoalSelectionCard extends StatelessWidget {
               thumbColor: AppTheme.trendWeight,
               trackHeight: 4,
             ),
-            child: Slider(
-              value: DomainValidator.clampRateOfChange(
-                profile.weeklyRateOfChangePct,
-                profile.goalType,
-              ).clamp(-1.5, 1.0),
-              min: -1.5,
-              max: 1.0,
-              divisions: 50,
-              onChanged: (val) {
-                final safeRate =
-                    DomainValidator.clampRateOfChange(val, profile.goalType);
-                ref.read(userProfileProvider.notifier).updateProfile(
-                      profile.copyWith(weeklyRateOfChangePct: safeRate),
-                    );
-              },
+            child: Semantics(
+              label: 'Weekly Rate of Change Slider',
+              value:
+                  '${profile.weeklyRateOfChangePct >= 0 ? "+" : ""}${profile.weeklyRateOfChangePct.toStringAsFixed(2)}% per week',
+              child: Slider(
+                value: DomainValidator.clampRateOfChange(
+                  profile.weeklyRateOfChangePct,
+                  profile.goalType,
+                ).clamp(-1.5, 1.0),
+                min: -1.5,
+                max: 1.0,
+                divisions: 50,
+                onChanged: (val) {
+                  final safeRate =
+                      DomainValidator.clampRateOfChange(val, profile.goalType);
+                  ref.read(userProfileProvider.notifier).updateProfile(
+                        profile.copyWith(weeklyRateOfChangePct: safeRate),
+                      );
+                },
+              ),
             ),
           ),
         ],

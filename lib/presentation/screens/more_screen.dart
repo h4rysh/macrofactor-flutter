@@ -149,7 +149,7 @@ class MoreScreen extends ConsumerWidget {
         style: const TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w700,
-          color: AppTheme.textMuted,
+          color: AppTheme.textSecondary,
           letterSpacing: 0.8,
         ),
       ),
@@ -392,66 +392,70 @@ class MoreScreen extends ConsumerWidget {
     required String subtitle,
     required Widget destination,
   }) {
-    return AppleBouncy(
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute<void>(
-            builder: (_) => destination,
+    return Semantics(
+      button: true,
+      hint: 'Navigates to $title screen',
+      child: AppleBouncy(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => destination,
+            ),
+          );
+        },
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          decoration: BoxDecoration(
+            color: AppTheme.cardSurface,
+            borderRadius: AppRadii.lgBorderRadius,
+            border: Border.all(color: AppTheme.cardBorder),
           ),
-        );
-      },
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 10),
-        decoration: BoxDecoration(
-          color: AppTheme.cardSurface,
-          borderRadius: AppRadii.lgBorderRadius,
-          border: Border.all(color: AppTheme.cardBorder),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: const BoxDecoration(
-                color: AppTheme.cardElevated,
-                borderRadius: AppRadii.mdBorderRadius,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: const BoxDecoration(
+                  color: AppTheme.cardElevated,
+                  borderRadius: AppRadii.mdBorderRadius,
+                ),
+                child: Icon(
+                  icon,
+                  color: AppTheme.textSecondary,
+                  size: 20,
+                ),
               ),
-              child: Icon(
-                icon,
-                color: AppTheme.textSecondary,
-                size: 20,
-              ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textPrimary,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textSecondary,
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const Icon(
-              Icons.arrow_forward_ios_rounded,
-              size: 14,
-              color: AppTheme.textMuted,
-            ),
-          ],
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 14,
+                color: AppTheme.textMuted,
+              ),
+            ],
+          ),
         ),
       ),
     );
