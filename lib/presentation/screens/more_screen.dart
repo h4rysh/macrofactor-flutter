@@ -45,7 +45,7 @@ class MoreScreen extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         children: [
           // 1. ACCOUNT & PROFILE
-          _buildSectionHeader('ACCOUNT & PROFILE'),
+          _buildSectionHeader('Account & Profile'),
           AppleStaggeredEntrance(
             index: 0,
             child: _buildAccountCard(context, user),
@@ -65,7 +65,7 @@ class MoreScreen extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // 2. COACHING & LOGGING
-          _buildSectionHeader('COACHING & LOGGING'),
+          _buildSectionHeader('Coaching & Logging'),
           AppleStaggeredEntrance(
             index: 2,
             child: _buildSettingsTile(
@@ -92,7 +92,7 @@ class MoreScreen extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // 3. DATA & INTEGRATIONS
-          _buildSectionHeader('DATA & INTEGRATIONS'),
+          _buildSectionHeader('Data & Integrations'),
           AppleStaggeredEntrance(
             index: 4,
             child: _buildSettingsTile(
@@ -118,7 +118,7 @@ class MoreScreen extends ConsumerWidget {
           const SizedBox(height: 16),
 
           // 4. DATA MANAGEMENT & LEGAL
-          _buildSectionHeader('DATA MANAGEMENT & LEGAL'),
+          _buildSectionHeader('Data Management & Legal'),
           AppleStaggeredEntrance(
             index: 6,
             child: _buildSettingsTile(
@@ -152,10 +152,10 @@ class MoreScreen extends ConsumerWidget {
       child: Text(
         title,
         style: const TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
           color: AppTheme.textSecondary,
-          letterSpacing: 0.8,
+          letterSpacing: 0.2,
         ),
       ),
     );

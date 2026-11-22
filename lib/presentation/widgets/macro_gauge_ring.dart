@@ -93,12 +93,12 @@ class MacroGaugeRing extends StatelessWidget {
                             ),
                           ),
                           Text(
-                            'CALORIES CONSUMED',
+                            'Calories consumed',
                             style: AppTypography.labelSmall.copyWith(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
                               color: AppTheme.textSecondary,
-                              letterSpacing: 0.9,
+                              letterSpacing: 0.1,
                             ),
                           ),
                           const SizedBox(height: 8),

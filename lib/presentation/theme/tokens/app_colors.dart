@@ -26,6 +26,12 @@ class AppColors {
   /// Subtle hairline divider and border token (#26262E).
   static const Color cardBorder = Color(0xFF26262E);
 
+  /// Top-edge specular highlight for physical anodized surface depth (12% white).
+  static const Color specularHighlightTop = Color(0x1FFFFFFF);
+
+  /// Bottom-edge hairline border for subtle shadow separation (2% white).
+  static const Color specularHighlightBottom = Color(0x05FFFFFF);
+
   // ===========================================================================
   // Text & Content Tokens
   // All text tokens guarantee >= 4.5:1 WCAG AA contrast across all surfaces.

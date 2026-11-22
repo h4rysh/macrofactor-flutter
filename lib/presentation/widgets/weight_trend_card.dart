@@ -195,7 +195,7 @@ class WeightTrendCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'Steady progress · Pacing adapts to actual trend',
+                    'Steady progress (pacing adapts to actual trend)',
                     style: AppTypography.numericCaption.copyWith(
                       fontSize: 11,
                       color: AppTheme.textSecondary,

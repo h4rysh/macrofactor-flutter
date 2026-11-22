@@ -50,6 +50,13 @@ class SiqueTonalCard extends StatelessWidget {
         color: effectiveBg,
         borderRadius: effectiveRadius,
         border: Border.all(color: effectiveBorder, width: 1.0),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x33000000),
+            blurRadius: 16,
+            offset: Offset(0, 4),
+          ),
+        ],
       ),
       child: child,
     );

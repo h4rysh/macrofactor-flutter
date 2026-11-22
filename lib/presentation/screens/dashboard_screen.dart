@@ -74,13 +74,12 @@ class DashboardScreen extends ConsumerWidget {
                                 children: [
                                   Text(
                                     DateFormat('EEEE, MMM d')
-                                        .format(selectedDate)
-                                        .toUpperCase(),
+                                        .format(selectedDate),
                                     style: const TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppTheme.textMuted,
-                                      letterSpacing: 1.0,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.textSecondary,
+                                      letterSpacing: 0.1,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
