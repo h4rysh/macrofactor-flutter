@@ -150,6 +150,10 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
 
   void _onConfirmLog() {
     if (_isSubmitting) return;
+    final latestParsed = _parseQuantity(_quantityController.text);
+    if (latestParsed != null && latestParsed > 0) {
+      _quantity = latestParsed;
+    }
     _isSubmitting = true;
     AppHaptics.mediumImpact();
     Navigator.of(context).pop();

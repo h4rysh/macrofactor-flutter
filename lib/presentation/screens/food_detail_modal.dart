@@ -6,6 +6,7 @@ import 'package:sique/domain/models/food_models.dart';
 import 'package:sique/domain/models/oil_modifier_display.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/utils/quantity_parser.dart';
 import 'package:sique/presentation/widgets/apple_sheet_grabber.dart';
 import 'package:sique/presentation/widgets/food_svg_icon.dart';
 
@@ -55,7 +56,7 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
     _quantityFocusNode = FocusNode();
     _quantityFocusNode.addListener(() {
       if (!_quantityFocusNode.hasFocus) {
-        final parsed = double.tryParse(_quantityController.text);
+        final parsed = QuantityParser.parse(_quantityController.text);
         if (parsed == null || parsed <= 0) {
           _quantityController.text = _formatQuantity(_quantity);
         } else {
@@ -91,6 +92,10 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
 
   void _handleLogFood() {
     if (_isSubmitting) return; // Debounce guard (ISS-8-08)
+    final parsed = QuantityParser.parse(_quantityController.text);
+    if (parsed != null && parsed > 0) {
+      _quantity = parsed;
+    }
     setState(() => _isSubmitting = true);
 
     try {

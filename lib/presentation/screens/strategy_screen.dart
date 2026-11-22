@@ -225,14 +225,15 @@ class StrategyScreen extends ConsumerWidget {
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(Icons.auto_fix_high_rounded,
-                                        size: 16, color: Colors.white),
+                                        size: 16,
+                                        color: AppTheme.buttonForeground),
                                     SizedBox(width: 4),
                                     Text(
                                       'Refigure Split',
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w800,
-                                        color: Colors.white,
+                                        color: AppTheme.buttonForeground,
                                       ),
                                     ),
                                   ],

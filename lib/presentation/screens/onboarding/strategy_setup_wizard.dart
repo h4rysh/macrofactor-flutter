@@ -638,35 +638,44 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
             children: daysOfWeek.map((day) {
               final id = day['id'] as int;
               final isWorkout = _workoutDays.contains(id);
-              return GestureDetector(
-                onTap: () {
-                  setState(() {
-                    if (isWorkout) {
-                      if (_workoutDays.length > 1) _workoutDays.remove(id);
-                    } else {
-                      _workoutDays.add(id);
-                    }
-                  });
-                },
-                child: Container(
-                  width: 42,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: isWorkout ? AppTheme.calories : AppTheme.cardSurface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
+              return Semantics(
+                button: true,
+                selected: isWorkout,
+                label:
+                    "${day['name']}, ${isWorkout ? 'workout day' : 'rest day'}",
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      if (isWorkout) {
+                        if (_workoutDays.length > 1) _workoutDays.remove(id);
+                      } else {
+                        _workoutDays.add(id);
+                      }
+                    });
+                  },
+                  child: Container(
+                    width: 42,
+                    height: 48,
+                    decoration: BoxDecoration(
                       color:
-                          isWorkout ? AppTheme.calories : AppTheme.cardBorder,
-                      width: 1.5,
+                          isWorkout ? AppTheme.calories : AppTheme.cardSurface,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color:
+                            isWorkout ? AppTheme.calories : AppTheme.cardBorder,
+                        width: 1.5,
+                      ),
                     ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    day['name'] as String,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: isWorkout ? Colors.white : AppTheme.textSecondary,
+                    alignment: Alignment.center,
+                    child: Text(
+                      day['name'] as String,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: isWorkout
+                            ? AppTheme.buttonForeground
+                            : AppTheme.textSecondary,
+                      ),
                     ),
                   ),
                 ),

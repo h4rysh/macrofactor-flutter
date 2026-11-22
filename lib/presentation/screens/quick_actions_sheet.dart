@@ -1,5 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/widgets/sique_bouncy.dart';
 import '../../domain/models/food_models.dart';
 import '../theme/app_theme.dart';
@@ -18,6 +21,62 @@ class QuickActionsSheet extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => const QuickActionsSheet(),
+    );
+  }
+
+  void _handleCopyYesterday(BuildContext context) {
+    Navigator.pop(context);
+    try {
+      final container = ProviderScope.containerOf(context, listen: false);
+      final selectedDateStr = container.read(selectedDateProvider);
+      final selectedDate = DateTime.tryParse(selectedDateStr) ?? DateTime.now();
+      final yesterday = DateTime(
+        selectedDate.year,
+        selectedDate.month,
+        selectedDate.day - 1,
+      );
+      final yesterdayStr = DateFormat('yyyy-MM-dd').format(yesterday);
+
+      final count = container
+          .read(dailyFoodLogsProvider.notifier)
+          .copyFromDate(yesterdayStr);
+
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            count > 0
+                ? 'Copied $count ${count == 1 ? 'meal' : 'meals'} from yesterday'
+                : 'No meals logged yesterday to copy',
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (_) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Failed to copy yesterday’s meals. Please try again.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  void _handleDayNote(BuildContext context) {
+    String selectedDateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    try {
+      final container = ProviderScope.containerOf(context, listen: false);
+      selectedDateStr = container.read(selectedDateProvider);
+    } catch (_) {}
+
+    final navigator = Navigator.of(context);
+    navigator.pop();
+
+    showModalBottomSheet(
+      context: navigator.context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => DayNoteSheet(date: selectedDateStr),
     );
   }
 
@@ -127,17 +186,7 @@ class QuickActionsSheet extends StatelessWidget {
                             icon: Icons.content_copy_rounded,
                             title: 'Copy Yesterday',
                             color: AppTheme.carbs,
-                            onTap: () {
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Yesterday’s meals copied to today',
-                                  ),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            },
+                            onTap: () => _handleCopyYesterday(context),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -147,15 +196,7 @@ class QuickActionsSheet extends StatelessWidget {
                             icon: Icons.note_alt_outlined,
                             title: 'Day Note',
                             color: AppTheme.protein,
-                            onTap: () {
-                              Navigator.pop(context);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Day note recorded'),
-                                  behavior: SnackBarBehavior.floating,
-                                ),
-                              );
-                            },
+                            onTap: () => _handleDayNote(context),
                           ),
                         ),
                       ],
@@ -278,6 +319,224 @@ class QuickActionsSheet extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Modal bottom sheet for logging or editing reflections, hunger, or energy for [date].
+class DayNoteSheet extends ConsumerStatefulWidget {
+  const DayNoteSheet({super.key, required this.date});
+  final String date;
+
+  @override
+  ConsumerState<DayNoteSheet> createState() => _DayNoteSheetState();
+}
+
+class _DayNoteSheetState extends ConsumerState<DayNoteSheet> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final db = ref.read(databaseProvider);
+    final existing = db.getSetting('day_note:${widget.date}', '');
+    _controller = TextEditingController(text: existing);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _saveNote() {
+    final text = _controller.text.trim();
+    final db = ref.read(databaseProvider);
+    db.setSetting('day_note:${widget.date}', text);
+
+    Navigator.pop(context);
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text.isEmpty ? 'Day note cleared' : 'Day note saved'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    DateTime parsedDate;
+    try {
+      parsedDate = DateTime.parse(widget.date);
+    } catch (_) {
+      parsedDate = DateTime.now();
+    }
+    final formattedDate = DateFormat('EEEE, MMM d').format(parsedDate);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface.withValues(alpha: 0.96),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.12),
+          width: 0.5,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 25, sigmaY: 25),
+          child: SafeArea(
+            child: Padding(
+              padding: EdgeInsets.only(
+                left: 20,
+                right: 20,
+                top: 12,
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const AppleSheetGrabber(margin: EdgeInsets.only(bottom: 12)),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Day Note',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                color: AppTheme.textPrimary,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              formattedDate,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded,
+                              color: AppTheme.textSecondary),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _controller,
+                      maxLines: 4,
+                      autofocus: true,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppTheme.textPrimary,
+                        height: 1.4,
+                      ),
+                      decoration: InputDecoration(
+                        hintText:
+                            'How did your energy, hunger, recovery, or workouts feel today?',
+                        hintStyle: TextStyle(
+                          color: AppTheme.textSecondary.withValues(alpha: 0.6),
+                          fontSize: 13,
+                        ),
+                        filled: true,
+                        fillColor: AppTheme.cardElevated,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: AppTheme.cardBorder,
+                            width: 0.8,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: AppTheme.cardBorder,
+                            width: 0.8,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: AppTheme.activeBlue,
+                            width: 1.2,
+                          ),
+                        ),
+                        contentPadding: const EdgeInsets.all(14),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SiqueBouncy(
+                            onTap: () => Navigator.pop(context),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: AppTheme.cardElevated,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(
+                                  color: AppTheme.cardBorder,
+                                  width: 0.8,
+                                ),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'Cancel',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.textSecondary,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: SiqueBouncy(
+                            onTap: _saveNote,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFFAFAFA),
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: const Center(
+                                child: Text(
+                                  'Save Note',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    color: Color(0xFF09090B),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ),
       ),

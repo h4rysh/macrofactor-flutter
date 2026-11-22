@@ -56,6 +56,12 @@ class SiqueTonalCard extends StatelessWidget {
             blurRadius: 16,
             offset: Offset(0, 4),
           ),
+          BoxShadow(
+            color: AppColors.specularHighlightTop,
+            blurRadius: 0.5,
+            spreadRadius: 0.0,
+            offset: Offset(0, -0.5),
+          ),
         ],
       ),
       child: child,

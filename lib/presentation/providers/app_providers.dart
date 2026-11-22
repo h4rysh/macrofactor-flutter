@@ -179,6 +179,40 @@ class DailyFoodLogsNotifier extends StateNotifier<List<FoodLogEntry>> {
     return id;
   }
 
+  /// Copies all food entries from [fromDate] ('yyyy-MM-dd') into the current date.
+  /// Returns the number of copied entries.
+  int copyFromDate(String fromDate) {
+    final sourceLogs = _db.getFoodLogsForDate(fromDate);
+    if (sourceLogs.isEmpty) return 0;
+
+    final targetParts = _date.split('-');
+    if (targetParts.length != 3) return 0;
+    final targetYear = int.tryParse(targetParts[0]);
+    final targetMonth = int.tryParse(targetParts[1]);
+    final targetDay = int.tryParse(targetParts[2]);
+    if (targetYear == null || targetMonth == null || targetDay == null) return 0;
+
+    for (final src in sourceLogs) {
+      final newLoggedAt = DateTime(
+        targetYear,
+        targetMonth,
+        targetDay,
+        src.loggedAt.hour,
+        src.loggedAt.minute,
+        src.loggedAt.second,
+      );
+      final newEntry = src.copyWith(
+        id: 0,
+        date: _date,
+        loggedAt: newLoggedAt,
+      );
+      _db.insertFoodLog(newEntry);
+    }
+    refresh();
+    _notifyMutation();
+    return sourceLogs.length;
+  }
+
   int addEntry({
     required FoodItem food,
     required PortionUnit portionUnit,

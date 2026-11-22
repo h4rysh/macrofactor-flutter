@@ -181,64 +181,6 @@ class DashboardScreen extends ConsumerWidget {
                           targets: macroTarget,
                         ),
                       ),
-                      if (dailyNutrition.calories == 0) ...[
-                        const SizedBox(height: 14),
-                        AppleStaggeredEntrance(
-                          index: 1,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 12),
-                            decoration: BoxDecoration(
-                              color: AppTheme.cardSurface,
-                              borderRadius: AppRadii.lgBorderRadius,
-                              border: Border.all(
-                                  color: AppTheme.cardBorder, width: 0.8),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.activeBlue
-                                        .withValues(alpha: 0.12),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.wb_sunny_rounded,
-                                    color: AppTheme.activeBlue,
-                                    size: 18,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                const Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Your day starts here',
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w700,
-                                          color: AppTheme.textPrimary,
-                                        ),
-                                      ),
-                                      SizedBox(height: 2),
-                                      Text(
-                                        'Tap Log Food or Quick Add to log breakfast.',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: AppTheme.textSecondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
                       const SizedBox(height: 14),
 
                       // Quick Action Strip
@@ -250,7 +192,6 @@ class DashboardScreen extends ConsumerWidget {
                               child: _buildActionPill(
                                 icon: Icons.add_rounded,
                                 label: 'Log Food',
-                                color: AppTheme.activeBlue,
                                 onTap: () {
                                   if (onNavigateToFoodLog != null) {
                                     onNavigateToFoodLog!();
@@ -268,7 +209,6 @@ class DashboardScreen extends ConsumerWidget {
                               child: _buildActionPill(
                                 icon: Icons.monitor_weight_outlined,
                                 label: 'Log Weight',
-                                color: AppTheme.trendWeight,
                                 onTap: () => WeightLogModal.show(context),
                               ),
                             ),
@@ -277,7 +217,6 @@ class DashboardScreen extends ConsumerWidget {
                               child: _buildActionPill(
                                 icon: Icons.bolt_rounded,
                                 label: 'Quick Add',
-                                color: AppTheme.calories,
                                 onTap: () => QuickActionsSheet.show(context),
                               ),
                             ),
@@ -325,7 +264,6 @@ class DashboardScreen extends ConsumerWidget {
   Widget _buildActionPill({
     required IconData icon,
     required String label,
-    required Color color,
     required VoidCallback onTap,
   }) {
     return AppleBouncy(
@@ -336,14 +274,21 @@ class DashboardScreen extends ConsumerWidget {
           color: AppTheme.cardSurface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: color.withValues(alpha: 0.25),
+            color: AppTheme.cardBorder,
             width: 0.8,
           ),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x1A000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 15),
+            Icon(icon, color: AppTheme.textSecondary, size: 15),
             const SizedBox(width: 4),
             Flexible(
               child: Text(

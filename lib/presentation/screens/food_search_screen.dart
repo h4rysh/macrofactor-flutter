@@ -376,7 +376,13 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                           scaleDown: 0.94,
                           onTap: () {
                             _debounceTimer?.cancel();
-                            setState(() => _selectedFilter = filter);
+                            setState(() {
+                              if (isSelected && filter != FoodFilterType.all) {
+                                _selectedFilter = FoodFilterType.all;
+                              } else {
+                                _selectedFilter = filter;
+                              }
+                            });
                             _performSearch(_searchController.text);
                           },
                           child: Container(
