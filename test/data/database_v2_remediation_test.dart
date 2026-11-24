@@ -24,9 +24,9 @@ void main() {
 
     test('1. Migration v4 establishes composite keys and new schema columns',
         () {
-      // PRAGMA user_version is 4
+      // PRAGMA user_version is currentVersion (>= 4)
       final ver = rawDb.select('PRAGMA user_version;').first.values.first;
-      expect(ver, equals(4));
+      expect(ver, equals(DatabaseMigrations.currentVersion));
 
       // user_profile has date_of_birth and user_id
       final profileCols = rawDb

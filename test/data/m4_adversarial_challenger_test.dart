@@ -103,13 +103,14 @@ void main() {
             rawDb.select('PRAGMA user_version;').first.values.first as int;
         expect(initialVersion, equals(DatabaseMigrations.currentVersion));
 
-        // Simulate failing step 5 that adds a column and then throws before commit
+        // Simulate failing step that adds a column and then throws before commit
         expect(
-          () => DatabaseMigrations.runStepForTest(rawDb, 5, (db) {
+          () => DatabaseMigrations.runStepForTest(
+              rawDb, DatabaseMigrations.currentVersion + 1, (db) {
             db.execute(
                 'ALTER TABLE user_profile ADD COLUMN experimental_metric REAL;');
             // Throw before user_version is bumped or committed
-            throw StateError('Simulated crash during schema migration step 5');
+            throw StateError('Simulated crash during schema migration step');
           }),
           throwsA(isA<StateError>()),
         );
@@ -140,9 +141,10 @@ void main() {
             "INSERT INTO app_settings (key, value) VALUES ('version_meta', '1.0');");
 
         expect(
-          () => DatabaseMigrations.runStepForTest(rawDb, 5, (db) {
+          () => DatabaseMigrations.runStepForTest(
+              rawDb, DatabaseMigrations.currentVersion + 1, (db) {
             db.execute(
-                "INSERT INTO app_settings (key, value) VALUES ('step5_key', 'val5');");
+                "INSERT INTO app_settings (key, value) VALUES ('step_key', 'val');");
             db.execute(
                 "UPDATE app_settings SET value = '2.0' WHERE key = 'version_meta';");
             throw const SocketException(
@@ -180,14 +182,16 @@ void main() {
 
         // Attempt 1 fails
         expect(
-          () => DatabaseMigrations.runStepForTest(rawDb, 5, migrationStep),
+          () => DatabaseMigrations.runStepForTest(
+              rawDb, DatabaseMigrations.currentVersion + 1, migrationStep),
           throwsA(isA<Exception>()),
         );
         expect(rawDb.select('PRAGMA user_version;').first.values.first,
             equals(DatabaseMigrations.currentVersion));
 
         // Attempt 2 succeeds
-        DatabaseMigrations.runStepForTest(rawDb, 5, migrationStep);
+        DatabaseMigrations.runStepForTest(
+            rawDb, DatabaseMigrations.currentVersion + 1, migrationStep);
         expect(rawDb.select('PRAGMA user_version;').first.values.first,
             equals(DatabaseMigrations.currentVersion + 1));
 

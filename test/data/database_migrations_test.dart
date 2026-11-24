@@ -242,28 +242,28 @@ void main() {
       final rawDb = sqlite3.openInMemory();
       DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
 
-      // Current user_version is 4
+      // Current user_version is 5
       final initialVersion =
           rawDb.select('PRAGMA user_version;').first.values.first;
       expect(initialVersion, equals(DatabaseMigrations.currentVersion));
 
-      // Attempt a failing migration step to version 5
+      // Attempt a failing migration step to version 6
       expect(
-        () => DatabaseMigrations.runStepForTest(rawDb, 5, (db) {
-          db.execute('CREATE TABLE step5_rollback_table (id INT);');
+        () => DatabaseMigrations.runStepForTest(rawDb, 6, (db) {
+          db.execute('CREATE TABLE step6_rollback_table (id INT);');
           throw Exception('Simulated migration crash');
         }),
         throwsA(isA<Exception>()),
       );
 
-      // Verify user_version remained 4
+      // Verify user_version remained 5
       final postFailureVersion =
           rawDb.select('PRAGMA user_version;').first.values.first;
       expect(postFailureVersion, equals(DatabaseMigrations.currentVersion));
 
-      // Verify step5_rollback_table was rolled back and does not exist
+      // Verify step6_rollback_table was rolled back and does not exist
       final checkTable = rawDb.select(
-        "SELECT count(*) as cnt FROM sqlite_master WHERE type='table' AND name='step5_rollback_table';",
+        "SELECT count(*) as cnt FROM sqlite_master WHERE type='table' AND name='step6_rollback_table';",
       );
       expect(checkTable.first['cnt'], equals(0));
 
@@ -319,17 +319,60 @@ void main() {
           .toSet();
       expect(foodLogCols.contains('user_id'), isTrue);
 
+      // Apply Step 4
+      DatabaseMigrations.applyStepForTest(rawDb, 4);
+      final v4 = rawDb.select('PRAGMA user_version;').first.values.first;
+      expect(v4, equals(4));
+
+      // Apply Step 5
+      DatabaseMigrations.applyStepForTest(rawDb, 5);
+      final v5 = rawDb.select('PRAGMA user_version;').first.values.first;
+      expect(v5, equals(5));
+
+      // Verify new Wave 4 tables exist under v5
+      final tablesV5 = rawDb
+          .select("SELECT name FROM sqlite_master WHERE type='table';")
+          .map((r) => r['name'] as String)
+          .toSet();
+      expect(tablesV5.contains('body_measurements'), isTrue);
+      expect(tablesV5.contains('weekly_challenges'), isTrue);
+      expect(tablesV5.contains('challenge_daily_progress'), isTrue);
+      expect(tablesV5.contains('water_logs'), isTrue);
+      expect(tablesV5.contains('fasting_sessions'), isTrue);
+
+      // Verify user_profile v5 extension columns exist
+      final profileColsV5 = rawDb
+          .select("PRAGMA table_info('user_profile');")
+          .map((r) => r['name'] as String)
+          .toSet();
+      expect(profileColsV5.contains('reverse_diet_pacing'), isTrue);
+      expect(profileColsV5.contains('is_in_diet_break'), isTrue);
+      expect(profileColsV5.contains('daily_water_target_ml'), isTrue);
+      expect(profileColsV5.contains('default_fasting_protocol'), isTrue);
+      expect(profileColsV5.contains('peri_workout_timing_enabled'), isTrue);
+      expect(profileColsV5.contains('neck_circumference_cm'), isTrue);
+
+      // Verify coaching_check_ins v5 audit trail columns exist
+      final checkInColsV5 = rawDb
+          .select("PRAGMA table_info('coaching_check_ins');")
+          .map((r) => r['name'] as String)
+          .toSet();
+      expect(checkInColsV5.contains('raw_calorie_delta'), isTrue);
+      expect(checkInColsV5.contains('damped_calorie_delta'), isTrue);
+      expect(checkInColsV5.contains('was_clamped'), isTrue);
+      expect(checkInColsV5.contains('silent_recomp_detected'), isTrue);
+
       rawDb.dispose();
     });
 
     test('Higher user_version is protected from downgrade overwrite', () {
       final rawDb = sqlite3.openInMemory();
-      rawDb.execute('PRAGMA user_version = 5;');
+      rawDb.execute('PRAGMA user_version = 6;');
 
       DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
 
       final versionResult = rawDb.select('PRAGMA user_version;');
-      expect(versionResult.first.values.first, equals(5));
+      expect(versionResult.first.values.first, equals(6));
 
       rawDb.dispose();
     });

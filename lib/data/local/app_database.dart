@@ -4,10 +4,14 @@ import 'dart:io';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sique/data/local/dao/body_measurements_dao.dart';
+import 'package:sique/data/local/dao/challenges_dao.dart';
 import 'package:sique/data/local/dao/expenditure_dao.dart';
+import 'package:sique/data/local/dao/fasting_dao.dart';
 import 'package:sique/data/local/dao/food_dao.dart';
 import 'package:sique/data/local/dao/profile_dao.dart';
 import 'package:sique/data/local/dao/settings_dao.dart';
+import 'package:sique/data/local/dao/water_dao.dart';
 import 'package:sique/data/local/dao/weight_dao.dart';
 import 'package:sique/data/local/dao/workout_dao.dart';
 import 'package:sique/data/local/database_migrations.dart';
@@ -20,10 +24,14 @@ import 'package:sqlite3/sqlite3.dart';
 
 export 'app_database_coaching.dart';
 export 'app_database_expenditure.dart';
+export 'dao/body_measurements_dao.dart';
+export 'dao/challenges_dao.dart';
 export 'dao/expenditure_dao.dart';
+export 'dao/fasting_dao.dart';
 export 'dao/food_dao.dart';
 export 'dao/profile_dao.dart';
 export 'dao/settings_dao.dart';
+export 'dao/water_dao.dart';
 export 'dao/weight_dao.dart';
 export 'dao/workout_dao.dart';
 export 'database_migrations.dart';
@@ -48,7 +56,11 @@ class AppDatabase {
         profileDao = ProfileDao(_db),
         workoutDao = WorkoutDao(_db),
         expenditureDao = ExpenditureDao(_db),
-        settingsDao = SettingsDao(_db) {
+        settingsDao = SettingsDao(_db),
+        bodyMeasurementsDao = BodyMeasurementsDao(_db),
+        challengesDao = ChallengesDao(_db),
+        waterDao = WaterDao(_db),
+        fastingDao = FastingDao(_db) {
     _wireDaoUserIds();
     DatabaseMigrations.initializeAndMigrate(_db, isInMemory: isInMemory);
     _initializeFtsAndTriggers();
@@ -64,6 +76,10 @@ class AppDatabase {
   final WorkoutDao workoutDao;
   final ExpenditureDao expenditureDao;
   final SettingsDao settingsDao;
+  final BodyMeasurementsDao bodyMeasurementsDao;
+  final ChallengesDao challengesDao;
+  final WaterDao waterDao;
+  final FastingDao fastingDao;
 
   String _currentUserId = 'default_user';
 
@@ -78,6 +94,10 @@ class AppDatabase {
       expenditureDao.userId = _currentUserId;
       workoutDao.userId = _currentUserId;
       profileDao.userId = _currentUserId;
+      bodyMeasurementsDao.userId = _currentUserId;
+      challengesDao.userId = _currentUserId;
+      waterDao.userId = _currentUserId;
+      fastingDao.userId = _currentUserId;
     }
   }
 
@@ -94,6 +114,10 @@ class AppDatabase {
     expenditureDao.userIdProvider = () => _currentUserId;
     workoutDao.userIdProvider = () => _currentUserId;
     profileDao.userIdProvider = () => _currentUserId;
+    bodyMeasurementsDao.userIdProvider = () => _currentUserId;
+    challengesDao.userIdProvider = () => _currentUserId;
+    waterDao.userIdProvider = () => _currentUserId;
+    fastingDao.userIdProvider = () => _currentUserId;
   }
 
   /// Legacy initializer - retained for compatibility.

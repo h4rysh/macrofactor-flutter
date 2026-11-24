@@ -103,6 +103,12 @@ class UserProfile {
     this.recentWeightTrend = 'stable',
     this.exerciseFrequency = '1-3',
     this.dailyActivity = 'moderate',
+    this.reverseDietPacing = 'none',
+    this.isInDietBreak = false,
+    this.dailyWaterTargetMl = 2500,
+    this.defaultFastingProtocol = 'none',
+    this.periWorkoutTimingEnabled = false,
+    this.neckCircumferenceCm,
   });
 
   final String id;
@@ -133,6 +139,12 @@ class UserProfile {
   final String recentWeightTrend;
   final String exerciseFrequency;
   final String dailyActivity;
+  final String reverseDietPacing;
+  final bool isInDietBreak;
+  final int dailyWaterTargetMl;
+  final String defaultFastingProtocol;
+  final bool periWorkoutTimingEnabled;
+  final double? neckCircumferenceCm;
 
   /// Calculates dynamic daily calorie and macro targets given current Bayesian expenditure.
   MacroTarget calculateTargetMacros(double currentExpenditureKcal) {
@@ -244,6 +256,12 @@ class UserProfile {
     String? recentWeightTrend,
     String? exerciseFrequency,
     String? dailyActivity,
+    String? reverseDietPacing,
+    bool? isInDietBreak,
+    int? dailyWaterTargetMl,
+    String? defaultFastingProtocol,
+    bool? periWorkoutTimingEnabled,
+    double? neckCircumferenceCm,
     bool clearCustom = false,
   }) {
     return UserProfile(
@@ -281,6 +299,14 @@ class UserProfile {
       recentWeightTrend: recentWeightTrend ?? this.recentWeightTrend,
       exerciseFrequency: exerciseFrequency ?? this.exerciseFrequency,
       dailyActivity: dailyActivity ?? this.dailyActivity,
+      reverseDietPacing: reverseDietPacing ?? this.reverseDietPacing,
+      isInDietBreak: isInDietBreak ?? this.isInDietBreak,
+      dailyWaterTargetMl: dailyWaterTargetMl ?? this.dailyWaterTargetMl,
+      defaultFastingProtocol:
+          defaultFastingProtocol ?? this.defaultFastingProtocol,
+      periWorkoutTimingEnabled:
+          periWorkoutTimingEnabled ?? this.periWorkoutTimingEnabled,
+      neckCircumferenceCm: neckCircumferenceCm ?? this.neckCircumferenceCm,
     );
   }
 
@@ -313,6 +339,12 @@ class UserProfile {
         'recentWeightTrend': recentWeightTrend,
         'exerciseFrequency': exerciseFrequency,
         'dailyActivity': dailyActivity,
+        'reverseDietPacing': reverseDietPacing,
+        'isInDietBreak': isInDietBreak,
+        'dailyWaterTargetMl': dailyWaterTargetMl,
+        'defaultFastingProtocol': defaultFastingProtocol,
+        'periWorkoutTimingEnabled': periWorkoutTimingEnabled,
+        'neckCircumferenceCm': neckCircumferenceCm,
       };
 
   factory UserProfile.fromMap(Map<String, dynamic> map) => UserProfile(
@@ -355,5 +387,14 @@ class UserProfile {
         recentWeightTrend: map['recentWeightTrend'] as String? ?? 'stable',
         exerciseFrequency: map['exerciseFrequency'] as String? ?? '1-3',
         dailyActivity: map['dailyActivity'] as String? ?? 'moderate',
+        reverseDietPacing: map['reverseDietPacing'] as String? ?? 'none',
+        isInDietBreak: map['isInDietBreak'] as bool? ?? false,
+        dailyWaterTargetMl:
+            (map['dailyWaterTargetMl'] as num?)?.toInt() ?? 2500,
+        defaultFastingProtocol:
+            map['defaultFastingProtocol'] as String? ?? 'none',
+        periWorkoutTimingEnabled:
+            map['periWorkoutTimingEnabled'] as bool? ?? false,
+        neckCircumferenceCm: (map['neckCircumferenceCm'] as num?)?.toDouble(),
       );
 }

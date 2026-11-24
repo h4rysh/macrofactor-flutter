@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/domain/models/macro_program.dart';
+import 'package:sqlite3/sqlite3.dart';
 
 /// Extension on [AppDatabase] providing persistence for Sique coaching programs
 /// and weekly metabolic check-in records.
@@ -46,8 +47,9 @@ extension AppDatabaseCoachingExtension on AppDatabase {
     final stmt = rawDb.prepare('''
       INSERT INTO coaching_check_ins (
         id, user_id, check_in_date, previous_calories, recommended_calories,
-        expenditure_kcal, weight_trend_kg, is_accepted, status_note, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        expenditure_kcal, weight_trend_kg, is_accepted, status_note, created_at,
+        raw_calorie_delta, damped_calorie_delta, was_clamped, silent_recomp_detected
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         user_id = excluded.user_id,
         previous_calories = excluded.previous_calories,
@@ -55,22 +57,33 @@ extension AppDatabaseCoachingExtension on AppDatabase {
         expenditure_kcal = excluded.expenditure_kcal,
         weight_trend_kg = excluded.weight_trend_kg,
         is_accepted = excluded.is_accepted,
-        status_note = excluded.status_note;
+        status_note = excluded.status_note,
+        raw_calorie_delta = excluded.raw_calorie_delta,
+        damped_calorie_delta = excluded.damped_calorie_delta,
+        was_clamped = excluded.was_clamped,
+        silent_recomp_detected = excluded.silent_recomp_detected;
     ''');
 
-    stmt.execute([
-      checkIn.id,
-      uid,
-      checkIn.checkInDate.toIso8601String(),
-      checkIn.previousCalories,
-      checkIn.recommendedCalories,
-      checkIn.expenditureKcal,
-      checkIn.weightTrendKg,
-      checkIn.isAccepted ? 1 : 0,
-      checkIn.statusNote,
-      checkIn.createdAt.toIso8601String(),
-    ]);
-    stmt.dispose();
+    try {
+      stmt.execute([
+        checkIn.id,
+        uid,
+        checkIn.checkInDate.toIso8601String(),
+        checkIn.previousCalories,
+        checkIn.recommendedCalories,
+        checkIn.expenditureKcal,
+        checkIn.weightTrendKg,
+        checkIn.isAccepted ? 1 : 0,
+        checkIn.statusNote,
+        checkIn.createdAt.toIso8601String(),
+        checkIn.rawCalorieDelta,
+        checkIn.dampedCalorieDelta,
+        checkIn.wasClamped ? 1 : 0,
+        checkIn.silentRecompDetected ? 1 : 0,
+      ]);
+    } finally {
+      stmt.dispose();
+    }
   }
 
   /// Retrieves all historical coaching check-ins ordered chronologically descending, scoped to user_id.
@@ -81,8 +94,12 @@ extension AppDatabaseCoachingExtension on AppDatabase {
       WHERE user_id = ?
       ORDER BY check_in_date DESC, created_at DESC;
     ''');
-    final result = stmt.select([uid]);
-    stmt.dispose();
+    final ResultSet result;
+    try {
+      result = stmt.select([uid]);
+    } finally {
+      stmt.dispose();
+    }
 
     return result.map((row) {
       return CoachingCheckIn(
@@ -95,6 +112,11 @@ extension AppDatabaseCoachingExtension on AppDatabase {
         isAccepted: (row['is_accepted'] as int) == 1,
         statusNote: row['status_note'] as String? ?? '',
         createdAt: DateTime.parse(row['created_at'] as String),
+        rawCalorieDelta: (row['raw_calorie_delta'] as num?)?.toDouble(),
+        dampedCalorieDelta: (row['damped_calorie_delta'] as num?)?.toDouble(),
+        wasClamped: (row['was_clamped'] as int? ?? 0) == 1,
+        silentRecompDetected:
+            (row['silent_recomp_detected'] as int? ?? 0) == 1,
       );
     }).toList();
   }

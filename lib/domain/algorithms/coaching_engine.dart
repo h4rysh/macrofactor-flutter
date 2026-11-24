@@ -3,6 +3,34 @@ import 'package:meta/meta.dart';
 import 'package:sique/domain/models/macro_program.dart';
 import 'package:sique/domain/models/user_profile.dart';
 
+/// Lifecycle status of a weekly metabolic calorie adjustment.
+enum AdjustmentStatus {
+  adjusted,
+  clamped,
+  deadbandHold,
+  silentRecompHold,
+}
+
+/// Result payload of flux-damped metabolic adjustments.
+@immutable
+class DampedAdjustmentResult {
+  const DampedAdjustmentResult({
+    required this.recommendedCalories,
+    required this.appliedDelta,
+    required this.rawDelta,
+    required this.status,
+    required this.reason,
+    this.wasClamped = false,
+  });
+
+  final double recommendedCalories;
+  final double appliedDelta;
+  final double rawDelta;
+  final AdjustmentStatus status;
+  final String reason;
+  final bool wasClamped;
+}
+
 /// Recommendation payload generated during a coaching check-in.
 @immutable
 class CheckInRecommendation {
@@ -15,6 +43,10 @@ class CheckInRecommendation {
     required this.calorieDelta,
     required this.metabolicInsight,
     required this.suggestedProgram,
+    this.rawCalorieDelta,
+    this.dampedCalorieDelta,
+    this.wasClamped = false,
+    this.silentRecompDetected = false,
   });
 
   final bool isDue;
@@ -25,6 +57,10 @@ class CheckInRecommendation {
   final double calorieDelta;
   final String metabolicInsight;
   final WeeklyMacroProgram suggestedProgram;
+  final double? rawCalorieDelta;
+  final double? dampedCalorieDelta;
+  final bool wasClamped;
+  final bool silentRecompDetected;
 }
 
 /// Core reverse-engineered coaching engine for Sique.
@@ -426,37 +462,115 @@ class CoachingEngine {
     );
   }
 
+  /// Computes physiological flux-damped calorie adjustment.
+  /// Applies a confidence-weighted attenuation, a 20 kcal cognitive deadband,
+  /// asymmetric clamping ([-100 kcal, +150 kcal]), and silent recomposition protection.
+  static DampedAdjustmentResult computeDampedAdjustment({
+    required double currentAvgCalories,
+    required double unconstrainedTargetCalories,
+    required double kalmanConfidence,
+    required double calorieFloor,
+    required bool silentRecompActive,
+  }) {
+    final rawDelta = unconstrainedTargetCalories - currentAvgCalories;
+
+    // 1. Silent Recomposition Guard Override
+    if (silentRecompActive && rawDelta < 0) {
+      return DampedAdjustmentResult(
+        recommendedCalories: currentAvgCalories,
+        appliedDelta: 0.0,
+        rawDelta: rawDelta,
+        status: AdjustmentStatus.silentRecompHold,
+        reason:
+            'Waist circumference decreased despite scale weight plateau. Calories held to preserve muscle gain.',
+      );
+    }
+
+    // 2. Cognitive Deadband Filter (Disregard noise < 20 kcal)
+    if (rawDelta.abs() < 20.0) {
+      return DampedAdjustmentResult(
+        recommendedCalories: currentAvgCalories,
+        appliedDelta: 0.0,
+        rawDelta: rawDelta,
+        status: AdjustmentStatus.deadbandHold,
+        reason:
+            'Your metabolism is tracking steadily within optimal tolerance (delta < 20 kcal). Your current program remains optimal.',
+      );
+    }
+
+    // 3. Confidence Attenuation Factor: Gamma in [0.5, 1.0]
+    final gamma = 0.5 + (0.5 * kalmanConfidence.clamp(0.0, 1.0));
+    var scaledDelta = rawDelta * gamma;
+
+    // 4. Asymmetric Physiological Clamping: [-100 kcal, +150 kcal]
+    bool wasClamped = false;
+    if (scaledDelta < -100.0) {
+      scaledDelta = -100.0;
+      wasClamped = true;
+    } else if (scaledDelta > 150.0) {
+      scaledDelta = 150.0;
+      wasClamped = true;
+    }
+
+    // 5. Physiological Floor Protection
+    var finalTarget = (currentAvgCalories + scaledDelta).roundToDouble();
+    if (finalTarget < calorieFloor) {
+      finalTarget = calorieFloor;
+      scaledDelta = calorieFloor - currentAvgCalories;
+      wasClamped = true;
+    }
+
+    final String reason;
+    if (wasClamped) {
+      reason = scaledDelta > 0
+          ? 'Your dynamic expenditure has risen (+${scaledDelta.round()} kcal/day). Adjustment safety-damped to prevent metabolic whiplash.'
+          : 'Your metabolic adaptation suggests an adjustment (${scaledDelta.round()} kcal/day). Adjustment safety-damped to prevent metabolic whiplash.';
+    } else if (scaledDelta > 0) {
+      reason =
+          'Your dynamic expenditure has risen to ${finalTarget.round()} kcal/day (+${scaledDelta.round()} kcal intake recommended).';
+    } else {
+      reason =
+          'Your metabolic adaptation suggests a target adjustment of ${scaledDelta.round()} kcal/day to stay on pace.';
+    }
+
+    return DampedAdjustmentResult(
+      recommendedCalories: finalTarget,
+      appliedDelta: scaledDelta,
+      rawDelta: rawDelta,
+      status: wasClamped ? AdjustmentStatus.clamped : AdjustmentStatus.adjusted,
+      wasClamped: wasClamped,
+      reason: reason,
+    );
+  }
+
   /// Evaluates weekly check-in status and calculates new metabolic adjustments.
   static CheckInRecommendation evaluateWeeklyCheckIn({
     required WeeklyMacroProgram currentProgram,
     required UserProfile profile,
     required double currentExpenditureKcal,
     required DateTime currentDate,
+    double kalmanConfidence = 1.0,
+    bool silentRecompActive = false,
   }) {
     final daysSinceCheckIn =
         currentDate.difference(currentProgram.lastCheckInDate).inDays;
     final isDue = daysSinceCheckIn >= 7;
     final daysUntilNext = isDue ? 0 : (7 - daysSinceCheckIn).clamp(0, 7);
 
-    // Compute what the new daily average would be with latest Bayesian expenditure
-    final newAverageCalories = calculateDailyAverageCalories(
+    // Compute raw unconstrained target from Bayesian expenditure
+    final rawTarget = calculateDailyAverageCalories(
       profile: profile,
       expenditureKcal: currentExpenditureKcal,
     );
-    final calorieDelta =
-        newAverageCalories - currentProgram.dailyAverageCalories;
 
-    String insight;
-    if (calorieDelta.abs() < 15.0) {
-      insight =
-          'Your metabolism is tracking steadily at ${currentExpenditureKcal.round()} kcal/day. Your current program remains optimal.';
-    } else if (calorieDelta > 0) {
-      insight =
-          'Your dynamic expenditure has risen to ${currentExpenditureKcal.round()} kcal/day (+${calorieDelta.round()} kcal intake recommended).';
-    } else {
-      insight =
-          'Your metabolic adaptation suggests a target adjustment to ${newAverageCalories.round()} kcal/day (${calorieDelta.round()} kcal) to stay on pace.';
-    }
+    // Apply Confidence-Weighted Flux Damping Operator
+    final damped = computeDampedAdjustment(
+      currentAvgCalories: currentProgram.dailyAverageCalories,
+      unconstrainedTargetCalories: rawTarget,
+      kalmanConfidence: kalmanConfidence,
+      calorieFloor: profile.calorieFloor,
+      silentRecompActive: silentRecompActive,
+    );
 
     final suggestedProgram = buildWeeklyProgram(
       profile: profile,
@@ -467,7 +581,7 @@ class CoachingEngine {
       programStartDate: currentProgram.createdAt,
       lastCheckInDate: currentDate,
       checkInDayOfWeek: currentProgram.checkInDayOfWeek,
-      customDailyAverage: newAverageCalories,
+      customDailyAverage: damped.recommendedCalories,
     );
 
     return CheckInRecommendation(
@@ -475,10 +589,14 @@ class CoachingEngine {
       daysUntilNextCheckIn: daysUntilNext,
       currentExpenditureKcal: currentExpenditureKcal,
       previousAverageCalories: currentProgram.dailyAverageCalories,
-      recommendedAverageCalories: newAverageCalories,
-      calorieDelta: calorieDelta,
-      metabolicInsight: insight,
+      recommendedAverageCalories: damped.recommendedCalories,
+      calorieDelta: damped.appliedDelta,
+      metabolicInsight: damped.reason,
       suggestedProgram: suggestedProgram,
+      rawCalorieDelta: damped.rawDelta,
+      dampedCalorieDelta: damped.appliedDelta,
+      wasClamped: damped.wasClamped,
+      silentRecompDetected: silentRecompActive,
     );
   }
 }

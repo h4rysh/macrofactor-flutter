@@ -7,6 +7,8 @@ import 'package:sique/domain/models/macro_program.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 
+export 'lifestyle_providers.dart';
+
 /// Notifier managing active 7-day WeeklyMacroProgram and persistence.
 class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
   WeeklyMacroProgramNotifier(this._ref) : super(_loadInitial(_ref));
@@ -69,6 +71,10 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
       isAccepted: true,
       statusNote: recommendation.metabolicInsight,
       createdAt: DateTime.now(),
+      rawCalorieDelta: recommendation.rawCalorieDelta,
+      dampedCalorieDelta: recommendation.dampedCalorieDelta,
+      wasClamped: recommendation.wasClamped,
+      silentRecompDetected: recommendation.silentRecompDetected,
     );
 
     db.insertCoachingCheckIn(checkIn);
@@ -89,6 +95,10 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
       isAccepted: false,
       statusNote: 'Program retained without changes.',
       createdAt: DateTime.now(),
+      rawCalorieDelta: recommendation.rawCalorieDelta,
+      dampedCalorieDelta: recommendation.dampedCalorieDelta,
+      wasClamped: recommendation.wasClamped,
+      silentRecompDetected: recommendation.silentRecompDetected,
     );
 
     db.insertCoachingCheckIn(checkIn);
@@ -112,12 +122,15 @@ final coachingCheckInStatusProvider = Provider<CheckInRecommendation>((ref) {
   final program = ref.watch(weeklyMacroProgramProvider);
   final profile = ref.watch(userProfileProvider);
   final expenditure = ref.watch(expenditureStateProvider);
+  final silentRecomp = ref.watch(recompositionStatusProvider);
 
   return CoachingEngine.evaluateWeeklyCheckIn(
     currentProgram: program,
     profile: profile,
     currentExpenditureKcal: expenditure.expenditureKcal,
     currentDate: DateTime.now(),
+    kalmanConfidence: expenditure.confidence,
+    silentRecompActive: silentRecomp,
   );
 });
 

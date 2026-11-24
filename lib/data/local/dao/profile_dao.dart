@@ -32,8 +32,10 @@ class ProfileDao {
         custom_calories, custom_protein, custom_carbs, custom_fat,
         diet_type, calorie_floor_type, lifting_experience, cardio_experience,
         body_fat_range, weight_history_max, distribution_mode,
-        recent_weight_trend, exercise_frequency, daily_activity
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        recent_weight_trend, exercise_frequency, daily_activity,
+        reverse_diet_pacing, is_in_diet_break, daily_water_target_ml,
+        default_fasting_protocol, peri_workout_timing_enabled, neck_circumference_cm
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
         user_id = excluded.user_id,
         name = excluded.name,
@@ -62,7 +64,13 @@ class ProfileDao {
         distribution_mode = excluded.distribution_mode,
         recent_weight_trend = excluded.recent_weight_trend,
         exercise_frequency = excluded.exercise_frequency,
-        daily_activity = excluded.daily_activity;
+        daily_activity = excluded.daily_activity,
+        reverse_diet_pacing = excluded.reverse_diet_pacing,
+        is_in_diet_break = excluded.is_in_diet_break,
+        daily_water_target_ml = excluded.daily_water_target_ml,
+        default_fasting_protocol = excluded.default_fasting_protocol,
+        peri_workout_timing_enabled = excluded.peri_workout_timing_enabled,
+        neck_circumference_cm = excluded.neck_circumference_cm;
     ''');
 
     try {
@@ -96,6 +104,12 @@ class ProfileDao {
         profile.recentWeightTrend,
         profile.exerciseFrequency,
         profile.dailyActivity,
+        profile.reverseDietPacing,
+        profile.isInDietBreak ? 1 : 0,
+        profile.dailyWaterTargetMl,
+        profile.defaultFastingProtocol,
+        profile.periWorkoutTimingEnabled ? 1 : 0,
+        profile.neckCircumferenceCm,
       ]);
     } finally {
       stmt.dispose();
@@ -144,6 +158,14 @@ class ProfileDao {
         recentWeightTrend: row['recent_weight_trend'] as String? ?? 'stable',
         exerciseFrequency: row['exercise_frequency'] as String? ?? '1-3',
         dailyActivity: row['daily_activity'] as String? ?? 'moderate',
+        reverseDietPacing: row['reverse_diet_pacing'] as String? ?? 'none',
+        isInDietBreak: (row['is_in_diet_break'] as int? ?? 0) == 1,
+        dailyWaterTargetMl: row['daily_water_target_ml'] as int? ?? 2500,
+        defaultFastingProtocol:
+            row['default_fasting_protocol'] as String? ?? 'none',
+        periWorkoutTimingEnabled:
+            (row['peri_workout_timing_enabled'] as int? ?? 0) == 1,
+        neckCircumferenceCm: (row['neck_circumference_cm'] as num?)?.toDouble(),
       );
     } finally {
       stmt.dispose();
@@ -258,6 +280,18 @@ class ProfileDao {
     try {
       _executeScopedDelete('food_logs', targetUserId);
       _executeScopedDelete('weight_logs', targetUserId);
+      _executeScopedDelete('body_measurements', targetUserId);
+      final progressStmt = _db.prepare(
+        'DELETE FROM challenge_daily_progress WHERE challenge_id IN (SELECT id FROM weekly_challenges WHERE user_id = ?);',
+      );
+      try {
+        progressStmt.execute([targetUserId]);
+      } finally {
+        progressStmt.dispose();
+      }
+      _executeScopedDelete('weekly_challenges', targetUserId);
+      _executeScopedDelete('water_logs', targetUserId);
+      _executeScopedDelete('fasting_sessions', targetUserId);
       final profileStmt =
           _db.prepare('DELETE FROM user_profile WHERE user_id = ? OR id = ?;');
       try {
@@ -309,6 +343,11 @@ class ProfileDao {
     try {
       _db.execute('DELETE FROM food_logs;');
       _db.execute('DELETE FROM weight_logs;');
+      _db.execute('DELETE FROM body_measurements;');
+      _db.execute('DELETE FROM weekly_challenges;');
+      _db.execute('DELETE FROM challenge_daily_progress;');
+      _db.execute('DELETE FROM water_logs;');
+      _db.execute('DELETE FROM fasting_sessions;');
       _db.execute('DELETE FROM user_profile;');
       _db.execute('DELETE FROM expenditure_history;');
       _db.execute('DELETE FROM workout_sessions;');
@@ -320,7 +359,7 @@ class ProfileDao {
       _db.execute('DELETE FROM user_account_session;');
       try {
         _db.execute(
-          "DELETE FROM sqlite_sequence WHERE name IN ('food_logs', 'weight_logs');",
+          "DELETE FROM sqlite_sequence WHERE name IN ('food_logs', 'weight_logs', 'body_measurements', 'water_logs', 'fasting_sessions');",
         );
       } on SqliteException catch (e, st) {
         developer.log(

@@ -245,6 +245,10 @@ class CoachingCheckIn {
     required this.isAccepted,
     required this.statusNote,
     required this.createdAt,
+    this.rawCalorieDelta,
+    this.dampedCalorieDelta,
+    this.wasClamped = false,
+    this.silentRecompDetected = false,
   });
 
   final String id;
@@ -256,8 +260,13 @@ class CoachingCheckIn {
   final bool isAccepted;
   final String statusNote;
   final DateTime createdAt;
+  final double? rawCalorieDelta;
+  final double? dampedCalorieDelta;
+  final bool wasClamped;
+  final bool silentRecompDetected;
 
-  double get calorieDelta => recommendedCalories - previousCalories;
+  double get calorieDelta =>
+      dampedCalorieDelta ?? (recommendedCalories - previousCalories);
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -269,6 +278,10 @@ class CoachingCheckIn {
         'isAccepted': isAccepted,
         'statusNote': statusNote,
         'createdAt': createdAt.toIso8601String(),
+        'rawCalorieDelta': rawCalorieDelta,
+        'dampedCalorieDelta': dampedCalorieDelta,
+        'wasClamped': wasClamped,
+        'silentRecompDetected': silentRecompDetected,
       };
 
   factory CoachingCheckIn.fromJson(Map<String, dynamic> json) =>
@@ -279,8 +292,12 @@ class CoachingCheckIn {
         recommendedCalories: (json['recommendedCalories'] as num).toDouble(),
         expenditureKcal: (json['expenditureKcal'] as num).toDouble(),
         weightTrendKg: (json['weightTrendKg'] as num).toDouble(),
-        isAccepted: (json['isAccepted'] as bool?) ?? false,
+        isAccepted: json['isAccepted'] as bool? ?? false,
         statusNote: json['statusNote'] as String? ?? '',
         createdAt: DateTime.parse(json['createdAt'] as String),
+        rawCalorieDelta: (json['rawCalorieDelta'] as num?)?.toDouble(),
+        dampedCalorieDelta: (json['dampedCalorieDelta'] as num?)?.toDouble(),
+        wasClamped: json['wasClamped'] as bool? ?? false,
+        silentRecompDetected: json['silentRecompDetected'] as bool? ?? false,
       );
 }

@@ -83,7 +83,13 @@ class DatabaseSchema {
       distribution_mode TEXT NOT NULL DEFAULT 'even',
       recent_weight_trend TEXT NOT NULL DEFAULT 'stable',
       exercise_frequency TEXT NOT NULL DEFAULT '1-3',
-      daily_activity TEXT NOT NULL DEFAULT 'moderate'
+      daily_activity TEXT NOT NULL DEFAULT 'moderate',
+      reverse_diet_pacing TEXT NOT NULL DEFAULT 'none',
+      is_in_diet_break INTEGER NOT NULL DEFAULT 0,
+      daily_water_target_ml INTEGER NOT NULL DEFAULT 2500,
+      default_fasting_protocol TEXT NOT NULL DEFAULT 'none',
+      peri_workout_timing_enabled INTEGER NOT NULL DEFAULT 0,
+      neck_circumference_cm REAL
     );
   ''';
 
@@ -154,7 +160,11 @@ class DatabaseSchema {
       weight_trend_kg REAL NOT NULL,
       is_accepted INTEGER NOT NULL DEFAULT 0,
       status_note TEXT,
-      created_at TEXT NOT NULL
+      created_at TEXT NOT NULL,
+      raw_calorie_delta REAL,
+      damped_calorie_delta REAL,
+      was_clamped INTEGER NOT NULL DEFAULT 0,
+      silent_recomp_detected INTEGER NOT NULL DEFAULT 0
     );
   ''';
 
@@ -176,6 +186,99 @@ class DatabaseSchema {
     CREATE INDEX IF NOT EXISTS idx_day_completions_date ON day_completions(date);
   ''';
 
+  static const String createBodyMeasurementsTable = '''
+    CREATE TABLE IF NOT EXISTS body_measurements (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
+      date TEXT NOT NULL,
+      waist_cm REAL,
+      hips_cm REAL,
+      chest_cm REAL,
+      neck_cm REAL,
+      biceps_cm REAL,
+      thigh_cm REAL,
+      body_fat_pct REAL,
+      source TEXT NOT NULL DEFAULT 'manual',
+      notes TEXT,
+      logged_at TEXT NOT NULL,
+      UNIQUE(user_id, date)
+    );
+  ''';
+
+  static const String createBodyMeasurementsIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_body_measurements_user_date ON body_measurements(user_id, date);
+  ''';
+
+  static const String createWeeklyChallengesTable = '''
+    CREATE TABLE IF NOT EXISTS weekly_challenges (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      target_metric TEXT NOT NULL,
+      target_value REAL NOT NULL,
+      current_value REAL NOT NULL DEFAULT 0.0,
+      unit TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      week_start_date TEXT NOT NULL,
+      week_end_date TEXT NOT NULL,
+      completed_at TEXT,
+      created_at TEXT NOT NULL
+    );
+  ''';
+
+  static const String createWeeklyChallengesIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_weekly_challenges_user_status ON weekly_challenges(user_id, status);
+  ''';
+
+  static const String createChallengeDailyProgressTable = '''
+    CREATE TABLE IF NOT EXISTS challenge_daily_progress (
+      id TEXT PRIMARY KEY,
+      challenge_id TEXT NOT NULL,
+      date TEXT NOT NULL,
+      achieved_value REAL NOT NULL,
+      is_target_hit INTEGER NOT NULL DEFAULT 0,
+      FOREIGN KEY (challenge_id) REFERENCES weekly_challenges(id) ON DELETE CASCADE,
+      UNIQUE(challenge_id, date)
+    );
+  ''';
+
+  static const String createChallengeDailyProgressIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_challenge_progress_lookup ON challenge_daily_progress(challenge_id, date);
+  ''';
+
+  static const String createWaterLogsTable = '''
+    CREATE TABLE IF NOT EXISTS water_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
+      date TEXT NOT NULL,
+      amount_ml INTEGER NOT NULL,
+      logged_at TEXT NOT NULL
+    );
+  ''';
+
+  static const String createWaterLogsIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_water_logs_user_date ON water_logs(user_id, date);
+  ''';
+
+  static const String createFastingSessionsTable = '''
+    CREATE TABLE IF NOT EXISTS fasting_sessions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
+      protocol TEXT NOT NULL,
+      start_time TEXT NOT NULL,
+      target_end_time TEXT NOT NULL,
+      actual_end_time TEXT,
+      state TEXT NOT NULL DEFAULT 'active',
+      notes TEXT
+    );
+  ''';
+
+  static const String createFastingSessionsIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_fasting_sessions_user_state ON fasting_sessions(user_id, state);
+  ''';
+
   static const List<String> allCreateStatements = [
     createFoodLogsTable,
     createFoodLogsIndex,
@@ -194,5 +297,15 @@ class DatabaseSchema {
     createCoachingCheckInsIndex,
     createDayCompletionsTable,
     createDayCompletionsIndex,
+    createBodyMeasurementsTable,
+    createBodyMeasurementsIndex,
+    createWeeklyChallengesTable,
+    createWeeklyChallengesIndex,
+    createChallengeDailyProgressTable,
+    createChallengeDailyProgressIndex,
+    createWaterLogsTable,
+    createWaterLogsIndex,
+    createFastingSessionsTable,
+    createFastingSessionsIndex,
   ];
 }

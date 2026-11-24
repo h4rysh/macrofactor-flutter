@@ -8,6 +8,10 @@ import '../widgets/strategy/checkin_history_sheet.dart';
 import '../widgets/strategy/coaching_checkin_card.dart';
 import '../widgets/strategy/macro_program_hero_card.dart';
 import '../widgets/strategy/seven_day_distribution_chart.dart';
+import '../widgets/body_measurements_sheet.dart';
+import '../widgets/fasting_clock_widget.dart';
+import '../widgets/water_dial_widget.dart';
+import '../widgets/weekly_challenge_card.dart';
 import 'goal_questionnaire_sheet.dart';
 import 'onboarding/strategy_setup_wizard.dart';
 
@@ -85,30 +89,56 @@ class StrategyScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
 
-            // 3. Active Program Hero Card
+            // 3. Weekly Behavioral Challenges
             const AppleStaggeredEntrance(
               index: 2,
+              child: WeeklyChallengesSection(),
+            ),
+            const SizedBox(height: 16),
+
+            // 4. Anthropometric Composition & Silent Recomposition Radar
+            const AppleStaggeredEntrance(
+              index: 3,
+              child: AnthropometricsCard(),
+            ),
+            const SizedBox(height: 16),
+
+            // 5. Daily Lifestyle Rhythm: Water Dial & Fasting Clock
+            const AppleStaggeredEntrance(
+              index: 4,
+              child: WaterDialCard(),
+            ),
+            const SizedBox(height: 16),
+            const AppleStaggeredEntrance(
+              index: 5,
+              child: FastingClockCard(),
+            ),
+            const SizedBox(height: 16),
+
+            // 6. Active Program Hero Card
+            const AppleStaggeredEntrance(
+              index: 6,
               child: MacroProgramHeroCard(),
             ),
             const SizedBox(height: 16),
 
-            // 4. 7-Day Day Shifting Distribution Chart
+            // 7. 7-Day Day Shifting Distribution Chart
             const AppleStaggeredEntrance(
-              index: 3,
+              index: 7,
               child: SevenDayDistributionChart(),
             ),
             const SizedBox(height: 16),
 
-            // 5. Program Mode Quick Switch Card
+            // 8. Program Mode Quick Switch Card
             AppleStaggeredEntrance(
-              index: 4,
+              index: 8,
               child: _buildProgramModeCard(context, ref, program.mode),
             ),
             const SizedBox(height: 16),
 
-            // 6. Refined Adjust Strategy & Program Personalization Card
+            // 9. Refined Adjust Strategy & Program Personalization Card
             AppleStaggeredEntrance(
-              index: 5,
+              index: 9,
               child: Container(
                 key: const Key('strategy_adjust_program_card'),
                 padding: const EdgeInsets.all(16),

@@ -251,6 +251,54 @@ class CheckinReviewSheet extends ConsumerWidget {
                     ],
                   ),
                 ),
+                if (recommendation.wasClamped ||
+                    recommendation.silentRecompDetected) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: recommendation.silentRecompDetected
+                          ? const Color(0xFF66BB6A).withValues(alpha: 0.14)
+                          : AppTheme.calories.withValues(alpha: 0.12),
+                      borderRadius: AppRadii.mdBorderRadius,
+                      border: Border.all(
+                        color: recommendation.silentRecompDetected
+                            ? const Color(0xFF66BB6A).withValues(alpha: 0.35)
+                            : AppTheme.calories.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          recommendation.silentRecompDetected
+                              ? Icons.fitness_center_rounded
+                              : Icons.security_rounded,
+                          size: 15,
+                          color: recommendation.silentRecompDetected
+                              ? const Color(0xFF66BB6A)
+                              : AppTheme.calories,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            recommendation.silentRecompDetected
+                                ? 'Silent Recomp: Calories held to preserve muscle gain.'
+                                : 'Flux Damping: Adjustment smoothed within safe asymmetric boundaries ([-100, +150 kcal]).',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: recommendation.silentRecompDetected
+                                  ? const Color(0xFF66BB6A)
+                                  : AppTheme.calories,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 16),
 
                 // 3-Row Metabolic Math Breakdown Card

@@ -8,7 +8,7 @@ import 'database_schema.dart';
 class DatabaseMigrations {
   const DatabaseMigrations._();
 
-  static const int currentVersion = 4;
+  static const int currentVersion = 5;
   static const int busyTimeoutMs = 5000;
 
   /// Applies necessary schema migrations and performance pragmas to the database.
@@ -60,6 +60,10 @@ class DatabaseMigrations {
     if (currentDbVersion < 4) {
       _runStep(db, 4, _applyVersion4);
     }
+
+    if (currentDbVersion < 5) {
+      _runStep(db, 5, _applyVersion5);
+    }
   }
 
   /// Public test-friendly hook for running an isolated migration step.
@@ -73,6 +77,8 @@ class DatabaseMigrations {
         _runStep(db, 3, _applyVersion3);
       case 4:
         _runStep(db, 4, _applyVersion4);
+      case 5:
+        _runStep(db, 5, _applyVersion5);
       default:
         throw ArgumentError('Unknown migration target version: $targetVersion');
     }
@@ -320,6 +326,70 @@ class DatabaseMigrations {
     db.execute('DROP INDEX IF EXISTS idx_weight_logs_date;');
     db.execute('DROP INDEX IF EXISTS idx_day_completions_date;');
     db.execute('DROP INDEX IF EXISTS idx_coaching_check_ins_date;');
+  }
+
+  static void _applyVersion5(CommonDatabase db) {
+    // 1. Create new Wave 4 tables and composite indices if they do not exist
+    db.execute(DatabaseSchema.createBodyMeasurementsTable);
+    db.execute(DatabaseSchema.createBodyMeasurementsIndex);
+    db.execute(DatabaseSchema.createWeeklyChallengesTable);
+    db.execute(DatabaseSchema.createWeeklyChallengesIndex);
+    db.execute(DatabaseSchema.createChallengeDailyProgressTable);
+    db.execute(DatabaseSchema.createChallengeDailyProgressIndex);
+    db.execute(DatabaseSchema.createWaterLogsTable);
+    db.execute(DatabaseSchema.createWaterLogsIndex);
+    db.execute(DatabaseSchema.createFastingSessionsTable);
+    db.execute(DatabaseSchema.createFastingSessionsIndex);
+
+    // 2. Add profile strategy extension columns if missing
+    final profileCols = _getTableColumns(db, 'user_profile');
+    if (profileCols.isNotEmpty) {
+      if (!profileCols.contains('reverse_diet_pacing')) {
+        db.execute(
+            "ALTER TABLE user_profile ADD COLUMN reverse_diet_pacing TEXT NOT NULL DEFAULT 'none';");
+      }
+      if (!profileCols.contains('is_in_diet_break')) {
+        db.execute(
+            'ALTER TABLE user_profile ADD COLUMN is_in_diet_break INTEGER NOT NULL DEFAULT 0;');
+      }
+      if (!profileCols.contains('daily_water_target_ml')) {
+        db.execute(
+            'ALTER TABLE user_profile ADD COLUMN daily_water_target_ml INTEGER NOT NULL DEFAULT 2500;');
+      }
+      if (!profileCols.contains('default_fasting_protocol')) {
+        db.execute(
+            "ALTER TABLE user_profile ADD COLUMN default_fasting_protocol TEXT NOT NULL DEFAULT 'none';");
+      }
+      if (!profileCols.contains('peri_workout_timing_enabled')) {
+        db.execute(
+            'ALTER TABLE user_profile ADD COLUMN peri_workout_timing_enabled INTEGER NOT NULL DEFAULT 0;');
+      }
+      if (!profileCols.contains('neck_circumference_cm')) {
+        db.execute(
+            'ALTER TABLE user_profile ADD COLUMN neck_circumference_cm REAL;');
+      }
+    }
+
+    // 3. Add coaching check-ins audit trail enrichment columns
+    final coachingCols = _getTableColumns(db, 'coaching_check_ins');
+    if (coachingCols.isNotEmpty) {
+      if (!coachingCols.contains('raw_calorie_delta')) {
+        db.execute(
+            'ALTER TABLE coaching_check_ins ADD COLUMN raw_calorie_delta REAL;');
+      }
+      if (!coachingCols.contains('damped_calorie_delta')) {
+        db.execute(
+            'ALTER TABLE coaching_check_ins ADD COLUMN damped_calorie_delta REAL;');
+      }
+      if (!coachingCols.contains('was_clamped')) {
+        db.execute(
+            'ALTER TABLE coaching_check_ins ADD COLUMN was_clamped INTEGER NOT NULL DEFAULT 0;');
+      }
+      if (!coachingCols.contains('silent_recomp_detected')) {
+        db.execute(
+            'ALTER TABLE coaching_check_ins ADD COLUMN silent_recomp_detected INTEGER NOT NULL DEFAULT 0;');
+      }
+    }
   }
 
   static Set<String> _getTableColumns(CommonDatabase db, String tableName) {
