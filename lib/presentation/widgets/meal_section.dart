@@ -202,8 +202,7 @@ class _FoodLogRowItem extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.close, size: 16, color: AppTheme.textMuted),
             onPressed: onDelete,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             tooltip: 'Delete item',
           ),
         ],

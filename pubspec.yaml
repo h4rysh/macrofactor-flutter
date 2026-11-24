@@ -2,7 +2,7 @@ name: sique
 description: "Sique: Adherence-neutral nutritional coaching with metabolic expenditure modeling."
 publish_to: 'none'
 
-version: 2.1.0+21
+version: 2.1.1+22
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -55,9 +55,7 @@ flutter:
     - assets/fonts/Inter-Bold.ttf
     - assets/fonts/Inter-Black.ttf
     - assets/foods/
-    - assets/metadata/
     - assets/database/
-    - assets/data/
 
   fonts:
     - family: Inter

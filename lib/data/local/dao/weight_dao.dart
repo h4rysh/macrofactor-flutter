@@ -1,3 +1,4 @@
+import 'dart:developer' as developer;
 import 'package:sique/domain/models/scale_weight_entry.dart';
 import 'package:sqlite3/common.dart';
 
@@ -72,7 +73,14 @@ class WeightDao {
       } finally {
         stmt.dispose();
       }
-    } catch (_) {}
+    } catch (e, st) {
+      developer.log(
+        '_syncUserProfileWeight note for user $uid',
+        name: 'WeightDao',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   /// Convenience method to insert scale weight from DateTime.

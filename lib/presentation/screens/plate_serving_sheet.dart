@@ -321,8 +321,10 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                               tooltip: 'Close',
                               icon: const Icon(Icons.close_rounded, size: 24),
                               color: AppTheme.textSecondary,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
+                              constraints: const BoxConstraints(
+                                minWidth: 48,
+                                minHeight: 48,
+                              ),
                               onPressed: () => Navigator.pop(context),
                             ),
                             Flexible(

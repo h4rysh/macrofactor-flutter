@@ -78,6 +78,7 @@ class TimelineFoodCard extends StatelessWidget {
                 onDuplicate!,
         },
         child: GestureDetector(
+          behavior: HitTestBehavior.opaque,
           onTap: onTap,
           child: Container(
             margin: const EdgeInsets.only(bottom: 8),

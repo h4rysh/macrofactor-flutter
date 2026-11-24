@@ -132,7 +132,14 @@ class AppDatabase {
         ''');
         try {
           _db.execute("INSERT INTO foods_fts(foods_fts) VALUES('rebuild');");
-        } catch (_) {}
+        } catch (e, st) {
+          developer.log(
+            'foods_fts rebuild note',
+            name: 'AppDatabase',
+            error: e,
+            stackTrace: st,
+          );
+        }
       }
 
       // Triggers to automatically synchronize foods_fts on all mutations (ISS-3-02, ISS-8-06)
@@ -404,7 +411,7 @@ class AppDatabase {
         final data = await rootBundle.load('assets/database/foods_master.db');
         final bytes =
             data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-        await file.writeAsBytes(bytes, flush: true);
+        await file.writeAsBytes(bytes, flush: false);
       }
 
       final rawDb = sqlite3.open(dbPath);

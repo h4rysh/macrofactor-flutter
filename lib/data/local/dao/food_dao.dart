@@ -34,7 +34,14 @@ class FoodDao {
       _db.execute(
         'CREATE INDEX IF NOT EXISTS idx_food_logs_user_date ON food_logs(user_id, date, logged_at);',
       );
-    } catch (_) {}
+    } catch (e, st) {
+      developer.log(
+        '_ensureIndexes note in FoodDao',
+        name: 'FoodDao',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   /// Sanitizes an input search string for SQLite FTS5 by stripping control operators

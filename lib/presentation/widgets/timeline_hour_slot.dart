@@ -276,6 +276,7 @@ class _CopyYesterdayButton extends StatelessWidget {
       button: true,
       label: 'Copy $count ${count == 1 ? 'item' : 'items'} from yesterday',
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: onTap,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 150),

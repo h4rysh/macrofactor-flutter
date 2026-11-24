@@ -407,31 +407,37 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                 children: [
                   GestureDetector(
                     key: const Key('step_23_checkbox'),
+                    behavior: HitTestBehavior.opaque,
                     onTap: () {
                       AppHaptics.selectionClick();
                       setState(
                           () => _disclaimerAccepted = !_disclaimerAccepted);
                     },
-                    child: Row(
-                      children: [
-                        Checkbox(
-                          value: _disclaimerAccepted,
-                          activeColor: AppTheme.activeBlue,
-                          onChanged: (val) {
-                            setState(() => _disclaimerAccepted = val ?? false);
-                          },
-                        ),
-                        const Expanded(
-                          child: Text(
-                            LegalCopy.onboardingDisclaimerAgreement,
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textPrimary,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          Checkbox(
+                            value: _disclaimerAccepted,
+                            activeColor: AppTheme.activeBlue,
+                            onChanged: (val) {
+                              AppHaptics.selectionClick();
+                              setState(
+                                  () => _disclaimerAccepted = val ?? false);
+                            },
+                          ),
+                          const Expanded(
+                            child: Text(
+                              LegalCopy.onboardingDisclaimerAgreement,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.textPrimary,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                   const SizedBox(height: 6),

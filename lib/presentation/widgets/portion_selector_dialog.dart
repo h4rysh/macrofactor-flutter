@@ -207,7 +207,7 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
                       color: AppTheme.textPrimary,
                     ),
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d*')),
+                      FilteringTextInputFormatter.allow(RegExp(r'^\d*[.,]?\d*')),
                     ],
                     decoration: const InputDecoration(
                       contentPadding: EdgeInsets.symmetric(
@@ -234,14 +234,16 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Required';
                       }
-                      final parsed = double.tryParse(value);
+                      final sanitized = value.trim().replaceAll(',', '.');
+                      final parsed = double.tryParse(sanitized);
                       if (parsed == null || parsed <= 0) {
                         return 'Must be > 0';
                       }
                       return null;
                     },
                     onChanged: (val) {
-                      final parsed = double.tryParse(val);
+                      final parsed =
+                          double.tryParse(val.trim().replaceAll(',', '.'));
                       if (parsed != null && parsed > 0) {
                         _quantity = parsed;
                       }
@@ -290,7 +292,8 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
           ),
           onPressed: () {
             if (_formKey.currentState?.validate() ?? false) {
-              final val = double.parse(_controller.text);
+              final raw = _controller.text.trim().replaceAll(',', '.');
+              final val = double.tryParse(raw) ?? _quantity;
               widget.onConfirmed(val, _selectedUnit);
               Navigator.pop(context);
             }
