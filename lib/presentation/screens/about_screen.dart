@@ -197,7 +197,7 @@ class AboutScreen extends StatelessWidget {
               border: Border.all(color: AppTheme.cardBorder),
             ),
             child: const Text(
-              'v2.0.0 • Build 2026.10',
+              'v2.1.0 • Build 2026.11',
               style: TextStyle(
                 fontSize: 11,
                 color: AppTheme.textMuted,
