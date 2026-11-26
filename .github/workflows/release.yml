@@ -50,7 +50,18 @@ jobs:
           storeFile=release.keystore
           EOF
           else
-            echo "::warning::Release keystore secrets not configured; building with default Android release signing."
+            echo "::warning::Release keystore secrets not configured; generating ephemeral CI signing keystore."
+            EPHEMERAL_PASS=$(openssl rand -hex 16)
+            keytool -genkeypair -v -keystore android/app/release.keystore -alias sique-ci-release \
+              -keyalg RSA -keysize 2048 -validity 3650 \
+              -storepass "$EPHEMERAL_PASS" -keypass "$EPHEMERAL_PASS" \
+              -dname "CN=Sique CI, OU=Release, O=Sique, L=Unknown, ST=Unknown, C=US"
+            cat <<EOF > android/key.properties
+          storePassword=$EPHEMERAL_PASS
+          keyPassword=$EPHEMERAL_PASS
+          keyAlias=sique-ci-release
+          storeFile=release.keystore
+          EOF
           fi
 
       - name: Install Dependencies
