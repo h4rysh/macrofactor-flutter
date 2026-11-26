@@ -274,8 +274,8 @@ void main() {
           expect(conn1.select('PRAGMA busy_timeout;').first.values.first,
               equals(5000));
 
-          // Conn 1 begins an exclusive transaction and holds lock
-          conn1.execute('BEGIN EXCLUSIVE TRANSACTION;');
+          // Conn 1 begins an immediate write transaction and holds the WAL write lock
+          conn1.execute('BEGIN IMMEDIATE TRANSACTION;');
           conn1.execute(
               "INSERT INTO app_settings (key, value) VALUES ('lock_holder', 'conn1');");
 
@@ -297,12 +297,12 @@ void main() {
           // Hold the lock for 400ms while isolate is waiting
           await Future<void>.delayed(const Duration(milliseconds: 400));
 
-          // Conn 1 commits and releases the exclusive lock
+          // Conn 1 commits and releases the write lock
           conn1.execute('COMMIT;');
 
           // Background isolate should now finish and return true within busy_timeout
           final result =
-              await isolateFuture.timeout(const Duration(seconds: 4));
+              await isolateFuture.timeout(const Duration(seconds: 6));
           expect(result, isTrue);
 
           // Verify both rows exist

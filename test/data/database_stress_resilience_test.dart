@@ -125,11 +125,15 @@ void main() {
         "INSERT INTO user_profile (id, name, current_weight, target_weight, height_cm, age, is_male, goal_type, program_mode, weekly_rate, protein_preference, calorie_floor, baseline_expenditure) VALUES ('u1', 'Initial', 75.0, 70.0, 175.0, 25, 1, 'fatLoss', 'coached', -0.5, 'high', 1500.0, 2500.0);",
       );
 
-      // Spawn background isolate that locks the database file exclusively for 300ms
+      final lockAcquiredPort = ReceivePort();
+      final sendPort = lockAcquiredPort.sendPort;
+
+      // Spawn background isolate that holds the WAL write lock for 300ms
       final backgroundLock = Isolate.run(() async {
         final isolateDb = sqlite3.open(dbPath);
         isolateDb.execute('PRAGMA busy_timeout = 5000;');
-        isolateDb.execute('BEGIN EXCLUSIVE;');
+        isolateDb.execute('BEGIN IMMEDIATE;');
+        sendPort.send(null);
         await Future.delayed(const Duration(milliseconds: 300));
         isolateDb.execute(
           "UPDATE user_profile SET name = 'Isolate Updated' WHERE id = 'u1';",
@@ -138,13 +142,14 @@ void main() {
         isolateDb.dispose();
       });
 
-      // Give isolate a moment to acquire lock
-      await Future.delayed(const Duration(milliseconds: 50));
+      // Wait until the background isolate has actually acquired the write lock
+      await lockAcquiredPort.first;
+      lockAcquiredPort.close();
 
       final stopwatch = Stopwatch()..start();
-      // Main isolate attempts to begin exclusive write transaction
-      // Because PRAGMA busy_timeout is 5000ms, it should wait for the 300ms isolate lock rather than crashing
-      db.execute('BEGIN EXCLUSIVE;');
+      // Main isolate attempts to begin an immediate write transaction.
+      // Because PRAGMA busy_timeout is 5000ms, it waits for the 300ms isolate lock rather than crashing.
+      db.execute('BEGIN IMMEDIATE;');
       stopwatch.stop();
 
       expect(stopwatch.elapsedMilliseconds, greaterThanOrEqualTo(200));
