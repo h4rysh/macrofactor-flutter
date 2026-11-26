@@ -279,6 +279,139 @@ class DatabaseSchema {
     CREATE INDEX IF NOT EXISTS idx_fasting_sessions_user_state ON fasting_sessions(user_id, state);
   ''';
 
+  // --- Migration v6: Custom Recipes, Offline Barcode Cache & Sparse Micronutrients ---
+
+  static const String createCustomRecipesTable = '''
+    CREATE TABLE IF NOT EXISTS custom_recipes (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
+      name TEXT NOT NULL,
+      servings INTEGER NOT NULL DEFAULT 1,
+      total_weight_g REAL,
+      cooked_weight_g REAL,
+      prep_instructions TEXT,
+      source_url TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+  ''';
+
+  static const String createCustomRecipesIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_custom_recipes_user ON custom_recipes(user_id, updated_at);
+  ''';
+
+  static const String createRecipeIngredientsTable = '''
+    CREATE TABLE IF NOT EXISTS recipe_ingredients (
+      id TEXT PRIMARY KEY,
+      recipe_id TEXT NOT NULL,
+      food_id INTEGER NOT NULL,
+      food_name TEXT NOT NULL,
+      serving_quantity REAL NOT NULL,
+      unit_name TEXT NOT NULL,
+      gram_weight REAL NOT NULL,
+      calories REAL NOT NULL,
+      protein REAL NOT NULL,
+      carbs REAL NOT NULL,
+      fat REAL NOT NULL,
+      fiber REAL NOT NULL,
+      FOREIGN KEY (recipe_id) REFERENCES custom_recipes(id) ON DELETE CASCADE
+    );
+  ''';
+
+  static const String createRecipeIngredientsIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_recipe ON recipe_ingredients(recipe_id);
+  ''';
+
+  static const String createBarcodeCacheTable = '''
+    CREATE TABLE IF NOT EXISTS barcode_cache (
+      barcode TEXT PRIMARY KEY,
+      food_name TEXT NOT NULL,
+      brand_name TEXT,
+      serving_size_g REAL NOT NULL,
+      calories REAL NOT NULL,
+      protein REAL NOT NULL,
+      carbs REAL NOT NULL,
+      fat REAL NOT NULL,
+      fiber REAL NOT NULL,
+      micros_json TEXT,
+      cached_at TEXT NOT NULL
+    );
+  ''';
+
+  static const String createNutrientDefinitionsTable = '''
+    CREATE TABLE IF NOT EXISTS nutrient_definitions (
+      id INTEGER PRIMARY KEY,
+      slug TEXT UNIQUE NOT NULL,
+      display_name TEXT NOT NULL,
+      category TEXT NOT NULL,
+      unit TEXT NOT NULL,
+      default_rda_male REAL,
+      default_rda_female REAL,
+      upper_tolerable_limit REAL
+    );
+  ''';
+
+  static const String createFoodNutrientsTable = '''
+    CREATE TABLE IF NOT EXISTS food_nutrients (
+      food_id INTEGER NOT NULL,
+      nutrient_id INTEGER NOT NULL,
+      amount_per_100g REAL NOT NULL,
+      PRIMARY KEY (food_id, nutrient_id),
+      FOREIGN KEY (nutrient_id) REFERENCES nutrient_definitions(id) ON DELETE CASCADE
+    );
+  ''';
+
+  static const String createFoodNutrientsIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_food_nutrients_lookup ON food_nutrients(food_id, nutrient_id);
+  ''';
+
+  static const String createRepeatItemsTable = '''
+    CREATE TABLE IF NOT EXISTS repeat_items (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
+      food_id INTEGER NOT NULL,
+      food_name TEXT NOT NULL,
+      meal_type TEXT NOT NULL,
+      hour INTEGER NOT NULL,
+      serving_quantity REAL NOT NULL,
+      unit_name TEXT NOT NULL,
+      gram_weight REAL NOT NULL,
+      calories REAL NOT NULL,
+      protein REAL NOT NULL,
+      carbs REAL NOT NULL,
+      fat REAL NOT NULL,
+      fiber REAL NOT NULL,
+      active_days_mask INTEGER NOT NULL DEFAULT 127,
+      is_active INTEGER NOT NULL DEFAULT 1,
+      last_logged_date TEXT,
+      created_at TEXT NOT NULL
+    );
+  ''';
+
+  static const String createRepeatItemsIndex = '''
+    CREATE INDEX IF NOT EXISTS idx_repeat_items_user ON repeat_items(user_id, is_active);
+  ''';
+
+  static const String createDayNotesTable = '''
+    CREATE TABLE IF NOT EXISTS day_notes (
+      user_id TEXT NOT NULL DEFAULT 'default_user',
+      date TEXT NOT NULL,
+      note TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (user_id, date)
+    );
+  ''';
+
+  static const String createMicroGoalsTable = '''
+    CREATE TABLE IF NOT EXISTS micro_goals (
+      user_id TEXT NOT NULL DEFAULT 'default_user',
+      nutrient_id INTEGER NOT NULL,
+      custom_target REAL NOT NULL,
+      updated_at TEXT NOT NULL,
+      PRIMARY KEY (user_id, nutrient_id)
+    );
+  ''';
+
   static const List<String> allCreateStatements = [
     createFoodLogsTable,
     createFoodLogsIndex,
@@ -307,5 +440,17 @@ class DatabaseSchema {
     createWaterLogsIndex,
     createFastingSessionsTable,
     createFastingSessionsIndex,
+    createCustomRecipesTable,
+    createCustomRecipesIndex,
+    createRecipeIngredientsTable,
+    createRecipeIngredientsIndex,
+    createBarcodeCacheTable,
+    createNutrientDefinitionsTable,
+    createFoodNutrientsTable,
+    createFoodNutrientsIndex,
+    createRepeatItemsTable,
+    createRepeatItemsIndex,
+    createDayNotesTable,
+    createMicroGoalsTable,
   ];
 }

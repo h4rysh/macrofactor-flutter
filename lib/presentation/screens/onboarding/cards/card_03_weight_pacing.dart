@@ -590,9 +590,8 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: _isValid
-                            ? AppTheme.buttonText
-                            : AppTheme.textMuted,
+                        color:
+                            _isValid ? AppTheme.buttonText : AppTheme.textMuted,
                       ),
                     ),
                   ),

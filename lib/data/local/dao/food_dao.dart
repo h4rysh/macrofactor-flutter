@@ -387,6 +387,30 @@ class FoodDao {
     }
   }
 
+  /// Retrieves distinct recently logged foods scoped to user_id without loading full history.
+  List<FoodItem> getRecentFoods({int limit = 10, String? userId}) {
+    final uid = userId ?? effectiveUserId;
+    final stmt = _db.prepare('''
+      SELECT f.*
+      FROM foods f
+      INNER JOIN (
+        SELECT food_id, MAX(logged_at) AS last_logged
+        FROM food_logs
+        WHERE user_id = ?
+        GROUP BY food_id
+        ORDER BY last_logged DESC
+        LIMIT ?
+      ) recent ON f.id = recent.food_id
+      ORDER BY recent.last_logged DESC;
+    ''');
+    try {
+      final result = stmt.select([uid, limit]);
+      return result.map(_mapFoodRow).toList();
+    } finally {
+      stmt.dispose();
+    }
+  }
+
   /// Retrieves all logged food entries across all dates scoped to user_id.
   List<FoodLogEntry> getAllFoodLogs({String? userId}) {
     final uid = userId ?? effectiveUserId;

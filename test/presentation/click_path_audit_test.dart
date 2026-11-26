@@ -21,7 +21,9 @@ void main() {
   });
 
   group('Click-Path Audit & State Transition Tests', () {
-    test('DailyFoodLogsNotifier.copyFromDate duplicates yesterday food logs into today', () {
+    test(
+        'DailyFoodLogsNotifier.copyFromDate duplicates yesterday food logs into today',
+        () {
       final providerContainer = ProviderContainer(
         overrides: [
           databaseProvider.overrideWithValue(db),
@@ -75,7 +77,8 @@ void main() {
       expect(todayLogs.first.loggedAt.minute, 30);
     });
 
-    testWidgets('QuickActionsSheet Copy Yesterday executes real copy', (tester) async {
+    testWidgets('QuickActionsSheet Copy Yesterday executes real copy',
+        (tester) async {
       // 1. Seed yesterday's food
       final yesterdayEntry = FoodLogEntry(
         id: 0,
@@ -136,8 +139,10 @@ void main() {
       expect(todayLogs.first.foodName, 'Oats with Almond Milk');
     });
 
-    testWidgets('DayNoteSheet loads existing note and persists updates', (tester) async {
-      db.setSetting('day_note:2026-11-22', 'Felt energetic after morning workout.');
+    testWidgets('DayNoteSheet loads existing note and persists updates',
+        (tester) async {
+      db.setSetting(
+          'day_note:2026-11-22', 'Felt energetic after morning workout.');
 
       await tester.pumpWidget(
         ProviderScope(
@@ -166,11 +171,13 @@ void main() {
       await tester.pumpAndSettle();
 
       // Verify existing note was loaded into text field
-      expect(find.text('Felt energetic after morning workout.'), findsOneWidget);
+      expect(
+          find.text('Felt energetic after morning workout.'), findsOneWidget);
 
       // Edit note
       final textField = find.byType(TextField);
-      await tester.enterText(textField, 'Updated reflection: Great recovery and high focus.');
+      await tester.enterText(
+          textField, 'Updated reflection: Great recovery and high focus.');
       await tester.pumpAndSettle();
 
       // Tap Save Note
@@ -186,7 +193,9 @@ void main() {
       expect(find.text('Day note saved'), findsOneWidget);
     });
 
-    testWidgets('FoodSearchScreen category filter toggles back to all on second tap', (tester) async {
+    testWidgets(
+        'FoodSearchScreen category filter toggles back to all on second tap',
+        (tester) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -209,8 +218,8 @@ void main() {
 
       final vegSemanticsSelected =
           tester.getSemantics(find.bySemanticsLabel('Filter: Vegetarian'));
-      expect(
-          vegSemanticsSelected.flagsCollection.isSelected, equals(Tristate.isTrue));
+      expect(vegSemanticsSelected.flagsCollection.isSelected,
+          equals(Tristate.isTrue));
 
       // 2. Tap Vegetarian chip again -> toggles back to All
       await tester.tap(vegChip);
@@ -223,8 +232,8 @@ void main() {
 
       final allSemanticsSelected =
           tester.getSemantics(find.bySemanticsLabel('Filter: All'));
-      expect(
-          allSemanticsSelected.flagsCollection.isSelected, equals(Tristate.isTrue));
+      expect(allSemanticsSelected.flagsCollection.isSelected,
+          equals(Tristate.isTrue));
 
       // Verify search input TextField is present and active
       expect(find.byType(TextField), findsOneWidget);

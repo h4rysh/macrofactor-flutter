@@ -356,8 +356,9 @@ class _ExpenditureSettingsScreenState
                         : AppTheme.cardElevated,
                     borderRadius: AppRadii.mdBorderRadius,
                     border: Border.all(
-                      color:
-                          isSelected ? AppTheme.expenditure : AppTheme.cardBorder,
+                      color: isSelected
+                          ? AppTheme.expenditure
+                          : AppTheme.cardBorder,
                     ),
                   ),
                   child: Row(
@@ -388,22 +389,22 @@ class _ExpenditureSettingsScreenState
                                     : AppTheme.textSecondary,
                               ),
                             ),
-                          Text(
-                            desc,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              color: AppTheme.textMuted,
+                            Text(
+                              desc,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppTheme.textMuted,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          }),
         ],
       ),
     );

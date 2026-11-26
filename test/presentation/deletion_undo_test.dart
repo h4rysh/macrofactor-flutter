@@ -217,6 +217,10 @@ void main() {
       // Verify the item is initially visible
       expect(find.text('Paneer Wrap'), findsOneWidget);
 
+      // Scroll timeline up slightly so the 8 AM item clears the bottom search bar
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -120));
+      await tester.pumpAndSettle();
+
       // Dismiss the food card
       final dismissibleFinder = find.byType(Dismissible);
       expect(dismissibleFinder, findsWidgets);
@@ -241,6 +245,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Removed Paneer Wrap'), findsOneWidget);
+
+      // Scroll back to top so DateCarouselRibbon's 'Previous day' button is visible
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, 120));
+      await tester.pumpAndSettle();
 
       // Now tap the previous day chevron button to change the selected date
       final prevDayBtn = find.byTooltip('Previous day');

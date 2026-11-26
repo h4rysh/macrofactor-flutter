@@ -1,18 +1,22 @@
 import 'dart:convert';
 import 'package:sique/data/local/app_database_expenditure.dart';
+import 'package:sique/domain/models/body_measurement_entry.dart';
 import 'package:sique/domain/models/food_models.dart';
+import 'package:sique/domain/models/lifestyle_models.dart';
 import 'package:sique/domain/models/macro_program.dart';
+import 'package:sique/domain/models/recipe_models.dart';
 import 'package:sique/domain/models/scale_weight_entry.dart';
 import 'package:sique/domain/models/user_profile.dart';
+import 'package:sique/domain/models/weekly_challenge_model.dart';
 import 'package:sique/domain/models/workout_session.dart';
 
-/// Archive encoder and decoder for Sique full database backups (.sique.json).
-/// Enforces schema version validation (supported: <= 4).
+/// Archive encoder and decoder for Sique full database backups (.sique.json / .sique.enc).
+/// Supports schema versions 1 through 6.
 class BackupCodec {
-  static const int currentSchemaVersion = 4;
+  static const int currentSchemaVersion = 7;
   static const String appSignature = 'Sique';
 
-  /// Serializes full 7-table backup to pretty JSON string.
+  /// Serializes complete backup snapshot (including Wave 4/5/6 lifestyle & recipes tables) to JSON.
   static String encodeBackup({
     required UserProfile profile,
     required List<FoodLogEntry> foodLogs,
@@ -22,10 +26,15 @@ class BackupCodec {
     List<CoachingCheckIn> coachingCheckIns = const [],
     Map<String, bool> dayCompletions = const {},
     Map<String, String> appSettings = const {},
+    List<BodyMeasurementEntry> bodyMeasurements = const [],
+    List<WeeklyChallengeModel> weeklyChallenges = const [],
+    List<WaterLog> waterLogs = const [],
+    List<FastingSession> fastingSessions = const [],
+    List<CustomRecipe> customRecipes = const [],
   }) {
     final backup = {
       'app': appSignature,
-      'backupVersion': 2,
+      'backupVersion': 3,
       'schemaVersion': currentSchemaVersion,
       'exportedAt': DateTime.now().toIso8601String(),
       'profile': profileToMap(profile),
@@ -36,6 +45,11 @@ class BackupCodec {
       'coachingCheckIns': coachingCheckIns.map((c) => c.toJson()).toList(),
       'dayCompletions': dayCompletions,
       'appSettings': appSettings,
+      'bodyMeasurements': bodyMeasurements.map((b) => b.toMap()).toList(),
+      'weeklyChallenges': weeklyChallenges.map((c) => c.toMap()).toList(),
+      'waterLogs': waterLogs.map((w) => w.toMap()).toList(),
+      'fastingSessions': fastingSessions.map(fastingSessionToMap).toList(),
+      'customRecipes': customRecipes.map(recipeToMap).toList(),
     };
 
     return const JsonEncoder.withIndent('  ').convert(backup);
@@ -136,6 +150,51 @@ class BackupCodec {
       });
     }
 
+    final bodyMeasurements = <BodyMeasurementEntry>[];
+    if (decoded['bodyMeasurements'] is List) {
+      for (final item in decoded['bodyMeasurements'] as List) {
+        if (item is Map<String, dynamic>) {
+          bodyMeasurements.add(bodyMeasurementFromMap(item));
+        }
+      }
+    }
+
+    final weeklyChallenges = <WeeklyChallengeModel>[];
+    if (decoded['weeklyChallenges'] is List) {
+      for (final item in decoded['weeklyChallenges'] as List) {
+        if (item is Map<String, dynamic>) {
+          weeklyChallenges.add(challengeFromMap(item));
+        }
+      }
+    }
+
+    final waterLogs = <WaterLog>[];
+    if (decoded['waterLogs'] is List) {
+      for (final item in decoded['waterLogs'] as List) {
+        if (item is Map<String, dynamic>) {
+          waterLogs.add(waterLogFromMap(item));
+        }
+      }
+    }
+
+    final fastingSessions = <FastingSession>[];
+    if (decoded['fastingSessions'] is List) {
+      for (final item in decoded['fastingSessions'] as List) {
+        if (item is Map<String, dynamic>) {
+          fastingSessions.add(fastingSessionFromMap(item));
+        }
+      }
+    }
+
+    final customRecipes = <CustomRecipe>[];
+    if (decoded['customRecipes'] is List) {
+      for (final item in decoded['customRecipes'] as List) {
+        if (item is Map<String, dynamic>) {
+          customRecipes.add(recipeFromMap(item));
+        }
+      }
+    }
+
     return DecodedBackup(
       schemaVersion: schemaVersion,
       exportedAt: decoded['exportedAt'] as String?,
@@ -147,6 +206,11 @@ class BackupCodec {
       coachingCheckIns: coachingCheckIns,
       dayCompletions: dayCompletions,
       appSettings: appSettings,
+      bodyMeasurements: bodyMeasurements,
+      weeklyChallenges: weeklyChallenges,
+      waterLogs: waterLogs,
+      fastingSessions: fastingSessions,
+      customRecipes: customRecipes,
     );
   }
 
@@ -181,6 +245,12 @@ class BackupCodec {
         'recentWeightTrend': p.recentWeightTrend,
         'exerciseFrequency': p.exerciseFrequency,
         'dailyActivity': p.dailyActivity,
+        'reverseDietPacing': p.reverseDietPacing,
+        'isInDietBreak': p.isInDietBreak,
+        'dailyWaterTargetMl': p.dailyWaterTargetMl,
+        'defaultFastingProtocol': p.defaultFastingProtocol,
+        'periWorkoutTimingEnabled': p.periWorkoutTimingEnabled,
+        'neckCircumferenceCm': p.neckCircumferenceCm,
       };
 
   static UserProfile profileFromMap(Map<String, dynamic> map) => UserProfile(
@@ -223,6 +293,15 @@ class BackupCodec {
         recentWeightTrend: map['recentWeightTrend'] as String? ?? 'stable',
         exerciseFrequency: map['exerciseFrequency'] as String? ?? '1-3',
         dailyActivity: map['dailyActivity'] as String? ?? 'moderate',
+        reverseDietPacing: map['reverseDietPacing'] as String? ?? 'none',
+        isInDietBreak: map['isInDietBreak'] as bool? ?? false,
+        dailyWaterTargetMl:
+            (map['dailyWaterTargetMl'] as num?)?.toInt() ?? 2500,
+        defaultFastingProtocol:
+            map['defaultFastingProtocol'] as String? ?? 'none',
+        periWorkoutTimingEnabled:
+            map['periWorkoutTimingEnabled'] as bool? ?? false,
+        neckCircumferenceCm: (map['neckCircumferenceCm'] as num?)?.toDouble(),
       );
 
   // --- Weight Mapping ---
@@ -292,9 +371,140 @@ class BackupCodec {
       iconSvg: map['iconSvg'] as String? ?? 'i10.svg',
     );
   }
+
+  // --- Wave 4/5/6 Tables ---
+
+  static BodyMeasurementEntry bodyMeasurementFromMap(Map<String, dynamic> m) =>
+      BodyMeasurementEntry(
+        id: m['id'] as String,
+        userId: m['user_id'] as String? ?? 'default_user',
+        date: DateTime.parse(m['date'] as String),
+        waistCm: (m['waist_cm'] as num?)?.toDouble(),
+        hipsCm: (m['hips_cm'] as num?)?.toDouble(),
+        chestCm: (m['chest_cm'] as num?)?.toDouble(),
+        neckCm: (m['neck_cm'] as num?)?.toDouble(),
+        bicepsCm: (m['biceps_cm'] as num?)?.toDouble(),
+        thighCm: (m['thigh_cm'] as num?)?.toDouble(),
+        bodyFatPct: (m['body_fat_pct'] as num?)?.toDouble(),
+        source: m['source'] as String? ?? 'manual',
+        notes: m['notes'] as String?,
+        loggedAt: DateTime.parse(m['logged_at'] as String),
+      );
+
+  static WeeklyChallengeModel challengeFromMap(Map<String, dynamic> m) =>
+      WeeklyChallengeModel(
+        id: m['id'] as String,
+        userId: m['user_id'] as String? ?? 'default_user',
+        type: ChallengeType.values.firstWhere(
+          (t) => t.name == m['type'],
+          orElse: () => ChallengeType.proteinAnchor,
+        ),
+        title: m['title'] as String,
+        description: m['description'] as String,
+        targetMetric: m['target_metric'] as String,
+        targetValue: (m['target_value'] as num).toDouble(),
+        currentValue: (m['current_value'] as num?)?.toDouble() ?? 0.0,
+        unit: m['unit'] as String,
+        status: ChallengeStatus.fromString(m['status'] as String),
+        weekStartDate: DateTime.parse(m['week_start_date'] as String),
+        weekEndDate: DateTime.parse(m['week_end_date'] as String),
+        completedAt: m['completed_at'] != null
+            ? DateTime.parse(m['completed_at'] as String)
+            : null,
+        createdAt: DateTime.parse(m['created_at'] as String),
+      );
+
+  static WaterLog waterLogFromMap(Map<String, dynamic> m) => WaterLog(
+        userId: m['user_id'] as String? ?? 'default_user',
+        date: m['date'] as String,
+        amountMl: (m['amount_ml'] as num).toInt(),
+        loggedAt: DateTime.parse(m['logged_at'] as String),
+      );
+
+  static Map<String, dynamic> fastingSessionToMap(FastingSession f) => {
+        'id': f.id,
+        'user_id': f.userId,
+        'protocol': f.protocol.name,
+        'start_time': f.startTime.toIso8601String(),
+        'target_end_time': f.targetEndTime.toIso8601String(),
+        'actual_end_time': f.actualEndTime?.toIso8601String(),
+        'state': f.state,
+        'notes': f.notes,
+      };
+
+  static FastingSession fastingSessionFromMap(Map<String, dynamic> m) =>
+      FastingSession(
+        id: m['id'] as String,
+        userId: m['user_id'] as String? ?? 'default_user',
+        protocol: FastingProtocol.fromString(m['protocol'] as String),
+        startTime: DateTime.parse(m['start_time'] as String),
+        targetEndTime: DateTime.parse(m['target_end_time'] as String),
+        actualEndTime: m['actual_end_time'] != null
+            ? DateTime.parse(m['actual_end_time'] as String)
+            : null,
+        state: m['state'] as String? ?? 'completed',
+        notes: m['notes'] as String?,
+      );
+
+  static Map<String, dynamic> recipeToMap(CustomRecipe r) => {
+        'id': r.id,
+        'user_id': r.userId,
+        'name': r.name,
+        'servings': r.safeServings,
+        'total_weight_g': r.totalWeightG,
+        'prep_instructions': r.prepInstructions,
+        'source_url': r.sourceUrl,
+        'created_at': r.createdAt.toIso8601String(),
+        'updated_at': r.updatedAt.toIso8601String(),
+        'ingredients': r.ingredients
+            .map((i) => {
+                  'id': i.id,
+                  'recipe_id': i.recipeId,
+                  'food_id': i.foodId,
+                  'food_name': i.foodName,
+                  'serving_quantity': i.servingQuantity,
+                  'unit_name': i.unitName,
+                  'gram_weight': i.gramWeight,
+                  'calories': i.calories,
+                  'protein': i.protein,
+                  'carbs': i.carbs,
+                  'fat': i.fat,
+                  'fiber': i.fiber,
+                })
+            .toList(),
+      };
+
+  static CustomRecipe recipeFromMap(Map<String, dynamic> m) => CustomRecipe(
+        id: m['id'] as String,
+        userId: m['user_id'] as String? ?? 'default_user',
+        name: m['name'] as String,
+        servings: (m['servings'] as num?)?.toInt() ?? 1,
+        totalWeightG: (m['total_weight_g'] as num?)?.toDouble(),
+        prepInstructions: m['prep_instructions'] as String?,
+        sourceUrl: m['source_url'] as String?,
+        createdAt: DateTime.parse(m['created_at'] as String),
+        updatedAt: DateTime.parse(m['updated_at'] as String),
+        ingredients: (m['ingredients'] as List<dynamic>? ?? const [])
+            .whereType<Map<String, dynamic>>()
+            .map((i) => RecipeIngredient(
+                  id: i['id'] as String,
+                  recipeId: i['recipe_id'] as String,
+                  foodId: (i['food_id'] as num).toInt(),
+                  foodName: i['food_name'] as String,
+                  servingQuantity: (i['serving_quantity'] as num).toDouble(),
+                  unitName: i['unit_name'] as String,
+                  gramWeight: (i['gram_weight'] as num).toDouble(),
+                  calories: (i['calories'] as num).toDouble(),
+                  protein: (i['protein'] as num).toDouble(),
+                  carbs: (i['carbs'] as num).toDouble(),
+                  fat: (i['fat'] as num).toDouble(),
+                  fiber: (i['fiber'] as num).toDouble(),
+                ))
+            .toList(),
+      );
 }
 
-/// Structured container for validated backup contents across all 7 user data tables.
+/// Structured container for validated backup contents across all user data tables.
 class DecodedBackup {
   const DecodedBackup({
     required this.schemaVersion,
@@ -307,6 +517,11 @@ class DecodedBackup {
     this.coachingCheckIns = const [],
     this.dayCompletions = const {},
     this.appSettings = const {},
+    this.bodyMeasurements = const [],
+    this.weeklyChallenges = const [],
+    this.waterLogs = const [],
+    this.fastingSessions = const [],
+    this.customRecipes = const [],
   });
 
   final int schemaVersion;
@@ -319,4 +534,9 @@ class DecodedBackup {
   final List<CoachingCheckIn> coachingCheckIns;
   final Map<String, bool> dayCompletions;
   final Map<String, String> appSettings;
+  final List<BodyMeasurementEntry> bodyMeasurements;
+  final List<WeeklyChallengeModel> weeklyChallenges;
+  final List<WaterLog> waterLogs;
+  final List<FastingSession> fastingSessions;
+  final List<CustomRecipe> customRecipes;
 }

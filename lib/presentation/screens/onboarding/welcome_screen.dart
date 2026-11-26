@@ -222,113 +222,113 @@ class _LiveMiniPreviewCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppTheme.expenditure.withValues(alpha: 0.12),
-                  borderRadius: AppRadii.mdBorderRadius,
-                ),
-                child: const Icon(
-                  Icons.trending_up_rounded,
-                  color: AppTheme.expenditure,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Expanded(
-                child: Text(
-                  'Dynamic Bayesian Expenditure',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: const BoxDecoration(
-              color: AppTheme.cardElevated,
-              borderRadius: AppRadii.mdBorderRadius,
-            ),
-            child: Row(
+            Row(
               children: [
-                // Mini Macro Ring
-                SizedBox(
-                  width: 44,
-                  height: 44,
-                  child: CustomPaint(
-                    painter: _MiniMacroRingPainter(),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: AppTheme.expenditure.withValues(alpha: 0.12),
+                    borderRadius: AppRadii.mdBorderRadius,
+                  ),
+                  child: const Icon(
+                    Icons.trending_up_rounded,
+                    color: AppTheme.expenditure,
+                    size: 20,
                   ),
                 ),
-                const SizedBox(width: 14),
-                // Expenditure Curve & Stats
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              '2,420 kcal/day',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                color: AppTheme.textPrimary,
-                                fontFeatures: [FontFeature.tabularFigures()],
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          SizedBox(width: 4),
-                          Flexible(
-                            child: Text(
-                              '±28 kcal conf.',
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.expenditure,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      // Mini Curve Canvas
-                      SizedBox(
-                        height: 20,
-                        child: CustomPaint(
-                          size: const Size(double.infinity, 20),
-                          painter: _MiniCurvePainter(),
-                        ),
-                      ),
-                    ],
+                const SizedBox(width: 10),
+                const Expanded(
+                  child: Text(
+                    'Dynamic Bayesian Expenditure',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textPrimary,
+                    ),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 10),
-          const Text(
-            'Continuous Kalman-filter expenditure decodes your true metabolic burn from daily weigh-ins and food logs.',
-            style: TextStyle(
-              fontSize: 12,
-              color: AppTheme.textSecondary,
-              height: 1.35,
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: const BoxDecoration(
+                color: AppTheme.cardElevated,
+                borderRadius: AppRadii.mdBorderRadius,
+              ),
+              child: Row(
+                children: [
+                  // Mini Macro Ring
+                  SizedBox(
+                    width: 44,
+                    height: 44,
+                    child: CustomPaint(
+                      painter: _MiniMacroRingPainter(),
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  // Expenditure Curve & Stats
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Flexible(
+                              child: Text(
+                                '2,420 kcal/day',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: AppTheme.textPrimary,
+                                  fontFeatures: [FontFeature.tabularFigures()],
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                '±28 kcal conf.',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.expenditure,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        // Mini Curve Canvas
+                        SizedBox(
+                          height: 20,
+                          child: CustomPaint(
+                            size: const Size(double.infinity, 20),
+                            painter: _MiniCurvePainter(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            const Text(
+              'Continuous Kalman-filter expenditure decodes your true metabolic burn from daily weigh-ins and food logs.',
+              style: TextStyle(
+                fontSize: 12,
+                color: AppTheme.textSecondary,
+                height: 1.35,
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
   }
 }
 

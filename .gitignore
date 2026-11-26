@@ -65,3 +65,6 @@ android/key.properties
 
 # Reference material
 docs/reference/
+
+# Golden test failure diffs
+test/presentation/goldens/failures/

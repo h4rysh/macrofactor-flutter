@@ -37,19 +37,23 @@ void main() {
 
         appDb.bodyMeasurementsDao.upsertMeasurement(entry);
 
-        final retrieved = appDb.bodyMeasurementsDao.getMeasurementForDate(now, userId: 'test_user');
+        final retrieved = appDb.bodyMeasurementsDao
+            .getMeasurementForDate(now, userId: 'test_user');
         expect(retrieved, isNotNull);
         expect(retrieved!.waistCm, 84.5);
         expect(retrieved.neckCm, 39.0);
         expect(retrieved.hipsCm, 98.0);
         expect(retrieved.bodyFatPct, 20.2);
 
-        final recents = appDb.bodyMeasurementsDao.getRecentMeasurements(limit: 10, userId: 'test_user');
+        final recents = appDb.bodyMeasurementsDao
+            .getRecentMeasurements(limit: 10, userId: 'test_user');
         expect(recents.length, 1);
         expect(recents.first.id, 'bm_test_1');
 
-        appDb.bodyMeasurementsDao.deleteMeasurement('bm_test_1', userId: 'test_user');
-        final afterDelete = appDb.bodyMeasurementsDao.getRecentMeasurements(limit: 10, userId: 'test_user');
+        appDb.bodyMeasurementsDao
+            .deleteMeasurement('bm_test_1', userId: 'test_user');
+        final afterDelete = appDb.bodyMeasurementsDao
+            .getRecentMeasurements(limit: 10, userId: 'test_user');
         expect(afterDelete, isEmpty);
       });
     });
@@ -75,7 +79,8 @@ void main() {
 
         appDb.challengesDao.upsertChallenge(challenge);
 
-        final active = appDb.challengesDao.getActiveChallenges(userId: 'test_user');
+        final active =
+            appDb.challengesDao.getActiveChallenges(userId: 'test_user');
         expect(active.length, 1);
         expect(active.first.title, 'Protein Anchor');
 
@@ -86,12 +91,14 @@ void main() {
           userId: 'test_user',
         );
 
-        final updated = appDb.challengesDao.getActiveChallenges(userId: 'test_user').first;
+        final updated =
+            appDb.challengesDao.getActiveChallenges(userId: 'test_user').first;
         expect(updated.currentValue, 3.0);
         expect(updated.progressFraction, 0.60);
 
         // Record daily progress
-        appDb.challengesDao.recordDailyProgress('chk_test_1', '2026-11-24', 155.0, true);
+        appDb.challengesDao
+            .recordDailyProgress('chk_test_1', '2026-11-24', 155.0, true);
 
         // Complete challenge
         appDb.challengesDao.updateChallengeStatus(
@@ -101,15 +108,19 @@ void main() {
           userId: 'test_user',
         );
 
-        final activeAfter = appDb.challengesDao.getActiveChallenges(userId: 'test_user');
+        final activeAfter =
+            appDb.challengesDao.getActiveChallenges(userId: 'test_user');
         expect(activeAfter, isEmpty);
 
-        final history = appDb.challengesDao.getChallengeHistory(userId: 'test_user');
+        final history =
+            appDb.challengesDao.getChallengeHistory(userId: 'test_user');
         expect(history.length, 1);
         expect(history.first.status, ChallengeStatus.completed);
       });
 
-      test('mineDeficitMetrics runs query without error on empty or populated logs', () {
+      test(
+          'mineDeficitMetrics runs query without error on empty or populated logs',
+          () {
         final metrics = appDb.challengesDao.mineDeficitMetrics(
           proteinTargetG: 140.0,
           userId: 'test_user',
@@ -132,11 +143,13 @@ void main() {
         final total = appDb.waterDao.getDailyWaterMl(now, userId: 'test_user');
         expect(total, 1250);
 
-        final entries = appDb.waterDao.getWaterEntriesForDate(now, userId: 'test_user');
+        final entries =
+            appDb.waterDao.getWaterEntriesForDate(now, userId: 'test_user');
         expect(entries.length, 2);
 
         appDb.waterDao.clearDayWater(now, userId: 'test_user');
-        final totalAfter = appDb.waterDao.getDailyWaterMl(now, userId: 'test_user');
+        final totalAfter =
+            appDb.waterDao.getDailyWaterMl(now, userId: 'test_user');
         expect(totalAfter, 0);
       });
     });
@@ -162,12 +175,14 @@ void main() {
         expect(active!.id, 'fast_test_1');
         expect(active.protocol, FastingProtocol.f16_8);
 
-        appDb.fastingDao.endFast('fast_test_1', completed: true, userId: 'test_user');
+        appDb.fastingDao
+            .endFast('fast_test_1', completed: true, userId: 'test_user');
 
         final activeAfter = appDb.fastingDao.getActiveFast(userId: 'test_user');
         expect(activeAfter, isNull);
 
-        final recents = appDb.fastingDao.getRecentFasts(limit: 5, userId: 'test_user');
+        final recents =
+            appDb.fastingDao.getRecentFasts(limit: 5, userId: 'test_user');
         expect(recents.length, 1);
         expect(recents.first.state, 'completed');
         expect(recents.first.actualEndTime, isNotNull);

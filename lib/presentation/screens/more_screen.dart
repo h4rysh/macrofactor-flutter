@@ -29,9 +29,13 @@ class MoreScreen extends ConsumerWidget {
     final user = ref.watch(currentUserProvider);
     final profile = ref.watch(userProfileProvider);
     final targets = ref.watch(macroTargetProvider);
+    final useLbs = ref.watch(useImperialUnitsProvider);
 
+    final weightDisplay = useLbs
+        ? '${(profile.currentWeightKg * 2.20462262185).toStringAsFixed(1)} lbs'
+        : '${profile.currentWeightKg.toStringAsFixed(1)} kg';
     final profileSummary =
-        '${profile.currentWeightKg.toStringAsFixed(1)} kg · ${targets.targetCalories.round()} kcal/day';
+        '$weightDisplay · ${targets.targetCalories.round()} kcal/day';
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -43,107 +47,172 @@ class MoreScreen extends ConsumerWidget {
           constraints: const BoxConstraints(maxWidth: 640),
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            children: [
+              // 1. ACCOUNT & PROFILE
+              _buildSectionHeader('Account & Profile'),
+              AppleStaggeredEntrance(
+                index: 0,
+                child: _buildAccountCard(context, user),
+              ),
+              const SizedBox(height: 8),
+              AppleStaggeredEntrance(
+                index: 1,
+                child: _buildSettingsTile(
+                  context: context,
+                  icon: Icons.account_circle_outlined,
+                  title: 'Profile & Targets',
+                  subtitle: profileSummary,
+                  destination: const ProfileTargetsScreen(),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // 2. COACHING & LOGGING
+              _buildSectionHeader('Coaching & Logging'),
+              AppleStaggeredEntrance(
+                index: 2,
+                child: _buildSettingsTile(
+                  context: context,
+                  icon: Icons.restaurant_outlined,
+                  title: 'Food Log Settings',
+                  subtitle:
+                      'Timeline display, portion units, cooking oil modifiers',
+                  destination: const FoodLogSettingsScreen(),
+                ),
+              ),
+              AppleStaggeredEntrance(
+                index: 3,
+                child: _buildSettingsTile(
+                  context: context,
+                  icon: Icons.monitor_weight_outlined,
+                  title: 'Expenditure & Weight Settings',
+                  subtitle:
+                      'Bayesian Kalman sensitivity, trend weight noise smoothing',
+                  destination: const ExpenditureSettingsScreen(),
+                ),
+              ),
+              AppleStaggeredEntrance(
+                index: 4,
+                child: _buildUnitsTile(ref, useLbs),
+              ),
+
+              const SizedBox(height: 16),
+
+              // 3. DATA & INTEGRATIONS
+              _buildSectionHeader('Data & Integrations'),
+              AppleStaggeredEntrance(
+                index: 4,
+                child: _buildSettingsTile(
+                  context: context,
+                  icon: Icons.sync_rounded,
+                  title: 'Health Connect Sync',
+                  subtitle:
+                      'Scale weight, workout sessions, permission diagnostics',
+                  destination: const HealthSyncSettingsScreen(),
+                ),
+              ),
+              AppleStaggeredEntrance(
+                index: 5,
+                child: _buildSettingsTile(
+                  context: context,
+                  icon: Icons.download_rounded,
+                  title: 'Data Export & Diagnostics',
+                  subtitle:
+                      'Export logs to JSON or CSV, inspect database health',
+                  destination: const DataExportScreen(),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // 4. DATA MANAGEMENT & LEGAL
+              _buildSectionHeader('Data Management & Legal'),
+              AppleStaggeredEntrance(
+                index: 6,
+                child: _buildSettingsTile(
+                  context: context,
+                  icon: Icons.info_outline_rounded,
+                  title: 'About Sique',
+                  subtitle: 'v3.0.0 • Clean-Room Adherence-Neutral',
+                  destination: const AboutScreen(),
+                ),
+              ),
+              AppleStaggeredEntrance(
+                index: 7,
+                child: _buildAttributionAndLegalCard(context),
+              ),
+              const SizedBox(height: 10),
+              AppleStaggeredEntrance(
+                index: 8,
+                child: _buildDeleteDataTile(context, user),
+              ),
+              const SizedBox(height: 110),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildUnitsTile(WidgetRef ref, bool useLbs) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: AppTheme.cardSurface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.cardBorder, width: 0.8),
+      ),
+      child: Row(
         children: [
-          // 1. ACCOUNT & PROFILE
-          _buildSectionHeader('Account & Profile'),
-          AppleStaggeredEntrance(
-            index: 0,
-            child: _buildAccountCard(context, user),
-          ),
-          const SizedBox(height: 8),
-          AppleStaggeredEntrance(
-            index: 1,
-            child: _buildSettingsTile(
-              context: context,
-              icon: Icons.account_circle_outlined,
-              title: 'Profile & Targets',
-              subtitle: profileSummary,
-              destination: const ProfileTargetsScreen(),
+          const Icon(Icons.straighten_rounded,
+              color: AppTheme.activeBlue, size: 22),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Display Units',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  useLbs ? 'Imperial (lbs, ft/in)' : 'Metric (kg, cm)',
+                  style: const TextStyle(
+                      fontSize: 12, color: AppTheme.textSecondary),
+                ),
+              ],
             ),
           ),
-
-          const SizedBox(height: 16),
-
-          // 2. COACHING & LOGGING
-          _buildSectionHeader('Coaching & Logging'),
-          AppleStaggeredEntrance(
-            index: 2,
-            child: _buildSettingsTile(
-              context: context,
-              icon: Icons.restaurant_outlined,
-              title: 'Food Log Settings',
-              subtitle:
-                  'Timeline display, portion units, cooking oil modifiers',
-              destination: const FoodLogSettingsScreen(),
+          const SizedBox(width: 8),
+          Flexible(
+            child: FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerRight,
+              child: SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment<bool>(value: false, label: Text('kg')),
+                  ButtonSegment<bool>(value: true, label: Text('lbs')),
+                ],
+                selected: {useLbs},
+                onSelectionChanged: (sel) {
+                  AppHaptics.selectionClick();
+                  ref
+                      .read(useImperialUnitsProvider.notifier)
+                      .setImperial(sel.first);
+                },
+              ),
             ),
           ),
-          AppleStaggeredEntrance(
-            index: 3,
-            child: _buildSettingsTile(
-              context: context,
-              icon: Icons.monitor_weight_outlined,
-              title: 'Expenditure & Weight Settings',
-              subtitle:
-                  'Bayesian Kalman sensitivity, trend weight noise smoothing',
-              destination: const ExpenditureSettingsScreen(),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // 3. DATA & INTEGRATIONS
-          _buildSectionHeader('Data & Integrations'),
-          AppleStaggeredEntrance(
-            index: 4,
-            child: _buildSettingsTile(
-              context: context,
-              icon: Icons.sync_rounded,
-              title: 'Health Connect Sync',
-              subtitle:
-                  'Scale weight, workout sessions, permission diagnostics',
-              destination: const HealthSyncSettingsScreen(),
-            ),
-          ),
-          AppleStaggeredEntrance(
-            index: 5,
-            child: _buildSettingsTile(
-              context: context,
-              icon: Icons.download_rounded,
-              title: 'Data Export & Diagnostics',
-              subtitle: 'Export logs to JSON or CSV, inspect database health',
-              destination: const DataExportScreen(),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // 4. DATA MANAGEMENT & LEGAL
-          _buildSectionHeader('Data Management & Legal'),
-          AppleStaggeredEntrance(
-            index: 6,
-            child: _buildSettingsTile(
-              context: context,
-              icon: Icons.info_outline_rounded,
-              title: 'About Sique',
-              subtitle: 'v2.1.1 • Clean-Room Adherence-Neutral',
-              destination: const AboutScreen(),
-            ),
-          ),
-          AppleStaggeredEntrance(
-            index: 7,
-            child: _buildAttributionAndLegalCard(context),
-          ),
-          const SizedBox(height: 10),
-          AppleStaggeredEntrance(
-            index: 8,
-            child: _buildDeleteDataTile(context, user),
-          ),
-          const SizedBox(height: 110),
         ],
       ),
-    ),
-  ),
-);
+    );
   }
 
   Widget _buildSectionHeader(String title) {

@@ -18,6 +18,7 @@ class TimelineHourSlot extends StatelessWidget {
     this.onEntryDuplicate,
     this.yesterdayEntries = const [],
     this.onCopyYesterday,
+    this.isFastingWindow = false,
   });
 
   final int hour;
@@ -27,6 +28,7 @@ class TimelineHourSlot extends StatelessWidget {
   final ValueChanged<DailyFoodLogEntry> onEntryTap;
   final ValueChanged<DailyFoodLogEntry> onEntryDelete;
   final ValueChanged<DailyFoodLogEntry>? onEntryDuplicate;
+  final bool isFastingWindow;
 
   /// Entries from the same hour slot on the previous day, used for Copy Yesterday.
   final List<DailyFoodLogEntry> yesterdayEntries;
@@ -136,6 +138,25 @@ class TimelineHourSlot extends StatelessWidget {
                 ),
               ),
 
+              // Fasting window subtle pill when empty
+              if (entries.isEmpty && isFastingWindow)
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFAB47BC).withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Text(
+                    'Fasting Window',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: Color(0xFFAB47BC),
+                    ),
+                  ),
+                ),
+
               // Macro Subtotals for this Hour (if items logged)
               if (entries.isNotEmpty)
                 Row(
@@ -195,12 +216,13 @@ class TimelineHourSlot extends StatelessWidget {
                   if (isCollapsed)
                     // Collapsed mode: horizontal scroll of food icons
                     Container(
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                      padding: const EdgeInsets.symmetric(
+                          vertical: 8, horizontal: 12),
                       decoration: BoxDecoration(
                         color: AppTheme.cardSurface.withAlpha(150),
                         borderRadius: AppRadii.mdBorderRadius,
-                        border: Border.all(color: AppTheme.cardBorder.withAlpha(80)),
+                        border: Border.all(
+                            color: AppTheme.cardBorder.withAlpha(80)),
                       ),
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,

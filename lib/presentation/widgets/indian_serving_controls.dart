@@ -155,7 +155,8 @@ class PreparationStateSelector extends StatelessWidget {
                 onChanged(!isRaw);
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: isRaw
                       ? AppTheme.calories.withValues(alpha: 0.2)

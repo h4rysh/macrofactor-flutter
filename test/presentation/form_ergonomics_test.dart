@@ -5,9 +5,7 @@ import 'package:sique/data/local/app_database.dart';
 import 'package:sique/domain/models/user_account.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
-import 'package:sique/presentation/screens/auth/change_password_dialog.dart';
 import 'package:sique/presentation/screens/auth/delete_account_dialog.dart';
-import 'package:sique/presentation/screens/auth/email_auth_dialog.dart';
 import 'package:sique/presentation/screens/food_search_screen.dart';
 import 'package:sique/presentation/screens/onboarding/steps/step_03_dob.dart';
 import 'package:sique/presentation/screens/onboarding/steps/step_04_height.dart';
@@ -52,92 +50,13 @@ void main() {
     }
 
     testWidgets(
-        'EmailAuthDialog: wraps in AutofillGroup and sets correct keyboardType, hints, and actions',
-        (tester) async {
-      await tester.pumpWidget(createTestWidget(const EmailAuthDialog()));
-      await tester.pumpAndSettle();
-
-      // Verify AutofillGroup exists
-      expect(find.byType(AutofillGroup), findsOneWidget);
-
-      // Verify Sign In email field
-      final emailFieldFinder = find.byKey(const Key('auth_email_input'));
-      expect(emailFieldFinder, findsOneWidget);
-      final emailField = getField(tester, emailFieldFinder);
-      expect(emailField.keyboardType, equals(TextInputType.emailAddress));
-      expect(emailField.textInputAction, equals(TextInputAction.next));
-      expect(emailField.autofillHints, contains(AutofillHints.email));
-
-      // Verify Sign In password field
-      final passwordFieldFinder = find.byKey(const Key('auth_password_input'));
-      expect(passwordFieldFinder, findsOneWidget);
-      final passwordField = getField(tester, passwordFieldFinder);
-      expect(passwordField.keyboardType, equals(TextInputType.visiblePassword));
-      expect(passwordField.textInputAction, equals(TextInputAction.done));
-      expect(passwordField.autofillHints, contains(AutofillHints.password));
-
-      // Switch to Sign Up mode
-      await tester.tap(find.byKey(const Key('auth_switch_to_signup_btn')));
-      await tester.pumpAndSettle();
-
-      // Verify Name field in sign up
-      final nameFieldFinder = find.byKey(const Key('auth_name_input'));
-      expect(nameFieldFinder, findsOneWidget);
-      final nameField = getField(tester, nameFieldFinder);
-      expect(nameField.keyboardType, equals(TextInputType.name));
-      expect(nameField.textInputAction, equals(TextInputAction.next));
-      expect(nameField.autofillHints, contains(AutofillHints.name));
-
-      // Verify Confirm Password field in sign up
-      final confirmPassFieldFinder =
-          find.byKey(const Key('auth_confirm_password_input'));
-      expect(confirmPassFieldFinder, findsOneWidget);
-      final confirmPass = getField(tester, confirmPassFieldFinder);
-      expect(confirmPass.keyboardType, equals(TextInputType.visiblePassword));
-      expect(confirmPass.textInputAction, equals(TextInputAction.done));
-      expect(confirmPass.autofillHints, contains(AutofillHints.newPassword));
-    });
-
-    testWidgets(
-        'ChangePasswordDialog: wraps in AutofillGroup and configures password autofill hints',
-        (tester) async {
-      await tester.pumpWidget(createTestWidget(const ChangePasswordDialog()));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(AutofillGroup), findsOneWidget);
-
-      final currentPassFinder =
-          find.byKey(const Key('change_password_current_input'));
-      expect(currentPassFinder, findsOneWidget);
-      final currentPass = getField(tester, currentPassFinder);
-      expect(currentPass.keyboardType, equals(TextInputType.visiblePassword));
-      expect(currentPass.textInputAction, equals(TextInputAction.next));
-      expect(currentPass.autofillHints, contains(AutofillHints.password));
-
-      final newPassFinder = find.byKey(const Key('change_password_new_input'));
-      expect(newPassFinder, findsOneWidget);
-      final newPass = getField(tester, newPassFinder);
-      expect(newPass.keyboardType, equals(TextInputType.visiblePassword));
-      expect(newPass.textInputAction, equals(TextInputAction.next));
-      expect(newPass.autofillHints, contains(AutofillHints.newPassword));
-
-      final confirmPassFinder =
-          find.byKey(const Key('change_password_confirm_input'));
-      expect(confirmPassFinder, findsOneWidget);
-      final confirmPass = getField(tester, confirmPassFinder);
-      expect(confirmPass.keyboardType, equals(TextInputType.visiblePassword));
-      expect(confirmPass.textInputAction, equals(TextInputAction.done));
-      expect(confirmPass.autofillHints, contains(AutofillHints.newPassword));
-    });
-
-    testWidgets(
-        'DeleteAccountDialog: wraps in AutofillGroup with password confirmation ergonomics',
+        'DeleteAccountDialog: displays confirmation and action buttons cleanly',
         (tester) async {
       final testUser = UserAccount(
         id: 'u1',
         googleUserId: 'g1',
         displayName: 'Test User',
-        authProvider: AuthProviderType.email,
+        authProvider: AuthProviderType.google,
         email: 'user@example.com',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -148,14 +67,10 @@ void main() {
       ));
       await tester.pumpAndSettle();
 
-      expect(find.byType(AutofillGroup), findsOneWidget);
-
-      final passFinder = find.byKey(const Key('delete_account_password_input'));
-      expect(passFinder, findsOneWidget);
-      final passField = getField(tester, passFinder);
-      expect(passField.keyboardType, equals(TextInputType.visiblePassword));
-      expect(passField.textInputAction, equals(TextInputAction.done));
-      expect(passField.autofillHints, contains(AutofillHints.password));
+      expect(
+          find.byKey(const Key('delete_account_confirm_btn')), findsOneWidget);
+      expect(
+          find.byKey(const Key('delete_account_cancel_btn')), findsOneWidget);
     });
 
     testWidgets(

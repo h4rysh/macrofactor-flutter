@@ -46,114 +46,25 @@ void main() {
     }
 
     testWidgets(
-        'Email/Password Sign-Up creates account and saves session to SQLite',
+        'Google Sign-In creates authenticated session and saves to SQLite',
         (tester) async {
       await tester.pumpWidget(createTestWidget(child: const AuthGateScreen()));
       await tester.pumpAndSettle();
 
-      // Tap Continue with Email
-      await tester.tap(find.byKey(const Key('auth_gate_email_btn')));
-      await tester.pumpAndSettle();
-
-      // Switch to Sign Up
-      await tester.tap(find.byKey(const Key('auth_switch_to_signup_btn')));
-      await tester.pumpAndSettle();
-
-      // Fill form
-      await tester.enterText(
-          find.byKey(const Key('auth_name_input')), 'Kavita Athlete');
-      await tester.enterText(
-          find.byKey(const Key('auth_email_input')), 'kavita@sique.test');
-      await tester.enterText(
-          find.byKey(const Key('auth_password_input')), 'securepass123');
-      if (find
-          .byKey(const Key('auth_confirm_password_input'))
-          .evaluate()
-          .isNotEmpty) {
-        await tester.enterText(
-            find.byKey(const Key('auth_confirm_password_input')),
-            'securepass123');
-      }
-      await tester.pumpAndSettle();
-
-      // Submit
-      await tester.tap(find.byKey(const Key('auth_submit_btn')));
+      // Tap Continue with Google
+      await tester.tap(find.byKey(const Key('auth_gate_google_btn')));
       await tester.pumpAndSettle();
 
       // Verify user session in SQLite
       final session = db.getAccountSession();
       expect(session, isNotNull);
-      expect(session!.email, equals('kavita@sique.test'));
-      expect(session.displayName, equals('Kavita Athlete'));
-      expect(session.authProvider, equals(AuthProviderType.email));
-    });
-
-    testWidgets('Change Password button is visible for Email accounts',
-        (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final emailUser = UserAccount(
-        id: 'usr_email_1',
-        googleUserId: 'email_1',
-        displayName: 'Email User',
-        email: 'user@sique.test',
-        authProvider: AuthProviderType.email,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isAuthenticated: true,
-      );
-
-      final emailRepo = FakeAuthRepository(initialUser: emailUser);
-      await tester.pumpWidget(createTestWidget(
-        child: const AccountProfileScreen(),
-        authRepo: emailRepo,
-        initialUser: emailUser,
-      ));
-      await tester.pumpAndSettle();
-
-      expect(
-          find.byKey(const Key('profile_change_password_btn')), findsOneWidget);
-    });
-
-    testWidgets('Change Password button is hidden for Google accounts',
-        (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final googleUser = UserAccount(
-        id: 'usr_google_1',
-        googleUserId: 'google_1',
-        displayName: 'Google User',
-        email: 'google@sique.test',
-        authProvider: AuthProviderType.google,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-        isAuthenticated: true,
-      );
-
-      final googleRepo = FakeAuthRepository(initialUser: googleUser);
-      await tester.pumpWidget(createTestWidget(
-        child: const AccountProfileScreen(),
-        authRepo: googleRepo,
-        initialUser: googleUser,
-      ));
-      await tester.pumpAndSettle();
-
-      expect(
-          find.byKey(const Key('profile_change_password_btn')), findsNothing);
+      expect(session!.email, equals('athlete@gmail.com'));
+      expect(session.displayName, equals('Google Athlete'));
+      expect(session.authProvider, equals(AuthProviderType.google));
     });
 
     testWidgets(
-        'Provider-aware Delete Account prompts for password on Email account',
+        'Delete Account clears Google account session without password prompt',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
@@ -163,16 +74,12 @@ void main() {
       });
 
       final repo = FakeAuthRepository();
-      final signedUpUser = await repo.signUpWithEmailAndPassword(
-        email: 'del@sique.test',
-        password: 'password123',
-        displayName: 'Delete Test User',
-      );
+      final googleUser = await repo.signInWithGoogle();
 
       await tester.pumpWidget(createTestWidget(
         child: const AccountProfileScreen(),
         authRepo: repo,
-        initialUser: signedUpUser,
+        initialUser: googleUser,
       ));
       await tester.pumpAndSettle();
 
@@ -180,14 +87,9 @@ void main() {
       await tester.tap(find.byKey(const Key('profile_delete_account_btn')));
       await tester.pumpAndSettle();
 
-      // Password input field must be present for Email account deletion
-      expect(find.byKey(const Key('delete_account_password_input')),
-          findsOneWidget);
-
-      // Enter password and confirm deletion
-      await tester.enterText(
-          find.byKey(const Key('delete_account_password_input')),
-          'password123');
+      // Confirm deletion directly (streamlined Google + Guest auth has no password input)
+      expect(
+          find.byKey(const Key('delete_account_confirm_btn')), findsOneWidget);
       await tester.tap(find.byKey(const Key('delete_account_confirm_btn')));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));

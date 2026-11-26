@@ -5,12 +5,12 @@ import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animated_primitives.dart';
 import '../widgets/strategy/checkin_history_sheet.dart';
-import '../widgets/strategy/coaching_checkin_card.dart';
+import '../widgets/strategy/collaborative_macro_editor_sheet.dart';
+import '../widgets/strategy/lifestyle_telemetry_strip.dart';
 import '../widgets/strategy/macro_program_hero_card.dart';
+import '../widgets/strategy/metabolic_command_header.dart';
 import '../widgets/strategy/seven_day_distribution_chart.dart';
 import '../widgets/body_measurements_sheet.dart';
-import '../widgets/fasting_clock_widget.dart';
-import '../widgets/water_dial_widget.dart';
 import '../widgets/weekly_challenge_card.dart';
 import 'goal_questionnaire_sheet.dart';
 import 'onboarding/strategy_setup_wizard.dart';
@@ -44,6 +44,7 @@ class StrategyScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final program = ref.watch(weeklyMacroProgramProvider);
+    final profile = ref.watch(userProfileProvider);
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -72,269 +73,207 @@ class StrategyScreen extends ConsumerWidget {
             physics: const BouncingScrollPhysics(),
             padding:
                 const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // 1. Adherence-Neutral Guarantee Banner
-            AppleStaggeredEntrance(
-              index: 0,
-              child: _buildAdherenceNeutralCard(),
-            ),
-            const SizedBox(height: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // TIER 1: Above-the-Fold Metabolic Command & Active Macro Program
+                const AppleStaggeredEntrance(
+                  index: 0,
+                  child: MetabolicCommandHeader(),
+                ),
+                const SizedBox(height: 16),
+                const AppleStaggeredEntrance(
+                  index: 1,
+                  child: MacroProgramHeroCard(),
+                ),
+                const SizedBox(height: 16),
+                const AppleStaggeredEntrance(
+                  index: 2,
+                  child: SevenDayDistributionChart(),
+                ),
+                const SizedBox(height: 16),
 
-            // 2. Coaching Check-In Status Card
-            const AppleStaggeredEntrance(
-              index: 1,
-              child: CoachingCheckinCard(),
-            ),
-            const SizedBox(height: 16),
+                // TIER 2: Closed-Loop Coaching (Personalized Challenges & Recomp Radar)
+                const AppleStaggeredEntrance(
+                  index: 3,
+                  child: WeeklyChallengesSection(),
+                ),
+                const SizedBox(height: 16),
+                const AppleStaggeredEntrance(
+                  index: 4,
+                  child: AnthropometricsCard(),
+                ),
+                const SizedBox(height: 16),
 
-            // 3. Weekly Behavioral Challenges
-            const AppleStaggeredEntrance(
-              index: 2,
-              child: WeeklyChallengesSection(),
-            ),
-            const SizedBox(height: 16),
-
-            // 4. Anthropometric Composition & Silent Recomposition Radar
-            const AppleStaggeredEntrance(
-              index: 3,
-              child: AnthropometricsCard(),
-            ),
-            const SizedBox(height: 16),
-
-            // 5. Daily Lifestyle Rhythm: Water Dial & Fasting Clock
-            const AppleStaggeredEntrance(
-              index: 4,
-              child: WaterDialCard(),
-            ),
-            const SizedBox(height: 16),
-            const AppleStaggeredEntrance(
-              index: 5,
-              child: FastingClockCard(),
-            ),
-            const SizedBox(height: 16),
-
-            // 6. Active Program Hero Card
-            const AppleStaggeredEntrance(
-              index: 6,
-              child: MacroProgramHeroCard(),
-            ),
-            const SizedBox(height: 16),
-
-            // 7. 7-Day Day Shifting Distribution Chart
-            const AppleStaggeredEntrance(
-              index: 7,
-              child: SevenDayDistributionChart(),
-            ),
-            const SizedBox(height: 16),
-
-            // 8. Program Mode Quick Switch Card
-            AppleStaggeredEntrance(
-              index: 8,
-              child: _buildProgramModeCard(context, ref, program.mode),
-            ),
-            const SizedBox(height: 16),
-
-            // 9. Refined Adjust Strategy & Program Personalization Card
-            AppleStaggeredEntrance(
-              index: 9,
-              child: Container(
-                key: const Key('strategy_adjust_program_card'),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardSurface,
-                  borderRadius: AppRadii.xlBorderRadius,
-                  border: Border.all(
-                    color: AppTheme.activeBlue.withValues(alpha: 0.25),
-                    width: 1.0,
+                // TIER 3: Configuration & Lifestyle Telemetry Strip
+                AppleStaggeredEntrance(
+                  index: 5,
+                  child: _buildProgramModeCard(
+                    context,
+                    ref,
+                    program.mode,
+                    profile,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Row(
-                      children: [
-                        Icon(
-                          Icons.tune_rounded,
-                          size: 18,
-                          color: AppTheme.activeBlue,
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'ADJUST STRATEGY & GOALS',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: AppTheme.textSecondary,
-                                letterSpacing: 0.8,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    const Text(
-                      'Personalize your target rate of change, Indian diet staples, or refigure the entire macro split.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppTheme.textSecondary,
-                        height: 1.4,
+                const SizedBox(height: 16),
+                const AppleStaggeredEntrance(
+                  index: 6,
+                  child: LifestyleTelemetryStrip(),
+                ),
+                const SizedBox(height: 16),
+
+                // Refined Adjust Strategy & Program Personalization Card
+                AppleStaggeredEntrance(
+                  index: 7,
+                  child: Container(
+                    key: const Key('strategy_adjust_program_card'),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardSurface,
+                      borderRadius: AppRadii.xlBorderRadius,
+                      border: Border.all(
+                        color: AppTheme.activeBlue.withValues(alpha: 0.25),
+                        width: 1.0,
                       ),
                     ),
-                    const SizedBox(height: 14),
-                    Row(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
-                          child: AppleBouncy(
-                            scaleDown: 0.96,
-                            onTap: () {
-                              AppHaptics.lightImpact();
-                              _openQuestionnaire(context);
-                            },
-                            child: Container(
-                              key: const Key('strategy_personalize_goal_btn'),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 4),
-                              decoration: BoxDecoration(
-                                color:
-                                    AppTheme.activeBlue.withValues(alpha: 0.12),
-                                borderRadius: AppRadii.mdBorderRadius,
-                                border: Border.all(
-                                  color: AppTheme.activeBlue
-                                      .withValues(alpha: 0.35),
-                                  width: 1,
-                                ),
-                              ),
-                              child: const FittedBox(
+                        const Row(
+                          children: [
+                            Icon(
+                              Icons.tune_rounded,
+                              size: 18,
+                              color: AppTheme.activeBlue,
+                            ),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: FittedBox(
                                 fit: BoxFit.scaleDown,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.edit_note_rounded,
-                                        size: 16, color: AppTheme.activeBlue),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Edit Goal & Diet',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w700,
-                                        color: AppTheme.activeBlue,
-                                      ),
-                                    ),
-                                  ],
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'ADJUST STRATEGY & GOALS',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppTheme.textSecondary,
+                                    letterSpacing: 0.8,
+                                  ),
                                 ),
                               ),
                             ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Personalize your target rate of change, Indian diet staples, or refigure the entire macro split.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: AppTheme.textSecondary,
+                            height: 1.4,
                           ),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: AppleBouncy(
-                            scaleDown: 0.96,
-                            onTap: () {
-                              AppHaptics.lightImpact();
-                              _openSetupWizard(context);
-                            },
-                            child: Container(
-                              key: const Key('strategy_refigure_program_btn'),
-                              padding: const EdgeInsets.symmetric(
-                                  vertical: 12, horizontal: 4),
-                              decoration: const BoxDecoration(
-                                color: AppTheme.calories,
-                                borderRadius: AppRadii.mdBorderRadius,
-                              ),
-                              child: const FittedBox(
-                                fit: BoxFit.scaleDown,
-                                child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.auto_fix_high_rounded,
-                                        size: 16,
-                                        color: AppTheme.buttonForeground),
-                                    SizedBox(width: 4),
-                                    Text(
-                                      'Refigure Split',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w800,
-                                        color: AppTheme.buttonForeground,
-                                      ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: AppleBouncy(
+                                scaleDown: 0.96,
+                                onTap: () {
+                                  AppHaptics.lightImpact();
+                                  _openQuestionnaire(context);
+                                },
+                                child: Container(
+                                  key: const Key(
+                                      'strategy_personalize_goal_btn'),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 4),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.activeBlue
+                                        .withValues(alpha: 0.12),
+                                    borderRadius: AppRadii.mdBorderRadius,
+                                    border: Border.all(
+                                      color: AppTheme.activeBlue
+                                          .withValues(alpha: 0.35),
+                                      width: 1,
                                     ),
-                                  ],
+                                  ),
+                                  child: const FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.edit_note_rounded,
+                                            size: 16,
+                                            color: AppTheme.activeBlue),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Edit Goal & Diet',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w700,
+                                            color: AppTheme.activeBlue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: AppleBouncy(
+                                scaleDown: 0.96,
+                                onTap: () {
+                                  AppHaptics.lightImpact();
+                                  _openSetupWizard(context);
+                                },
+                                child: Container(
+                                  key: const Key(
+                                      'strategy_refigure_program_btn'),
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12, horizontal: 4),
+                                  decoration: const BoxDecoration(
+                                    color: AppTheme.calories,
+                                    borderRadius: AppRadii.mdBorderRadius,
+                                  ),
+                                  child: const FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(Icons.auto_fix_high_rounded,
+                                            size: 16,
+                                            color: AppTheme.buttonForeground),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Refigure Split',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w800,
+                                            color: AppTheme.buttonForeground,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 110),
-          ],
-        ),
-      ),
-    ),
-  ),
-);
-  }
-
-  Widget _buildAdherenceNeutralCard() {
-    return AppleTactileCard(
-      padding: const EdgeInsets.all(16),
-      borderRadius: 18,
-      backgroundColor: AppTheme.cardSurface,
-      borderColor: AppTheme.expenditure.withValues(alpha: 0.3),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.expenditure.withValues(alpha: 0.15),
-              borderRadius: AppRadii.mdBorderRadius,
-            ),
-            child: const Icon(
-              Icons.psychology_rounded,
-              size: 22,
-              color: AppTheme.expenditure,
-            ),
-          ),
-          const SizedBox(width: 14),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'ADHERENCE-NEUTRAL COACHING',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: AppTheme.expenditure,
-                    letterSpacing: 0.5,
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
-                  'Our Bayesian expenditure engine does not judge or assign guilt. Eat what you enjoy: your targets adapt to biological intake and weight flux, with zero behavioral penalties.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.textSecondary,
-                    height: 1.4,
-                  ),
-                ),
+                const SizedBox(height: 110),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -343,6 +282,7 @@ class StrategyScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     ProgramMode activeMode,
+    UserProfile profile,
   ) {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -399,6 +339,115 @@ class StrategyScreen extends ConsumerWidget {
               ),
             ],
           ),
+          if (activeMode != ProgramMode.coached) ...[
+            const SizedBox(height: 12),
+            AppleBouncy(
+              scaleDown: 0.96,
+              onTap: () => CollaborativeMacroEditorSheet.show(
+                context,
+                mode: activeMode,
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: AppTheme.activeBlue.withValues(alpha: 0.14),
+                  borderRadius: AppRadii.mdBorderRadius,
+                  border: Border.all(
+                    color: AppTheme.activeBlue.withValues(alpha: 0.35),
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  activeMode == ProgramMode.manual
+                      ? 'Configure Manual Targets ->'
+                      : 'Customize Carb/Fat & Refeed Split ->',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.activeBlue,
+                  ),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 16),
+          Divider(color: AppTheme.cardBorder.withValues(alpha: 0.6), height: 1),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'DIET BREAK WEEK',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textSecondary,
+                        letterSpacing: 0.8,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Pause deficit temporarily at 1.0x estimated expenditure.',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: AppTheme.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: profile.isInDietBreak,
+                activeThumbColor: AppTheme.expenditure,
+                onChanged: (enabled) {
+                  AppHaptics.selectionClick();
+                  ref.read(userProfileProvider.notifier).updateProfile(
+                        profile.copyWith(isInDietBreak: enabled),
+                      );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'REVERSE DIET PACING',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: AppTheme.textSecondary,
+              letterSpacing: 0.8,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 6,
+            children: [
+              for (final opt in const [
+                ('none', 'Off'),
+                ('conservative', '+2.5%/wk'),
+                ('moderate', '+5%/wk'),
+                ('aggressive', '+8%/wk'),
+              ])
+                ChoiceChip(
+                  label: Text(
+                    opt.$2,
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                  selected: profile.reverseDietPacing == opt.$1,
+                  selectedColor: AppTheme.expenditure.withValues(alpha: 0.22),
+                  onSelected: (_) {
+                    AppHaptics.selectionClick();
+                    ref.read(userProfileProvider.notifier).updateProfile(
+                          profile.copyWith(reverseDietPacing: opt.$1),
+                        );
+                  },
+                ),
+            ],
+          ),
         ],
       ),
     );
@@ -428,14 +477,20 @@ class StrategyScreen extends ConsumerWidget {
         onTap: () {
           AppHaptics.selectionClick();
           final program = ref.read(weeklyMacroProgramProvider);
-          final updatedProgram = program.copyWith(mode: mode);
+          final updatedProgram = program.copyWith(
+            mode: mode,
+            clearCarbShareOverride: mode != ProgramMode.collaborative,
+          );
           ref
               .read(weeklyMacroProgramProvider.notifier)
               .updateProgram(updatedProgram);
 
           final profile = ref.read(userProfileProvider);
           ref.read(userProfileProvider.notifier).updateProfile(
-                profile.copyWith(programMode: mode),
+                profile.copyWith(
+                  programMode: mode,
+                  clearCustom: mode != ProgramMode.manual,
+                ),
               );
         },
         child: AnimatedContainer(

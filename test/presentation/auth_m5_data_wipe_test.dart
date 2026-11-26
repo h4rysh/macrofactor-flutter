@@ -7,7 +7,6 @@ import 'package:sique/data/services/mock_auth_service.dart';
 import 'package:sique/domain/models/user_account.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/screens/auth/delete_account_dialog.dart';
-import 'package:sique/presentation/screens/auth/email_auth_dialog.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 import 'package:sique/presentation/widgets/auth_legal_footer.dart';
@@ -155,20 +154,16 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      final emailUser = UserAccount(
-        id: 'user_123',
-        googleUserId: 'email_uid_123',
-        authProvider: AuthProviderType.email,
+      final googleUser = UserAccount.fromGoogle(
+        googleUserId: 'google_uid_123',
         displayName: 'Athlete One',
         email: 'athlete@sique.com',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
       );
 
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: DeleteAccountDialog(user: emailUser),
+            body: DeleteAccountDialog(user: googleUser),
           ),
         ),
       );
@@ -188,7 +183,7 @@ void main() {
     });
 
     testWidgets(
-        'GoogleAccountCard displays distinct auth provider badges for Guest, Google, and Email',
+        'GoogleAccountCard displays distinct auth provider badges for Guest and Google',
         (tester) async {
       tester.view.physicalSize = const Size(1080, 2400);
       tester.view.devicePixelRatio = 1.0;
@@ -261,119 +256,6 @@ void main() {
 
       final AppleBadge googleBadge = tester.widget(googleBadgeFinder);
       expect(googleBadge.color, equals(AppTheme.activeBlue));
-
-      // 3. Email Account Mode
-      rawDb.execute('DELETE FROM user_account_session;');
-      final emailUser = UserAccount(
-        id: 'active_session',
-        googleUserId: 'email_uid_456',
-        authProvider: AuthProviderType.email,
-        displayName: 'Email Athlete',
-        email: 'athlete@sique.com',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      );
-      appDb.saveAccountSession(emailUser);
-
-      final emailContainer = ProviderContainer(
-        overrides: [
-          databaseProvider.overrideWithValue(appDb),
-          authServiceProvider.overrideWithValue(mockAuth),
-        ],
-      );
-      addTearDown(emailContainer.dispose);
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: emailContainer,
-          child: const MaterialApp(
-            home: Scaffold(
-              body: GoogleAccountCard(),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      final emailBadgeFinder =
-          find.byKey(const Key('profile_auth_provider_badge'));
-      expect(emailBadgeFinder, findsOneWidget);
-      expect(find.text('Email Account'), findsOneWidget);
-
-      final AppleBadge emailBadge = tester.widget(emailBadgeFinder);
-      expect(emailBadge.color, equals(AppTheme.success));
-    });
-
-    testWidgets(
-        'EmailAuthDialog performs regex email validation and password confirmation in SignUp mode',
-        (tester) async {
-      tester.view.physicalSize = const Size(1080, 2400);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(() {
-        tester.view.resetPhysicalSize();
-        tester.view.resetDevicePixelRatio();
-      });
-
-      final container = ProviderContainer(
-        overrides: [
-          databaseProvider.overrideWithValue(appDb),
-          authServiceProvider.overrideWithValue(mockAuth),
-        ],
-      );
-      addTearDown(container.dispose);
-
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(
-            home: Scaffold(
-              body: EmailAuthDialog(),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Test Invalid Email in SignIn mode
-      final emailInput = find.byKey(const Key('auth_email_input'));
-      final passwordInput = find.byKey(const Key('auth_password_input'));
-      final submitBtn = find.byKey(const Key('auth_submit_btn'));
-
-      await tester.enterText(emailInput, 'invalid-email-address');
-      await tester.enterText(passwordInput, 'secret123');
-      await tester.tap(submitBtn);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Invalid email address'), findsOneWidget);
-
-      // Switch to SignUp mode
-      final switchToSignUpBtn =
-          find.byKey(const Key('auth_switch_to_signup_btn'));
-      await tester.tap(switchToSignUpBtn);
-      await tester.pumpAndSettle();
-
-      // Verify Confirm Password input is present in SignUp mode
-      final confirmPasswordInput =
-          find.byKey(const Key('auth_confirm_password_input'));
-      expect(confirmPasswordInput, findsOneWidget);
-
-      // Enter valid email but mismatched passwords
-      await tester.enterText(emailInput, 'athlete@sique.com');
-      await tester.enterText(passwordInput, 'password123');
-      await tester.enterText(confirmPasswordInput, 'different_password');
-      await tester.tap(submitBtn);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Passwords do not match'), findsOneWidget);
-
-      // Enter matching passwords
-      await tester.enterText(confirmPasswordInput, 'password123');
-      await tester.tap(submitBtn);
-      await tester.pumpAndSettle();
-
-      // Form validation succeeds and submission triggered
-      expect(find.text('Passwords do not match'), findsNothing);
-      expect(find.text('Invalid email address'), findsNothing);
     });
 
     testWidgets(

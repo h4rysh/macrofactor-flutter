@@ -11,7 +11,8 @@ class AuthLegalFooter extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.cardSurface,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadii.lgBorderRadius),
+        shape:
+            const RoundedRectangleBorder(borderRadius: AppRadii.lgBorderRadius),
         title: const Text(
           LegalCopy.privacyPolicyTitle,
           style: TextStyle(
@@ -50,7 +51,8 @@ class AuthLegalFooter extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppTheme.cardSurface,
-        shape: const RoundedRectangleBorder(borderRadius: AppRadii.lgBorderRadius),
+        shape:
+            const RoundedRectangleBorder(borderRadius: AppRadii.lgBorderRadius),
         title: const Text(
           LegalCopy.medicalDisclaimerTitle,
           style: TextStyle(

@@ -41,172 +41,172 @@ class CoachingCheckinCard extends ConsumerWidget {
             'Weekly coaching check-in ready. Tap to review calorie adjustments and metabolic review.',
         child: AppleTactileCard(
           onTap: () => _openCheckInSheet(context, recommendation),
-        backgroundColor: AppTheme.cardSurface,
-        borderRadius: 20,
-        border: Border.all(
-          color: AppTheme.calories.withValues(alpha: 0.6),
-          width: 1.5,
-        ),
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppTheme.calories.withValues(alpha: 0.18),
-                    borderRadius: AppRadii.mdBorderRadius,
-                  ),
-                  child: const Icon(
-                    Icons.auto_awesome_rounded,
-                    color: AppTheme.calories,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'CHECK-IN READY',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.calories,
-                          letterSpacing: 1.0,
-                        ),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Your Weekly Strategy Review is Ready!',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => _openHistorySheet(context),
-                  icon: const Icon(
-                    Icons.history_rounded,
-                    color: AppTheme.textSecondary,
-                    size: 20,
-                  ),
-                  tooltip: 'Check-in History',
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            Text(
-              recommendation.metabolicInsight,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppTheme.textSecondary,
-                height: 1.35,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: const BoxDecoration(
-                color: AppTheme.calories,
-                borderRadius: AppRadii.lgBorderRadius,
-              ),
-              alignment: Alignment.center,
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+          backgroundColor: AppTheme.cardSurface,
+          borderRadius: 20,
+          border: Border.all(
+            color: AppTheme.calories.withValues(alpha: 0.6),
+            width: 1.5,
+          ),
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
                 children: [
-                  Text(
-                    'Review & Adjust Strategy',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.calories.withValues(alpha: 0.18),
+                      borderRadius: AppRadii.mdBorderRadius,
+                    ),
+                    child: const Icon(
+                      Icons.auto_awesome_rounded,
+                      color: AppTheme.calories,
+                      size: 20,
                     ),
                   ),
-                  SizedBox(width: 6),
-                  Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Colors.white,
-                    size: 16,
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CHECK-IN READY',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: AppTheme.calories,
+                            letterSpacing: 1.0,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Your Weekly Strategy Review is Ready!',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => _openHistorySheet(context),
+                    icon: const Icon(
+                      Icons.history_rounded,
+                      color: AppTheme.textSecondary,
+                      size: 20,
+                    ),
+                    tooltip: 'Check-in History',
                   ),
                 ],
               ),
+              const SizedBox(height: 12),
+              Text(
+                recommendation.metabolicInsight,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: AppTheme.textSecondary,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: const BoxDecoration(
+                  color: AppTheme.calories,
+                  borderRadius: AppRadii.lgBorderRadius,
+                ),
+                alignment: Alignment.center,
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Review & Adjust Strategy',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 6),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Not due yet: Countdown state
+    return Semantics(
+      button: true,
+      label:
+          'Weekly coaching check-in. ${recommendation.daysUntilNextCheckIn} days until next review.',
+      child: AppleTactileCard(
+        onTap: () => _openHistorySheet(context),
+        backgroundColor: AppTheme.cardSurface,
+        borderRadius: 18,
+        border: Border.all(color: AppTheme.cardBorder, width: 1),
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.expenditure.withValues(alpha: 0.12),
+                borderRadius: AppRadii.mdBorderRadius,
+              ),
+              child: const Icon(
+                Icons.event_available_rounded,
+                color: AppTheme.expenditure,
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'WEEKLY CHECK-IN',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.textSecondary,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    recommendation.daysUntilNextCheckIn <= 1
+                        ? 'Due tomorrow'
+                        : 'Next check-in in ${recommendation.daysUntilNextCheckIn} days',
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.history_rounded,
+              color: AppTheme.textSecondary,
+              size: 20,
             ),
           ],
         ),
       ),
     );
   }
-
-  // Not due yet: Countdown state
-  return Semantics(
-    button: true,
-    label:
-        'Weekly coaching check-in. ${recommendation.daysUntilNextCheckIn} days until next review.',
-    child: AppleTactileCard(
-      onTap: () => _openHistorySheet(context),
-      backgroundColor: AppTheme.cardSurface,
-      borderRadius: 18,
-      border: Border.all(color: AppTheme.cardBorder, width: 1),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: AppTheme.expenditure.withValues(alpha: 0.12),
-              borderRadius: AppRadii.mdBorderRadius,
-            ),
-            child: const Icon(
-              Icons.event_available_rounded,
-              color: AppTheme.expenditure,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'WEEKLY CHECK-IN',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.textSecondary,
-                    letterSpacing: 0.8,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  recommendation.daysUntilNextCheckIn <= 1
-                      ? 'Due tomorrow'
-                      : 'Next check-in in ${recommendation.daysUntilNextCheckIn} days',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Icon(
-            Icons.history_rounded,
-            color: AppTheme.textSecondary,
-            size: 20,
-          ),
-        ],
-      ),
-    ),
-  );
-}
 }

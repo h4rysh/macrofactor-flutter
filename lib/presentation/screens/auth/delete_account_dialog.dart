@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/domain/models/user_account.dart';
 import 'package:sique/presentation/providers/auth_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
-/// Provider-aware modal dialog for permanently deleting user account and session.
+/// Modal confirmation dialog for permanently deleting user account and session.
 class DeleteAccountDialog extends ConsumerStatefulWidget {
   const DeleteAccountDialog({super.key, required this.user});
 
@@ -24,27 +23,10 @@ class DeleteAccountDialog extends ConsumerStatefulWidget {
 }
 
 class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
   bool _isLoading = false;
   String? _errorMessage;
 
-  @override
-  void dispose() {
-    _passwordController.dispose();
-    super.dispose();
-  }
-
   Future<void> _handleDelete() async {
-    final isEmail = widget.user.authProvider == AuthProviderType.email;
-    final password = _passwordController.text;
-
-    if (isEmail && password.isEmpty) {
-      setState(() =>
-          _errorMessage = 'Please enter your password to confirm deletion.');
-      return;
-    }
-
     setState(() {
       _isLoading = true;
       _errorMessage = null;
@@ -52,12 +34,9 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
 
     try {
       final success =
-          await ref.read(authNotifierProvider.notifier).deleteAccount(
-                password: isEmail ? password : null,
-              );
+          await ref.read(authNotifierProvider.notifier).deleteAccount();
       if (mounted) {
         if (success) {
-          TextInput.finishAutofillContext();
           Navigator.of(context).pop(true);
         } else {
           final authState = ref.read(authNotifierProvider);
@@ -83,8 +62,6 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final isEmail = widget.user.authProvider == AuthProviderType.email;
-
     return AlertDialog(
       backgroundColor: AppTheme.cardSurface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -104,74 +81,38 @@ class _DeleteAccountDialogState extends ConsumerState<DeleteAccountDialog> {
       ),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 380),
-        child: AutofillGroup(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                isEmail
-                    ? 'Permanently delete your account (${widget.user.email}). All local workout, nutrition, and weight data will be permanently wiped. This cannot be undone. Only your personal logs and profile are cleared; the verified Indian food catalog is preserved. Enter your password to confirm:'
-                    : 'Permanently delete your account (${widget.user.displayName}). All local workout, nutrition, and weight data will be permanently wiped. This cannot be undone. Only your personal logs and profile are cleared; the verified Indian food catalog is preserved. You may be prompted to re-authenticate with Google.',
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppTheme.textSecondary,
-                  height: 1.4,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Permanently delete your account (${widget.user.displayName}). All local workout, nutrition, and weight data will be permanently wiped. This cannot be undone. Only your personal logs and profile are cleared; the verified Indian food catalog is preserved.',
+              style: const TextStyle(
+                fontSize: 14,
+                color: AppTheme.textSecondary,
+                height: 1.4,
+              ),
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 14),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.calories.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                      color: AppTheme.calories.withValues(alpha: 0.4)),
+                ),
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppTheme.calories,
+                  ),
                 ),
               ),
-              const SizedBox(height: 16),
-              if (_errorMessage != null)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 14),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.calories.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                        color: AppTheme.calories.withValues(alpha: 0.4)),
-                  ),
-                  child: Text(
-                    _errorMessage!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.calories,
-                    ),
-                  ),
-                ),
-              if (isEmail)
-                TextFormField(
-                  key: const Key('delete_account_password_input'),
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  keyboardType: TextInputType.visiblePassword,
-                  textInputAction: TextInputAction.done,
-                  autofillHints: const [AutofillHints.password],
-                  onFieldSubmitted: (_) => _handleDelete(),
-                  style: const TextStyle(color: AppTheme.textPrimary),
-                  decoration: InputDecoration(
-                    labelText: 'Account Password',
-                    prefixIcon: const Icon(Icons.lock_outline_rounded,
-                        color: AppTheme.textSecondary),
-                    suffixIcon: IconButton(
-                      tooltip:
-                          _obscurePassword ? 'Show password' : 'Hide password',
-                      icon: Icon(
-                        _obscurePassword
-                            ? Icons.visibility_off_rounded
-                            : Icons.visibility_rounded,
-                        color: AppTheme.textSecondary,
-                      ),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                    filled: true,
-                    fillColor: AppTheme.cardElevated,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
             ],
-          ),
+          ],
         ),
       ),
       actions: [

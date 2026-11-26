@@ -4,9 +4,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/food_models.dart';
 import '../../domain/models/user_profile.dart';
+import '../../domain/services/home_widget_sync_service.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/date_carousel_ribbon.dart';
+import '../widgets/food/barcode_scanner_sheet.dart';
+import '../widgets/food/batch_diary_toolbar.dart';
+import '../widgets/food/day_note_banner.dart';
+import '../widgets/food/quick_add_macros_sheet.dart';
 import '../widgets/nutrition_summary_banner.dart';
 import '../widgets/persistent_search_bar.dart';
 import '../widgets/sique_frosted_chrome.dart';
@@ -25,6 +30,8 @@ class FoodLogScreen extends ConsumerStatefulWidget {
 
 class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
   bool _isCollapsed = false;
+  bool _isMultiSelect = false;
+  final Set<int> _selectedIds = <int>{};
 
   /// Tracks whether we have already fired the celebratory haptic this session
   /// for calories and protein independently to avoid repeat firing.
@@ -79,6 +86,17 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
   }
 
   void _onEntryTap(DailyFoodLogEntry entry) {
+    if (_isMultiSelect) {
+      final eid = entry.id;
+      if (eid != null) {
+        setState(() {
+          if (!_selectedIds.remove(eid)) {
+            _selectedIds.add(eid);
+          }
+        });
+      }
+      return;
+    }
     final db = ref.read(databaseProvider);
     final portionUnits = db.getPortionUnits(entry.food.id);
     final macroTargets = ref.read(macroTargetProvider);
@@ -124,14 +142,14 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
       _calHapticFired = true;
       HapticFeedback.mediumImpact();
       Future.delayed(const Duration(milliseconds: 120), () {
-        HapticFeedback.lightImpact();
+        if (mounted) HapticFeedback.lightImpact();
       });
     }
     if (proteinReached && !_proteinHapticFired) {
       _proteinHapticFired = true;
       HapticFeedback.mediumImpact();
       Future.delayed(const Duration(milliseconds: 120), () {
-        HapticFeedback.lightImpact();
+        if (mounted) HapticFeedback.lightImpact();
       });
     }
   }
@@ -238,7 +256,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
       ),
     );
 
-    // Check for celebratory haptic (runs after each build)
+    // Check for celebratory haptic & sync home widget for today (runs after each build)
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkAndFireCelebratoryHaptic(
         totalCalories: dailyAggregate.totalCalories,
@@ -246,6 +264,17 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
         targetCalories: macroTargets.targetCalories,
         targetProteinGrams: macroTargets.targetProteinGrams,
       );
+      if (_isSameDay(selectedDate, now)) {
+        HomeWidgetSyncService.updateRemainingMacros(
+          caloriesRemaining:
+              macroTargets.targetCalories - dailyAggregate.totalCalories,
+          proteinRemaining:
+              macroTargets.targetProteinGrams - dailyAggregate.totalProtein,
+          carbsRemaining:
+              macroTargets.targetCarbsGrams - dailyAggregate.totalCarbs,
+          fatRemaining: macroTargets.targetFatGrams - dailyAggregate.totalFat,
+        );
+      }
     });
 
     // Fetch yesterday's logs for Copy Yesterday feature (calendar math is DST-safe)
@@ -283,25 +312,51 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                           DateFormat('yyyy-MM-dd').format(date);
                     },
                     leading: IconButton(
-                      icon: const Icon(Icons.menu_rounded, size: 24),
-                      color: AppTheme.textSecondary,
-                      tooltip: 'Menu',
-                      onPressed: () {},
-                    ),
-                    trailing: IconButton(
-                      icon: Icon(
-                        _isCollapsed
-                            ? Icons.view_agenda_outlined
-                            : Icons.format_list_bulleted_rounded,
-                        size: 22,
+                      icon: const Icon(Icons.bolt_rounded, size: 22),
+                      color: AppTheme.calories,
+                      tooltip: 'Quick Add Macros',
+                      onPressed: () => QuickAddMacrosSheet.show(
+                        context,
+                        date: selectedDate,
                       ),
-                      color: AppTheme.textSecondary,
-                      tooltip: _isCollapsed
-                          ? 'Expand Timeline'
-                          : 'Collapse Timeline',
-                      onPressed: () {
-                        setState(() => _isCollapsed = !_isCollapsed);
-                      },
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            _isMultiSelect
+                                ? Icons.checklist_rtl_rounded
+                                : Icons.checklist_rounded,
+                            size: 21,
+                          ),
+                          color: _isMultiSelect
+                              ? AppTheme.activeBlue
+                              : AppTheme.textSecondary,
+                          tooltip: 'Batch Select',
+                          onPressed: () {
+                            setState(() {
+                              _isMultiSelect = !_isMultiSelect;
+                              _selectedIds.clear();
+                            });
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            _isCollapsed
+                                ? Icons.view_agenda_outlined
+                                : Icons.format_list_bulleted_rounded,
+                            size: 21,
+                          ),
+                          color: AppTheme.textSecondary,
+                          tooltip: _isCollapsed
+                              ? 'Expand Timeline'
+                              : 'Collapse Timeline',
+                          onPressed: () {
+                            setState(() => _isCollapsed = !_isCollapsed);
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -329,6 +384,22 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
+                SliverToBoxAdapter(
+                  child: DayNoteAndRepeatsBanner(date: selectedDate),
+                ),
+
+                if (_isMultiSelect)
+                  SliverToBoxAdapter(
+                    child: BatchDiaryToolbar(
+                      selectedIds: _selectedIds,
+                      dayLogs: dayLogs,
+                      onClear: () => setState(() {
+                        _isMultiSelect = false;
+                        _selectedIds.clear();
+                      }),
+                    ),
+                  ),
+
                 // 4. Hourly Timeline Slots
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
@@ -340,11 +411,18 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                       final hourYesterday = yesterdayLogs
                           .where((e) => e.loggedAt.hour == hour)
                           .toList();
+                      final activeFast = ref.watch(fastingSessionProvider);
+                      final slotDt = DateTime(selectedDate.year,
+                          selectedDate.month, selectedDate.day, hour);
+                      final isFastingHour = activeFast != null &&
+                          !slotDt.isBefore(activeFast.startTime) &&
+                          slotDt.isBefore(activeFast.targetEndTime);
 
                       return TimelineHourSlot(
                         hour: hour,
                         entries: hourEntries,
                         isCollapsed: _isCollapsed,
+                        isFastingWindow: isFastingHour,
                         onAddTap: () => _onAddForHour(hour),
                         onEntryTap: _onEntryTap,
                         yesterdayEntries: hourYesterday,
@@ -452,6 +530,14 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                       mealType: _getMealTypeForHour(nowHour),
                       initialLoggedAt: _selectedDateWithCurrentTime,
                     ),
+                  );
+                },
+                onBarcodeTap: () {
+                  final nowHour = ref.read(clockProvider)().hour;
+                  BarcodeScannerSheet.show(
+                    context,
+                    mealType: _getMealTypeForHour(nowHour),
+                    loggedAt: _selectedDateWithCurrentTime,
                   );
                 },
               ),

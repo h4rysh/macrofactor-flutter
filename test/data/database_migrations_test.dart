@@ -362,17 +362,37 @@ void main() {
       expect(checkInColsV5.contains('was_clamped'), isTrue);
       expect(checkInColsV5.contains('silent_recomp_detected'), isTrue);
 
+      // Apply Step 6
+      DatabaseMigrations.applyStepForTest(rawDb, 6);
+      final v6 = rawDb.select('PRAGMA user_version;').first.values.first;
+      expect(v6, equals(6));
+
+      final tablesV6 = rawDb
+          .select("SELECT name FROM sqlite_master WHERE type='table';")
+          .map((r) => r['name'] as String)
+          .toSet();
+      expect(tablesV6.contains('custom_recipes'), isTrue);
+      expect(tablesV6.contains('recipe_ingredients'), isTrue);
+      expect(tablesV6.contains('barcode_cache'), isTrue);
+      expect(tablesV6.contains('nutrient_definitions'), isTrue);
+      expect(tablesV6.contains('food_nutrients'), isTrue);
+
+      final nutrientCount = rawDb
+          .select('SELECT COUNT(*) AS cnt FROM nutrient_definitions;')
+          .first['cnt'] as int;
+      expect(nutrientCount, equals(10));
+
       rawDb.dispose();
     });
 
     test('Higher user_version is protected from downgrade overwrite', () {
       final rawDb = sqlite3.openInMemory();
-      rawDb.execute('PRAGMA user_version = 6;');
+      rawDb.execute('PRAGMA user_version = 7;');
 
       DatabaseMigrations.initializeAndMigrate(rawDb, isInMemory: true);
 
       final versionResult = rawDb.select('PRAGMA user_version;');
-      expect(versionResult.first.values.first, equals(6));
+      expect(versionResult.first.values.first, equals(7));
 
       rawDb.dispose();
     });

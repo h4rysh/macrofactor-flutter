@@ -165,44 +165,44 @@ class Card01Goal extends StatelessWidget {
                       : AppTheme.cardElevated,
                   borderRadius: AppRadii.mdBorderRadius,
                 ),
-              child: Icon(
-                icon,
-                size: 24,
-                color: isSelected ? color : AppTheme.textSecondary,
+                child: Icon(
+                  icon,
+                  size: 24,
+                  color: isSelected ? color : AppTheme.textSecondary,
+                ),
               ),
-            ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      color: isSelected ? color : AppTheme.textPrimary,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? color : AppTheme.textPrimary,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    softWrap: true,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: AppTheme.textSecondary,
-                      height: 1.3,
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      softWrap: true,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.textSecondary,
+                        height: 1.3,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            if (isSelected)
-              Icon(Icons.check_circle_rounded, color: color, size: 20),
-          ],
+              if (isSelected)
+                Icon(Icons.check_circle_rounded, color: color, size: 20),
+            ],
+          ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 }

@@ -42,7 +42,10 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
   }
 
   /// Immediately regenerates and persists weekly program when driving profile attributes change.
-  void regenerateFromProfile(UserProfile profile) {
+  void regenerateFromProfile(
+    UserProfile profile, {
+    bool applyReverseRamp = false,
+  }) {
     final expenditure = _ref.read(expenditureStateProvider);
     final currentProgram = state;
     final updatedProgram = CoachingEngine.buildWeeklyProgram(
@@ -54,8 +57,60 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
       checkInDayOfWeek: currentProgram.checkInDayOfWeek,
       lastCheckInDate: currentProgram.lastCheckInDate,
       programStartDate: currentProgram.createdAt,
+      carbShareOverride: profile.programMode == ProgramMode.collaborative
+          ? currentProgram.carbShareOverride
+          : null,
+      previousAvgCalories: currentProgram.dailyAverageCalories,
+      applyReverseRamp: applyReverseRamp,
     );
     updateProgram(updatedProgram);
+  }
+
+  /// Rebuilds the active weekly program with custom Collaborative carb-to-fat ratio & day allocation.
+  void applyCollaborativeCustomization({
+    required double carbSharePct,
+    required DayAllocationType allocationType,
+    required Set<int> workoutDays,
+  }) {
+    final profile = _ref.read(userProfileProvider);
+    if (profile.programMode != ProgramMode.collaborative) {
+      _ref.read(userProfileProvider.notifier).updateProfile(
+            profile.copyWith(programMode: ProgramMode.collaborative),
+          );
+    }
+    final latestProfile = _ref.read(userProfileProvider);
+    final expenditure = _ref.read(expenditureStateProvider);
+    final updated = CoachingEngine.buildWeeklyProgram(
+      profile: latestProfile.copyWith(programMode: ProgramMode.collaborative),
+      expenditureKcal: expenditure.expenditureKcal,
+      style: state.style,
+      allocationType: allocationType,
+      workoutDays: workoutDays,
+      checkInDayOfWeek: state.checkInDayOfWeek,
+      lastCheckInDate: state.lastCheckInDate,
+      programStartDate: state.createdAt,
+      carbShareOverride: carbSharePct,
+      previousAvgCalories: state.dailyAverageCalories,
+      applyReverseRamp: false,
+    );
+    updateProgram(updated);
+  }
+
+  /// Locks exact Manual custom targets onto the profile & weekly schedule.
+  void applyManualTargets({
+    required double calories,
+    required double proteinGrams,
+    required double carbsGrams,
+    required double fatGrams,
+  }) {
+    final profile = _ref.read(userProfileProvider).copyWith(
+          programMode: ProgramMode.manual,
+          customCalories: calories,
+          customProteinGrams: proteinGrams,
+          customCarbsGrams: carbsGrams,
+          customFatGrams: fatGrams,
+        );
+    _ref.read(userProfileProvider.notifier).updateProfile(profile);
   }
 
   void applyCheckIn(CheckInRecommendation recommendation) {
@@ -106,6 +161,21 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
     final updated = state.copyWith(lastCheckInDate: DateTime.now());
     updateProgram(updated);
     _ref.invalidate(coachingCheckInHistoryProvider);
+  }
+
+  /// Rebalances the remaining days of the current week around actual logged intake.
+  void applyMidWeekRebalance({
+    required double consumedCaloriesSoFar,
+    required int completedDaysCount,
+  }) {
+    final profile = _ref.read(userProfileProvider);
+    final rebalanced = CoachingEngine.rebalanceRemainingWeek(
+      currentProgram: state,
+      profile: profile,
+      consumedCaloriesSoFar: consumedCaloriesSoFar,
+      completedDaysCount: completedDaysCount,
+    );
+    updateProgram(rebalanced);
   }
 }
 

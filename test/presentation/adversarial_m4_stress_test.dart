@@ -5,9 +5,7 @@ import 'package:sique/data/local/app_database.dart';
 import 'package:sique/domain/models/user_account.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
-import 'package:sique/presentation/screens/auth/change_password_dialog.dart';
 import 'package:sique/presentation/screens/auth/delete_account_dialog.dart';
-import 'package:sique/presentation/screens/auth/email_auth_dialog.dart';
 import 'package:sique/presentation/screens/onboarding/steps/step_03_dob.dart';
 import 'package:sique/presentation/screens/onboarding/steps/step_04_height.dart';
 import 'package:sique/presentation/screens/onboarding/steps/step_05_weight.dart';
@@ -257,66 +255,13 @@ void main() {
     });
 
     testWidgets(
-        'Adversarial: Auth forms AutofillGroup hierarchy and hint isolation',
+        'Adversarial: DeleteAccountDialog renders confirmation controls for Google users',
         (tester) async {
-      // 1. EmailAuthDialog
-      await tester.pumpWidget(wrap(const EmailAuthDialog()));
-      await tester.pumpAndSettle();
-
-      final emailGroup = find.byType(AutofillGroup);
-      expect(emailGroup, findsOneWidget);
-
-      final emailInput = find.byKey(const Key('auth_email_input'));
-      final passInput = find.byKey(const Key('auth_password_input'));
-
-      expect(find.descendant(of: emailGroup, matching: emailInput),
-          findsOneWidget);
-      expect(
-          find.descendant(of: emailGroup, matching: passInput), findsOneWidget);
-
-      final emailField = tester.widget<TextField>(
-          find.descendant(of: emailInput, matching: find.byType(TextField)));
-      final passField = tester.widget<TextField>(
-          find.descendant(of: passInput, matching: find.byType(TextField)));
-
-      expect(emailField.autofillHints, equals([AutofillHints.email]));
-      expect(passField.autofillHints, equals([AutofillHints.password]));
-      expect(passField.keyboardType, equals(TextInputType.visiblePassword));
-
-      // 2. ChangePasswordDialog
-      await tester.pumpWidget(wrap(const ChangePasswordDialog()));
-      await tester.pumpAndSettle();
-
-      expect(find.byType(AutofillGroup), findsOneWidget);
-      final curPass = find.byKey(const Key('change_password_current_input'));
-      final newPass = find.byKey(const Key('change_password_new_input'));
-      final confPass = find.byKey(const Key('change_password_confirm_input'));
-
-      expect(
-          tester
-              .widget<TextField>(find.descendant(
-                  of: curPass, matching: find.byType(TextField)))
-              .autofillHints,
-          equals([AutofillHints.password]));
-      expect(
-          tester
-              .widget<TextField>(find.descendant(
-                  of: newPass, matching: find.byType(TextField)))
-              .autofillHints,
-          equals([AutofillHints.newPassword]));
-      expect(
-          tester
-              .widget<TextField>(find.descendant(
-                  of: confPass, matching: find.byType(TextField)))
-              .autofillHints,
-          equals([AutofillHints.newPassword]));
-
-      // 3. DeleteAccountDialog
       final testUser = UserAccount(
         id: 'u1',
         googleUserId: 'g1',
         displayName: 'Test User',
-        authProvider: AuthProviderType.email,
+        authProvider: AuthProviderType.google,
         email: 'user@example.com',
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
@@ -324,15 +269,10 @@ void main() {
       await tester.pumpWidget(wrap(DeleteAccountDialog(user: testUser)));
       await tester.pumpAndSettle();
 
-      final delGroup = find.byType(AutofillGroup);
-      expect(delGroup, findsOneWidget);
-      final delPass = find.byKey(const Key('delete_account_password_input'));
       expect(
-          tester
-              .widget<TextField>(find.descendant(
-                  of: delPass, matching: find.byType(TextField)))
-              .autofillHints,
-          equals([AutofillHints.password]));
+          find.byKey(const Key('delete_account_confirm_btn')), findsOneWidget);
+      expect(
+          find.byKey(const Key('delete_account_cancel_btn')), findsOneWidget);
     });
 
     testWidgets(
@@ -385,34 +325,6 @@ void main() {
       await tester.tap(refreshBtn);
       await tester.pump();
       expect(retryCalls, 2);
-    });
-
-    testWidgets(
-        'Adversarial: Empty input validation guards in EmailAuthDialog and ChangePasswordDialog',
-        (tester) async {
-      // 1. EmailAuthDialog empty submission
-      await tester.pumpWidget(wrap(const EmailAuthDialog()));
-      await tester.pumpAndSettle();
-
-      final signInBtn = find.byKey(const Key('auth_submit_btn'));
-      expect(signInBtn, findsOneWidget);
-      await tester.tap(signInBtn);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Email is required'), findsOneWidget);
-      expect(find.text('Password is required'), findsOneWidget);
-
-      // 2. ChangePasswordDialog empty submission
-      await tester.pumpWidget(wrap(const ChangePasswordDialog()));
-      await tester.pumpAndSettle();
-
-      final changeBtn = find.byKey(const Key('change_password_submit_btn'));
-      expect(changeBtn, findsOneWidget);
-      await tester.tap(changeBtn);
-      await tester.pumpAndSettle();
-
-      expect(find.text('Current password is required'), findsOneWidget);
-      expect(find.text('New password is required'), findsOneWidget);
     });
 
     testWidgets(

@@ -10,10 +10,12 @@ class PersistentSearchBar extends StatelessWidget {
     super.key,
     required this.onSearchTap,
     required this.onCustomFoodTap,
+    this.onBarcodeTap,
   });
 
   final VoidCallback onSearchTap;
   final VoidCallback onCustomFoodTap;
+  final VoidCallback? onBarcodeTap;
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +80,31 @@ class PersistentSearchBar extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
+
+                if (onBarcodeTap != null)
+                  Semantics(
+                    button: true,
+                    label: 'Scan barcode',
+                    child: AppleBouncy(
+                      scaleDown: 0.90,
+                      onTap: () {
+                        AppHaptics.lightImpact();
+                        onBarcodeTap!();
+                      },
+                      child: Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.qr_code_scanner_rounded,
+                          size: 20,
+                          color: AppTheme.activeBlue,
+                        ),
+                      ),
+                    ),
+                  ),
 
                 // Custom Food / Plate shortcut
                 Semantics(

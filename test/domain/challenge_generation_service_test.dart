@@ -29,7 +29,9 @@ void main() {
       expect(challenges[1].type, ChallengeType.fiberBuilder);
     });
 
-    test('Generates produce and hydration challenges when protein and fiber are optimal', () {
+    test(
+        'Generates produce and hydration challenges when protein and fiber are optimal',
+        () {
       const metrics = MinedDeficitMetrics(
         totalLoggedDays: 7,
         proteinHitDays: 6,
@@ -49,7 +51,9 @@ void main() {
       expect(challenges[1].type, ChallengeType.hydrationHero);
     });
 
-    test('Fallback: Returns 2 mastery challenges when user meets all deficit thresholds', () {
+    test(
+        'Fallback: Returns 2 mastery challenges when user meets all deficit thresholds',
+        () {
       const metrics = MinedDeficitMetrics(
         totalLoggedDays: 7,
         proteinHitDays: 7,

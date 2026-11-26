@@ -8,7 +8,7 @@ import 'database_schema.dart';
 class DatabaseMigrations {
   const DatabaseMigrations._();
 
-  static const int currentVersion = 5;
+  static const int currentVersion = 7;
   static const int busyTimeoutMs = 5000;
 
   /// Applies necessary schema migrations and performance pragmas to the database.
@@ -64,6 +64,14 @@ class DatabaseMigrations {
     if (currentDbVersion < 5) {
       _runStep(db, 5, _applyVersion5);
     }
+
+    if (currentDbVersion < 6) {
+      _runStep(db, 6, _applyVersion6);
+    }
+
+    if (currentDbVersion < 7) {
+      _runStep(db, 7, _applyVersion7);
+    }
   }
 
   /// Public test-friendly hook for running an isolated migration step.
@@ -79,6 +87,10 @@ class DatabaseMigrations {
         _runStep(db, 4, _applyVersion4);
       case 5:
         _runStep(db, 5, _applyVersion5);
+      case 6:
+        _runStep(db, 6, _applyVersion6);
+      case 7:
+        _runStep(db, 7, _applyVersion7);
       default:
         throw ArgumentError('Unknown migration target version: $targetVersion');
     }
@@ -389,6 +401,131 @@ class DatabaseMigrations {
         db.execute(
             'ALTER TABLE coaching_check_ins ADD COLUMN silent_recomp_detected INTEGER NOT NULL DEFAULT 0;');
       }
+    }
+  }
+
+  static void _applyVersion6(CommonDatabase db) {
+    db.execute(DatabaseSchema.createCustomRecipesTable);
+    db.execute(DatabaseSchema.createCustomRecipesIndex);
+    db.execute(DatabaseSchema.createRecipeIngredientsTable);
+    db.execute(DatabaseSchema.createRecipeIngredientsIndex);
+    db.execute(DatabaseSchema.createBarcodeCacheTable);
+    db.execute(DatabaseSchema.createNutrientDefinitionsTable);
+    db.execute(DatabaseSchema.createFoodNutrientsTable);
+    db.execute(DatabaseSchema.createFoodNutrientsIndex);
+
+    // Seed the 10 key ICMR-NIN / USDA micronutrient definitions idempotently so
+    // fresh in-memory databases and upgraded v5->v6 users have RDAs ready immediately.
+    const nutrientSeeds =
+        <(int, String, String, String, String, double, double, double?)>[
+      (1, 'iron', 'Iron', 'mineral', 'mg', 19.0, 29.0, 45.0),
+      (2, 'calcium', 'Calcium', 'mineral', 'mg', 1000.0, 1000.0, 2500.0),
+      (3, 'potassium', 'Potassium', 'mineral', 'mg', 3500.0, 3500.0, null),
+      (4, 'sodium', 'Sodium', 'mineral', 'mg', 2000.0, 2000.0, 2300.0),
+      (5, 'vitamin_c', 'Vitamin C', 'vitamin', 'mg', 80.0, 65.0, 2000.0),
+      (6, 'vitamin_d', 'Vitamin D', 'vitamin', 'IU', 600.0, 600.0, 4000.0),
+      (7, 'vitamin_b12', 'Vitamin B12', 'vitamin', 'mcg', 2.2, 2.2, null),
+      (8, 'magnesium', 'Magnesium', 'mineral', 'mg', 440.0, 370.0, null),
+      (9, 'zinc', 'Zinc', 'mineral', 'mg', 17.0, 13.2, 40.0),
+      (10, 'folate', 'Folate (B9)', 'vitamin', 'mcg', 300.0, 220.0, 1000.0),
+    ];
+
+    final stmt = db.prepare('''
+      INSERT OR IGNORE INTO nutrient_definitions (
+        id, slug, display_name, category, unit,
+        default_rda_male, default_rda_female, upper_tolerable_limit
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+    ''');
+    try {
+      for (final row in nutrientSeeds) {
+        stmt.execute([
+          row.$1,
+          row.$2,
+          row.$3,
+          row.$4,
+          row.$5,
+          row.$6,
+          row.$7,
+          row.$8,
+        ]);
+      }
+    } finally {
+      stmt.dispose();
+    }
+  }
+
+  static void _applyVersion7(CommonDatabase db) {
+    db.execute(DatabaseSchema.createRepeatItemsTable);
+    db.execute(DatabaseSchema.createRepeatItemsIndex);
+    db.execute(DatabaseSchema.createDayNotesTable);
+    db.execute(DatabaseSchema.createMicroGoalsTable);
+
+    final recipeCols = _getTableColumns(db, 'custom_recipes');
+    if (recipeCols.isNotEmpty && !recipeCols.contains('cooked_weight_g')) {
+      db.execute('ALTER TABLE custom_recipes ADD COLUMN cooked_weight_g REAL;');
+    }
+
+    // Expand nutrient_definitions from 10 to 36 biomarkers (Vitamins, Minerals, Lipids, Amino Acids)
+    const v7Nutrients =
+        <(int, String, String, String, String, double, double, double?)>[
+      (11, 'vitamin_a', 'Vitamin A', 'vitamin', 'mcg', 1000.0, 840.0, 3000.0),
+      (12, 'vitamin_e', 'Vitamin E', 'vitamin', 'mg', 10.0, 10.0, 1000.0),
+      (13, 'vitamin_k', 'Vitamin K', 'vitamin', 'mcg', 55.0, 55.0, null),
+      (14, 'vitamin_b1', 'Thiamine (B1)', 'vitamin', 'mg', 1.4, 1.4, null),
+      (15, 'vitamin_b2', 'Riboflavin (B2)', 'vitamin', 'mg', 2.0, 1.9, null),
+      (16, 'vitamin_b3', 'Niacin (B3)', 'vitamin', 'mg', 14.0, 11.0, 35.0),
+      (
+        17,
+        'vitamin_b5',
+        'Pantothenic Acid (B5)',
+        'vitamin',
+        'mg',
+        5.0,
+        5.0,
+        null
+      ),
+      (18, 'vitamin_b6', 'Vitamin B6', 'vitamin', 'mg', 1.9, 1.9, 100.0),
+      (19, 'biotin', 'Biotin (B7)', 'vitamin', 'mcg', 30.0, 30.0, null),
+      (20, 'choline', 'Choline', 'vitamin', 'mg', 550.0, 425.0, 3500.0),
+      (21, 'phosphorus', 'Phosphorus', 'mineral', 'mg', 1000.0, 1000.0, 4000.0),
+      (22, 'copper', 'Copper', 'mineral', 'mg', 1.7, 1.7, 10.0),
+      (23, 'manganese', 'Manganese', 'mineral', 'mg', 4.0, 4.0, 11.0),
+      (24, 'selenium', 'Selenium', 'mineral', 'mcg', 40.0, 40.0, 400.0),
+      (25, 'iodine', 'Iodine', 'mineral', 'mcg', 140.0, 140.0, 1100.0),
+      (26, 'chromium', 'Chromium', 'mineral', 'mcg', 50.0, 50.0, null),
+      (27, 'omega3_ala', 'Omega-3 (ALA)', 'lipid', 'g', 1.6, 1.1, null),
+      (28, 'omega3_epa', 'Omega-3 (EPA)', 'lipid', 'mg', 250.0, 250.0, null),
+      (29, 'omega3_dha', 'Omega-3 (DHA)', 'lipid', 'mg', 250.0, 250.0, null),
+      (30, 'omega6_la', 'Omega-6 (LA)', 'lipid', 'g', 17.0, 12.0, null),
+      (31, 'saturated_fat', 'Saturated Fat', 'lipid', 'g', 22.0, 20.0, 25.0),
+      (32, 'cholesterol', 'Cholesterol', 'lipid', 'mg', 300.0, 300.0, 300.0),
+      (33, 'leucine', 'Leucine', 'amino', 'g', 2.7, 2.3, null),
+      (34, 'isoleucine', 'Isoleucine', 'amino', 'g', 1.4, 1.2, null),
+      (35, 'valine', 'Valine', 'amino', 'g', 1.8, 1.5, null),
+      (36, 'lysine', 'Lysine', 'amino', 'g', 2.1, 1.8, null),
+    ];
+
+    final stmt = db.prepare('''
+      INSERT OR IGNORE INTO nutrient_definitions (
+        id, slug, display_name, category, unit,
+        default_rda_male, default_rda_female, upper_tolerable_limit
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+    ''');
+    try {
+      for (final row in v7Nutrients) {
+        stmt.execute([
+          row.$1,
+          row.$2,
+          row.$3,
+          row.$4,
+          row.$5,
+          row.$6,
+          row.$7,
+          row.$8,
+        ]);
+      }
+    } finally {
+      stmt.dispose();
     }
   }
 

@@ -340,9 +340,7 @@ class _FastingClockCardState extends ConsumerState<FastingClockCard> {
                 : AppTheme.cardElevated,
             borderRadius: AppRadii.mdBorderRadius,
             border: Border.all(
-              color: isSelected
-                  ? const Color(0xFFAB47BC)
-                  : Colors.transparent,
+              color: isSelected ? const Color(0xFFAB47BC) : Colors.transparent,
               width: 1.5,
             ),
           ),
@@ -352,9 +350,8 @@ class _FastingClockCardState extends ConsumerState<FastingClockCard> {
             style: TextStyle(
               fontSize: 12,
               fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-              color: isSelected
-                  ? const Color(0xFFAB47BC)
-                  : AppTheme.textSecondary,
+              color:
+                  isSelected ? const Color(0xFFAB47BC) : AppTheme.textSecondary,
             ),
           ),
         ),

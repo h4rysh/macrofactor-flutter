@@ -247,8 +247,8 @@ class PlateOilModifierSelector extends StatelessWidget {
                     child: AnimatedContainer(
                       duration: AppMotion.normal,
                       curve: Curves.easeOutCubic,
-                      padding:
-                          const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected
                             ? AppTheme.activeBlue.withValues(alpha: 0.18)

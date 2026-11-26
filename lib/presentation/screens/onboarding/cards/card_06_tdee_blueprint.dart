@@ -249,7 +249,8 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                               fontSize: 12, color: AppTheme.textSecondary),
                           errorText: (_hasOverride &&
                                   _overrideController.text.isNotEmpty &&
-                                  (double.tryParse(_overrideController.text) ==
+                                  (double.tryParse(
+                                              _overrideController.text) ==
                                           null ||
                                       double.tryParse(
                                               _overrideController.text)! <
@@ -263,8 +264,7 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                           fillColor: AppTheme.cardElevated,
                           border: const OutlineInputBorder(
                             borderRadius: AppRadii.mdBorderRadius,
-                            borderSide:
-                                BorderSide(color: AppTheme.cardBorder),
+                            borderSide: BorderSide(color: AppTheme.cardBorder),
                           ),
                         ),
                         onChanged: (val) {

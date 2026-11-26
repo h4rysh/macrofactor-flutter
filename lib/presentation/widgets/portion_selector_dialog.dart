@@ -207,27 +207,26 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
                       color: AppTheme.textPrimary,
                     ),
                     inputFormatters: [
-                      FilteringTextInputFormatter.allow(RegExp(r'^\d*[.,]?\d*')),
+                      FilteringTextInputFormatter.allow(
+                          RegExp(r'^\d*[.,]?\d*')),
                     ],
                     decoration: const InputDecoration(
-                      contentPadding: EdgeInsets.symmetric(
-                          vertical: 10, horizontal: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(vertical: 10, horizontal: 8),
                       filled: true,
                       fillColor: AppTheme.cardElevated,
                       border: OutlineInputBorder(
                         borderRadius: AppRadii.mdBorderRadius,
-                        borderSide:
-                            BorderSide(color: AppTheme.cardBorder),
+                        borderSide: BorderSide(color: AppTheme.cardBorder),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: AppRadii.mdBorderRadius,
-                        borderSide:
-                            BorderSide(color: AppTheme.cardBorder),
+                        borderSide: BorderSide(color: AppTheme.cardBorder),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: AppRadii.mdBorderRadius,
-                        borderSide: BorderSide(
-                            color: AppTheme.activeBlue, width: 1.5),
+                        borderSide:
+                            BorderSide(color: AppTheme.activeBlue, width: 1.5),
                       ),
                     ),
                     validator: (value) {

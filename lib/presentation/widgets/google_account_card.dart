@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/domain/models/user_account.dart';
 import 'package:sique/presentation/providers/auth_providers.dart';
-import 'package:sique/presentation/screens/auth/change_password_dialog.dart';
 import 'package:sique/presentation/screens/auth/delete_account_dialog.dart';
-import 'package:sique/presentation/screens/auth/email_auth_dialog.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 
@@ -44,7 +42,8 @@ class GoogleAccountCard extends ConsumerWidget {
                     const SizedBox(height: 2),
                     Semantics(
                       readOnly: true,
-                      label: 'Account email: ${user.email.isNotEmpty ? user.email : "Local Guest Account"}',
+                      label:
+                          'Account email: ${user.email.isNotEmpty ? user.email : "Local Guest Account"}',
                       child: Text(
                         user.email.isNotEmpty
                             ? user.email
@@ -227,46 +226,9 @@ class GoogleAccountCard extends ConsumerWidget {
     final isConfigured = authRepo.isConfigured;
 
     if (user.isAuthenticated) {
-      final isEmailUser = user.authProvider == AuthProviderType.email;
-
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (isEmailUser) ...[
-            AppleBouncy(
-              onTap:
-                  isLoading ? null : () => ChangePasswordDialog.show(context),
-              child: Container(
-                key: const Key('profile_change_password_btn'),
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 11),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardElevated,
-                  borderRadius: AppRadii.mdBorderRadius,
-                  border: Border.all(color: AppTheme.cardBorder, width: 1),
-                ),
-                alignment: Alignment.center,
-                child: const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.key_rounded,
-                        size: 16, color: AppTheme.activeBlue),
-                    SizedBox(width: 8),
-                    Text(
-                      'Change Password',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.textPrimary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-          ],
           AppleBouncy(
             onTap: isLoading
                 ? null
@@ -467,62 +429,6 @@ class GoogleAccountCard extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        AppleBouncy(
-          onTap: isLoading
-              ? null
-              : () {
-                  if (!isConfigured) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                            'Sign-in unavailable: Firebase not configured'),
-                        backgroundColor: AppTheme.warning,
-                      ),
-                    );
-                    return;
-                  }
-                  EmailAuthDialog.show(context);
-                },
-          child: Container(
-            key: const Key('profile_email_sign_in_btn'),
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 10),
-            decoration: BoxDecoration(
-              color: AppTheme.cardElevated,
-              borderRadius: AppRadii.mdBorderRadius,
-              border: Border.all(
-                color: AppTheme.cardBorder,
-                width: 1,
-              ),
-            ),
-            alignment: Alignment.center,
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.email_outlined,
-                  size: 16,
-                  color: AppTheme.textPrimary,
-                ),
-                SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    'Sign in or Register with Email',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
       ],
     );
   }
@@ -536,19 +442,11 @@ class GoogleAccountCard extends ConsumerWidget {
         icon: Icons.cloud_off_rounded,
       );
     }
-    if (user.authProvider == AuthProviderType.google) {
-      return const AppleBadge(
-        key: Key('profile_auth_provider_badge'),
-        label: 'Google Account',
-        color: AppTheme.activeBlue,
-        icon: Icons.g_mobiledata_rounded,
-      );
-    }
     return const AppleBadge(
       key: Key('profile_auth_provider_badge'),
-      label: 'Email Account',
-      color: AppTheme.success,
-      icon: Icons.mark_email_read_rounded,
+      label: 'Google Account',
+      color: AppTheme.activeBlue,
+      icon: Icons.g_mobiledata_rounded,
     );
   }
 }

@@ -278,7 +278,7 @@ void main() {
 
       // Strategy should still be rendered and not popped out
       expect(find.text('Strategy'), findsWidgets);
-      expect(find.text('ADHERENCE-NEUTRAL COACHING'), findsOneWidget);
+      expect(find.text('ADAPTIVE TDEE'), findsOneWidget);
     });
 
     testWidgets(

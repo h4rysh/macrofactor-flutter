@@ -1,26 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:sique/domain/algorithms/weight_trend_v2.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/animated_primitives.dart';
+import 'package:sique/presentation/widgets/charts/metabolic_series_chart.dart';
 import 'package:sique/utils/unit_formatter.dart';
 
-/// Weight Trend Card displaying smoothed trend weight vs raw scale observation
-/// and water-weight noise range.
+/// Weight Trend Card displaying smoothed trend weight vs raw scale observation,
+/// water-weight noise range, interactive trend chart, and Goal ETA.
 class WeightTrendCard extends StatelessWidget {
   const WeightTrendCard({
     super.key,
     required this.latestTrendPoint,
     required this.onLogWeightTap,
+    this.trendSeries = const [],
+    this.targetWeightKg,
+    this.weeklyRatePct,
+    this.useLbs = false,
   });
 
   final WeightTrendPoint? latestTrendPoint;
   final VoidCallback onLogWeightTap;
+  final List<WeightTrendPoint> trendSeries;
+  final double? targetWeightKg;
+  final double? weeklyRatePct;
+  final bool useLbs;
+
+  double _toDisplay(double kg) => useLbs ? UnitFormatter.kgToLbs(kg) : kg;
+
+  String? _computeGoalEtaText() {
+    if (latestTrendPoint == null || targetWeightKg == null) return null;
+    final diffKg = latestTrendPoint!.trendWeightKg - targetWeightKg!;
+    if (diffKg.abs() < 0.25) return 'Goal weight reached!';
+    final ratePct = (weeklyRatePct ?? 0).abs();
+    if (ratePct < 0.05) return null;
+    final weeklyKgDelta = latestTrendPoint!.trendWeightKg * (ratePct / 100.0);
+    if (weeklyKgDelta <= 0) return null;
+    final weeks = (diffKg.abs() / weeklyKgDelta).ceil().clamp(1, 260);
+    return 'Est. Goal ETA: ~$weeks ${weeks == 1 ? 'week' : 'weeks'}';
+  }
 
   @override
   Widget build(BuildContext context) {
-    final unit = UnitFormatter.weightUnit();
+    final unit = UnitFormatter.weightUnit(useLbs: useLbs);
+    final goalEtaText = _computeGoalEtaText();
     final semanticsLabel = latestTrendPoint != null
-        ? 'Weight Trend: ${latestTrendPoint!.trendWeightKg.toStringAsFixed(1)} $unit trend, ${latestTrendPoint!.scaleWeightKg.toStringAsFixed(1)} $unit raw scale.'
+        ? 'Weight Trend: ${_toDisplay(latestTrendPoint!.trendWeightKg).toStringAsFixed(1)} $unit trend, ${_toDisplay(latestTrendPoint!.scaleWeightKg).toStringAsFixed(1)} $unit raw scale.'
         : 'Weight Trend: No weight entries logged yet.';
 
     return Semantics(
@@ -121,7 +146,7 @@ class WeightTrendCard extends StatelessWidget {
                         textBaseline: TextBaseline.alphabetic,
                         children: [
                           AnimatedCountText(
-                            value: latestTrendPoint!.trendWeightKg,
+                            value: _toDisplay(latestTrendPoint!.trendWeightKg),
                             formatter: (v) => v.toStringAsFixed(1),
                             style: AppTypography.numericLarge.copyWith(
                               fontSize: 32,
@@ -132,7 +157,7 @@ class WeightTrendCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            '${UnitFormatter.weightUnit()} trend',
+                            '$unit trend',
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -156,7 +181,7 @@ class WeightTrendCard extends StatelessWidget {
                             Border.all(color: AppTheme.cardBorder, width: 1),
                       ),
                       child: Text(
-                        'Scale: ${latestTrendPoint!.scaleWeightKg.toStringAsFixed(1)} kg',
+                        'Scale: ${_toDisplay(latestTrendPoint!.scaleWeightKg).toStringAsFixed(1)} $unit',
                         style: AppTypography.numericCaption.copyWith(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -167,7 +192,27 @@ class WeightTrendCard extends StatelessWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              if (trendSeries.length >= 2) ...[
+                const SizedBox(height: 14),
+                MetabolicSeriesChart(
+                  points: trendSeries
+                      .map((p) => ChartSeriesPoint(
+                            dateLabel: DateFormat('MM-dd').format(p.date),
+                            value: _toDisplay(p.trendWeightKg),
+                            bandLow: _toDisplay(p.noiseMinKg),
+                            bandHigh: _toDisplay(p.noiseMaxKg),
+                            scatterValue: _toDisplay(p.scaleWeightKg),
+                          ))
+                      .toList(),
+                  accentColor: AppTheme.trendWeight,
+                  unitLabel: unit,
+                  decimals: 1,
+                  targetLineValue: targetWeightKg != null
+                      ? _toDisplay(targetWeightKg!)
+                      : null,
+                ),
+              ],
+              const SizedBox(height: 10),
               Row(
                 children: [
                   const Icon(
@@ -176,11 +221,15 @@ class WeightTrendCard extends StatelessWidget {
                     color: AppTheme.neutralInfo,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    'Water noise range: ${latestTrendPoint!.noiseMinKg.toStringAsFixed(1)} – ${latestTrendPoint!.noiseMaxKg.toStringAsFixed(1)} kg (±1.5%)',
-                    style: AppTypography.numericCaption.copyWith(
-                      fontSize: 11,
-                      color: AppTheme.textMuted,
+                  Expanded(
+                    child: Text(
+                      'Water noise range: ${_toDisplay(latestTrendPoint!.noiseMinKg).toStringAsFixed(1)} – ${_toDisplay(latestTrendPoint!.noiseMaxKg).toStringAsFixed(1)} $unit (±1.5%)',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.numericCaption.copyWith(
+                        fontSize: 11,
+                        color: AppTheme.textMuted,
+                      ),
                     ),
                   ),
                 ],
@@ -194,11 +243,16 @@ class WeightTrendCard extends StatelessWidget {
                     color: AppTheme.textSecondary,
                   ),
                   const SizedBox(width: 4),
-                  Text(
-                    'Steady progress (pacing adapts to actual trend)',
-                    style: AppTypography.numericCaption.copyWith(
-                      fontSize: 11,
-                      color: AppTheme.textSecondary,
+                  Expanded(
+                    child: Text(
+                      goalEtaText ??
+                          'Steady progress (pacing adapts to actual trend)',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.numericCaption.copyWith(
+                        fontSize: 11,
+                        color: AppTheme.textSecondary,
+                      ),
                     ),
                   ),
                 ],

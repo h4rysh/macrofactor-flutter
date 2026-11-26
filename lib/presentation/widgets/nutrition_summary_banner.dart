@@ -5,6 +5,7 @@ import '../../domain/models/user_profile.dart';
 import '../providers/logging_streak_provider.dart';
 import '../theme/app_theme.dart';
 import 'animated_primitives.dart';
+import 'food/micronutrient_breakdown_sheet.dart';
 
 /// Authentic Sique Nutrition Summary Banner right below the Date Carousel.
 /// Shows consumed vs target for Calories, Protein (P), Fat (F), and Carbs (C).
@@ -138,7 +139,7 @@ class NutritionSummaryBanner extends ConsumerWidget {
 
             const SizedBox(height: 6),
 
-            // Two-dot page indicator matching Sique
+            // Two-dot page indicator + quick Micros pill
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -157,6 +158,26 @@ class NutritionSummaryBanner extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: AppTheme.textMuted.withAlpha(120),
                     shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () => MicronutrientBreakdownSheet.show(context),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: AppTheme.activeBlue.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Micros ▸',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.activeBlue,
+                      ),
+                    ),
                   ),
                 ),
               ],

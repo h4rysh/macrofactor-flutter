@@ -290,6 +290,15 @@ class ProfileDao {
         progressStmt.dispose();
       }
       _executeScopedDelete('weekly_challenges', targetUserId);
+      final recipeIngStmt = _db.prepare(
+        'DELETE FROM recipe_ingredients WHERE recipe_id IN (SELECT id FROM custom_recipes WHERE user_id = ?);',
+      );
+      try {
+        recipeIngStmt.execute([targetUserId]);
+      } finally {
+        recipeIngStmt.dispose();
+      }
+      _executeScopedDelete('custom_recipes', targetUserId);
       _executeScopedDelete('water_logs', targetUserId);
       _executeScopedDelete('fasting_sessions', targetUserId);
       final profileStmt =
@@ -303,6 +312,9 @@ class ProfileDao {
       _executeScopedDelete('workout_sessions', targetUserId);
       _executeScopedDelete('coaching_check_ins', targetUserId);
       _executeScopedDelete('day_completions', targetUserId);
+      _executeScopedDelete('repeat_items', targetUserId);
+      _executeScopedDelete('day_notes', targetUserId);
+      _executeScopedDelete('micro_goals', targetUserId);
 
       final settingsStmt =
           _db.prepare("DELETE FROM app_settings WHERE key LIKE ?;");
@@ -346,6 +358,8 @@ class ProfileDao {
       _db.execute('DELETE FROM body_measurements;');
       _db.execute('DELETE FROM weekly_challenges;');
       _db.execute('DELETE FROM challenge_daily_progress;');
+      _db.execute('DELETE FROM recipe_ingredients;');
+      _db.execute('DELETE FROM custom_recipes;');
       _db.execute('DELETE FROM water_logs;');
       _db.execute('DELETE FROM fasting_sessions;');
       _db.execute('DELETE FROM user_profile;');
@@ -353,6 +367,9 @@ class ProfileDao {
       _db.execute('DELETE FROM workout_sessions;');
       _db.execute('DELETE FROM coaching_check_ins;');
       _db.execute('DELETE FROM day_completions;');
+      _db.execute('DELETE FROM repeat_items;');
+      _db.execute('DELETE FROM day_notes;');
+      _db.execute('DELETE FROM micro_goals;');
       _db.execute(
         "DELETE FROM app_settings WHERE key NOT LIKE '%seed%' AND key NOT LIKE '%catalog%';",
       );

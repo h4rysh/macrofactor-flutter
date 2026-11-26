@@ -109,7 +109,7 @@ void main() {
       );
 
       expect(jsonStr, contains('"app": "Sique"'));
-      expect(jsonStr, contains('"schemaVersion": 4'));
+      expect(jsonStr, contains('"schemaVersion": 7'));
       expect(jsonStr, contains('"Rohan Sharma"'));
       expect(jsonStr, contains('"dateOfBirth": "1997-06-15"'));
       expect(jsonStr, contains('"Paneer Bhurji"'));
@@ -117,7 +117,7 @@ void main() {
 
       final decoded = BackupCodec.decodeAndValidate(jsonStr);
 
-      expect(decoded.schemaVersion, equals(4));
+      expect(decoded.schemaVersion, equals(7));
       expect(decoded.profile, isNotNull);
       expect(decoded.profile!.name, equals('Rohan Sharma'));
       expect(decoded.profile!.dateOfBirth, equals('1997-06-15'));
@@ -175,17 +175,17 @@ void main() {
       );
     });
 
-    test('Rejects incompatible schema version > 4', () {
+    test('Rejects incompatible schema version > 7', () {
       final futureBackup = json.encode({
         'app': 'Sique',
-        'schemaVersion': 5,
+        'schemaVersion': 8,
         'profile': {},
       });
 
       expect(
         () => BackupCodec.decodeAndValidate(futureBackup),
         throwsA(isA<FormatException>().having((e) => e.message, 'message',
-            contains('Incompatible backup schema version: 5'))),
+            contains('Incompatible backup schema version: 8'))),
       );
     });
 

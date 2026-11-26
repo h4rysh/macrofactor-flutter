@@ -80,12 +80,51 @@ class CoachingEngine {
   ];
 
   /// Calculates baseline daily average calories for a user profile and Bayesian expenditure.
+  /// Honors Manual custom calories, active Diet Breaks (1.0x TDEE maintenance),
+  /// and Reverse Diet weekly ramp pacing when climbing back toward expenditure.
   static double calculateDailyAverageCalories({
     required UserProfile profile,
     required double expenditureKcal,
+    double? previousAvgCalories,
+    bool applyReverseRamp = true,
   }) {
     if (profile.customCalories != null) {
       return profile.customCalories!.roundToDouble();
+    }
+
+    if (profile.isInDietBreak) {
+      return expenditureKcal
+          .clamp(profile.calorieFloor, 6500.0)
+          .roundToDouble();
+    }
+
+    if (profile.reverseDietPacing != 'none' &&
+        previousAvgCalories != null &&
+        previousAvgCalories > 0) {
+      if (previousAvgCalories >= expenditureKcal) {
+        return expenditureKcal
+            .clamp(profile.calorieFloor, 6500.0)
+            .roundToDouble();
+      }
+      if (!applyReverseRamp) {
+        final upper = math.max(profile.calorieFloor, expenditureKcal);
+        return previousAvgCalories
+            .clamp(profile.calorieFloor, upper)
+            .roundToDouble();
+      }
+      final rampPct = switch (profile.reverseDietPacing) {
+        'conservative' => 0.025,
+        'moderate' => 0.05,
+        'aggressive' => 0.08,
+        _ => 0.0,
+      };
+      if (rampPct > 0) {
+        final ramped = math.min(
+          expenditureKcal,
+          previousAvgCalories * (1.0 + rampPct),
+        );
+        return ramped.clamp(profile.calorieFloor, 6500.0).roundToDouble();
+      }
     }
 
     double dailyEnergyDeltaKcal;
@@ -110,12 +149,15 @@ class CoachingEngine {
   }
 
   /// Calculates daily macronutrients based on caloric budget, body mass, and program style.
+  /// When [carbShareOverride] is provided (e.g. Collaborative mode slider in `[0.2, 0.85]`),
+  /// distributes non-protein calories smoothly by that carb-to-fat ratio.
   static MacroTarget computeDayMacros({
     required double calories,
     required double weightKg,
     required MacroProgramStyle style,
     required ProteinPreference proteinPref,
     bool isWorkoutDay = false,
+    double? carbShareOverride,
   }) {
     double proteinGrams;
     double fatGrams;
@@ -130,49 +172,69 @@ class CoachingEngine {
       _ => math.max(20.0, (calories * 0.10) / 4.0),
     };
 
-    switch (style) {
-      case MacroProgramStyle.balanced:
-        // Protein: standard tier (1.6 - 2.4 g/kg)
-        proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
-        // Fat: ~28% of calories
-        final fatCalories = calories * 0.28;
-        fatGrams = (fatCalories / 9.0).roundToDouble();
-        break;
+    if (carbShareOverride != null) {
+      proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
+      final remainingCals = math.max(0.0, calories - (proteinGrams * 4.0));
+      final share = carbShareOverride.clamp(0.15, 0.85);
+      carbsGrams = math.max(
+        minCarbsGrams,
+        ((remainingCals * share) / 4.0).roundToDouble(),
+      );
+      fatGrams = math.max(
+        minFatGrams,
+        ((remainingCals * (1.0 - share)) / 9.0).roundToDouble(),
+      );
+    } else {
+      switch (style) {
+        case MacroProgramStyle.balanced:
+          // Protein: standard tier (1.6 - 2.4 g/kg)
+          proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
+          // Fat: ~28% of calories
+          final fatCalories = calories * 0.28;
+          fatGrams = (fatCalories / 9.0).roundToDouble();
+          break;
 
-      case MacroProgramStyle.lowFat:
-        proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
-        // Fat minimized to ~18% of calories
-        final fatCalories = calories * 0.18;
-        fatGrams = (fatCalories / 9.0).roundToDouble();
-        break;
+        case MacroProgramStyle.lowFat:
+          proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
+          // Fat minimized to ~18% of calories
+          final fatCalories = calories * 0.18;
+          fatGrams = (fatCalories / 9.0).roundToDouble();
+          break;
 
-      case MacroProgramStyle.lowCarb:
-        proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
-        // Carbs restricted to 20% of calories or 40-140g
-        final carbCals = calories * 0.20;
-        carbsGrams = (carbCals / 4.0).clamp(40.0, 140.0).roundToDouble();
-        final remForFat = calories - (proteinGrams * 4.0) - (carbsGrams * 4.0);
-        fatGrams = (remForFat / 9.0).roundToDouble();
-        break;
+        case MacroProgramStyle.lowCarb:
+          proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
+          // Carbs restricted to 20% of calories or 40-140g
+          final carbCals = calories * 0.20;
+          carbsGrams = (carbCals / 4.0).clamp(40.0, 140.0).roundToDouble();
+          final remForFat =
+              calories - (proteinGrams * 4.0) - (carbsGrams * 4.0);
+          fatGrams = (remForFat / 9.0).roundToDouble();
+          break;
 
-      case MacroProgramStyle.keto:
-        proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
-        // Strict carb ceiling: 25g - 45g net carbs
-        carbsGrams = (calories * 0.05 / 4.0).clamp(25.0, 45.0).roundToDouble();
-        final remForFat = calories - (proteinGrams * 4.0) - (carbsGrams * 4.0);
-        fatGrams = (remForFat / 9.0).roundToDouble();
-        break;
+        case MacroProgramStyle.keto:
+          proteinGrams = (proteinPref.gramsPerKg * weightKg).roundToDouble();
+          // Strict carb ceiling: 25g - 45g net carbs
+          carbsGrams =
+              (calories * 0.05 / 4.0).clamp(25.0, 45.0).roundToDouble();
+          final remForFat =
+              calories - (proteinGrams * 4.0) - (carbsGrams * 4.0);
+          fatGrams = (remForFat / 9.0).roundToDouble();
+          break;
 
-      case MacroProgramStyle.highProtein:
-        // Elevated protein: 2.4 - 2.8 g/kg
-        final elevatedFactor = (proteinPref.gramsPerKg * 1.25).clamp(2.4, 2.8);
-        proteinGrams = (elevatedFactor * weightKg).roundToDouble();
-        final fatCalories = calories * 0.25;
-        fatGrams = (fatCalories / 9.0).roundToDouble();
-        break;
+        case MacroProgramStyle.highProtein:
+          // Elevated protein: 2.4 - 2.8 g/kg
+          final elevatedFactor =
+              (proteinPref.gramsPerKg * 1.25).clamp(2.4, 2.8);
+          proteinGrams = (elevatedFactor * weightKg).roundToDouble();
+          final fatCalories = calories * 0.25;
+          fatGrams = (fatCalories / 9.0).roundToDouble();
+          break;
+      }
     }
 
-    if (style == MacroProgramStyle.keto || style == MacroProgramStyle.lowCarb) {
+    if (carbShareOverride == null &&
+        (style == MacroProgramStyle.keto ||
+            style == MacroProgramStyle.lowCarb)) {
       final maxAvailableForProtein =
           calories - (carbsGrams * 4.0) - (minFatGrams * 9.0);
       if (proteinGrams * 4.0 > maxAvailableForProtein) {
@@ -279,11 +341,16 @@ class CoachingEngine {
     DateTime? lastCheckInDate,
     int checkInDayOfWeek = 1, // Default Monday
     double? customDailyAverage,
+    double? carbShareOverride,
+    double? previousAvgCalories,
+    bool applyReverseRamp = true,
   }) {
     final dailyAvgCalories = customDailyAverage ??
         calculateDailyAverageCalories(
           profile: profile,
           expenditureKcal: expenditureKcal,
+          previousAvgCalories: previousAvgCalories,
+          applyReverseRamp: applyReverseRamp,
         );
 
     final totalWeeklyBudget = dailyAvgCalories * 7.0;
@@ -424,17 +491,34 @@ class CoachingEngine {
     }
 
     // Build the 7 DayMacroTargets
+    final isManualCustom = profile.programMode == ProgramMode.manual &&
+        profile.customProteinGrams != null &&
+        profile.customCarbsGrams != null &&
+        profile.customFatGrams != null;
+
     for (int day = 1; day <= 7; day++) {
       final isWorkout = workoutDays.contains(day);
-      final cals = math.max(
-          profile.calorieFloor, dayCaloriesMap[day] ?? dailyAvgCalories);
-      final macros = computeDayMacros(
-        calories: cals,
-        weightKg: profile.currentWeightKg,
-        style: style,
-        proteinPref: profile.proteinPreference,
-        isWorkoutDay: isWorkout,
-      );
+      final MacroTarget macros;
+      if (isManualCustom) {
+        // Honor exact Manual calories and macros uniformly without floor clamping or day-shifting.
+        macros = MacroTarget(
+          calories: dailyAvgCalories,
+          proteinGrams: profile.customProteinGrams!,
+          carbsGrams: profile.customCarbsGrams!,
+          fatGrams: profile.customFatGrams!,
+        );
+      } else {
+        final cals = math.max(
+            profile.calorieFloor, dayCaloriesMap[day] ?? dailyAvgCalories);
+        macros = computeDayMacros(
+          calories: cals,
+          weightKg: profile.currentWeightKg,
+          style: style,
+          proteinPref: profile.proteinPreference,
+          isWorkoutDay: isWorkout,
+          carbShareOverride: carbShareOverride,
+        );
+      }
 
       days.add(DayMacroTarget(
         dayOfWeek: day,
@@ -459,6 +543,7 @@ class CoachingEngine {
       createdAt: programStartDate ?? now,
       lastCheckInDate: lastCheckInDate ?? now,
       checkInDayOfWeek: checkInDayOfWeek,
+      carbShareOverride: carbShareOverride,
     );
   }
 
@@ -552,15 +637,32 @@ class CoachingEngine {
     double kalmanConfidence = 1.0,
     bool silentRecompActive = false,
   }) {
+    if (profile.programMode == ProgramMode.manual) {
+      return CheckInRecommendation(
+        isDue: false,
+        daysUntilNextCheckIn: 7,
+        currentExpenditureKcal: currentExpenditureKcal,
+        previousAverageCalories: currentProgram.dailyAverageCalories,
+        recommendedAverageCalories: currentProgram.dailyAverageCalories,
+        calorieDelta: 0.0,
+        metabolicInsight:
+            'Manual mode active — your custom calorie & macro targets remain locked while expenditure tracks silently.',
+        suggestedProgram: currentProgram,
+        rawCalorieDelta: 0.0,
+        dampedCalorieDelta: 0.0,
+      );
+    }
+
     final daysSinceCheckIn =
         currentDate.difference(currentProgram.lastCheckInDate).inDays;
     final isDue = daysSinceCheckIn >= 7;
     final daysUntilNext = isDue ? 0 : (7 - daysSinceCheckIn).clamp(0, 7);
 
-    // Compute raw unconstrained target from Bayesian expenditure
+    // Compute raw unconstrained target from Bayesian expenditure & periodization
     final rawTarget = calculateDailyAverageCalories(
       profile: profile,
       expenditureKcal: currentExpenditureKcal,
+      previousAvgCalories: currentProgram.dailyAverageCalories,
     );
 
     // Apply Confidence-Weighted Flux Damping Operator
@@ -572,6 +674,17 @@ class CoachingEngine {
       silentRecompActive: silentRecompActive,
     );
 
+    final String insight;
+    if (profile.isInDietBreak) {
+      insight =
+          'Diet Break active — maintenance calories (${damped.recommendedCalories.round()} kcal/day) help restore hormonal & training recovery.';
+    } else if (profile.reverseDietPacing != 'none' && damped.appliedDelta > 0) {
+      insight =
+          'Reverse Diet (${profile.reverseDietPacing}) ramping intake by +${damped.appliedDelta.round()} kcal/day toward estimated expenditure.';
+    } else {
+      insight = damped.reason;
+    }
+
     final suggestedProgram = buildWeeklyProgram(
       profile: profile,
       expenditureKcal: currentExpenditureKcal,
@@ -582,6 +695,9 @@ class CoachingEngine {
       lastCheckInDate: currentDate,
       checkInDayOfWeek: currentProgram.checkInDayOfWeek,
       customDailyAverage: damped.recommendedCalories,
+      carbShareOverride: profile.programMode == ProgramMode.collaborative
+          ? currentProgram.carbShareOverride
+          : null,
     );
 
     return CheckInRecommendation(
@@ -591,12 +707,45 @@ class CoachingEngine {
       previousAverageCalories: currentProgram.dailyAverageCalories,
       recommendedAverageCalories: damped.recommendedCalories,
       calorieDelta: damped.appliedDelta,
-      metabolicInsight: damped.reason,
+      metabolicInsight: insight,
       suggestedProgram: suggestedProgram,
       rawCalorieDelta: damped.rawDelta,
       dampedCalorieDelta: damped.appliedDelta,
       wasClamped: damped.wasClamped,
       silentRecompDetected: silentRecompActive,
+    );
+  }
+
+  /// Rebalances the remaining days of the current 7-day week when actual intake
+  /// deviated from plan (e.g. a high-calorie social dinner), smoothing the deficit
+  /// without extreme crash-dieting or losing protein floors.
+  static WeeklyMacroProgram rebalanceRemainingWeek({
+    required WeeklyMacroProgram currentProgram,
+    required UserProfile profile,
+    required double consumedCaloriesSoFar,
+    required int completedDaysCount,
+  }) {
+    final remainingDays = (7 - completedDaysCount).clamp(1, 6);
+    final totalWeeklyBudget = currentProgram.dailyAverageCalories * 7.0;
+    final rawRemainingDaily =
+        (totalWeeklyBudget - consumedCaloriesSoFar) / remainingDays;
+    final safeRemainingDaily = rawRemainingDaily.clamp(
+      profile.calorieFloor,
+      currentProgram.dailyAverageCalories * 1.30,
+    );
+    return buildWeeklyProgram(
+      profile: profile,
+      expenditureKcal: safeRemainingDaily,
+      style: currentProgram.style,
+      allocationType: currentProgram.allocationType,
+      workoutDays: currentProgram.workoutDays,
+      programStartDate: currentProgram.createdAt,
+      lastCheckInDate: currentProgram.lastCheckInDate,
+      checkInDayOfWeek: currentProgram.checkInDayOfWeek,
+      customDailyAverage: safeRemainingDaily,
+      carbShareOverride: profile.programMode == ProgramMode.collaborative
+          ? currentProgram.carbShareOverride
+          : null,
     );
   }
 }

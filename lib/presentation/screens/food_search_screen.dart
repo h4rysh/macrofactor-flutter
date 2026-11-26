@@ -4,9 +4,14 @@ import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/food_models.dart';
 import '../providers/app_providers.dart';
+import '../providers/plate_staging_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/apple_tactile_card.dart';
-import '../widgets/food_search_highlight.dart';
+import '../widgets/food/ai_describe_meal_sheet.dart';
+import '../widgets/food/barcode_scanner_sheet.dart';
+import '../widgets/food/recipe_builder_sheet.dart';
+import '../widgets/food/search_food_result_tile.dart';
+import '../widgets/food/staging_plate_sheet.dart';
 import '../widgets/food_search_indian_staples.dart';
 import '../widgets/food_svg_icon.dart';
 import '../widgets/sique_empty_state.dart';
@@ -58,21 +63,6 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   List<FoodItem> _searchResults = [];
   bool _isLoading = false;
   FoodFilterType _selectedFilter = FoodFilterType.all;
-  final List<FoodItem> _plateItems = [];
-  final Set<int> _recentlyAddedIds = {};
-
-  int get _totalPlateKcal {
-    double total = 0;
-    for (final item in _plateItems) {
-      total += item
-          .calculateNutrition(
-            quantity: 1.0,
-            unit: item.defaultPortionUnit,
-          )
-          .calories;
-    }
-    return total.round();
-  }
 
   void _quickAddFromSearch(FoodItem food) {
     AppHaptics.mediumImpact();
@@ -81,24 +71,42 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     final defaultUnit =
         portionUnits.isNotEmpty ? portionUnits.first : food.defaultPortionUnit;
 
-    ref.read(dailyFoodLogsProvider.notifier).addEntry(
-          food: food,
-          portionUnit: defaultUnit,
+    ref.read(plateStagingProvider.notifier).addItem(
+          food,
+          unit: defaultUnit,
           quantity: 1.0,
-          mealType: widget.mealType,
           oilModifier: OilModifier.none,
-          loggedAt: widget.initialLoggedAt ?? DateTime.now(),
         );
 
-    setState(() {
-      _plateItems.add(food);
-      _recentlyAddedIds.add(food.id);
-    });
+    final staged = ref.read(plateStagingProvider);
+    final totalKcal =
+        staged.fold(0.0, (sum, i) => sum + i.nutrition.calories).round();
     SemanticsService.sendAnnouncement(
       View.of(context),
-      'Added ${food.name} to plate. ${_plateItems.length} items on plate, $_totalPlateKcal calories total',
+      'Staged ${food.name} on plate. ${staged.length} items staged, $totalKcal calories total',
       TextDirection.ltr,
     );
+  }
+
+  void _commitStagedPlate() {
+    final loggedAt = widget.initialLoggedAt ?? DateTime.now();
+    final count = ref.read(plateStagingProvider.notifier).commitToLog(
+          mealType: widget.mealType,
+          loggedAt: loggedAt,
+        );
+    if (!mounted) return;
+    if (count > 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('Logged $count staged ${count == 1 ? 'item' : 'items'}'),
+          backgroundColor: AppTheme.cardElevated,
+          duration: const Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+    Navigator.pop(context);
   }
 
   void _openManualFoodSheet() {
@@ -270,6 +278,10 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   @override
   Widget build(BuildContext context) {
     final recentFoods = ref.watch(recentLoggedFoodsProvider);
+    final stagedItems = ref.watch(plateStagingProvider);
+    final stagedFoodIds = stagedItems.map((i) => i.food.id).toSet();
+    final stagedKcal =
+        stagedItems.fold(0.0, (sum, i) => sum + i.nutrition.calories).round();
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -286,6 +298,58 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
             fontWeight: FontWeight.w800,
           ),
         ),
+        actions: [
+          IconButton(
+            tooltip: 'AI Describe Meal',
+            icon: const Icon(Icons.auto_awesome_rounded,
+                size: 21, color: AppTheme.calories),
+            onPressed: () {
+              AiDescribeMealSheet.show(
+                context,
+                mealType: widget.mealType,
+                loggedAt: widget.initialLoggedAt ?? DateTime.now(),
+              );
+            },
+          ),
+          IconButton(
+            tooltip: 'Custom Recipes',
+            icon: const Icon(Icons.menu_book_rounded, size: 22),
+            onPressed: () {
+              RecipeBuilderSheet.show(
+                context,
+                mealType: widget.mealType,
+                loggedAt: widget.initialLoggedAt ?? DateTime.now(),
+                onLogged: (msg) {
+                  if (!mounted) return;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(msg),
+                      backgroundColor: AppTheme.cardElevated,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                  Navigator.of(context).pop();
+                },
+              );
+            },
+          ),
+          IconButton(
+            tooltip: 'Scan Barcode',
+            icon: const Icon(
+              Icons.qr_code_scanner_rounded,
+              size: 22,
+              color: AppTheme.activeBlue,
+            ),
+            onPressed: () {
+              BarcodeScannerSheet.show(
+                context,
+                mealType: widget.mealType,
+                loggedAt: widget.initialLoggedAt ?? DateTime.now(),
+                stageMode: true,
+              );
+            },
+          ),
+        ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(110),
           child: Column(
@@ -342,16 +406,14 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                         vertical: 12, horizontal: 16),
                     border: const OutlineInputBorder(
                         borderRadius: AppRadii.lgBorderRadius,
-                        borderSide:
-                            BorderSide(color: AppTheme.cardBorder)),
+                        borderSide: BorderSide(color: AppTheme.cardBorder)),
                     enabledBorder: const OutlineInputBorder(
                         borderRadius: AppRadii.lgBorderRadius,
-                        borderSide:
-                            BorderSide(color: AppTheme.cardBorder)),
+                        borderSide: BorderSide(color: AppTheme.cardBorder)),
                     focusedBorder: const OutlineInputBorder(
                         borderRadius: AppRadii.lgBorderRadius,
-                        borderSide: BorderSide(
-                            color: AppTheme.activeBlue, width: 1.5)),
+                        borderSide:
+                            BorderSide(color: AppTheme.activeBlue, width: 1.5)),
                   ),
                   onChanged: _onSearchChanged,
                 ),
@@ -549,175 +611,57 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                                         .isNotEmpty
                                     ? 'Quick add "${_searchController.text.trim()}" manually'
                                     : null,
-                                onAction: _searchController.text.trim().isNotEmpty
-                                    ? _openManualFoodSheet
-                                    : null,
+                                onAction:
+                                    _searchController.text.trim().isNotEmpty
+                                        ? _openManualFoodSheet
+                                        : null,
                               ))
                         : ListView.separated(
                             padding: EdgeInsets.fromLTRB(
                               16,
                               16,
                               16,
-                              _plateItems.isNotEmpty ? 96 : 16,
+                              stagedItems.isNotEmpty ? 96 : 16,
                             ),
                             itemCount: _searchResults.length,
                             separatorBuilder: (_, __) =>
                                 const SizedBox(height: 8),
                             itemBuilder: (context, index) {
                               final food = _searchResults[index];
-                              final defaultNutrition = food.calculateNutrition(
-                                quantity: 1.0,
-                                unit: food.defaultPortionUnit,
+                              return SearchFoodResultTile(
+                                food: food,
+                                searchQuery: _searchController.text,
+                                index: index,
+                                totalCount: _searchResults.length,
+                                isStaged: stagedFoodIds.contains(food.id),
+                                onTap: () => _openPlateSheet(food),
+                                onQuickStage: () => _quickAddFromSearch(food),
                               );
-                              final isAdded =
-                                  _recentlyAddedIds.contains(food.id);
-                              return Semantics(
-                                button: true,
-                                label:
-                                    '${food.name}, ${defaultNutrition.calories.round()} calories, ${defaultNutrition.protein.toStringAsFixed(1)} grams protein, item ${index + 1} of ${_searchResults.length}',
-                                child: AppleBouncy(
-                                  scaleDown: 0.98,
-                                  onTap: () => _openPlateSheet(food),
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 12,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.cardSurface,
-                                      borderRadius: AppRadii.lgBorderRadius,
-                                      border: Border.all(
-                                        color: AppTheme.cardBorder,
-                                        width: 0.8,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        FoodSvgIcon(
-                                          iconName: food.iconName,
-                                          size: 34,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              FoodSearchHighlight(
-                                                name: food.name,
-                                                query: _searchController.text,
-                                              ),
-                                              const SizedBox(height: 6),
-                                            Wrap(
-                                              spacing: 6,
-                                              runSpacing: 4,
-                                              children: [
-                                                AppleBadge(
-                                                  label:
-                                                      '${defaultNutrition.calories.round()} kcal',
-                                                  color: AppTheme.calories,
-                                                ),
-                                                AppleBadge(
-                                                  label:
-                                                      '${defaultNutrition.protein.toStringAsFixed(1)}P',
-                                                  color: AppTheme.protein,
-                                                ),
-                                                AppleBadge(
-                                                  label:
-                                                      '${defaultNutrition.fat.toStringAsFixed(1)}F',
-                                                  color: AppTheme.fat,
-                                                ),
-                                                AppleBadge(
-                                                  label:
-                                                      '${defaultNutrition.carbs.toStringAsFixed(1)}C',
-                                                  color: AppTheme.carbs,
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      SizedBox(
-                                        width: 48,
-                                        height: 48,
-                                        child: AppleBouncy(
-                                          scaleDown: 0.88,
-                                          onTap: () =>
-                                              _quickAddFromSearch(food),
-                                          child: Center(
-                                            child: AnimatedSwitcher(
-                                              duration: const Duration(
-                                                  milliseconds: 200),
-                                              child: isAdded
-                                                  ? Container(
-                                                      key: const ValueKey(
-                                                          'check'),
-                                                      width: 32,
-                                                      height: 32,
-                                                      decoration: BoxDecoration(
-                                                        color: AppTheme
-                                                            .activeBlue
-                                                            .withValues(
-                                                                alpha: 0.2),
-                                                        shape: BoxShape.circle,
-                                                        border: Border.all(
-                                                          color: AppTheme
-                                                              .activeBlue,
-                                                          width: 1.2,
-                                                        ),
-                                                      ),
-                                                      child: const Icon(
-                                                        Icons.check_rounded,
-                                                        size: 18,
-                                                        color:
-                                                            AppTheme.activeBlue,
-                                                      ),
-                                                    )
-                                                  : Container(
-                                                      key: const ValueKey(
-                                                          'plus'),
-                                                      width: 32,
-                                                      height: 32,
-                                                      decoration: BoxDecoration(
-                                                        color: AppTheme
-                                                            .cardElevated,
-                                                        shape: BoxShape.circle,
-                                                        border: Border.all(
-                                                          color: AppTheme
-                                                              .cardBorder,
-                                                          width: 0.8,
-                                                        ),
-                                                      ),
-                                                      child: const Icon(
-                                                        Icons.add_rounded,
-                                                        size: 18,
-                                                        color: AppTheme
-                                                            .textPrimary,
-                                                      ),
-                                                    ),
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-            ),
-          ],
-        ),
-        if (_plateItems.isNotEmpty)
-          PlateReviewBar(
-            itemCount: _plateItems.length,
-            totalCalories: _totalPlateKcal,
-            onDone: () => Navigator.pop(context),
+                            },
+                          ),
+              ),
+            ],
           ),
-      ],
-    ),
-  );
-}
+          if (stagedItems.isNotEmpty)
+            PlateReviewBar(
+              itemCount: stagedItems.length,
+              totalCalories: stagedKcal,
+              buttonLabel: 'Log (${stagedItems.length})',
+              onExpand: () {
+                StagingPlateSheet.show(
+                  context,
+                  mealType: widget.mealType,
+                  loggedAt: widget.initialLoggedAt ?? DateTime.now(),
+                  onCommitted: (count) {
+                    if (!mounted || count <= 0) return;
+                    Navigator.of(context).pop();
+                  },
+                );
+              },
+              onDone: _commitStagedPlate,
+            ),
+        ],
+      ),
+    );
+  }
 }

@@ -5,7 +5,8 @@ enum WhtrCategory {
   underweight('Underweight / Thin', 'Below healthy circumference bounds.'),
   healthy('Optimal / Healthy', 'Circumference is within clinical target.'),
   increasedRisk('Increased Health Risk', 'Abdominal fat warrants monitoring.'),
-  highRisk('Very High Health Risk', 'Substantial visceral adipose accumulation.');
+  highRisk(
+      'Very High Health Risk', 'Substantial visceral adipose accumulation.');
 
   const WhtrCategory(this.displayName, this.clinicalNote);
   final String displayName;
@@ -93,16 +94,20 @@ class AnthropometricService {
     return whr <= threshold;
   }
 
-  /// Applies 1D Exponential Smoothing Filter (alpha = 0.30 by default)
-  /// to eliminate tape measurement noise and postprandial fluctuations.
+  /// Applies time-aware 1D Exponential Smoothing Filter (alpha = 0.30 per 7 days)
+  /// to eliminate tape measurement noise without over-damping infrequent 14-day logs.
   static double smoothCircumference({
     required double currentObservedCm,
     required double previousSmoothedCm,
     double alpha = 0.30,
+    int deltaDays = 7,
   }) {
-    final clampedAlpha = alpha.clamp(0.05, 1.0);
-    return (clampedAlpha * currentObservedCm) +
-        ((1.0 - clampedAlpha) * previousSmoothedCm);
+    final baseAlpha = alpha.clamp(0.05, 0.95);
+    final effectiveDays = deltaDays.clamp(1, 30);
+    final alphaEff = (1.0 - math.pow(1.0 - baseAlpha, effectiveDays / 7.0))
+        .clamp(0.05, 0.75);
+    return (alphaEff * currentObservedCm) +
+        ((1.0 - alphaEff) * previousSmoothedCm);
   }
 
   /// Evaluates whether a user is undergoing "Silent Recomposition".

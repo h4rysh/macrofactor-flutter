@@ -359,9 +359,8 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: _isAdult
-                            ? AppTheme.buttonText
-                            : AppTheme.textMuted,
+                        color:
+                            _isAdult ? AppTheme.buttonText : AppTheme.textMuted,
                       ),
                     ),
                   ),

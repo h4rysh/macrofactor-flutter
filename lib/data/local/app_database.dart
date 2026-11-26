@@ -4,12 +4,15 @@ import 'dart:io';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+import 'package:sique/data/local/dao/barcode_dao.dart';
 import 'package:sique/data/local/dao/body_measurements_dao.dart';
 import 'package:sique/data/local/dao/challenges_dao.dart';
+import 'package:sique/data/local/dao/diary_tools_dao.dart';
 import 'package:sique/data/local/dao/expenditure_dao.dart';
 import 'package:sique/data/local/dao/fasting_dao.dart';
 import 'package:sique/data/local/dao/food_dao.dart';
 import 'package:sique/data/local/dao/profile_dao.dart';
+import 'package:sique/data/local/dao/recipes_dao.dart';
 import 'package:sique/data/local/dao/settings_dao.dart';
 import 'package:sique/data/local/dao/water_dao.dart';
 import 'package:sique/data/local/dao/weight_dao.dart';
@@ -24,12 +27,15 @@ import 'package:sqlite3/sqlite3.dart';
 
 export 'app_database_coaching.dart';
 export 'app_database_expenditure.dart';
+export 'dao/barcode_dao.dart';
 export 'dao/body_measurements_dao.dart';
 export 'dao/challenges_dao.dart';
+export 'dao/diary_tools_dao.dart';
 export 'dao/expenditure_dao.dart';
 export 'dao/fasting_dao.dart';
 export 'dao/food_dao.dart';
 export 'dao/profile_dao.dart';
+export 'dao/recipes_dao.dart';
 export 'dao/settings_dao.dart';
 export 'dao/water_dao.dart';
 export 'dao/weight_dao.dart';
@@ -60,7 +66,10 @@ class AppDatabase {
         bodyMeasurementsDao = BodyMeasurementsDao(_db),
         challengesDao = ChallengesDao(_db),
         waterDao = WaterDao(_db),
-        fastingDao = FastingDao(_db) {
+        fastingDao = FastingDao(_db),
+        recipesDao = RecipesDao(_db),
+        barcodeDao = BarcodeDao(_db),
+        diaryToolsDao = DiaryToolsDao(_db) {
     _wireDaoUserIds();
     DatabaseMigrations.initializeAndMigrate(_db, isInMemory: isInMemory);
     _initializeFtsAndTriggers();
@@ -80,6 +89,9 @@ class AppDatabase {
   final ChallengesDao challengesDao;
   final WaterDao waterDao;
   final FastingDao fastingDao;
+  final RecipesDao recipesDao;
+  final BarcodeDao barcodeDao;
+  final DiaryToolsDao diaryToolsDao;
 
   String _currentUserId = 'default_user';
 
@@ -98,6 +110,9 @@ class AppDatabase {
       challengesDao.userId = _currentUserId;
       waterDao.userId = _currentUserId;
       fastingDao.userId = _currentUserId;
+      recipesDao.userId = _currentUserId;
+      barcodeDao.userId = _currentUserId;
+      diaryToolsDao.userId = _currentUserId;
     }
   }
 
@@ -118,6 +133,9 @@ class AppDatabase {
     challengesDao.userIdProvider = () => _currentUserId;
     waterDao.userIdProvider = () => _currentUserId;
     fastingDao.userIdProvider = () => _currentUserId;
+    recipesDao.userIdProvider = () => _currentUserId;
+    barcodeDao.userIdProvider = () => _currentUserId;
+    diaryToolsDao.userIdProvider = () => _currentUserId;
   }
 
   /// Legacy initializer - retained for compatibility.
@@ -164,6 +182,25 @@ class AppDatabase {
             stackTrace: st,
           );
         }
+      }
+
+      // Always drop & recreate triggers when FTS table is rebuilt or an older
+      // 4-column (`region`) trigger is still registered from a pre-v6 asset DB.
+      final triggerCheck = _db.select(
+        "SELECT sql FROM sqlite_master WHERE type='trigger' AND name='foods_ai';",
+      );
+      final triggerSql = triggerCheck.isNotEmpty
+          ? (triggerCheck.first['sql'] as String? ?? '')
+          : '';
+      final triggerStale = triggerSql.contains('region') ||
+          !triggerSql.contains('new.aliases') ||
+          !hasFts ||
+          !hasPorter;
+
+      if (triggerStale) {
+        _db.execute('DROP TRIGGER IF EXISTS foods_ai;');
+        _db.execute('DROP TRIGGER IF EXISTS foods_ad;');
+        _db.execute('DROP TRIGGER IF EXISTS foods_au;');
       }
 
       // Triggers to automatically synchronize foods_fts on all mutations (ISS-3-02, ISS-8-06)
@@ -297,6 +334,9 @@ class AppDatabase {
   List<FoodLogEntry> getAllFoodLogs() =>
       foodDao.getAllFoodLogs(userId: _currentUserId);
 
+  List<FoodItem> getRecentFoods({int limit = 10}) =>
+      foodDao.getRecentFoods(limit: limit, userId: _currentUserId);
+
   Map<String, double> getDailyCalorieTotals() =>
       foodDao.getDailyCalorieTotals(userId: _currentUserId);
 
@@ -426,7 +466,8 @@ class AppDatabase {
       }
       final file = File(dbPath);
 
-      if (!await file.exists()) {
+      final existed = await file.exists();
+      if (!existed) {
         final parentDir = file.parent;
         if (!await parentDir.exists()) {
           await parentDir.create(recursive: true);
@@ -440,6 +481,9 @@ class AppDatabase {
 
       final rawDb = sqlite3.open(dbPath);
       final appDb = AppDatabase(rawDb, dbPath: dbPath);
+      if (existed) {
+        await _syncBundledMasterCatalogIfStale(rawDb, file.parent.path);
+      }
       return appDb;
     } catch (e, st) {
       developer.log(
@@ -449,6 +493,89 @@ class AppDatabase {
         stackTrace: st,
       );
       throw DatabaseOpenException('Failed to open database: $e', e);
+    }
+  }
+
+  /// Incrementally merges newly bundled foods, portion units, sparse
+  /// micronutrients, and retail barcodes from `assets/database/foods_master.db`
+  /// when upgrading an existing persistent database from an older app release.
+  static Future<void> _syncBundledMasterCatalogIfStale(
+    Database db,
+    String parentDirPath,
+  ) async {
+    File? tempAssetFile;
+    var attached = false;
+    try {
+      final foodCount =
+          (db.select('SELECT COUNT(*) AS cnt FROM foods;').first['cnt'] as num)
+              .toInt();
+      final nutrientFactCount = (db
+              .select('SELECT COUNT(*) AS cnt FROM food_nutrients;')
+              .first['cnt'] as num)
+          .toInt();
+      final barcodeCount = (db
+              .select('SELECT COUNT(*) AS cnt FROM barcode_cache;')
+              .first['cnt'] as num)
+          .toInt();
+
+      if (foodCount >= 2400 && nutrientFactCount > 0 && barcodeCount >= 20) {
+        return;
+      }
+
+      final tempPath = p.join(parentDirPath, 'sique_master_sync.tmp.db');
+      tempAssetFile = File(tempPath);
+      final data = await rootBundle.load('assets/database/foods_master.db');
+      final bytes =
+          data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+      await tempAssetFile.writeAsBytes(bytes, flush: true);
+
+      final escaped = tempPath.replaceAll("'", "''");
+      db.execute("ATTACH DATABASE '$escaped' AS master_cat;");
+      attached = true;
+
+      db.execute('BEGIN TRANSACTION;');
+      try {
+        db.execute(
+          'INSERT OR IGNORE INTO foods SELECT * FROM master_cat.foods;',
+        );
+        db.execute(
+          'INSERT OR IGNORE INTO portion_units SELECT * FROM master_cat.portion_units;',
+        );
+        db.execute(
+          'INSERT OR IGNORE INTO nutrient_definitions SELECT * FROM master_cat.nutrient_definitions;',
+        );
+        db.execute(
+          'INSERT OR IGNORE INTO food_nutrients SELECT * FROM master_cat.food_nutrients;',
+        );
+        db.execute(
+          'INSERT OR IGNORE INTO barcode_cache SELECT * FROM master_cat.barcode_cache;',
+        );
+        db.execute("INSERT INTO foods_fts(foods_fts) VALUES('rebuild');");
+        db.execute('COMMIT;');
+      } catch (_) {
+        try {
+          db.execute('ROLLBACK;');
+        } catch (_) {}
+        rethrow;
+      }
+    } catch (e, st) {
+      developer.log(
+        'Master catalog upgrade sync skipped/failed',
+        name: 'AppDatabase',
+        error: e,
+        stackTrace: st,
+      );
+    } finally {
+      if (attached) {
+        try {
+          db.execute('DETACH DATABASE master_cat;');
+        } catch (_) {}
+      }
+      if (tempAssetFile != null && await tempAssetFile.exists()) {
+        try {
+          await tempAssetFile.delete();
+        } catch (_) {}
+      }
     }
   }
 }

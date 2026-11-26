@@ -31,6 +31,7 @@ class HealthSyncState {
     this.syncedWeightsCount = 0,
     this.isAvailable = true,
     this.hasPermissions = false,
+    this.writeNutritionEnabled = false,
   });
 
   /// Current operation status.
@@ -53,6 +54,9 @@ class HealthSyncState {
 
   /// Whether necessary Health Connect read permissions are granted.
   final bool hasPermissions;
+
+  /// Whether two-way nutrition write-back to Health Connect is enabled.
+  final bool writeNutritionEnabled;
 
   /// Convenience getters.
   bool get isSyncing => status == HealthSyncStatus.syncing;
@@ -78,6 +82,7 @@ class HealthSyncState {
     int? syncedWeightsCount,
     bool? isAvailable,
     bool? hasPermissions,
+    bool? writeNutritionEnabled,
     bool clearError = false,
   }) {
     return HealthSyncState(
@@ -88,6 +93,8 @@ class HealthSyncState {
       syncedWeightsCount: syncedWeightsCount ?? this.syncedWeightsCount,
       isAvailable: isAvailable ?? this.isAvailable,
       hasPermissions: hasPermissions ?? this.hasPermissions,
+      writeNutritionEnabled:
+          writeNutritionEnabled ?? this.writeNutritionEnabled,
     );
   }
 
@@ -295,6 +302,37 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
         _ref?.read(weightLogsProvider.notifier).refresh();
       }
 
+      // 2b. Optional Two-Way Health Connect: Steps/Sleep read & Nutrition write-back
+      if (_adapter is HealthConnectSyncAdapter) {
+        final stepsAndSleep = await _adapter.fetchDailyStepsAndSleepHours(now);
+        _db.setSetting('hc_last_steps', stepsAndSleep.steps.toString());
+        _db.setSetting(
+          'hc_last_sleep_h',
+          stepsAndSleep.sleepHours.toStringAsFixed(1),
+        );
+        if (_db.getSetting('hc_write_nutrition', 'false') == 'true') {
+          final todayStr = DateFormat('yyyy-MM-dd').format(now);
+          final todayLogs = _db.getFoodLogsForDate(todayStr);
+          if (todayLogs.isNotEmpty) {
+            final kcal = todayLogs.fold(0.0, (s, e) => s + e.calories);
+            final p = todayLogs.fold(0.0, (s, e) => s + e.protein);
+            final c = todayLogs.fold(0.0, (s, e) => s + e.carbs);
+            final f = todayLogs.fold(0.0, (s, e) => s + e.fat);
+            final fib = todayLogs.fold(0.0, (s, e) => s + e.fiber);
+            await _adapter.writeNutritionSummary(
+              startTime: DateTime(now.year, now.month, now.day, 8, 0),
+              endTime: now,
+              mealName: 'Sique Daily Intake',
+              calories: kcal,
+              protein: p,
+              carbs: c,
+              fat: f,
+              fiber: fib,
+            );
+          }
+        }
+      }
+
       // 3. Update session sync time in SQLite and AuthNotifier
       _ref?.read(authNotifierProvider.notifier).updateLastHealthSync(now);
 
@@ -319,6 +357,12 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
   /// Clears transient error state.
   void clearError() {
     state = state.copyWith(clearError: true, status: HealthSyncStatus.idle);
+  }
+
+  /// Persists and toggles two-way nutrition write-back to Health Connect.
+  void setNutritionWriteBack(bool enabled) {
+    _db.setSetting('hc_write_nutrition', enabled ? 'true' : 'false');
+    state = state.copyWith(writeNutritionEnabled: enabled);
   }
 }
 

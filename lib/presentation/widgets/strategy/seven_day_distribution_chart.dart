@@ -120,49 +120,50 @@ class _SevenDayDistributionChartState
               curve: Curves.easeOutCubic,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
                   color: AppTheme.cardElevated,
                   borderRadius: AppRadii.mdBorderRadius,
                   border: Border.all(color: AppTheme.cardBorder, width: 0.8),
                 ),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      '${selectedDay.dayName.substring(0, 3)}: ',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.textPrimary,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${selectedDay.dayName.substring(0, 3)}: ',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textPrimary,
+                        ),
                       ),
-                    ),
-                    Text(
-                      '${selectedDay.calories.round()} kcal',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.calories,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                      Text(
+                        '${selectedDay.calories.round()} kcal',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.calories,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '(${selectedDay.proteinGrams.round()}P · ${selectedDay.fatGrams.round()}F · ${selectedDay.carbsGrams.round()}C)',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color: AppTheme.textSecondary,
-                        fontFeatures: [FontFeature.tabularFigures()],
+                      const SizedBox(width: 6),
+                      Text(
+                        '(${selectedDay.proteinGrams.round()}P · ${selectedDay.fatGrams.round()}F · ${selectedDay.carbsGrams.round()}C)',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                          color: AppTheme.textSecondary,
+                          fontFeatures: [FontFeature.tabularFigures()],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-            ),
             ),
             const SizedBox(height: 12),
 

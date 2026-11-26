@@ -1,0 +1,33 @@
+name: "Feature Request"
+description: "Suggest an idea or algorithmic/UX improvement for Sique."
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have an idea for Sique? Please check [existing issues](https://github.com/h4rysh/macrofactor-flutter/issues) first.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      placeholder: "e.g., Add weekly sodium trend chart to Nutrient Explorer"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this solve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the desired behavior or UX flow.
+    validations:
+      required: true

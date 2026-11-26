@@ -6,8 +6,6 @@ import 'package:sique/data/repositories/firebase_auth_repository.dart';
 import 'package:sique/domain/legal/legal_copy.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/screens/about_screen.dart';
-import 'package:sique/presentation/screens/auth/change_password_dialog.dart';
-import 'package:sique/presentation/screens/auth/email_auth_dialog.dart';
 import 'package:sique/presentation/screens/onboarding/auth_gate_screen.dart';
 import 'package:sique/presentation/screens/onboarding/steps/step_01_health_connect.dart';
 import 'package:sique/presentation/screens/onboarding/steps/step_23_medical_disclaimer.dart';
@@ -198,103 +196,12 @@ void main() {
     });
   });
 
-  group('Password Policy Enforcement (AUD-22)', () {
-    test('FirebaseAuthRepository rejects passwords under 8 characters',
-        () async {
-      final repo = FirebaseAuthRepository(db: db, isConfigured: true);
-
-      // Sign In under 8 chars
-      expect(
-        () => repo.signInWithEmailAndPassword(
-            email: 'test@example.com', password: 'short'),
-        throwsA(isA<ArgumentError>().having(
-            (e) => e.message, 'message', contains('at least 8 characters'))),
-      );
-
-      // Sign Up under 8 chars
-      expect(
-        () => repo.signUpWithEmailAndPassword(
-            email: 'test@example.com', password: 'short'),
-        throwsA(isA<ArgumentError>().having(
-            (e) => e.message, 'message', contains('at least 8 characters'))),
-      );
-
-      // Valid 8+ chars sign up
-      final user = await repo.signUpWithEmailAndPassword(
-        email: 'test@example.com',
-        password: 'longpassword123',
-      );
-      expect(user.isAuthenticated, isTrue);
-
-      // Change password under 8 chars
-      expect(
-        () => repo.changePassword(
-            currentPassword: 'longpassword123', newPassword: 'short'),
-        throwsA(isA<ArgumentError>().having(
-            (e) => e.message, 'message', contains('at least 8 characters'))),
-      );
-    });
-
-    testWidgets('EmailAuthDialog validator enforces 8+ character password',
-        (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [databaseProvider.overrideWithValue(db)],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: EmailAuthDialog(),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Enter valid email and 7-character password
-      await tester.enterText(
-          find.byKey(const Key('auth_email_input')), 'user@domain.com');
-      await tester.enterText(
-          find.byKey(const Key('auth_password_input')), '1234567');
-      await tester.tap(find.byKey(const Key('auth_submit_btn')));
-      await tester.pumpAndSettle();
-
-      expect(
-          find.text('Password must be at least 8 characters'), findsOneWidget);
-
-      // Enter valid 8-character password
-      await tester.enterText(
-          find.byKey(const Key('auth_password_input')), '12345678');
-      await tester.tap(find.byKey(const Key('auth_submit_btn')));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Password must be at least 8 characters'), findsNothing);
-    });
-
-    testWidgets('ChangePasswordDialog validator enforces 8+ character password',
-        (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [databaseProvider.overrideWithValue(db)],
-          child: const MaterialApp(
-            home: Scaffold(
-              body: ChangePasswordDialog(),
-            ),
-          ),
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      await tester.enterText(
-          find.byKey(const Key('change_password_current_input')),
-          'oldpassword');
-      await tester.enterText(
-          find.byKey(const Key('change_password_new_input')), 'short');
-      await tester.enterText(
-          find.byKey(const Key('change_password_confirm_input')), 'short');
-      await tester.tap(find.byKey(const Key('change_password_submit_btn')));
-      await tester.pumpAndSettle();
-
-      expect(
-          find.text('Password must be at least 8 characters'), findsOneWidget);
+  group('Streamlined Auth Enforcement (AUD-22)', () {
+    test(
+        'FirebaseAuthRepository reports unconfigured when Firebase not initialized',
+        () {
+      final repo = FirebaseAuthRepository(db: db, isConfigured: false);
+      expect(repo.isConfigured, isFalse);
     });
   });
 }

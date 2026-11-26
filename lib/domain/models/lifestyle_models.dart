@@ -59,12 +59,17 @@ enum FastingProtocol {
 
 /// Biological stages of fasting progression.
 enum FastingStage {
-  anabolic('Digesting & Nutrient Absorption', 0, 4, 'Blood sugar and insulin levels normalize.'),
-  postAbsorptive('Blood Sugar Drop', 4, 12, 'Glycogen breakdown begins; insulin drops.'),
-  ketosis('Fat Burning & Ketosis', 12, 18, 'Liver starts converting fat stores into ketones.'),
-  autophagy('Cellular Autophagy', 18, 24, 'Cellular cleanup and deep biological repair begin.');
+  anabolic('Digesting & Nutrient Absorption', 0, 4,
+      'Blood sugar and insulin levels normalize.'),
+  postAbsorptive(
+      'Blood Sugar Drop', 4, 12, 'Glycogen breakdown begins; insulin drops.'),
+  ketosis('Fat Burning & Ketosis', 12, 18,
+      'Liver starts converting fat stores into ketones.'),
+  autophagy('Cellular Autophagy', 18, 24,
+      'Cellular cleanup and deep biological repair begin.');
 
-  const FastingStage(this.title, this.startHour, this.endHour, this.description);
+  const FastingStage(
+      this.title, this.startHour, this.endHour, this.description);
   final String title;
   final int startHour;
   final int endHour;

@@ -258,4 +258,59 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
 
     return 'Workout Session';
   }
+
+  /// Fetches daily steps and total sleep hours from Health Connect.
+  Future<({int steps, double sleepHours})> fetchDailyStepsAndSleepHours(
+    DateTime date,
+  ) async {
+    if (!_isAndroid) return (steps: 0, sleepHours: 0.0);
+    try {
+      await _ensureConfigured();
+      final start = DateTime(date.year, date.month, date.day);
+      final end = start.add(const Duration(days: 1));
+      final steps = await _health.getTotalStepsInInterval(start, end) ?? 0;
+      final sleepPoints = await _health.getHealthDataFromTypes(
+        startTime: start.subtract(const Duration(hours: 6)),
+        endTime: end,
+        types: const [HealthDataType.SLEEP_SESSION],
+      );
+      var sleepMins = 0;
+      for (final p in sleepPoints) {
+        sleepMins += p.dateTo.difference(p.dateFrom).inMinutes.clamp(0, 960);
+      }
+      return (steps: steps, sleepHours: sleepMins / 60.0);
+    } catch (_) {
+      return (steps: 0, sleepHours: 0.0);
+    }
+  }
+
+  /// Two-way Health Connect write-back: writes logged meal macros to Health Connect NUTRITION.
+  Future<bool> writeNutritionSummary({
+    required DateTime startTime,
+    required DateTime endTime,
+    required String mealName,
+    required double calories,
+    required double protein,
+    required double carbs,
+    required double fat,
+    double fiber = 0.0,
+  }) async {
+    if (!_isAndroid || calories <= 0) return false;
+    try {
+      await _ensureConfigured();
+      return await _health.writeMeal(
+        mealType: MealType.UNKNOWN,
+        startTime: startTime,
+        endTime: endTime,
+        name: mealName,
+        caloriesConsumed: calories,
+        protein: protein,
+        carbohydrates: carbs,
+        fatTotal: fat,
+        fiber: fiber,
+      );
+    } catch (_) {
+      return false;
+    }
+  }
 }

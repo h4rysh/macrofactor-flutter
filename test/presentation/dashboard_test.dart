@@ -118,7 +118,7 @@ void main() {
 
     // Verify Strategy screen is displayed
     expect(find.text('Coaching & Strategy'), findsOneWidget);
-    expect(find.text('ADHERENCE-NEUTRAL COACHING'), findsOneWidget);
+    expect(find.text('ADAPTIVE TDEE'), findsOneWidget);
     expect(find.text('kcal / day avg'), findsOneWidget);
     expect(find.text('PROTEIN'), findsOneWidget);
   });

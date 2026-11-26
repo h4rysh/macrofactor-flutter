@@ -56,134 +56,135 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
           }
         },
         child: Scaffold(
-        extendBody: true,
-        backgroundColor: AppTheme.background,
-        body: AnimatedSwitcher(
-          duration: AppMotion.fast,
-          switchInCurve: AppMotion.decelerated,
-          switchOutCurve: AppMotion.decelerated,
-          transitionBuilder: (child, animation) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
-          },
-          child: KeyedSubtree(
-            key: ValueKey<int>(_currentIndex),
-            child: _screens[_currentIndex],
-          ),
-        ),
-        bottomNavigationBar: Container(
-          decoration: BoxDecoration(
-            color: AppTheme.cardSurface.withValues(alpha: 0.75),
-            border: Border(
-              top: BorderSide(
-                color: Colors.white.withValues(alpha: 0.12),
-                width: 0.5,
-              ),
+          extendBody: true,
+          backgroundColor: AppTheme.background,
+          body: AnimatedSwitcher(
+            duration: AppMotion.fast,
+            switchInCurve: AppMotion.decelerated,
+            switchOutCurve: AppMotion.decelerated,
+            transitionBuilder: (child, animation) {
+              return FadeTransition(
+                opacity: animation,
+                child: child,
+              );
+            },
+            child: KeyedSubtree(
+              key: ValueKey<int>(_currentIndex),
+              child: _screens[_currentIndex],
             ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x44000000),
-                blurRadius: 24,
-                offset: Offset(0, -4),
-              ),
-            ],
           ),
-          child: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: SafeArea(
-                top: false,
-                bottom: true,
-                child: SizedBox(
-                  height: 66,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      // 1. Dashboard Tab
-                      _buildNavItem(
-                        index: 0,
-                        icon: Icons.grid_view_outlined,
-                        selectedIcon: Icons.grid_view_rounded,
-                        label: 'Dashboard',
-                      ),
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: AppTheme.cardSurface.withValues(alpha: 0.75),
+              border: Border(
+                top: BorderSide(
+                  color: Colors.white.withValues(alpha: 0.12),
+                  width: 0.5,
+                ),
+              ),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x44000000),
+                  blurRadius: 24,
+                  offset: Offset(0, -4),
+                ),
+              ],
+            ),
+            child: ClipRect(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: SafeArea(
+                  top: false,
+                  bottom: true,
+                  child: SizedBox(
+                    height: 66,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        // 1. Dashboard Tab
+                        _buildNavItem(
+                          index: 0,
+                          icon: Icons.grid_view_outlined,
+                          selectedIcon: Icons.grid_view_rounded,
+                          label: 'Dashboard',
+                        ),
 
-                      // 2. Food Log Tab
-                      _buildNavItem(
-                        index: 1,
-                        icon: Icons.restaurant_outlined,
-                        selectedIcon: Icons.restaurant,
-                        label: 'Food Log',
-                      ),
+                        // 2. Food Log Tab
+                        _buildNavItem(
+                          index: 1,
+                          icon: Icons.restaurant_outlined,
+                          selectedIcon: Icons.restaurant,
+                          label: 'Food Log',
+                        ),
 
-                      // 3. Center Floating Action Button (+) with specular glow
-                      Expanded(
-                        child: Center(
-                          child: Semantics(
-                            button: true,
-                            label: 'Open quick actions menu',
-                            child: SiqueBouncy(
-                              semanticLabel: 'Open quick actions menu',
-                              onTap: () {
-                                AppHaptics.mediumImpact();
-                                QuickActionsSheet.show(context);
-                              },
-                              onLongPress: () {
-                                AppHaptics.heavyImpact();
-                                Navigator.push(
-                                  context,
-                                  FoodSearchScreen.route(),
-                                );
-                              },
-                              child: Container(
-                                key: const Key('center_action_fab'),
-                                width: 50,
-                                height: 50,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.buttonBackground,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color:
-                                          Colors.white.withValues(alpha: 0.15),
-                                      blurRadius: 14,
-                                      spreadRadius: 1,
-                                    ),
-                                    const BoxShadow(
-                                      color: Color(0x55000000),
-                                      blurRadius: 12,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ],
-                                ),
-                                child: const Icon(
-                                  Icons.add_rounded,
-                                  color: AppTheme.buttonText,
-                                  size: 30,
+                        // 3. Center Floating Action Button (+) with specular glow
+                        Expanded(
+                          child: Center(
+                            child: Semantics(
+                              button: true,
+                              label: 'Open quick actions menu',
+                              child: SiqueBouncy(
+                                semanticLabel: 'Open quick actions menu',
+                                onTap: () {
+                                  AppHaptics.mediumImpact();
+                                  QuickActionsSheet.show(context);
+                                },
+                                onLongPress: () {
+                                  AppHaptics.heavyImpact();
+                                  Navigator.push(
+                                    context,
+                                    FoodSearchScreen.route(),
+                                  );
+                                },
+                                child: Container(
+                                  key: const Key('center_action_fab'),
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.buttonBackground,
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.white
+                                            .withValues(alpha: 0.15),
+                                        blurRadius: 14,
+                                        spreadRadius: 1,
+                                      ),
+                                      const BoxShadow(
+                                        color: Color(0x55000000),
+                                        blurRadius: 12,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: const Icon(
+                                    Icons.add_rounded,
+                                    color: AppTheme.buttonText,
+                                    size: 30,
+                                  ),
                                 ),
                               ),
                             ),
                           ),
                         ),
-                      ),
 
-                      // 4. Strategy Tab (3 interconnected nodes)
-                      _buildNavItem(
-                        index: 2,
-                        icon: Icons.hub_outlined,
-                        selectedIcon: Icons.hub_rounded,
-                        label: 'Strategy',
-                      ),
+                        // 4. Strategy Tab (3 interconnected nodes)
+                        _buildNavItem(
+                          index: 2,
+                          icon: Icons.hub_outlined,
+                          selectedIcon: Icons.hub_rounded,
+                          label: 'Strategy',
+                        ),
 
-                      // 5. More Tab
-                      _buildNavItem(
-                        index: 3,
-                        icon: Icons.more_horiz_outlined,
-                        selectedIcon: Icons.more_horiz_rounded,
-                        label: 'More',
-                      ),
-                    ],
+                        // 5. More Tab
+                        _buildNavItem(
+                          index: 3,
+                          icon: Icons.more_horiz_outlined,
+                          selectedIcon: Icons.more_horiz_rounded,
+                          label: 'More',
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -191,8 +192,7 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 
   Widget _buildNavItem({

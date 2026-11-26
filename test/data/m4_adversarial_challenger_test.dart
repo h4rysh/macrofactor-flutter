@@ -211,9 +211,9 @@ void main() {
     // =========================================================================
     group('Downgrade Protection Under Higher user_version', () {
       test(
-          'Protects higher user_versions (5, 10, 999999) without touching schema or version',
+          'Protects higher user_versions (7, 10, 999999) without touching schema or version',
           () {
-        final versionsToTest = [5, 10, 999999];
+        final versionsToTest = [7, 10, 999999];
 
         for (final higherVer in versionsToTest) {
           final rawDb = sqlite3.openInMemory();

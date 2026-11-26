@@ -183,8 +183,7 @@ class AnthropometricsCard extends ConsumerWidget {
               Expanded(
                 child: _buildMetricTile(
                   label: 'Navy Body Fat',
-                  value:
-                      navyBf != null ? '${navyBf.toStringAsFixed(1)}%' : '—',
+                  value: navyBf != null ? '${navyBf.toStringAsFixed(1)}%' : '—',
                   sub: navyBf != null ? 'US Navy formula' : 'Add neck + waist',
                   color: AppTheme.protein,
                 ),
@@ -222,7 +221,8 @@ class AnthropometricsCard extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.add_rounded, size: 16, color: AppTheme.activeBlue),
+                    Icon(Icons.add_rounded,
+                        size: 16, color: AppTheme.activeBlue),
                     SizedBox(width: 6),
                     Text(
                       'Log Circumference & Body Fat',
@@ -303,8 +303,7 @@ class BodyMeasurementsSheet extends ConsumerStatefulWidget {
       _BodyMeasurementsSheetState();
 }
 
-class _BodyMeasurementsSheetState
-    extends ConsumerState<BodyMeasurementsSheet> {
+class _BodyMeasurementsSheetState extends ConsumerState<BodyMeasurementsSheet> {
   late final TextEditingController _waistCtrl;
   late final TextEditingController _neckCtrl;
   late final TextEditingController _hipsCtrl;

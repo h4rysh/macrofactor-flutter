@@ -78,7 +78,8 @@ class DateCarouselRibbon extends StatelessWidget {
                         color: AppTheme.textSecondary,
                         tooltip: 'Previous day',
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                        constraints:
+                            const BoxConstraints(minWidth: 48, minHeight: 48),
                         onPressed: () {
                           AppHaptics.selectionClick();
                           onDateSelected(
@@ -156,7 +157,8 @@ class DateCarouselRibbon extends StatelessWidget {
                         color: AppTheme.textSecondary,
                         tooltip: 'Next day',
                         padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+                        constraints:
+                            const BoxConstraints(minWidth: 48, minHeight: 48),
                         onPressed: () {
                           AppHaptics.selectionClick();
                           onDateSelected(

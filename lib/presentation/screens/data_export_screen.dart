@@ -9,9 +9,12 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:sique/data/local/app_database_coaching.dart';
 import 'package:sique/data/utils/backup_codec.dart';
+import 'package:sique/data/utils/backup_crypto.dart';
 import 'package:sique/data/utils/csv_sanitizer.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/providers/recipes_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/data_export_dialogs.dart';
 import 'package:sique/presentation/widgets/export_card_tile.dart';
 
 /// Screen for exporting user nutrition logs and weight observations to JSON or CSV via Android share sheet.
@@ -85,7 +88,17 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     final expenditureHistory = db.expenditureDao.getExpenditureHistory();
     final coachingCheckIns = db.getCoachingCheckIns();
     final dayCompletions = db.expenditureDao.getDayCompletions();
-    final appSettings = db.getAllSettings();
+    final appSettings = Map<String, String>.from(db.getAllSettings())
+      ..remove('gemini_api_key');
+    final bodyMeasurements =
+        db.bodyMeasurementsDao.getRecentMeasurements(limit: 5000);
+    final weeklyChallenges = [
+      ...db.challengesDao.getActiveChallenges(),
+      ...db.challengesDao.getChallengeHistory(limit: 500),
+    ];
+    final waterLogs = db.waterDao.getAllWaterLogs();
+    final fastingSessions = db.fastingDao.getRecentFasts(limit: 500);
+    final customRecipes = db.recipesDao.getAllRecipes();
 
     return BackupCodec.encodeBackup(
       profile: profile,
@@ -96,13 +109,18 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       coachingCheckIns: coachingCheckIns,
       dayCompletions: dayCompletions,
       appSettings: appSettings,
+      bodyMeasurements: bodyMeasurements,
+      weeklyChallenges: weeklyChallenges,
+      waterLogs: waterLogs,
+      fastingSessions: fastingSessions,
+      customRecipes: customRecipes,
     );
   }
 
   Future<File?> _saveExportToFile(String filename, String content) async {
     try {
-      final docsDir = await getApplicationDocumentsDirectory();
-      final exportDir = Directory(p.join(docsDir.path, 'exports'));
+      final tempDir = await getTemporaryDirectory();
+      final exportDir = Directory(p.join(tempDir.path, 'sique_exports'));
       if (!await exportDir.exists()) {
         await exportDir.create(recursive: true);
       }
@@ -132,7 +150,20 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
     try {
       final file = await _saveExportToFile(filename, content);
-      if (file != null && mounted) {
+      if (file == null) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content:
+                  Text('Unable to write export archive to temporary storage.'),
+              backgroundColor: AppTheme.calories,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+      if (mounted) {
         final xFile = XFile(file.path, mimeType: mimeType, name: filename);
         // ignore: deprecated_member_use
         await Share.shareXFiles(
@@ -196,11 +227,68 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     );
   }
 
-  void _exportFullBackup() {
+  Future<void> _exportFullBackup() async {
+    if (_isProcessing) return;
+    final choice = await showBackupFormatDialog(context);
+    if (!mounted || choice == null) return;
+
     final timestamp =
         DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
     final backupJson = _generateFullBackupJson();
-    _shareExportFile(
+
+    if (choice == 'encrypted') {
+      final password = await showBackupPassphraseDialog(
+        context,
+        title: 'Encrypt Backup (AES-256-GCM)',
+        hint: 'Passphrase (min 8 characters)',
+        confirmPassword: true,
+      );
+      if (!mounted || password == null) return;
+      setState(() => _isProcessing = true);
+      final String encrypted;
+      try {
+        encrypted = await BackupCrypto.encryptBackup(
+          plaintextJson: backupJson,
+          password: password,
+        );
+      } on BackupCryptoException catch (e) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.message),
+              backgroundColor: AppTheme.calories,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      } catch (_) {
+        if (mounted) {
+          setState(() => _isProcessing = false);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to encrypt backup archive.'),
+              backgroundColor: AppTheme.calories,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return;
+      }
+      if (!mounted) return;
+      setState(() => _isProcessing = false);
+      await _shareExportFile(
+        filename: 'sique_backup_$timestamp.sique.enc',
+        content: encrypted,
+        mimeType: 'application/json',
+        successMessage: 'Encrypted AES-256-GCM backup created & shared',
+        color: AppTheme.activeBlue,
+      );
+      return;
+    }
+
+    await _shareExportFile(
       filename: 'sique_backup_$timestamp.sique.json',
       content: backupJson,
       mimeType: 'application/json',
@@ -209,48 +297,102 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     );
   }
 
-  Future<void> _restoreFromBackupContent(String jsonContent) async {
+  Future<void> _restoreFromBackupContent(String rawContent) async {
     try {
-      final decoded = BackupCodec.decodeAndValidate(jsonContent);
-      final db = ref.read(databaseProvider);
-
-      if (decoded.profile != null) {
-        db.profileDao.saveUserProfile(decoded.profile!);
-      }
-
-      for (final w in decoded.weightLogs) {
-        final dateStr = w.date.toIso8601String().split('T').first;
-        db.weightDao.insertWeightLog(
-          dateStr,
-          w.weightKg,
-          w.note,
-          source: w.source,
+      var jsonContent = rawContent;
+      if (BackupCrypto.isEncryptedEnvelope(rawContent)) {
+        final password = await showBackupPassphraseDialog(
+          context,
+          title: 'Decrypt Backup (.sique.enc)',
+          hint: 'Enter backup passphrase',
+        );
+        if (password == null || !mounted) return;
+        jsonContent = await BackupCrypto.decryptBackup(
+          envelopeJson: rawContent,
+          password: password,
         );
       }
 
-      for (final f in decoded.foodLogs) {
-        db.foodDao.restoreFoodLog(f);
+      final decoded = BackupCodec.decodeAndValidate(jsonContent);
+      final db = ref.read(databaseProvider);
+
+      db.rawDb.execute('BEGIN TRANSACTION;');
+      try {
+        if (decoded.profile != null) {
+          db.profileDao.saveUserProfile(decoded.profile!);
+        }
+
+        for (final w in decoded.weightLogs) {
+          final dateStr = w.date.toIso8601String().split('T').first;
+          db.weightDao.insertWeightLog(
+            dateStr,
+            w.weightKg,
+            w.note,
+            source: w.source,
+          );
+        }
+
+        for (final f in decoded.foodLogs) {
+          db.foodDao.restoreFoodLog(f);
+        }
+
+        if (decoded.workoutSessions.isNotEmpty) {
+          db.insertWorkoutSessions(decoded.workoutSessions);
+        }
+
+        if (decoded.expenditureHistory.isNotEmpty) {
+          db.expenditureDao.saveExpenditures(decoded.expenditureHistory);
+        }
+
+        for (final c in decoded.coachingCheckIns) {
+          db.insertCoachingCheckIn(c);
+        }
+
+        decoded.dayCompletions.forEach((date, isComplete) {
+          db.expenditureDao.setDayComplete(date, isComplete);
+        });
+
+        decoded.appSettings.forEach((k, v) {
+          db.setSetting(k, v);
+        });
+
+        for (final bm in decoded.bodyMeasurements) {
+          db.bodyMeasurementsDao.upsertMeasurement(bm);
+        }
+
+        for (final ch in decoded.weeklyChallenges) {
+          db.challengesDao.upsertChallenge(ch);
+        }
+
+        final restoredWaterDates = <String>{};
+        for (final w in decoded.waterLogs) {
+          if (restoredWaterDates.add(w.date)) {
+            final parsedDate = DateTime.tryParse(w.date);
+            if (parsedDate != null) {
+              db.waterDao.clearDayWater(parsedDate);
+            }
+          }
+        }
+        for (final w in decoded.waterLogs) {
+          db.waterDao.logWater(
+            w.amountMl,
+            date: DateTime.tryParse(w.date),
+            loggedAt: w.loggedAt,
+          );
+        }
+
+        for (final fs in decoded.fastingSessions) {
+          db.fastingDao.upsertFastingSession(fs);
+        }
+
+        for (final rec in decoded.customRecipes) {
+          db.recipesDao.upsertRecipe(rec, manageTransaction: false);
+        }
+        db.rawDb.execute('COMMIT;');
+      } catch (_) {
+        db.rawDb.execute('ROLLBACK;');
+        rethrow;
       }
-
-      if (decoded.workoutSessions.isNotEmpty) {
-        db.insertWorkoutSessions(decoded.workoutSessions);
-      }
-
-      if (decoded.expenditureHistory.isNotEmpty) {
-        db.expenditureDao.saveExpenditures(decoded.expenditureHistory);
-      }
-
-      for (final c in decoded.coachingCheckIns) {
-        db.insertCoachingCheckIn(c);
-      }
-
-      decoded.dayCompletions.forEach((date, isComplete) {
-        db.expenditureDao.setDayComplete(date, isComplete);
-      });
-
-      decoded.appSettings.forEach((k, v) {
-        db.setSetting(k, v);
-      });
 
       // Refresh providers
       ref.read(userDataEpochProvider.notifier).state++;
@@ -259,6 +401,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       ref.invalidate(dailyFoodLogsProvider);
       ref.invalidate(dayCompletionsProvider);
       ref.invalidate(workoutSessionsProvider);
+      ref.invalidate(bodyMeasurementsProvider);
+      ref.invalidate(weeklyChallengesProvider);
+      ref.invalidate(customRecipesProvider);
       _loadStats();
 
       if (mounted) {
@@ -280,10 +425,15 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
         error: e,
         stackTrace: st,
       );
+      final safeMessage = switch (e) {
+        BackupCryptoException(:final message) => message,
+        FormatException(:final message) => message,
+        _ => 'Restore failed: Backup file could not be validated or imported.',
+      };
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Restore failed: $e'),
+            content: Text(safeMessage),
             backgroundColor: AppTheme.calories,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 5),
@@ -294,6 +444,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
   }
 
   Future<void> _pickAndRestoreFile() async {
+    const maxBackupBytes = 25 * 1024 * 1024;
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.any,
@@ -303,15 +454,24 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           result.files.single.path != null) {
         final path = result.files.single.path!;
         final file = File(path);
+        final length = await file.length();
+        if (length > maxBackupBytes) {
+          throw const FormatException(
+            'Selected backup file exceeds the 25 MB safety limit.',
+          );
+        }
         final content = await file.readAsString();
         await _restoreFromBackupContent(content);
       }
     } catch (e, st) {
       developer.log('File pick error', error: e, stackTrace: st);
+      final msg = e is FormatException
+          ? e.message
+          : 'Failed to read selected backup file.';
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to read file: $e'),
+            content: Text(msg),
             backgroundColor: AppTheme.calories,
           ),
         );
@@ -320,106 +480,10 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
   }
 
   void _showRestoreDialog() {
-    final controller = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.cardSurface,
-        title: const Row(
-          children: [
-            Icon(Icons.restore_page_rounded, color: AppTheme.activeBlue),
-            SizedBox(width: 8),
-            Text('Restore from Backup',
-                style: TextStyle(color: AppTheme.textPrimary, fontSize: 18)),
-          ],
-        ),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton.icon(
-                  key: const Key('choose_backup_file_btn'),
-                  icon: const Icon(Icons.file_open_rounded, size: 18),
-                  label: const Text('Choose .sique.json File'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.activeBlue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  onPressed: () {
-                    Navigator.of(ctx).pop();
-                    _pickAndRestoreFile();
-                  },
-                ),
-                const SizedBox(height: 16),
-                const Row(
-                  children: [
-                    Expanded(child: Divider(color: AppTheme.cardBorder)),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8),
-                      child: Text('OR PASTE JSON',
-                          style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textMuted)),
-                    ),
-                    Expanded(child: Divider(color: AppTheme.cardBorder)),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  key: const Key('restore_backup_json_input'),
-                  controller: controller,
-                  maxLines: 5,
-                  style: const TextStyle(
-                      fontSize: 12,
-                      fontFamily: 'monospace',
-                      color: AppTheme.textPrimary),
-                  decoration: InputDecoration(
-                    hintText:
-                        '{\n  "app": "Sique",\n  "schemaVersion": 4,\n  ...\n}',
-                    hintStyle: const TextStyle(color: AppTheme.textMuted),
-                    filled: true,
-                    fillColor: AppTheme.cardElevated,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      borderSide: const BorderSide(color: AppTheme.cardBorder),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            key: const Key('restore_backup_confirm_btn'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.activeBlue.withValues(alpha: 0.2),
-              foregroundColor: AppTheme.activeBlue,
-            ),
-            onPressed: () {
-              final text = controller.text.trim();
-              Navigator.of(ctx).pop();
-              if (text.isNotEmpty) {
-                _restoreFromBackupContent(text);
-              }
-            },
-            child: const Text('Validate & Restore'),
-          ),
-        ],
-      ),
+    showBackupRestoreDialog(
+      context,
+      onPickFile: _pickAndRestoreFile,
+      onRestoreText: _restoreFromBackupContent,
     );
   }
 
@@ -510,10 +574,10 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             actionKey: const Key('full_backup_card'),
             icon: Icons.backup_rounded,
             color: AppTheme.calories,
-            title: 'Full Backup & Recovery (.sique.json)',
+            title: 'Full Backup & Recovery (.sique.enc / .json)',
             subtitle:
-                'Export or restore an entire snapshot of your profile, nutrition targets, scale weights, and meal entries with schema version validation.',
-            badgeText: 'Complete schema snapshot (v4)',
+                'Export or restore an encrypted AES-256-GCM or plaintext snapshot of all nutrition, metabolic, lifestyle, and recipe data.',
+            badgeText: 'Complete schema snapshot (v6)',
             primaryButtonLabel: 'Export Backup',
             primaryButtonIcon: Icons.download_rounded,
             onPrimaryPressed: _exportFullBackup,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sique/presentation/screens/auth/email_auth_dialog.dart';
 import 'package:sique/presentation/screens/onboarding/onboarding_flow_screen.dart';
 import 'package:sique/presentation/widgets/auth_legal_footer.dart';
 import '../../providers/app_providers.dart';
@@ -236,54 +235,7 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                         ),
                         const SizedBox(height: 12),
 
-                        // Button 2: Email Sign-In / Register
-                        AppleTactileCard(
-                          key: const Key('auth_gate_email_btn'),
-                          onTap: (_isLoading ||
-                                  !ref
-                                      .watch(authRepositoryProvider)
-                                      .isConfigured)
-                              ? null
-                              : () => EmailAuthDialog.show(
-                                    context,
-                                    onSuccess: _proceed,
-                                  ),
-                          backgroundColor: AppTheme.cardSurface,
-                          borderRadius: 16,
-                          border:
-                              Border.all(color: AppTheme.cardBorder, width: 1),
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.email_outlined,
-                                color: ref
-                                        .watch(authRepositoryProvider)
-                                        .isConfigured
-                                    ? AppTheme.textPrimary
-                                    : AppTheme.textSecondary,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 10),
-                              Text(
-                                'Continue with Email',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: ref
-                                          .watch(authRepositoryProvider)
-                                          .isConfigured
-                                      ? AppTheme.textPrimary
-                                      : AppTheme.textSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        // Button 3: Continue as Guest
+                        // Button 2: Continue as Guest
                         TextButton(
                           key: const Key('auth_gate_guest_btn'),
                           onPressed: _isLoading ? null : _handleContinueAsGuest,

@@ -1,0 +1,66 @@
+name: "Bug Report"
+description: "Submit a reproducible bug report for Sique."
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting an issue! Please check [existing issues](https://github.com/h4rysh/macrofactor-flutter/issues) first.
+
+  - type: input
+    id: summary
+    attributes:
+      label: Summary
+      description: Concise description of the issue.
+      placeholder: "e.g., Health Connect sync fails after granting permissions"
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Exact steps to trigger the bug.
+      placeholder: |
+        1. Open Strategy tab
+        2. Tap Check-In banner
+        3. Observe behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Device / Platform
+      options:
+        - "Android 14+"
+        - "Android 12–13"
+        - "Android Emulator"
+        - "iOS"
+    validations:
+      required: true
+
+  - type: input
+    id: app-version
+    attributes:
+      label: App Version
+      placeholder: "e.g., v4.0.0+40"
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant Logs or Screenshots
+      render: shell
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: "I searched existing issues to avoid duplicates."
+          required: true
+        - label: "I included complete reproduction steps."
+          required: true

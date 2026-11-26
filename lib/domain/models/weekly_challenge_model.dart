@@ -5,11 +5,22 @@ import 'package:sqlite3/common.dart';
 /// Categories of dynamic behavioral challenges derived from habit deficits.
 enum ChallengeType {
   proteinAnchor('Protein Anchor', 'Hit your personalized daily protein goal.'),
+  proteinVolume(
+      'Cumulative Protein', 'Hit your total weekly protein gram goal.'),
   fiberBuilder('Fiber & Satiety Builder', 'Reach at least 25g of fiber daily.'),
-  produceBooster('Produce Booster', 'Log 2+ servings of fresh fruits or vegetables.'),
-  scaleCadence('Consistent Weigh-In', 'Log your weight in the morning 5+ days.'),
+  produceBooster(
+      'Produce Booster', 'Log 1+ serving of fresh fruits or vegetables.'),
+  micronutrientFix(
+      'Micronutrient Gap Fix', 'Close your most under-consumed nutrient gap.'),
+  scaleCadence(
+      'Consistent Weigh-In', 'Log your weight in the morning 5+ days.'),
   hydrationHero('Hydration Baseline', 'Drink at least 2.5L of water daily.'),
-  nightCapTamer('Mindful Evening', 'Keep late-night calories under 15% of your daily budget.');
+  trainingConsistency(
+      'Training Consistency', 'Complete your planned workouts this week.'),
+  nightCapTamer(
+      'Mindful Evening', 'Keep the kitchen closed after 9 PM on most nights.'),
+  recompMeasure(
+      'Waist Check-In', 'Log a 30-second waist measurement this week.');
 
   const ChallengeType(this.defaultTitle, this.defaultDescription);
   final String defaultTitle;

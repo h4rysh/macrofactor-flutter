@@ -23,11 +23,12 @@ class WaterDao {
   void logWater(
     int amountMl, {
     DateTime? date,
+    DateTime? loggedAt,
     String? userId,
   }) {
     if (amountMl <= 0 || amountMl > 10000) return;
     final uid = userId ?? effectiveUserId;
-    final now = DateTime.now();
+    final now = loggedAt ?? DateTime.now();
     final effectiveDate = date ?? now;
     final dateStr =
         '${effectiveDate.year.toString().padLeft(4, '0')}-${effectiveDate.month.toString().padLeft(2, '0')}-${effectiveDate.day.toString().padLeft(2, '0')}';
@@ -79,6 +80,24 @@ class WaterDao {
 
     try {
       final rows = stmt.select([uid, dateStr]);
+      return rows.map(WaterLog.fromRow).toList();
+    } finally {
+      stmt.dispose();
+    }
+  }
+
+  /// Retrieves all water logs for the tenant ordered chronologically.
+  List<WaterLog> getAllWaterLogs({int limit = 2000, String? userId}) {
+    final uid = userId ?? effectiveUserId;
+    final stmt = _db.prepare('''
+      SELECT * FROM water_logs
+      WHERE user_id = ?
+      ORDER BY date ASC, logged_at ASC
+      LIMIT ?;
+    ''');
+
+    try {
+      final rows = stmt.select([uid, limit]);
       return rows.map(WaterLog.fromRow).toList();
     } finally {
       stmt.dispose();

@@ -1,8 +1,12 @@
+import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
 import 'package:sique/data/local/app_database.dart';
 import 'package:sique/data/repositories/firebase_auth_repository.dart';
@@ -178,108 +182,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Authenticates using email and password.
-  Future<bool> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) async {
-    final previousUser = state.user;
-    state = AuthLoading(user: previousUser);
-    try {
-      final user = await _authRepo.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      _db.saveAccountSession(user);
-      state = AuthAuthenticated(user);
-      return true;
-    } catch (e) {
-      final cleanMessage = e.toString().replaceFirst(
-          RegExp(r'^(Exception|ArgumentError|StateError):\s*'), '');
-      state = AuthError(
-        user: previousUser,
-        message: cleanMessage.isEmpty ? 'Sign-in failed' : cleanMessage,
-      );
-      return false;
-    }
-  }
-
-  /// Registers a new user account with email and password.
-  Future<bool> signUpWithEmailAndPassword({
-    required String email,
-    required String password,
-    String? displayName,
-  }) async {
-    final previousUser = state.user;
-    state = AuthLoading(user: previousUser);
-    try {
-      final user = await _authRepo.signUpWithEmailAndPassword(
-        email: email,
-        password: password,
-        displayName: displayName,
-      );
-      _db.saveAccountSession(user);
-      state = AuthAuthenticated(user);
-      return true;
-    } catch (e) {
-      final cleanMessage = e.toString().replaceFirst(
-          RegExp(r'^(Exception|ArgumentError|StateError):\s*'), '');
-      state = AuthError(
-        user: previousUser,
-        message: cleanMessage.isEmpty ? 'Registration failed' : cleanMessage,
-      );
-      return false;
-    }
-  }
-
-  /// Dispatches password reset email.
-  Future<bool> sendPasswordResetEmail(String email) async {
-    try {
-      await _authRepo.sendPasswordResetEmail(email);
-      return true;
-    } catch (e) {
-      final cleanMessage = e.toString().replaceFirst(
-          RegExp(r'^(Exception|ArgumentError|StateError):\s*'), '');
-      state = AuthError(
-        user: state.user,
-        message: cleanMessage.isEmpty ? 'Password reset failed' : cleanMessage,
-      );
-      return false;
-    }
-  }
-
-  /// Changes password for email accounts.
-  Future<bool> changePassword({
-    required String currentPassword,
-    required String newPassword,
-  }) async {
-    try {
-      await _authRepo.changePassword(
-        currentPassword: currentPassword,
-        newPassword: newPassword,
-      );
-      return true;
-    } catch (e) {
-      final cleanMessage = e.toString().replaceFirst(
-          RegExp(r'^(Exception|ArgumentError|StateError|UnsupportedError):\s*'),
-          '');
-      state = AuthError(
-        user: state.user,
-        message: cleanMessage.isEmpty ? 'Password change failed' : cleanMessage,
-      );
-      return false;
-    }
-  }
-
-  /// Permanently deletes account with provider-aware credential check.
-  Future<bool> deleteAccount({String? password}) async {
+  /// Permanently deletes the active account and wipes local session data.
+  Future<bool> deleteAccount() async {
     final currentUser = state.user;
     state = AuthLoading(user: currentUser);
     try {
-      await _authRepo.deleteAccount(password: password);
+      await _authRepo.deleteAccount();
       _db.clearAllData();
       _invalidateUserDataProviders();
       state = AuthUnauthenticated();
+      unawaited(_wipeExportResidualFiles());
       return true;
     } catch (e) {
       final cleanMessage = e.toString().replaceFirst(
@@ -314,11 +226,30 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Authenticates using a Demo Athlete profile for local testing.
+  Future<void> _wipeExportResidualFiles() async {
+    try {
+      final dirs = <Directory>[
+        Directory(
+            p.join((await getApplicationDocumentsDirectory()).path, 'exports')),
+        Directory(
+            p.join((await getTemporaryDirectory()).path, 'sique_exports')),
+      ];
+      for (final dir in dirs) {
+        if (await dir.exists()) {
+          await dir.delete(recursive: true);
+        }
+      }
+    } catch (_) {
+      // Safe no-op in headless unit tests without platform path_provider plugins
+    }
+  }
+
+  /// Authenticates using a Demo Athlete profile for debug/local testing only.
   Future<void> signInWithDemoAthlete({
     String displayName = 'Athlete (Demo)',
     String email = 'athlete.demo@sique.local',
   }) async {
+    if (!kDebugMode) return;
     final demoUser = UserAccount(
       id: 'active_session',
       googleUserId: 'demo_athlete_001',
@@ -384,9 +315,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Updates Health Connect enablement flag on the active session.
+  /// Updates Health Connect enablement flag on authenticated sessions.
   void setHealthConnectEnabled(bool enabled) {
     final current = state.user;
+    if (!current.isAuthenticated) return;
     final updated = current.copyWith(
       healthConnectEnabled: enabled,
       updatedAt: DateTime.now(),
@@ -406,9 +338,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Updates the last health sync timestamp on the active session.
+  /// Updates the last health sync timestamp on authenticated sessions.
   void updateLastHealthSync(DateTime syncTime) {
     final current = state.user;
+    if (!current.isAuthenticated) return;
     final updated = current.copyWith(
       lastHealthSyncTime: syncTime,
       updatedAt: DateTime.now(),
@@ -461,34 +394,7 @@ class _AuthServiceAdapter implements AuthRepository {
   Future<void> signOut() => _service.signOut();
 
   @override
-  Future<UserAccount> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) =>
-      throw UnsupportedError('Email auth not supported by legacy AuthService');
-
-  @override
-  Future<UserAccount> signUpWithEmailAndPassword({
-    required String email,
-    required String password,
-    String? displayName,
-  }) =>
-      throw UnsupportedError('Email auth not supported by legacy AuthService');
-
-  @override
-  Future<void> sendPasswordResetEmail(String email) =>
-      throw UnsupportedError('Reset not supported by legacy AuthService');
-
-  @override
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-  }) =>
-      throw UnsupportedError(
-          'Change password not supported by legacy AuthService');
-
-  @override
-  Future<void> deleteAccount({String? password}) => _service.signOut();
+  Future<void> deleteAccount() => _service.signOut();
 }
 
 /// Legacy compatibility provider for tests overriding [AuthService].

@@ -1,5 +1,9 @@
+import 'package:sique/data/local/dao/deficit_mining_v2.dart';
 import 'package:sique/domain/models/weekly_challenge_model.dart';
 import 'package:sqlite3/common.dart';
+
+export 'package:sique/data/local/dao/deficit_mining_v2.dart'
+    show MinedDeficitMetricsV2;
 
 /// Metrics mined from local SQLite logs to identify habit vulnerabilities.
 class MinedDeficitMetrics {
@@ -43,7 +47,9 @@ class ChallengesDao {
     final uid = userId ??
         (effectiveUserId != 'default_user'
             ? effectiveUserId
-            : (challenge.userId.isNotEmpty ? challenge.userId : 'default_user'));
+            : (challenge.userId.isNotEmpty
+                ? challenge.userId
+                : 'default_user'));
     final stmt = _db.prepare('''
       INSERT INTO weekly_challenges (
         id, user_id, type, title, description, target_metric, target_value,
@@ -53,7 +59,8 @@ class ChallengesDao {
       ON CONFLICT(id) DO UPDATE SET
         current_value = excluded.current_value,
         status = excluded.status,
-        completed_at = excluded.completed_at;
+        completed_at = excluded.completed_at
+      WHERE weekly_challenges.user_id = excluded.user_id;
     ''');
 
     try {
@@ -124,7 +131,11 @@ class ChallengesDao {
       UPDATE weekly_challenges
       SET current_value = ?,
           status = COALESCE(?, status),
-          completed_at = COALESCE(?, completed_at)
+          completed_at = CASE
+            WHEN ? = 'completed' THEN COALESCE(?, completed_at)
+            WHEN ? IS NOT NULL THEN NULL
+            ELSE completed_at
+          END
       WHERE id = ? AND user_id = ?;
     ''');
 
@@ -132,7 +143,9 @@ class ChallengesDao {
       stmt.execute([
         currentValue,
         status?.name,
+        status?.name,
         completedAt?.toIso8601String(),
+        status?.name,
         challengeId,
         uid,
       ]);
@@ -188,6 +201,253 @@ class ChallengesDao {
       stmt.execute([id, challengeId, dateStr, achievedValue, isHit ? 1 : 0]);
     } finally {
       stmt.dispose();
+    }
+  }
+
+  /// Automatically evaluates [challenge] against actual SQLite food/weight/water logs
+  /// within `[weekStartDate, weekEndDate]` and updates `challenge_daily_progress` + `weekly_challenges`.
+  /// Returns the synced hit count.
+  double syncChallengeWithLogs(
+    WeeklyChallengeModel challenge, {
+    required double proteinTargetG,
+    String? userId,
+  }) {
+    final uid = userId ?? effectiveUserId;
+    final startStr = challenge.weekStartDate.toIso8601String().substring(0, 10);
+    final endStr = challenge.weekEndDate.toIso8601String().substring(0, 10);
+
+    final String sql;
+    final List<Object?> args;
+
+    switch (challenge.type) {
+      case ChallengeType.proteinAnchor:
+        sql = '''
+          SELECT date, SUM(protein) AS metric_val
+          FROM food_logs
+          WHERE user_id = ? AND date >= ? AND date <= ?
+          GROUP BY date
+          HAVING SUM(protein) >= ?;
+        ''';
+        args = [uid, startStr, endStr, proteinTargetG];
+        break;
+      case ChallengeType.fiberBuilder:
+        sql = '''
+          SELECT date, SUM(fiber) AS metric_val
+          FROM food_logs
+          WHERE user_id = ? AND date >= ? AND date <= ?
+          GROUP BY date
+          HAVING SUM(fiber) >= 25.0;
+        ''';
+        args = [uid, startStr, endStr];
+        break;
+      case ChallengeType.proteinVolume:
+        // Cumulative grams across the week (handled directly below).
+        sql = '''
+          SELECT COALESCE(SUM(protein), 0.0) AS total_protein
+          FROM food_logs
+          WHERE user_id = ? AND date >= ? AND date <= ?;
+        ''';
+        args = [uid, startStr, endStr];
+        break;
+      case ChallengeType.produceBooster:
+        sql = '''
+          SELECT date, COUNT(*) AS metric_val
+          FROM food_logs
+          WHERE user_id = ? AND date >= ? AND date <= ?
+            AND (
+              LOWER(food_name) LIKE '%apple%' OR LOWER(food_name) LIKE '%banana%'
+              OR LOWER(food_name) LIKE '%orange%' OR LOWER(food_name) LIKE '%spinach%'
+              OR LOWER(food_name) LIKE '%broccoli%' OR LOWER(food_name) LIKE '%salad%'
+              OR LOWER(food_name) LIKE '%fruit%' OR LOWER(food_name) LIKE '%vegetable%'
+              OR LOWER(food_name) LIKE '%berry%' OR LOWER(food_name) LIKE '%greens%'
+              OR LOWER(food_name) LIKE '%papaya%' OR LOWER(food_name) LIKE '%guava%'
+              OR LOWER(food_name) LIKE '%palak%' OR LOWER(food_name) LIKE '%bhindi%'
+              OR LOWER(food_name) LIKE '%lauki%' OR LOWER(food_name) LIKE '%methi%'
+              OR LOWER(food_name) LIKE '%karela%' OR LOWER(food_name) LIKE '%amla%'
+              OR LOWER(food_name) LIKE '%pomegranate%' OR LOWER(food_name) LIKE '%tomato%'
+              OR LOWER(food_name) LIKE '%cucumber%' OR LOWER(food_name) LIKE '%sabzi%'
+              OR LOWER(food_name) LIKE '%raita%' OR LOWER(food_name) LIKE '%mango%'
+            )
+          GROUP BY date;
+        ''';
+        args = [uid, startStr, endStr];
+        break;
+      case ChallengeType.micronutrientFix:
+        final parts = challenge.targetMetric.split(':');
+        final nutrientId =
+            parts.length >= 2 ? (int.tryParse(parts[1]) ?? 1) : 1;
+        final threshold =
+            parts.length >= 3 ? (double.tryParse(parts[2]) ?? 10.0) : 10.0;
+        sql = '''
+          SELECT fl.date AS date,
+                 SUM((fl.gram_weight / 100.0) * fn.amount_per_100g) AS metric_val
+          FROM food_logs fl
+          INNER JOIN food_nutrients fn ON fl.food_id = fn.food_id
+          WHERE fl.user_id = ? AND fl.date >= ? AND fl.date <= ? AND fn.nutrient_id = ?
+          GROUP BY fl.date
+          HAVING SUM((fl.gram_weight / 100.0) * fn.amount_per_100g) >= ?;
+        ''';
+        args = [uid, startStr, endStr, nutrientId, threshold];
+        break;
+      case ChallengeType.scaleCadence:
+        sql = '''
+          SELECT date, scale_weight AS metric_val
+          FROM weight_logs
+          WHERE user_id = ? AND date >= ? AND date <= ?;
+        ''';
+        args = [uid, startStr, endStr];
+        break;
+      case ChallengeType.hydrationHero:
+        sql = '''
+          SELECT date, SUM(amount_ml) AS metric_val
+          FROM water_logs
+          WHERE user_id = ? AND date >= ? AND date <= ?
+          GROUP BY date
+          HAVING SUM(amount_ml) >= 2000;
+        ''';
+        args = [uid, startStr, endStr];
+        break;
+      case ChallengeType.trainingConsistency:
+        sql = '''
+          SELECT substr(start_time, 1, 10) AS date, COUNT(*) AS metric_val
+          FROM workout_sessions
+          WHERE user_id = ? AND substr(start_time, 1, 10) >= ?
+            AND substr(start_time, 1, 10) <= ? AND duration_minutes >= 20
+          GROUP BY substr(start_time, 1, 10);
+        ''';
+        args = [uid, startStr, endStr];
+        break;
+      case ChallengeType.nightCapTamer:
+        final now = DateTime.now();
+        final todayStr =
+            '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+        sql = '''
+          SELECT date, COUNT(*) AS metric_val
+          FROM food_logs
+          WHERE user_id = ? AND date >= ? AND date <= ? AND date < ?
+          GROUP BY date
+          HAVING SUM(CASE
+            WHEN meal_type IN ('snack', 'snacks')
+              AND substr(logged_at, 1, 10) = date
+              AND CAST(substr(logged_at, 12, 2) AS INTEGER) >= 21
+            THEN 1 ELSE 0 END) = 0;
+        ''';
+        args = [uid, startStr, endStr, todayStr];
+        break;
+      case ChallengeType.recompMeasure:
+        sql = '''
+          SELECT date, waist_cm AS metric_val
+          FROM body_measurements
+          WHERE user_id = ? AND date >= ? AND date <= ? AND waist_cm IS NOT NULL;
+        ''';
+        args = [uid, startStr, endStr];
+        break;
+    }
+
+    if (challenge.type == ChallengeType.proteinVolume) {
+      double totalP = 0.0;
+      final stmt = _db.prepare(sql);
+      try {
+        final rows = stmt.select(args);
+        if (rows.isNotEmpty) {
+          totalP = (rows.first['total_protein'] as num?)?.toDouble() ?? 0.0;
+        }
+      } finally {
+        stmt.dispose();
+      }
+      final isDone = totalP >= challenge.targetValue;
+      final nextStatus = isDone
+          ? ChallengeStatus.completed
+          : (challenge.status == ChallengeStatus.completed
+              ? ChallengeStatus.active
+              : challenge.status);
+      final preservedCompletedAt =
+          isDone ? (challenge.completedAt ?? DateTime.now()) : null;
+      if ((totalP - challenge.currentValue).abs() > 0.1 ||
+          nextStatus != challenge.status) {
+        updateChallengeProgress(
+          challenge.id,
+          totalP,
+          status: nextStatus,
+          completedAt: preservedCompletedAt,
+          userId: uid,
+        );
+      }
+      return totalP;
+    }
+
+    final hitDates = <(String, double)>[];
+    final stmt = _db.prepare(sql);
+    try {
+      final rows = stmt.select(args);
+      for (final row in rows) {
+        hitDates.add((
+          row['date'] as String,
+          (row['metric_val'] as num).toDouble(),
+        ));
+      }
+    } finally {
+      stmt.dispose();
+    }
+
+    _db.execute('BEGIN TRANSACTION;');
+    try {
+      // Reconcile daily progress within the challenge window so undone/deleted logs revert cleanly.
+      final resetStmt = _db.prepare('''
+        UPDATE challenge_daily_progress
+        SET is_target_hit = 0
+        WHERE challenge_id = ? AND date >= ? AND date <= ?;
+      ''');
+      try {
+        resetStmt.execute([challenge.id, startStr, endStr]);
+      } finally {
+        resetStmt.dispose();
+      }
+
+      for (final (dateStr, val) in hitDates) {
+        recordDailyProgress(challenge.id, dateStr, val, true);
+      }
+
+      final countStmt = _db.prepare(
+        'SELECT COUNT(*) AS hits FROM challenge_daily_progress WHERE challenge_id = ? AND is_target_hit = 1;',
+      );
+      int autoHits = hitDates.length;
+      try {
+        final res = countStmt.select([challenge.id]);
+        if (res.isNotEmpty) {
+          autoHits = (res.first['hits'] as int?) ?? hitDates.length;
+        }
+      } finally {
+        countStmt.dispose();
+      }
+
+      final syncedVal = autoHits.toDouble();
+      final isDone = syncedVal >= challenge.targetValue;
+      final nextStatus = isDone
+          ? ChallengeStatus.completed
+          : (challenge.status == ChallengeStatus.completed
+              ? ChallengeStatus.active
+              : challenge.status);
+      final preservedCompletedAt =
+          isDone ? (challenge.completedAt ?? DateTime.now()) : null;
+
+      if (syncedVal != challenge.currentValue ||
+          nextStatus != challenge.status) {
+        updateChallengeProgress(
+          challenge.id,
+          syncedVal,
+          status: nextStatus,
+          completedAt: preservedCompletedAt,
+          userId: uid,
+        );
+      }
+      _db.execute('COMMIT;');
+      return syncedVal;
+    } catch (_) {
+      try {
+        _db.execute('ROLLBACK;');
+      } catch (_) {}
+      rethrow;
     }
   }
 
@@ -285,6 +545,81 @@ class ChallengesDao {
       produceDays: produceDays,
       weighInDays: weighIns,
       avgHydrationMl: avgWater,
+    );
+  }
+
+  /// Returns a 7-element boolean list indicating whether each day in [weekStart..weekStart+6]
+  /// met the challenge target (from `challenge_daily_progress` or `food_logs` for proteinVolume).
+  List<bool> getDailyCompletionDots(
+    WeeklyChallengeModel challenge, {
+    double? proteinTargetG,
+    String? userId,
+  }) {
+    final uid = userId ?? effectiveUserId;
+    final start = DateTime(
+      challenge.weekStartDate.year,
+      challenge.weekStartDate.month,
+      challenge.weekStartDate.day,
+    );
+    final hitSet = <String>{};
+
+    if (challenge.type == ChallengeType.proteinVolume) {
+      final dailyFloor =
+          ((proteinTargetG ?? (challenge.targetValue / 7.0)) * 0.85)
+              .clamp(40.0, 300.0);
+      final endStr = challenge.weekEndDate.toIso8601String().substring(0, 10);
+      final startStr = start.toIso8601String().substring(0, 10);
+      final stmt = _db.prepare('''
+        SELECT date FROM food_logs
+        WHERE user_id = ? AND date >= ? AND date <= ?
+        GROUP BY date HAVING SUM(protein) >= ?;
+      ''');
+      try {
+        for (final row in stmt.select([uid, startStr, endStr, dailyFloor])) {
+          final d = row['date'] as String?;
+          if (d != null) hitSet.add(d);
+        }
+      } finally {
+        stmt.dispose();
+      }
+    } else {
+      final stmt = _db.prepare(
+        'SELECT date FROM challenge_daily_progress WHERE challenge_id = ? AND is_target_hit = 1;',
+      );
+      try {
+        for (final row in stmt.select([challenge.id])) {
+          final d = row['date'] as String?;
+          if (d != null) hitSet.add(d);
+        }
+      } finally {
+        stmt.dispose();
+      }
+    }
+
+    return List<bool>.generate(7, (i) {
+      final d = start.add(Duration(days: i));
+      final dStr =
+          '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      return hitSet.contains(dStr);
+    });
+  }
+
+  /// Full-spectrum V2 deficit mining across all 6 tables with >=75% sparse
+  /// micronutrient coverage gating and expanded Indian/global produce taxonomy.
+  MinedDeficitMetricsV2 mineDeficitMetricsV2({
+    String? userId,
+    required double proteinTargetG,
+    double weightKg = 70.0,
+    bool isFemale = false,
+    DateTime? referenceDate,
+  }) {
+    return DeficitMiningV2.mine(
+      _db,
+      userId: userId ?? effectiveUserId,
+      proteinTargetG: proteinTargetG,
+      weightKg: weightKg,
+      isFemale: isFemale,
+      referenceDate: referenceDate,
     );
   }
 }

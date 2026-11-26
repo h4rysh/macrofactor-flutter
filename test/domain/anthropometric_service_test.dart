@@ -18,7 +18,8 @@ void main() {
       expect(bf!, closeTo(14.5, 0.3));
     });
 
-    test('Female Navy formula requires hips and calculates accurate body fat', () {
+    test('Female Navy formula requires hips and calculates accurate body fat',
+        () {
       // Female missing hips returns null
       final missingHips = AnthropometricService.calculateNavyBodyFatPct(
         isMale: false,
@@ -72,7 +73,8 @@ void main() {
         heightCm: 180.0,
       )!;
       expect(under, closeTo(0.361, 0.005));
-      expect(AnthropometricService.classifyWhtr(under), WhtrCategory.underweight);
+      expect(
+          AnthropometricService.classifyWhtr(under), WhtrCategory.underweight);
 
       // Healthy (0.40 - 0.49)
       final healthy = AnthropometricService.calculateWhtr(
@@ -88,7 +90,8 @@ void main() {
         heightCm: 175.0,
       )!;
       expect(increased, closeTo(0.526, 0.005));
-      expect(AnthropometricService.classifyWhtr(increased), WhtrCategory.increasedRisk);
+      expect(AnthropometricService.classifyWhtr(increased),
+          WhtrCategory.increasedRisk);
 
       // High Risk (>= 0.60)
       final high = AnthropometricService.calculateWhtr(
@@ -103,18 +106,27 @@ void main() {
   group('AnthropometricService - Waist-to-Hip Ratio (WHR)', () {
     test('Calculates and verifies gender-specific WHR thresholds', () {
       // Male healthy <= 0.90
-      final maleHealthy = AnthropometricService.calculateWhr(waistCm: 82.0, hipsCm: 98.0)!;
-      expect(AnthropometricService.isWhrHealthy(whr: maleHealthy, isMale: true), isTrue);
+      final maleHealthy =
+          AnthropometricService.calculateWhr(waistCm: 82.0, hipsCm: 98.0)!;
+      expect(AnthropometricService.isWhrHealthy(whr: maleHealthy, isMale: true),
+          isTrue);
 
-      final maleHigh = AnthropometricService.calculateWhr(waistCm: 96.0, hipsCm: 100.0)!;
-      expect(AnthropometricService.isWhrHealthy(whr: maleHigh, isMale: true), isFalse);
+      final maleHigh =
+          AnthropometricService.calculateWhr(waistCm: 96.0, hipsCm: 100.0)!;
+      expect(AnthropometricService.isWhrHealthy(whr: maleHigh, isMale: true),
+          isFalse);
 
       // Female healthy <= 0.85
-      final femaleHealthy = AnthropometricService.calculateWhr(waistCm: 72.0, hipsCm: 98.0)!;
-      expect(AnthropometricService.isWhrHealthy(whr: femaleHealthy, isMale: false), isTrue);
+      final femaleHealthy =
+          AnthropometricService.calculateWhr(waistCm: 72.0, hipsCm: 98.0)!;
+      expect(
+          AnthropometricService.isWhrHealthy(whr: femaleHealthy, isMale: false),
+          isTrue);
 
-      final femaleHigh = AnthropometricService.calculateWhr(waistCm: 88.0, hipsCm: 100.0)!;
-      expect(AnthropometricService.isWhrHealthy(whr: femaleHigh, isMale: false), isFalse);
+      final femaleHigh =
+          AnthropometricService.calculateWhr(waistCm: 88.0, hipsCm: 100.0)!;
+      expect(AnthropometricService.isWhrHealthy(whr: femaleHigh, isMale: false),
+          isFalse);
     });
   });
 

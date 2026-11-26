@@ -38,7 +38,7 @@ class _HealthSyncSettingsScreenState
           const SizedBox(height: 14),
           _buildSyncActionCard(sync),
           const SizedBox(height: 14),
-          _buildChannelsCard(),
+          _buildChannelsCard(sync),
           const SizedBox(height: 14),
           _buildPrivacyCard(),
           const SizedBox(height: 24),
@@ -68,72 +68,74 @@ class _HealthSyncSettingsScreenState
           border: Border.all(color: AppTheme.cardBorder),
         ),
         child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(Icons.favorite_rounded, color: color, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text('Google Health Connect',
-                        style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w700,
-                            color: AppTheme.textPrimary)),
-                    Text(
-                        st.isAvailable
-                            ? 'Android Health API'
-                            : 'Not available on device',
-                        style: const TextStyle(
-                            fontSize: 12, color: AppTheme.textSecondary)),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
                     color: color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(8)),
-                child: Text(label,
-                    style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: color)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.favorite_rounded, color: color, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Google Health Connect',
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textPrimary)),
+                      Text(
+                          st.isAvailable
+                              ? 'Android Health API'
+                              : 'Not available on device',
+                          style: const TextStyle(
+                              fontSize: 12, color: AppTheme.textSecondary)),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8)),
+                  child: Text(label,
+                      style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: color)),
+                ),
+              ],
+            ),
+            if (st.isAvailable && !st.hasPermissions) ...[
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => ref
+                    .read(healthConnectSyncProvider.notifier)
+                    .requestPermissions(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.activeBlue,
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 40),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10)),
+                ),
+                child: const Text('Grant Read Permissions',
+                    style:
+                        TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
               ),
             ],
-          ),
-          if (st.isAvailable && !st.hasPermissions) ...[
-            const SizedBox(height: 12),
-            ElevatedButton(
-              onPressed: () => ref
-                  .read(healthConnectSyncProvider.notifier)
-                  .requestPermissions(),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.activeBlue,
-                foregroundColor: Colors.white,
-                minimumSize: const Size(double.infinity, 40),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text('Grant Read Permissions',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-            ),
           ],
-        ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildSyncActionCard(HealthSyncState st) {
     return Container(
@@ -325,7 +327,7 @@ class _HealthSyncSettingsScreenState
     );
   }
 
-  Widget _buildChannelsCard() {
+  Widget _buildChannelsCard(HealthSyncState sync) {
     Widget row(IconData icon, String title, String sub) => Row(
           children: [
             Icon(icon, color: AppTheme.activeBlue, size: 18),
@@ -369,6 +371,42 @@ class _HealthSyncSettingsScreenState
           const Divider(height: 16, color: AppTheme.cardBorder),
           row(Icons.monitor_weight_rounded, 'Scale Body Weight',
               'Smart scale daily logs feed trend weight'),
+          const Divider(height: 16, color: AppTheme.cardBorder),
+          row(Icons.directions_walk_rounded, 'Steps & Sleep Duration',
+              'Reads daily steps and sleep recovery signals'),
+          const Divider(height: 16, color: AppTheme.cardBorder),
+          Row(
+            children: [
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Two-Way Nutrition Write-Back',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
+                    Text(
+                      'Write daily logged macros back to Health Connect Nutrition',
+                      style: TextStyle(
+                          fontSize: 11, color: AppTheme.textSecondary),
+                    ),
+                  ],
+                ),
+              ),
+              Switch.adaptive(
+                value: sync.writeNutritionEnabled,
+                onChanged: (val) {
+                  ref
+                      .read(healthConnectSyncProvider.notifier)
+                      .setNutritionWriteBack(val);
+                },
+              ),
+            ],
+          ),
         ],
       ),
     );

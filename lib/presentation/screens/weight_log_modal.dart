@@ -27,6 +27,8 @@ class WeightLogModal extends ConsumerStatefulWidget {
 }
 
 class _WeightLogModalState extends ConsumerState<WeightLogModal> {
+  static const double _lbsPerKg = 2.2046226218;
+
   final TextEditingController _weightController = TextEditingController();
   final TextEditingController _noteController = TextEditingController();
   late String _selectedDate;
@@ -37,10 +39,13 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
     super.initState();
     _selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
-    // Pre-populate with previous weight if available
+    // Pre-populate with previous weight in the user's active unit system.
     final latestWeight = ref.read(weightLogsProvider);
+    final useLbs = ref.read(useImperialUnitsProvider);
     if (latestWeight.isNotEmpty) {
-      _weightController.text = latestWeight.last.weightKg.toStringAsFixed(1);
+      final kg = latestWeight.last.weightKg;
+      final displayVal = useLbs ? kg * _lbsPerKg : kg;
+      _weightController.text = displayVal.toStringAsFixed(1);
     }
   }
 
@@ -73,9 +78,14 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
 
   void _adjustWeight(double delta) {
     AppHaptics.lightImpact();
+    final useLbs = ref.read(useImperialUnitsProvider);
+    final defaultDisplay = useLbs ? 70.0 * _lbsPerKg : 70.0;
     final current =
-        double.tryParse(_weightController.text.replaceAll(',', '.')) ?? 70.0;
-    final updated = (current + delta).clamp(10.0, 500.0);
+        double.tryParse(_weightController.text.replaceAll(',', '.')) ??
+            defaultDisplay;
+    final maxVal = useLbs ? 1100.0 : 500.0;
+    final minVal = useLbs ? 22.0 : 10.0;
+    final updated = (current + delta).clamp(minVal, maxVal);
     setState(() {
       _weightController.text = updated.toStringAsFixed(1);
     });
@@ -97,24 +107,27 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
     }
   }
 
-  void _handleSave(double parsedWeight) {
+  void _handleSave(double parsedDisplayWeight, {required bool useLbs}) {
     if (_isSubmitting) return; // Debounce guard (ISS-8-08)
     setState(() => _isSubmitting = true);
 
     try {
       AppHaptics.successFeedback();
+      final weightKg =
+          useLbs ? parsedDisplayWeight / _lbsPerKg : parsedDisplayWeight;
       final note = _noteController.text.trim();
       ref.read(weightLogsProvider.notifier).logWeight(
             _selectedDate,
-            parsedWeight,
+            weightKg,
             note.isNotEmpty ? note : null,
           );
       Navigator.of(context).pop();
 
+      final unitLabel = useLbs ? 'lbs' : 'kg';
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-              'Logged ${parsedWeight.toStringAsFixed(1)} kg for $_selectedDate'),
+              'Logged ${parsedDisplayWeight.toStringAsFixed(1)} $unitLabel for $_selectedDate'),
           backgroundColor: AppTheme.cardSurface,
           behavior: SnackBarBehavior.floating,
         ),
@@ -164,8 +177,12 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
 
   @override
   Widget build(BuildContext context) {
+    final useLbs = ref.watch(useImperialUnitsProvider);
     final double? parsedWeight =
         double.tryParse(_weightController.text.replaceAll(',', '.'));
+    final double? parsedWeightKg = parsedWeight == null
+        ? null
+        : (useLbs ? parsedWeight / _lbsPerKg : parsedWeight);
     final existingWeights = ref.watch(weightLogsProvider);
     final mediaQuery = MediaQuery.of(context);
     final existingEntryForDate = existingWeights
@@ -176,19 +193,22 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
 
     // Compute preview trend weight if weight is entered
     double? previewTrendWeight;
-    if (parsedWeight != null && parsedWeight > 30.0 && parsedWeight < 300.0) {
+    if (parsedWeightKg != null &&
+        parsedWeightKg > 30.0 &&
+        parsedWeightKg < 300.0) {
       final simulatedList = List<ScaleWeightEntry>.from(existingWeights)
         ..removeWhere(
             (e) => DateFormat('yyyy-MM-dd').format(e.date) == _selectedDate)
         ..add(ScaleWeightEntry(
           date: DateTime.parse(_selectedDate),
-          weightKg: parsedWeight,
+          weightKg: parsedWeightKg,
         ));
 
       final series = WeightTrendV2Series.compute(
           entries: simulatedList, bidirectional: true);
       if (series.points.isNotEmpty) {
-        previewTrendWeight = series.points.last.trendWeightKg;
+        final trendKg = series.points.last.trendWeightKg;
+        previewTrendWeight = useLbs ? trendKg * _lbsPerKg : trendKg;
       }
     }
 
@@ -350,7 +370,9 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                                     fontSize: 32,
                                     fontWeight: FontWeight.w900,
                                     color: AppTheme.textPrimary,
-                                    fontFeatures: [FontFeature.tabularFigures()],
+                                    fontFeatures: [
+                                      FontFeature.tabularFigures()
+                                    ],
                                   ),
                                   decoration: const InputDecoration(
                                     hintText: '0.0',
@@ -364,9 +386,9 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                                 ),
                               ),
                             ),
-                            const Text(
-                              'KG',
-                              style: TextStyle(
+                            Text(
+                              useLbs ? 'LBS' : 'KG',
+                              style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
                                 color: AppTheme.textSecondary,
@@ -464,7 +486,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Preview: Resulting Trend Weight will be ${previewTrendWeight.toStringAsFixed(1)} kg',
+                            'Preview: Resulting Trend Weight will be ${previewTrendWeight.toStringAsFixed(1)} ${useLbs ? 'lbs' : 'kg'}',
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
@@ -511,8 +533,9 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                             chip,
                             style: TextStyle(
                               fontSize: 12,
-                              fontWeight:
-                                  isSelected ? FontWeight.w700 : FontWeight.w500,
+                              fontWeight: isSelected
+                                  ? FontWeight.w700
+                                  : FontWeight.w500,
                               color: isSelected
                                   ? AppTheme.buttonText
                                   : AppTheme.textSecondary,
@@ -535,12 +558,12 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                   decoration: const InputDecoration(
                     hintText:
                         'Note (optional, e.g. morning fasted, post walk)...',
-                    hintStyle: TextStyle(
-                        fontSize: 13, color: AppTheme.textMuted),
+                    hintStyle:
+                        TextStyle(fontSize: 13, color: AppTheme.textMuted),
                     filled: true,
                     fillColor: AppTheme.surface,
-                    contentPadding: EdgeInsets.symmetric(
-                        horizontal: 14, vertical: 12),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                     border: OutlineInputBorder(
                       borderRadius: AppRadii.mdBorderRadius,
                       borderSide: BorderSide(color: AppTheme.cardBorder),
@@ -561,7 +584,7 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                     onPressed: (parsedWeight != null &&
                             parsedWeight > 0 &&
                             !_isSubmitting)
-                        ? () => _handleSave(parsedWeight)
+                        ? () => _handleSave(parsedWeight, useLbs: useLbs)
                         : null,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.buttonBackground,

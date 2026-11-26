@@ -138,6 +138,7 @@ class WeeklyMacroProgram {
     required this.createdAt,
     required this.lastCheckInDate,
     this.checkInDayOfWeek = 1, // Default Monday
+    this.carbShareOverride,
   });
 
   final String id;
@@ -150,6 +151,7 @@ class WeeklyMacroProgram {
   final DateTime createdAt;
   final DateTime lastCheckInDate;
   final int checkInDayOfWeek; // 1 = Monday, 7 = Sunday
+  final double? carbShareOverride;
 
   /// Total calories over the 7 days.
   double get weeklyTotalCalories =>
@@ -175,6 +177,8 @@ class WeeklyMacroProgram {
     DateTime? createdAt,
     DateTime? lastCheckInDate,
     int? checkInDayOfWeek,
+    double? carbShareOverride,
+    bool clearCarbShareOverride = false,
   }) {
     return WeeklyMacroProgram(
       id: id ?? this.id,
@@ -187,6 +191,9 @@ class WeeklyMacroProgram {
       createdAt: createdAt ?? this.createdAt,
       lastCheckInDate: lastCheckInDate ?? this.lastCheckInDate,
       checkInDayOfWeek: checkInDayOfWeek ?? this.checkInDayOfWeek,
+      carbShareOverride: clearCarbShareOverride
+          ? null
+          : (carbShareOverride ?? this.carbShareOverride),
     );
   }
 
@@ -201,6 +208,7 @@ class WeeklyMacroProgram {
         'createdAt': createdAt.toIso8601String(),
         'lastCheckInDate': lastCheckInDate.toIso8601String(),
         'checkInDayOfWeek': checkInDayOfWeek,
+        'carbShareOverride': carbShareOverride,
       };
 
   factory WeeklyMacroProgram.fromJson(Map<String, dynamic> json) =>
@@ -229,6 +237,7 @@ class WeeklyMacroProgram {
         createdAt: DateTime.parse(json['createdAt'] as String),
         lastCheckInDate: DateTime.parse(json['lastCheckInDate'] as String),
         checkInDayOfWeek: (json['checkInDayOfWeek'] as num?)?.toInt() ?? 1,
+        carbShareOverride: (json['carbShareOverride'] as num?)?.toDouble(),
       );
 }
 

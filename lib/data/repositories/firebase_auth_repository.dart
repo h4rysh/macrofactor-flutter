@@ -52,67 +52,6 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<UserAccount> signInWithEmailAndPassword({
-    required String email,
-    required String password,
-  }) async {
-    if (!isConfigured) {
-      throw StateError('Sign-in unavailable: Firebase not configured');
-    }
-    if (password.length < 8) {
-      throw ArgumentError('Password must be at least 8 characters');
-    }
-
-    final now = DateTime.now();
-    final user = UserAccount(
-      id: 'usr_${email.hashCode.abs()}',
-      googleUserId: 'email_${email.hashCode.abs()}',
-      displayName: email.split('@').first,
-      email: email.trim(),
-      authProvider: AuthProviderType.email,
-      createdAt: now,
-      updatedAt: now,
-      isAuthenticated: true,
-    );
-
-    _db.saveAccountSession(user);
-    _currentCachedUser = user;
-    _authStateController.add(user);
-    return user;
-  }
-
-  @override
-  Future<UserAccount> signUpWithEmailAndPassword({
-    required String email,
-    required String password,
-    String? displayName,
-  }) async {
-    if (!isConfigured) {
-      throw StateError('Sign-in unavailable: Firebase not configured');
-    }
-    if (password.length < 8) {
-      throw ArgumentError('Password must be at least 8 characters');
-    }
-
-    final now = DateTime.now();
-    final user = UserAccount(
-      id: 'usr_${email.hashCode.abs()}',
-      googleUserId: 'email_${email.hashCode.abs()}',
-      displayName: displayName ?? email.split('@').first,
-      email: email.trim(),
-      authProvider: AuthProviderType.email,
-      createdAt: now,
-      updatedAt: now,
-      isAuthenticated: true,
-    );
-
-    _db.saveAccountSession(user);
-    _currentCachedUser = user;
-    _authStateController.add(user);
-    return user;
-  }
-
-  @override
   Future<UserAccount> signInWithGoogle() async {
     if (!isConfigured) {
       throw StateError('Sign-in unavailable: Firebase not configured');
@@ -148,31 +87,7 @@ class FirebaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> sendPasswordResetEmail(String email) async {
-    if (!isConfigured) {
-      throw StateError('Sign-in unavailable: Firebase not configured');
-    }
-  }
-
-  @override
-  Future<void> changePassword({
-    required String currentPassword,
-    required String newPassword,
-  }) async {
-    if (_currentCachedUser == null) {
-      throw StateError('No active user session');
-    }
-    if (_currentCachedUser!.authProvider != AuthProviderType.email) {
-      throw UnsupportedError(
-          'Change password is only supported for email accounts.');
-    }
-    if (newPassword.length < 8) {
-      throw ArgumentError('Password must be at least 8 characters');
-    }
-  }
-
-  @override
-  Future<void> deleteAccount({String? password}) async {
+  Future<void> deleteAccount() async {
     if (_currentCachedUser == null ||
         _currentCachedUser!.authProvider == AuthProviderType.guest) {
       _db.clearAccountSession();
@@ -181,30 +96,19 @@ class FirebaseAuthRepository implements AuthRepository {
       return;
     }
 
-    // Provider-aware re-authentication check
-    if (_currentCachedUser!.authProvider == AuthProviderType.email) {
-      if (password == null || password.trim().isEmpty) {
-        throw ArgumentError('Password is required to delete an email account.');
-      }
-    } else if (_currentCachedUser!.authProvider == AuthProviderType.google) {
+    if (_currentCachedUser!.authProvider == AuthProviderType.google) {
       try {
-        await _googleSignIn.signInSilently();
-      } on PlatformException catch (e, st) {
+        await _googleSignIn.disconnect();
+      } catch (e, st) {
         developer.log(
-          'Silent Google re-auth failed; falling back to interactive sign-in',
+          'GoogleSignIn.disconnect failed during account deletion; falling back to signOut',
           name: 'FirebaseAuthRepository',
           error: e,
           stackTrace: st,
         );
-        await _googleSignIn.signIn();
-      } on Exception catch (e, st) {
-        developer.log(
-          'Re-auth error; falling back to interactive sign-in',
-          name: 'FirebaseAuthRepository',
-          error: e,
-          stackTrace: st,
-        );
-        await _googleSignIn.signIn();
+        try {
+          await _googleSignIn.signOut();
+        } catch (_) {}
       }
     }
 

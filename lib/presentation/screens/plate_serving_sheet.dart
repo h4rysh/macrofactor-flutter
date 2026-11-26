@@ -7,6 +7,7 @@ import '../theme/app_theme.dart';
 import '../utils/quantity_parser.dart';
 import '../widgets/apple_sheet_grabber.dart';
 import '../widgets/apple_tactile_card.dart';
+import '../widgets/food/sique_math_keyboard.dart';
 import '../widgets/indian_serving_controls.dart';
 import '../widgets/plate_metric_dials.dart';
 import '../widgets/sique_frosted_chrome.dart';
@@ -357,8 +358,8 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                   color: AppTheme.cardElevated,
                                   shape: const RoundedRectangleBorder(
                                     borderRadius: AppRadii.lgBorderRadius,
-                                    side: BorderSide(
-                                        color: AppTheme.cardBorder),
+                                    side:
+                                        BorderSide(color: AppTheme.cardBorder),
                                   ),
                                   onSelected: (meal) {
                                     AppHaptics.selectionClick();
@@ -548,9 +549,8 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                             'plate_serving_numeric_field'),
                                         focusNode: _quantityFocusNode,
                                         controller: _quantityController,
-                                        keyboardType:
-                                            const TextInputType.numberWithOptions(
-                                                decimal: true),
+                                        keyboardType: const TextInputType
+                                            .numberWithOptions(decimal: true),
                                         textInputAction: TextInputAction.done,
                                         textAlign: TextAlign.center,
                                         style: const TextStyle(
@@ -563,7 +563,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                         ),
                                         inputFormatters: [
                                           FilteringTextInputFormatter.allow(
-                                              RegExp(r'[\d.,/ ]'))
+                                              RegExp(r'[\d.,+\-*/ ]'))
                                         ],
                                         decoration: const InputDecoration(
                                           isDense: true,
@@ -573,7 +573,10 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                           border: InputBorder.none,
                                         ),
                                         onChanged: (val) {
-                                          final parsed = _parseQuantity(val);
+                                          final parsed =
+                                              SiqueMathEvaluator.evaluate(
+                                                      val) ??
+                                                  _parseQuantity(val);
                                           if (parsed != null && parsed > 0) {
                                             setState(() => _quantity = parsed);
                                           }
@@ -664,8 +667,12 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                             ),
                           ],
                         ),
-
-                        const SizedBox(height: 18),
+                        const SizedBox(height: 10),
+                        SiqueMathKeyboardBar(
+                          controller: _quantityController,
+                          onEvaluated: (val) => setState(() => _quantity = val),
+                        ),
+                        const SizedBox(height: 14),
 
                         // 1-Tap Oil Modifier
                         PlateOilModifierSelector(

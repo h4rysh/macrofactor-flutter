@@ -7,7 +7,8 @@ import 'package:sique/domain/models/food_models.dart';
 
 void main() {
   group('FoodSvgIcon Dynamic Category Normalization Tests (DEF-01)', () {
-    test('Normalizes database category strings to verified existing SVG assets', () {
+    test('Normalizes database category strings to verified existing SVG assets',
+        () {
       const testCases = {
         'veg': 'i740.svg',
         'vegetable': 'i740.svg',
@@ -32,11 +33,13 @@ void main() {
         // Verify that the file actually exists on disk in assets/foods/
         final assetFile = File('assets/foods/${icon.resolvedIconSvg}');
         expect(assetFile.existsSync(), isTrue,
-            reason: 'Asset file does not exist on disk: assets/foods/${icon.resolvedIconSvg}');
+            reason:
+                'Asset file does not exist on disk: assets/foods/${icon.resolvedIconSvg}');
       }
     });
 
-    testWidgets('FoodSvgIcon renders without throwing asset exceptions for category tokens',
+    testWidgets(
+        'FoodSvgIcon renders without throwing asset exceptions for category tokens',
         (tester) async {
       await tester.pumpWidget(
         const MaterialApp(

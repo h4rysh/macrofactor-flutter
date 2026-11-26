@@ -37,7 +37,9 @@ void main() {
       expect(result.status, AdjustmentStatus.clamped);
     });
 
-    test('Deadband filter holds program when raw delta is within [-20, +20 kcal]', () {
+    test(
+        'Deadband filter holds program when raw delta is within [-20, +20 kcal]',
+        () {
       final positiveNoise = CoachingEngine.computeDampedAdjustment(
         currentAvgCalories: 2100.0,
         unconstrainedTargetCalories: 2115.0, // +15 kcal noise
@@ -81,7 +83,9 @@ void main() {
       expect(lowConfidence.wasClamped, isFalse);
     });
 
-    test('Silent recomposition guard stops calorie cuts to preserve muscle mass', () {
+    test(
+        'Silent recomposition guard stops calorie cuts to preserve muscle mass',
+        () {
       final result = CoachingEngine.computeDampedAdjustment(
         currentAvgCalories: 2100.0,
         unconstrainedTargetCalories: 1950.0, // raw -150 cut
@@ -97,7 +101,8 @@ void main() {
       expect(result.reason, contains('Calories held to preserve muscle gain'));
     });
 
-    test('Silent recomposition allows surplus adjustments if gaining weight', () {
+    test('Silent recomposition allows surplus adjustments if gaining weight',
+        () {
       final result = CoachingEngine.computeDampedAdjustment(
         currentAvgCalories: 2100.0,
         unconstrainedTargetCalories: 2200.0, // +100

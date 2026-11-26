@@ -109,7 +109,8 @@ class QuickActionsSheet extends StatelessWidget {
                       hint: 'Double tap to dismiss',
                       button: true,
                       onTap: () => Navigator.pop(context),
-                      child: const AppleSheetGrabber(margin: EdgeInsets.only(bottom: 8)),
+                      child: const AppleSheetGrabber(
+                          margin: EdgeInsets.only(bottom: 8)),
                     ),
                     const Text(
                       'Quick Actions',
@@ -403,7 +404,8 @@ class _DayNoteSheetState extends ConsumerState<DayNoteSheet> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const AppleSheetGrabber(margin: EdgeInsets.only(bottom: 12)),
+                    const AppleSheetGrabber(
+                        margin: EdgeInsets.only(bottom: 12)),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [

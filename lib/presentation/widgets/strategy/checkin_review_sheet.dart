@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/algorithms/coaching_engine.dart';
-import '../../providers/strategy_providers.dart';
+import '../../../domain/models/user_profile.dart';
+import '../../providers/app_providers.dart';
 import '../../theme/app_theme.dart';
 import '../apple_sheet_grabber.dart';
 import '../apple_tactile_card.dart';
@@ -255,8 +256,8 @@ class CheckinReviewSheet extends ConsumerWidget {
                     recommendation.silentRecompDetected) ...[
                   const SizedBox(height: 12),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
                       color: recommendation.silentRecompDetected
                           ? const Color(0xFF66BB6A).withValues(alpha: 0.14)
@@ -397,7 +398,15 @@ class CheckinReviewSheet extends ConsumerWidget {
                     ],
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 16),
+
+                // Interactive What-If Goal ETA Pace Simulator
+                _WhatIfEtaSimulator(
+                  expenditureKcal: recommendation.currentExpenditureKcal,
+                  recommendedCalories:
+                      recommendation.recommendedAverageCalories,
+                ),
+                const SizedBox(height: 20),
 
                 // CTA 1: Accept Adjustment (#FAFAFA pill, #09090B ink)
                 AppleBouncy(
@@ -479,6 +488,97 @@ class CheckinReviewSheet extends ConsumerWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _WhatIfEtaSimulator extends ConsumerStatefulWidget {
+  const _WhatIfEtaSimulator({
+    required this.expenditureKcal,
+    required this.recommendedCalories,
+  });
+
+  final double expenditureKcal;
+  final double recommendedCalories;
+
+  @override
+  ConsumerState<_WhatIfEtaSimulator> createState() =>
+      _WhatIfEtaSimulatorState();
+}
+
+class _WhatIfEtaSimulatorState extends ConsumerState<_WhatIfEtaSimulator> {
+  double? _pacePct;
+
+  @override
+  Widget build(BuildContext context) {
+    final profile = ref.watch(userProfileProvider);
+    final eta = ref.watch(goalEtaProjectionProvider);
+    if (profile.goalType == GoalType.maintenance || eta.atGoal) {
+      return const SizedBox.shrink();
+    }
+    final pace = (_pacePct ?? profile.weeklyRateOfChangePct).clamp(0.25, 1.50);
+    final wt = profile.currentWeightKg > 0 ? profile.currentWeightKg : 70.0;
+    final remKg = (wt - profile.targetWeightKg).abs();
+    final weeklyKg = (wt * pace / 100.0).clamp(0.10, 1.50);
+    final simWeeks = (remKg / weeklyKg).ceil().clamp(1, 260);
+    final dailyDeficitKcal = (weeklyKg * 7700.0 / 7.0).round();
+    final simDailyKcal = profile.goalType == GoalType.fatLoss
+        ? (widget.expenditureKcal - dailyDeficitKcal)
+            .clamp(profile.calorieFloor, widget.expenditureKcal)
+        : widget.expenditureKcal + dailyDeficitKcal;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.cardElevated,
+        borderRadius: AppRadii.lgBorderRadius,
+        border: Border.all(color: AppTheme.cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Expanded(
+                child: Text(
+                  'WHAT-IF PACE SIMULATOR',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textSecondary,
+                    letterSpacing: 0.7,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    '${pace.toStringAsFixed(2)}%/wk · ~$simWeeks wks (${simDailyKcal.round()} kcal)',
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.activeBlue,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Slider(
+            value: pace,
+            min: 0.25,
+            max: 1.50,
+            divisions: 5,
+            activeColor: AppTheme.activeBlue,
+            onChanged: (v) => setState(() => _pacePct = v),
+          ),
+        ],
       ),
     );
   }

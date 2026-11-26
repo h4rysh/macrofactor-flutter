@@ -84,6 +84,43 @@ class FastingDao {
     }
   }
 
+  /// Inserts or updates a historical/restored fasting session idempotently.
+  void upsertFastingSession(FastingSession session, {String? userId}) {
+    final uid = userId ??
+        (effectiveUserId != 'default_user'
+            ? effectiveUserId
+            : (session.userId.isNotEmpty ? session.userId : 'default_user'));
+
+    final stmt = _db.prepare('''
+      INSERT INTO fasting_sessions (
+        id, user_id, protocol, start_time, target_end_time, actual_end_time, state, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        protocol = excluded.protocol,
+        start_time = excluded.start_time,
+        target_end_time = excluded.target_end_time,
+        actual_end_time = excluded.actual_end_time,
+        state = excluded.state,
+        notes = excluded.notes
+      WHERE fasting_sessions.user_id = excluded.user_id;
+    ''');
+
+    try {
+      stmt.execute([
+        session.id,
+        uid,
+        session.protocol.name,
+        session.startTime.toIso8601String(),
+        session.targetEndTime.toIso8601String(),
+        session.actualEndTime?.toIso8601String(),
+        session.state,
+        session.notes,
+      ]);
+    } finally {
+      stmt.dispose();
+    }
+  }
+
   /// Ends an active fasting session.
   void endFast(
     String id, {
@@ -100,7 +137,12 @@ class FastingDao {
     ''');
 
     try {
-      stmt.execute([completed ? 'completed' : 'broken_early', actualEnd.toIso8601String(), id, uid]);
+      stmt.execute([
+        completed ? 'completed' : 'broken_early',
+        actualEnd.toIso8601String(),
+        id,
+        uid
+      ]);
     } finally {
       stmt.dispose();
     }

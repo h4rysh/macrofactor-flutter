@@ -254,11 +254,15 @@ class PlateReviewBar extends StatelessWidget {
     required this.itemCount,
     required this.totalCalories,
     required this.onDone,
+    this.onExpand,
+    this.buttonLabel = 'Done',
   });
 
   final int itemCount;
   final int totalCalories;
   final VoidCallback onDone;
+  final VoidCallback? onExpand;
+  final String buttonLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -269,73 +273,78 @@ class PlateReviewBar extends StatelessWidget {
       child: SiqueEntrance(
         child: Semantics(
           button: true,
-          label: 'Review Plate: $itemCount items, $totalCalories calories total',
+          label:
+              'Review Plate: $itemCount items, $totalCalories calories total',
           child: SiqueFrostedChrome(
             borderRadius: AppRadii.xlBorderRadius,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: const BoxDecoration(
-                    color: AppTheme.cardElevated,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.restaurant_menu_rounded,
-                    size: 18,
-                    color: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '$itemCount ${itemCount == 1 ? 'item' : 'items'} on Plate',
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        '$totalCalories kcal total',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.textSecondary,
-                          fontFeatures: [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                AppleBouncy(
-                  scaleDown: 0.94,
-                  onTap: onDone,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
+            child: InkWell(
+              onTap: onExpand,
+              borderRadius: AppRadii.xlBorderRadius,
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
                     decoration: const BoxDecoration(
-                      color: AppTheme.buttonBackground,
-                      borderRadius: AppRadii.lgBorderRadius,
+                      color: AppTheme.cardElevated,
+                      shape: BoxShape.circle,
                     ),
-                    child: const Text(
-                      'Done',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.buttonText,
+                    child: const Icon(
+                      Icons.restaurant_menu_rounded,
+                      size: 18,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '$itemCount ${itemCount == 1 ? 'item' : 'items'} staged · Tap to edit',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.textPrimary,
+                          ),
+                        ),
+                        Text(
+                          '$totalCalories kcal total',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                            color: AppTheme.textSecondary,
+                            fontFeatures: [FontFeature.tabularFigures()],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  AppleBouncy(
+                    scaleDown: 0.94,
+                    onTap: onDone,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      decoration: const BoxDecoration(
+                        color: AppTheme.buttonBackground,
+                        borderRadius: AppRadii.lgBorderRadius,
+                      ),
+                      child: Text(
+                        buttonLabel,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.buttonText,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),

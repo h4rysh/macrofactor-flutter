@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../data/local/app_database.dart';
+import '../../domain/algorithms/challenge_generation_service.dart';
 import '../../domain/models/weekly_challenge_model.dart';
-import '../providers/strategy_providers.dart';
+import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import 'animated_primitives.dart';
 import 'apple_tactile_card.dart';
@@ -84,34 +86,48 @@ class WeeklyChallengeCard extends ConsumerWidget {
   IconData _iconForType(ChallengeType type) {
     switch (type) {
       case ChallengeType.proteinAnchor:
+      case ChallengeType.proteinVolume:
         return Icons.fitness_center_rounded;
       case ChallengeType.fiberBuilder:
         return Icons.grass_rounded;
       case ChallengeType.produceBooster:
         return Icons.eco_rounded;
+      case ChallengeType.micronutrientFix:
+        return Icons.science_rounded;
       case ChallengeType.scaleCadence:
         return Icons.monitor_weight_outlined;
       case ChallengeType.hydrationHero:
         return Icons.water_drop_rounded;
+      case ChallengeType.trainingConsistency:
+        return Icons.directions_run_rounded;
       case ChallengeType.nightCapTamer:
         return Icons.nightlight_round;
+      case ChallengeType.recompMeasure:
+        return Icons.straighten_rounded;
     }
   }
 
   Color _colorForType(ChallengeType type) {
     switch (type) {
       case ChallengeType.proteinAnchor:
+      case ChallengeType.proteinVolume:
         return AppTheme.protein;
       case ChallengeType.fiberBuilder:
         return const Color(0xFF66BB6A);
       case ChallengeType.produceBooster:
         return AppTheme.carbs;
+      case ChallengeType.micronutrientFix:
+        return const Color(0xFF26C6DA);
       case ChallengeType.scaleCadence:
         return AppTheme.calories;
       case ChallengeType.hydrationHero:
         return AppTheme.activeBlue;
+      case ChallengeType.trainingConsistency:
+        return const Color(0xFFFF7043);
       case ChallengeType.nightCapTamer:
         return const Color(0xFFAB47BC);
+      case ChallengeType.recompMeasure:
+        return const Color(0xFF9CCC65);
     }
   }
 
@@ -126,9 +142,8 @@ class WeeklyChallengeCard extends ConsumerWidget {
       padding: const EdgeInsets.all(16),
       borderRadius: 18,
       backgroundColor: AppTheme.cardSurface,
-      borderColor: isDone
-          ? themeColor.withValues(alpha: 0.5)
-          : AppTheme.cardBorder,
+      borderColor:
+          isDone ? themeColor.withValues(alpha: 0.5) : AppTheme.cardBorder,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -223,68 +238,228 @@ class WeeklyChallengeCard extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
 
-          // Progress Metric & 1-Tap Progress Button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '${challenge.currentValue.toStringAsFixed(challenge.currentValue % 1 == 0 ? 0 : 1)} / ${challenge.targetValue.toStringAsFixed(challenge.targetValue % 1 == 0 ? 0 : 1)} ${challenge.unit}',
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.textSecondary,
-                      fontFeatures: [FontFeature.tabularFigures()],
-                    ),
+          // Progress Metric, 7-Day Dot Strip & Auto-Synced Actions
+          _buildFooterStrip(context, ref, themeColor, isDone),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooterStrip(
+    BuildContext context,
+    WidgetRef ref,
+    Color themeColor,
+    bool isDone,
+  ) {
+    final db = ref.watch(databaseProvider);
+    final profile = ref.watch(userProfileProvider);
+    final pTarget = profile.proteinPreference.gramsPerKg *
+        (profile.currentWeightKg > 0 ? profile.currentWeightKg : 70.0);
+    final dots = db.challengesDao.getDailyCompletionDots(
+      challenge,
+      proteinTargetG: pTarget,
+    );
+    const dayLabels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+    final supportsFoods = challenge.type == ChallengeType.proteinAnchor ||
+        challenge.type == ChallengeType.proteinVolume ||
+        challenge.type == ChallengeType.fiberBuilder ||
+        challenge.type == ChallengeType.produceBooster ||
+        challenge.type == ChallengeType.micronutrientFix;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${challenge.currentValue.toStringAsFixed(challenge.currentValue % 1 == 0 ? 0 : 1)} / ${challenge.targetValue.toStringAsFixed(challenge.targetValue % 1 == 0 ? 0 : 1)} ${challenge.unit} · Auto-synced',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textSecondary,
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
-              if (!isDone)
-                AppleBouncy(
-                  scaleDown: 0.94,
-                  onTap: () {
-                    AppHaptics.lightImpact();
-                    ref
-                        .read(weeklyChallengesProvider.notifier)
-                        .incrementProgress(challenge.id, 1.0);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: themeColor.withValues(alpha: 0.16),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: themeColor.withValues(alpha: 0.35),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.add_rounded, size: 14, color: themeColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          '+1 ${challenge.unit}',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: themeColor,
+            ),
+            const SizedBox(width: 8),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: List.generate(7, (i) {
+                final hit = i < dots.length && dots[i];
+                final wd = (challenge.weekStartDate.weekday - 1 + i) % 7;
+                return Padding(
+                  padding: const EdgeInsets.only(left: 4),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 9,
+                        height: 9,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: hit ? themeColor : AppTheme.cardElevated,
+                          border: Border.all(
+                            color: hit ? themeColor : AppTheme.cardBorder,
+                            width: 1,
                           ),
                         ),
-                      ],
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        dayLabels[wd],
+                        style: const TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 6,
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            if (supportsFoods)
+              AppleBouncy(
+                scaleDown: 0.96,
+                onTap: () => _showFixingFoodsSheet(context, db, themeColor),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: themeColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.restaurant_rounded,
+                          size: 13, color: themeColor),
+                      const SizedBox(width: 5),
+                      Text(
+                        'Foods that fix this',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: themeColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            if (!isDone)
+              AppleBouncy(
+                scaleDown: 0.96,
+                onTap: () {
+                  AppHaptics.lightImpact();
+                  ref
+                      .read(weeklyChallengesProvider.notifier)
+                      .swapChallenge(challenge.id);
+                },
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardElevated,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.swap_horiz_rounded,
+                          size: 13, color: AppTheme.textSecondary),
+                      SizedBox(width: 4),
+                      Text(
+                        'Swap',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _showFixingFoodsSheet(
+    BuildContext context,
+    AppDatabase db,
+    Color themeColor,
+  ) {
+    final foods = ChallengeGenerationService.suggestFixingFoods(db, challenge);
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppTheme.cardSurface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.fromLTRB(20, 18, 20, 28),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Top Foods for ${challenge.title}',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 12),
+            if (foods.isEmpty)
+              const Text(
+                'Log whole foods matching this target to auto-sync your 7-day dots.',
+                style: TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              )
+            else
+              for (final f in foods)
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: CircleAvatar(
+                    backgroundColor: themeColor.withValues(alpha: 0.16),
+                    child:
+                        Icon(Icons.bolt_rounded, color: themeColor, size: 18),
+                  ),
+                  title: Text(
+                    f.name,
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+                  ),
+                  trailing: Text(
+                    f.badge,
+                    style: TextStyle(
+                      color: themeColor,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
                     ),
                   ),
                 ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

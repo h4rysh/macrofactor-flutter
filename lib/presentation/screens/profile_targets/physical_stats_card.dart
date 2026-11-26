@@ -18,8 +18,16 @@ class PhysicalStatsCard extends StatelessWidget {
   final WidgetRef ref;
   final UserProfile profile;
 
+  static const double _lbsPerKg = 2.2046226218;
+
   @override
   Widget build(BuildContext context) {
+    final useLbs = ref.watch(useImperialUnitsProvider);
+    final unit = useLbs ? 'lbs' : 'kg';
+    final currentDisp =
+        useLbs ? profile.currentWeightKg * _lbsPerKg : profile.currentWeightKg;
+    final targetDisp =
+        useLbs ? profile.targetWeightKg * _lbsPerKg : profile.targetWeightKg;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -78,16 +86,16 @@ class PhysicalStatsCard extends StatelessWidget {
               Expanded(
                 child: _buildMetricTile(
                   label: 'Current Weight',
-                  value: '${profile.currentWeightKg.toStringAsFixed(1)} kg',
-                  onTap: () => _showWeightDialog(context),
+                  value: '${currentDisp.toStringAsFixed(1)} $unit',
+                  onTap: () => _showWeightDialog(context, useLbs: useLbs),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _buildMetricTile(
                   label: 'Target Weight',
-                  value: '${profile.targetWeightKg.toStringAsFixed(1)} kg',
-                  onTap: () => _showTargetWeightDialog(context),
+                  value: '${targetDisp.toStringAsFixed(1)} $unit',
+                  onTap: () => _showTargetWeightDialog(context, useLbs: useLbs),
                 ),
               ),
               const SizedBox(width: 12),
@@ -150,9 +158,12 @@ class PhysicalStatsCard extends StatelessWidget {
     );
   }
 
-  void _showWeightDialog(BuildContext context) {
+  void _showWeightDialog(BuildContext context, {required bool useLbs}) {
+    final unit = useLbs ? 'lbs' : 'kg';
+    final displayInit =
+        useLbs ? profile.currentWeightKg * _lbsPerKg : profile.currentWeightKg;
     final controller =
-        TextEditingController(text: profile.currentWeightKg.toStringAsFixed(1));
+        TextEditingController(text: displayInit.toStringAsFixed(1));
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -169,9 +180,9 @@ class PhysicalStatsCard extends StatelessWidget {
           autofocus: true,
           style: const TextStyle(color: AppTheme.textPrimary),
           decoration: InputDecoration(
-            labelText: UnitFormatter.weightLabel(),
+            labelText: 'Current Weight ($unit)',
             labelStyle: const TextStyle(color: AppTheme.textSecondary),
-            suffixText: UnitFormatter.weightUnit(),
+            suffixText: unit,
           ),
         ),
         actions: [
@@ -181,10 +192,12 @@ class PhysicalStatsCard extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              final val = double.tryParse(controller.text);
-              if (val != null && val > 20 && val < 300) {
+              final raw = double.tryParse(controller.text);
+              final valKg =
+                  raw == null ? null : (useLbs ? raw / _lbsPerKg : raw);
+              if (valKg != null && valKg > 20 && valKg < 300) {
                 ref.read(userProfileProvider.notifier).updateProfile(
-                      profile.copyWith(currentWeightKg: val),
+                      profile.copyWith(currentWeightKg: valKg),
                     );
               }
               Navigator.of(ctx).pop();
@@ -198,9 +211,12 @@ class PhysicalStatsCard extends StatelessWidget {
     );
   }
 
-  void _showTargetWeightDialog(BuildContext context) {
+  void _showTargetWeightDialog(BuildContext context, {required bool useLbs}) {
+    final unit = useLbs ? 'lbs' : 'kg';
+    final displayInit =
+        useLbs ? profile.targetWeightKg * _lbsPerKg : profile.targetWeightKg;
     final controller =
-        TextEditingController(text: profile.targetWeightKg.toStringAsFixed(1));
+        TextEditingController(text: displayInit.toStringAsFixed(1));
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -217,9 +233,9 @@ class PhysicalStatsCard extends StatelessWidget {
           autofocus: true,
           style: const TextStyle(color: AppTheme.textPrimary),
           decoration: InputDecoration(
-            labelText: UnitFormatter.targetWeightLabel(),
+            labelText: 'Target Weight ($unit)',
             labelStyle: const TextStyle(color: AppTheme.textSecondary),
-            suffixText: UnitFormatter.weightUnit(),
+            suffixText: unit,
           ),
         ),
         actions: [
@@ -229,16 +245,18 @@ class PhysicalStatsCard extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              final val = double.tryParse(controller.text);
-              if (val != null) {
+              final raw = double.tryParse(controller.text);
+              final valKg =
+                  raw == null ? null : (useLbs ? raw / _lbsPerKg : raw);
+              if (valKg != null) {
                 final v = DomainValidator.validateTargetWeight(
-                  targetWeightKg: val,
+                  targetWeightKg: valKg,
                   heightCm: profile.heightCm,
                   goalType: profile.goalType,
                 );
                 if (v.isValid) {
                   ref.read(userProfileProvider.notifier).updateProfile(
-                        profile.copyWith(targetWeightKg: val),
+                        profile.copyWith(targetWeightKg: valKg),
                       );
                   Navigator.of(ctx).pop();
                 } else {

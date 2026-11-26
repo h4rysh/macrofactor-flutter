@@ -30,14 +30,17 @@ class SettingsDao {
       final scopedKey = _scopedKey(key, userId);
       final stmt =
           _db.prepare('SELECT value FROM app_settings WHERE key = ? LIMIT 1;');
-      var result = stmt.select([scopedKey]);
-      if (result.isEmpty && !key.contains(':')) {
-        // Fallback for legacy unscoped settings
-        result = stmt.select([key]);
+      try {
+        var result = stmt.select([scopedKey]);
+        if (result.isEmpty && !key.contains(':')) {
+          // Fallback for legacy unscoped settings
+          result = stmt.select([key]);
+        }
+        if (result.isEmpty) return defaultValue;
+        return result.first['value'] as String;
+      } finally {
+        stmt.dispose();
       }
-      stmt.dispose();
-      if (result.isEmpty) return defaultValue;
-      return result.first['value'] as String;
     } on SqliteException catch (e, st) {
       developer.log(
         'Failed to read setting for key: "$key"',
@@ -70,8 +73,12 @@ class SettingsDao {
       final uid = userId ?? effectiveUserId;
       final prefix = '$uid:';
       final stmt = _db.prepare('SELECT key, value FROM app_settings;');
-      final result = stmt.select();
-      stmt.dispose();
+      final ResultSet result;
+      try {
+        result = stmt.select();
+      } finally {
+        stmt.dispose();
+      }
       final map = <String, String>{};
       for (final row in result) {
         final k = row['key'] as String;

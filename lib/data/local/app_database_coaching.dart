@@ -115,8 +115,7 @@ extension AppDatabaseCoachingExtension on AppDatabase {
         rawCalorieDelta: (row['raw_calorie_delta'] as num?)?.toDouble(),
         dampedCalorieDelta: (row['damped_calorie_delta'] as num?)?.toDouble(),
         wasClamped: (row['was_clamped'] as int? ?? 0) == 1,
-        silentRecompDetected:
-            (row['silent_recomp_detected'] as int? ?? 0) == 1,
+        silentRecompDetected: (row['silent_recomp_detected'] as int? ?? 0) == 1,
       );
     }).toList();
   }

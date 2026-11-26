@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.0] - 2026-11-26
+
+### 🚀 Major Milestone: Sique v4 — Multi-Modal Intelligence, Diary Power-Tools & 36 Biomarkers
+Version 4.0.0 introduces multi-modal Kalman V5 expenditure estimation, a redesigned 3-Tier Strategy Command Center, Schema v7 diary power-tools, a 36-biomarker Nutrient Explorer, an expanded 4,345-food catalog, and a native Android Home Screen Macro Widget.
+
+### 🧠 Multi-Modal Strategy & Adaptive Intelligence
+- **`ExpenditureKalmanV5`**: Fuses `WorkoutDao` 7d vs 21d training-volume drift ($\beta_{\text{comp}} = 0.60$, $\pm 120$ kcal clamp), heteroscedastic observation noise $R_t \in [0.36, 1.25]$ driven by hydration swings, lag-1 sodium spikes, and $\ge 18\text{h}$ fasts, plus Katch-McArdle + Mifflin-St Jeor BMR blending.
+- **3-Band `GoalEtaCalculator`**: Projects `Optimistic`, `Expected`, and `Conservative` goal dates with singularity-guarded Recomp Waist-to-Goal ETA fallback.
+- **Mid-Week Rebalancer & What-If Simulator**: Added `CoachingEngine.rebalanceRemainingWeek` and an interactive pace slider inside `CheckinReviewSheet`.
+- **3-Tier Strategy Tab**: Refactored `StrategyScreen` around `MetabolicCommandHeader`, `WeeklyChallengesSection`, and `LifestyleTelemetryStrip`.
+- **Closed-Loop Challenges V2 (`DeficitMiningV2`)**: 6-table deficit mining with $\ge 75\%$ sparse micronutrient coverage gating, cumulative protein targets, 7-day dot strips, "Foods that fix this", and Swap autonomy.
+
+### ⚡ Diary Power-Tools & Schema v7
+- **Database Schema v7 & `BackupCodec` v7**: Added `repeat_items`, `day_notes`, `micro_goals`, `cooked_weight_g` on `custom_recipes`, and 36 seeded `nutrient_definitions`.
+- **Logging Speed**: Added inline Math Keyboard (`+ - * /`), Quick-Add Macros, 1-tap Daily Repeat Items (`+ Repeat`), Day Notes, Batch Copy/Move/Delete toolbar, Fasting-Window timeline pills, and Recipe Edit with cooked weight scaling.
+
+### 🔬 36-Biomarker Explorer, Label OCR & 4,345-Food Catalog
+- **Nutrient Explorer (`NutrientExplorerScreen`)**: Rolling `7d/14d/30d` averages, coverage transparency, top food contributors, and custom `micro_goals`.
+- **Nutrition Label OCR (`NutritionLabelOcrParser`)**: Offline FSSAI/FDA label parser fallback in `BarcodeScannerSheet`.
+- **Catalog Expansion**: Compiled `foods_master.db` to **4,345 foods**, **11,933 portion units**, **43,367 micronutrient facts**, and **77 pre-cached barcodes**.
+
+### 📱 Android Home Widget, Two-Way Health Connect & Opt-In AI
+- **Android Home Widget (`SiqueMacroWidgetProvider`)**: Live remaining-macros widget synced from today's diary totals.
+- **Two-Way Health Connect**: Added Steps & Sleep reading and opt-in Nutrition write-back toggle in `HealthSyncSettingsScreen`.
+- **Opt-In Gemini AI Describe**: Added `AiDescribeMealSheet` (user-supplied API key, excluded from backup exports).
+- **Verified**: `0` analyzer issues (`--fatal-infos`), `896` passing tests, and signed/release APK verified.
+
+---
+
 ## [2.0.0] - 2026-10-25
 
 ### 🚀 Major Milestone: Sique Master Remediation & Autonomous Evolution
