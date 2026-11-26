@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.0.1] - 2026-11-26
+
+### 🔧 Fixes & UX Polish
+- **Google Sign-In**: Registered debug and permanent release keystore SHA-1 certificates in Firebase (`sique-app-harrish`), populated `google-services.json` Android/Web OAuth clients, and replaced raw `PlatformException` details with a clean user-facing message.
+- **Health Connect Auto-Sync**: Removed manual "Sync Now" buttons across Profile, Health Sync Settings, and Food Log Settings in favor of silent automatic background/app-open sync, and added a 1-line Google Fit → Health Connect setup tip when 0 workouts are detected.
+- **Weight Log → Profile Sync**: Invalidated `userProfileProvider` immediately on weight log/delete and Health Connect weight sync so Profile & Targets and macro targets update right away.
+- **UI Decluttering & Plain Language**:
+  - Removed the AI Describe meal feature and all Gemini API key prompts.
+  - Replaced user-facing technical jargon across all screens with clear, human-friendly copy.
+  - Decluttered Dashboard (removed extra Water/Fasting strip) and Food Log (removed duplicate sticky macro bar and defaulted empty hourly slots to hidden).
+  - Streamlined Strategy into a clean 3-tier layout with a first-run **Start Strategy Setup** prompt and moved secondary controls into a **Program & Goal Settings** sheet.
+  - Added canonical **Best Match** ranking and a highlighted hero card with food artwork at the top of Food Search.
+
+---
+
 ## [4.0.0] - 2026-11-26
 
 ### 🚀 Major Milestone: Sique v4 — Multi-Modal Intelligence, Diary Power-Tools & 36 Biomarkers
