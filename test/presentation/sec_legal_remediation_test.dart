@@ -122,12 +122,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Bayesian Adaptive Science'), findsOneWidget);
+      expect(find.text('Adaptive Nutrition Science'), findsOneWidget);
       expect(find.text('Clean-Room Architecture'), findsNothing);
       expect(find.textContaining('behavioral black-box reverse engineering'),
           findsNothing);
       expect(
-        find.textContaining('recursive Bayesian expenditure estimation'),
+        find.textContaining('real weight trends and food logs'),
         findsOneWidget,
       );
     });

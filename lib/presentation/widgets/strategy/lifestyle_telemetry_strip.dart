@@ -70,7 +70,7 @@ class LifestyleTelemetryStrip extends ConsumerWidget {
                 onTap: () => ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
-                      '$weekWorkouts workouts synced into Kalman V5 training drift.',
+                      '$weekWorkouts workouts factored into this week’s burn.',
                     ),
                   ),
                 ),

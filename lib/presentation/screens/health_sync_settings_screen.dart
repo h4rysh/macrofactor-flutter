@@ -92,7 +92,7 @@ class _HealthSyncSettingsScreenState
                               color: AppTheme.textPrimary)),
                       Text(
                           st.isAvailable
-                              ? 'Android Health API'
+                              ? 'On-device health sync'
                               : 'Not available on device',
                           style: const TextStyle(
                               fontSize: 12, color: AppTheme.textSecondary)),
@@ -164,7 +164,7 @@ class _HealthSyncSettingsScreenState
           ),
           const SizedBox(height: 6),
           Text(
-            'Synchronizes past $_selectedDays days of workouts and scale weights directly from device into local SQLite. Works 100% offline in Guest Mode without cloud sign-in.',
+            'Syncs the past $_selectedDays days of workouts and scale weights privately on your device. Works 100% offline.',
             style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
           ),
           const SizedBox(height: 12),
@@ -271,55 +271,35 @@ class _HealthSyncSettingsScreenState
             ),
           ],
           const SizedBox(height: 14),
-          Semantics(
-            button: true,
-            label: st.isSyncing
-                ? 'Syncing health data...'
-                : 'Sync Now ($_selectedDays days)',
-            child: ElevatedButton(
-              key: const Key('health_sync_trigger_btn'),
-              onPressed: st.isSyncing
-                  ? null
-                  : () => ref
-                      .read(healthConnectSyncProvider.notifier)
-                      .syncNow(trailingDays: _selectedDays),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.activeBlue,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppTheme.cardElevated,
-                minimumSize: const Size(double.infinity, 44),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              child: st.isSyncing
-                  ? const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        SizedBox(
-                          width: 14,
-                          height: 14,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.white),
-                          ),
-                        ),
-                        SizedBox(width: 8),
-                        Text('Syncing...',
-                            style: TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w700)),
-                      ],
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.sync_rounded, size: 16),
-                        const SizedBox(width: 6),
-                        Text('Sync Now (${_selectedDays}d)',
-                            style: const TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.w700)),
-                      ],
+          Container(
+            key: const Key('health_sync_auto_status'),
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppTheme.surface,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppTheme.cardBorder),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  st.isSyncing ? Icons.sync_rounded : Icons.autorenew_rounded,
+                  size: 16,
+                  color: AppTheme.activeBlue,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    st.isSyncing
+                        ? 'Syncing past $_selectedDays days automatically...'
+                        : 'Auto-syncs past $_selectedDays days whenever you open Sique. Using Google Fit? Enable "Sync Fit with Health Connect" in Google Fit Settings.',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
                     ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -427,7 +407,7 @@ class _HealthSyncSettingsScreenState
           SizedBox(width: 10),
           Expanded(
             child: Text(
-              '100% On-Device Privacy: Health Connect data is imported directly into SQLite on this device. Fully functional in Guest Mode without Google Sign-In or cloud accounts.',
+              '100% On-Device Privacy: Your health data stays privately on this device—no account required.',
               style: TextStyle(
                   fontSize: 11, color: AppTheme.textSecondary, height: 1.4),
             ),

@@ -300,6 +300,7 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
           );
         }
         _ref?.read(weightLogsProvider.notifier).refresh();
+        _ref?.invalidate(userProfileProvider);
       }
 
       // 2b. Optional Two-Way Health Connect: Steps/Sleep read & Nutrition write-back

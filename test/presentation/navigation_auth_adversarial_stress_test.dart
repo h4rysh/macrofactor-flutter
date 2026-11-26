@@ -454,11 +454,10 @@ void main() {
     );
   });
 
-  group(
-      'Group 3: Health Connect Manual Sync Rapid Double-Tap & Concurrency Stress',
+  group('Group 3: Health Connect Auto-Sync Concurrency & Error Recovery Stress',
       () {
     testWidgets(
-      'Rapid multiple taps on Key("profile_sync_now_btn") are guarded by in-flight lock',
+      'Concurrent auto-sync calls are guarded by in-flight lock on AccountProfileScreen',
       (tester) async {
         configureViewport(tester);
 
@@ -470,39 +469,28 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final syncBtn = find.byKey(const Key('profile_sync_now_btn'));
-
-        // Scroll until visible
-        await tester.scrollUntilVisible(
-          syncBtn,
-          300,
-          scrollable: find.byType(Scrollable).first,
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(AccountProfileScreen)),
         );
-        await tester.pumpAndSettle();
 
-        // 1. First tap initiates sync
-        await tester.tap(syncBtn);
-        await tester.pump(); // Pump frame to render syncing state
-
-        // Verify spinning indicator and synchronizing text
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
-        expect(find.text('Synchronizing Health Data...'), findsOneWidget);
-
-        // 2. Rapid double/triple taps while sync is in-flight
-        await tester.tap(syncBtn, warnIfMissed: false);
-        await tester.pump();
-        await tester.tap(syncBtn, warnIfMissed: false);
+        // 1. First call initiates sync
+        unawaited(container.read(healthConnectSyncProvider.notifier).syncNow());
         await tester.pump();
 
-        // Verify adapter was invoked only once so far
+        expect(
+            find.textContaining('Syncing workouts & weights'), findsOneWidget);
+
+        // 2. Rapid concurrent calls while sync is in-flight
+        unawaited(container.read(healthConnectSyncProvider.notifier).syncNow());
+        unawaited(container.read(healthConnectSyncProvider.notifier).syncNow());
+        await tester.pump();
+
         expect(syncAdapter.fetchWorkoutsCalls, 1);
 
         // 3. Complete the in-flight operation
         completer.complete();
         await tester.pumpAndSettle();
 
-        // Spinner is gone, status is updated
-        expect(find.byType(CircularProgressIndicator), findsNothing);
         expect(syncAdapter.fetchWorkoutsCalls, 1);
         expect(find.byKey(const Key('profile_last_sync_text')), findsOneWidget);
         expect(find.text('Just now'), findsOneWidget);
@@ -510,7 +498,7 @@ void main() {
     );
 
     testWidgets(
-      'Rapid multiple taps on Key("settings_sync_now_btn") in FoodLogSettingsScreen are guarded',
+      'Concurrent auto-sync calls are guarded by in-flight lock on FoodLogSettingsScreen',
       (tester) async {
         configureViewport(tester);
 
@@ -522,46 +510,37 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final settingsSyncBtn = find.byKey(const Key('settings_sync_now_btn'));
-
-        // Scroll until visible
-        await tester.scrollUntilVisible(
-          settingsSyncBtn,
-          300,
-          scrollable: find.byType(Scrollable).first,
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(FoodLogSettingsScreen)),
         );
-        await tester.pumpAndSettle();
 
-        // 1. First tap triggers sync
-        await tester.tap(settingsSyncBtn);
+        // 1. First call triggers sync
+        unawaited(container.read(healthConnectSyncProvider.notifier).syncNow());
         await tester.pump();
 
-        // Spinner is visible and label says "Syncing..."
-        expect(find.byType(CircularProgressIndicator), findsWidgets);
-        expect(find.text('Syncing...'), findsOneWidget);
+        expect(find.textContaining('Auto-syncing health data'), findsOneWidget);
 
-        // 2. Rapid repeated taps while in-flight
-        await tester.tap(settingsSyncBtn, warnIfMissed: false);
-        await tester.pump();
-        await tester.tap(settingsSyncBtn, warnIfMissed: false);
+        // 2. Rapid concurrent calls while in-flight
+        unawaited(container.read(healthConnectSyncProvider.notifier).syncNow());
+        unawaited(container.read(healthConnectSyncProvider.notifier).syncNow());
         await tester.pump();
 
-        // Adapter must only have been called once
         expect(syncAdapter.fetchWorkoutsCalls, 1);
 
         // 3. Complete in-flight future
         completer.complete();
         await tester.pumpAndSettle();
 
-        // Returned to normal state
-        expect(find.text('Sync Now'), findsOneWidget);
         expect(syncAdapter.fetchWorkoutsCalls, 1);
-        expect(find.text('Last synced: Just now'), findsOneWidget);
+        expect(
+          find.textContaining('Last synced: Just now'),
+          findsOneWidget,
+        );
       },
     );
 
     testWidgets(
-      'Manual sync error handling recovers button state and presents error cleanly',
+      'Auto-sync error handling recovers state and presents retry card cleanly',
       (tester) async {
         configureViewport(tester);
 
@@ -572,24 +551,17 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        final syncBtn = find.byKey(const Key('profile_sync_now_btn'));
-
-        await tester.scrollUntilVisible(
-          syncBtn,
-          300,
-          scrollable: find.byType(Scrollable).first,
+        final container = ProviderScope.containerOf(
+          tester.element(find.byType(AccountProfileScreen)),
         );
+        await container.read(healthConnectSyncProvider.notifier).syncNow();
         await tester.pumpAndSettle();
 
-        await tester.tap(syncBtn);
-        await tester.pumpAndSettle();
-
-        // Verifies no uncaught widget error; spinner dismissed
-        expect(find.byType(CircularProgressIndicator), findsNothing);
         expect(syncAdapter.fetchWorkoutsCalls, 1);
-
-        // Button should still be rendered and recoverable
-        expect(syncBtn, findsOneWidget);
+        expect(
+          find.byKey(const Key('health_sync_error_recovery_card')),
+          findsOneWidget,
+        );
       },
     );
   });

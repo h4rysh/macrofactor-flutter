@@ -104,11 +104,11 @@ void main() {
       expect(find.text('Google Health Connect'), findsOneWidget);
       expect(find.text('Connected'), findsOneWidget);
 
-      // Manual sync action card
+      // Auto-sync status card
       expect(find.byKey(const Key('health_sync_manual_card')), findsOneWidget);
       expect(find.text('Synchronization'), findsOneWidget);
-      expect(find.byKey(const Key('health_sync_trigger_btn')), findsOneWidget);
-      expect(find.text('Sync Now (30d)'), findsOneWidget);
+      expect(find.byKey(const Key('health_sync_auto_status')), findsOneWidget);
+      expect(find.textContaining('Auto-syncs past 30 days'), findsOneWidget);
       expect(find.text('30 Days'), findsOneWidget);
       expect(find.text('90 Days'), findsOneWidget);
 
@@ -121,20 +121,18 @@ void main() {
       expect(find.textContaining('100% On-Device Privacy'), findsOneWidget);
     });
 
-    testWidgets('tapping health_sync_trigger_btn triggers manual sync',
+    testWidgets(
+        'health_sync_auto_status updates timeframe text when 90d selected',
         (tester) async {
       configureViewport(tester);
 
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      expect(syncAdapter.fetchWorkoutsCalled, isFalse);
-
-      await tester.tap(find.byKey(const Key('health_sync_trigger_btn')));
+      await tester.tap(find.text('90 Days'));
       await tester.pumpAndSettle();
 
-      expect(syncAdapter.fetchWorkoutsCalled, isTrue);
-      expect(syncAdapter.fetchWeightsCalled, isTrue);
+      expect(find.textContaining('Auto-syncs past 90 days'), findsOneWidget);
     });
 
     testWidgets('renders permission prompt when permission is missing',

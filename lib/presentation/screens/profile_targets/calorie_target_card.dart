@@ -60,7 +60,7 @@ class CalorieTargetCard extends StatelessWidget {
                       child: Text(
                         isCustom
                             ? 'Custom Override Active'
-                            : 'Calculated by Expenditure Engine',
+                            : 'Based on your daily burn and goal',
                         style: TextStyle(
                           fontSize: 12,
                           color: isCustom

@@ -254,7 +254,7 @@ class _MetabolicCommandHeaderState
               const SizedBox(width: 6),
               Tooltip(
                 message:
-                    'Adherence-Neutral Coaching: Surplus or unlogged days are treated purely as data for your Kalman model — zero red warnings.',
+                    'No judgment tracking: higher-calorie or unlogged days simply help refine your targets — zero red warnings.',
                 triggerMode: TooltipTriggerMode.tap,
                 child: Container(
                   padding: const EdgeInsets.all(9),

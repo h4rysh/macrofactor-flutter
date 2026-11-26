@@ -41,15 +41,117 @@ class StrategyScreen extends ConsumerWidget {
     );
   }
 
+  void _openStrategySettingsSheet(
+    BuildContext context,
+    WidgetRef ref,
+    ProgramMode activeMode,
+    UserProfile profile,
+  ) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.background,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (sheetCtx) => DraggableScrollableSheet(
+        expand: false,
+        initialChildSize: 0.78,
+        maxChildSize: 0.92,
+        minChildSize: 0.45,
+        builder: (_, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: AppTheme.cardBorder,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const Text(
+              'Program & Goal Settings',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w800,
+                color: AppTheme.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildProgramModeCard(sheetCtx, ref, activeMode, profile),
+            const SizedBox(height: 16),
+            const AnthropometricsCard(),
+            const SizedBox(height: 16),
+            const LifestyleTelemetryStrip(),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    key: const Key('strategy_personalize_goal_btn'),
+                    onPressed: () {
+                      Navigator.pop(sheetCtx);
+                      _openQuestionnaire(context);
+                    },
+                    icon: const Icon(Icons.edit_note_rounded, size: 18),
+                    label: const Text('Edit Goal & Diet'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.activeBlue,
+                      side: BorderSide(
+                        color: AppTheme.activeBlue.withValues(alpha: 0.4),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: AppRadii.mdBorderRadius,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    key: const Key('strategy_refigure_program_btn'),
+                    onPressed: () {
+                      Navigator.pop(sheetCtx);
+                      _openSetupWizard(context);
+                    },
+                    icon: const Icon(Icons.auto_fix_high_rounded, size: 18),
+                    label: const Text('Refigure Split'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.calories,
+                      foregroundColor: AppTheme.buttonForeground,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: const RoundedRectangleBorder(
+                        borderRadius: AppRadii.mdBorderRadius,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final program = ref.watch(weeklyMacroProgramProvider);
     final profile = ref.watch(userProfileProvider);
+    final db = ref.watch(databaseProvider);
+    final isFinalized =
+        db.getSetting('strategy_program_finalized', 'false') == 'true';
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('Coaching & Strategy'),
+        title: const Text('Strategy'),
         actions: [
           IconButton(
             onPressed: () => _openHistorySheet(context),
@@ -58,9 +160,14 @@ class StrategyScreen extends ConsumerWidget {
           ),
           IconButton(
             key: const Key('strategy_goal_questionnaire_btn'),
-            onPressed: () => _openQuestionnaire(context),
+            onPressed: () => _openStrategySettingsSheet(
+              context,
+              ref,
+              program.mode,
+              profile,
+            ),
             icon: const Icon(Icons.tune_rounded, color: AppTheme.activeBlue),
-            tooltip: 'Personalize Goal & Strategy',
+            tooltip: 'Program & Goal Settings',
           ),
           const SizedBox(width: 4),
         ],
@@ -76,12 +183,85 @@ class StrategyScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // TIER 1: Above-the-Fold Metabolic Command & Active Macro Program
+                if (!isFinalized) ...[
+                  AppleStaggeredEntrance(
+                    index: 0,
+                    child: Container(
+                      key: const Key('strategy_first_run_card'),
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: AppTheme.cardSurface,
+                        borderRadius: AppRadii.xlBorderRadius,
+                        border: Border.all(
+                          color: AppTheme.activeBlue.withValues(alpha: 0.45),
+                          width: 1.2,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'SET UP YOUR STRATEGY',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.activeBlue,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Build your personalized calorie & macro plan',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w800,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Answer 4 quick questions to tailor your daily targets, protein level, and workout-day split.',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppTheme.textSecondary,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 14),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton.icon(
+                              key: const Key('strategy_first_run_setup_btn'),
+                              onPressed: () => _openSetupWizard(context),
+                              icon: const Icon(Icons.auto_fix_high_rounded,
+                                  size: 18),
+                              label: const Text('Start Strategy Setup'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.activeBlue,
+                                foregroundColor: Colors.white,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 13),
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: AppRadii.mdBorderRadius,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+
+                // 1. Goal & Check-In Summary
                 const AppleStaggeredEntrance(
                   index: 0,
                   child: MetabolicCommandHeader(),
                 ),
                 const SizedBox(height: 16),
+
+                // 2. Macro Program & 7-Day Schedule
                 const AppleStaggeredEntrance(
                   index: 1,
                   child: MacroProgramHeroCard(),
@@ -93,179 +273,29 @@ class StrategyScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
 
-                // TIER 2: Closed-Loop Coaching (Personalized Challenges & Recomp Radar)
+                // 3. Weekly Focus Challenges
                 const AppleStaggeredEntrance(
                   index: 3,
                   child: WeeklyChallengesSection(),
                 ),
                 const SizedBox(height: 16),
-                const AppleStaggeredEntrance(
-                  index: 4,
-                  child: AnthropometricsCard(),
-                ),
-                const SizedBox(height: 16),
 
-                // TIER 3: Configuration & Lifestyle Telemetry Strip
-                AppleStaggeredEntrance(
-                  index: 5,
-                  child: _buildProgramModeCard(
+                // Compact secondary settings trigger
+                OutlinedButton.icon(
+                  onPressed: () => _openStrategySettingsSheet(
                     context,
                     ref,
                     program.mode,
                     profile,
                   ),
-                ),
-                const SizedBox(height: 16),
-                const AppleStaggeredEntrance(
-                  index: 6,
-                  child: LifestyleTelemetryStrip(),
-                ),
-                const SizedBox(height: 16),
-
-                // Refined Adjust Strategy & Program Personalization Card
-                AppleStaggeredEntrance(
-                  index: 7,
-                  child: Container(
-                    key: const Key('strategy_adjust_program_card'),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.cardSurface,
-                      borderRadius: AppRadii.xlBorderRadius,
-                      border: Border.all(
-                        color: AppTheme.activeBlue.withValues(alpha: 0.25),
-                        width: 1.0,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Row(
-                          children: [
-                            Icon(
-                              Icons.tune_rounded,
-                              size: 18,
-                              color: AppTheme.activeBlue,
-                            ),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: FittedBox(
-                                fit: BoxFit.scaleDown,
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  'ADJUST STRATEGY & GOALS',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppTheme.textSecondary,
-                                    letterSpacing: 0.8,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 10),
-                        const Text(
-                          'Personalize your target rate of change, Indian diet staples, or refigure the entire macro split.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.textSecondary,
-                            height: 1.4,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: AppleBouncy(
-                                scaleDown: 0.96,
-                                onTap: () {
-                                  AppHaptics.lightImpact();
-                                  _openQuestionnaire(context);
-                                },
-                                child: Container(
-                                  key: const Key(
-                                      'strategy_personalize_goal_btn'),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 12, horizontal: 4),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.activeBlue
-                                        .withValues(alpha: 0.12),
-                                    borderRadius: AppRadii.mdBorderRadius,
-                                    border: Border.all(
-                                      color: AppTheme.activeBlue
-                                          .withValues(alpha: 0.35),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: const FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.edit_note_rounded,
-                                            size: 16,
-                                            color: AppTheme.activeBlue),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Edit Goal & Diet',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w700,
-                                            color: AppTheme.activeBlue,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: AppleBouncy(
-                                scaleDown: 0.96,
-                                onTap: () {
-                                  AppHaptics.lightImpact();
-                                  _openSetupWizard(context);
-                                },
-                                child: Container(
-                                  key: const Key(
-                                      'strategy_refigure_program_btn'),
-                                  padding: const EdgeInsets.symmetric(
-                                      vertical: 12, horizontal: 4),
-                                  decoration: const BoxDecoration(
-                                    color: AppTheme.calories,
-                                    borderRadius: AppRadii.mdBorderRadius,
-                                  ),
-                                  child: const FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Icon(Icons.auto_fix_high_rounded,
-                                            size: 16,
-                                            color: AppTheme.buttonForeground),
-                                        SizedBox(width: 4),
-                                        Text(
-                                          'Refigure Split',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w800,
-                                            color: AppTheme.buttonForeground,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                  icon: const Icon(Icons.tune_rounded, size: 18),
+                  label: const Text('Program & Goal Settings'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.textSecondary,
+                    side: const BorderSide(color: AppTheme.cardBorder),
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: AppRadii.mdBorderRadius,
                     ),
                   ),
                 ),
@@ -456,7 +486,7 @@ class StrategyScreen extends ConsumerWidget {
   String _modeDescription(ProgramMode mode) {
     switch (mode) {
       case ProgramMode.coached:
-        return 'Fully automated check-ins. Sique optimizes your calories and macro split based on your Bayesian expenditure.';
+        return 'Fully automated check-ins. Sique optimizes your calories and macros based on your daily burn.';
       case ProgramMode.collaborative:
         return 'Guided partnership. Sique sets the weekly energy budget, and you customize day distribution and macro ratios.';
       case ProgramMode.manual:

@@ -328,11 +328,12 @@ final dailyNutritionSummaryProvider = Provider<NutritionalValues>((ref) {
 
 /// Notifier for scale weight observations.
 class WeightLogsNotifier extends StateNotifier<List<ScaleWeightEntry>> {
-  WeightLogsNotifier(this._db) : super([]) {
+  WeightLogsNotifier(this._db, [this._ref]) : super([]) {
     refresh();
   }
 
   final AppDatabase _db;
+  final Ref? _ref;
 
   void refresh() {
     state = _db.getAllWeightLogs();
@@ -341,11 +342,13 @@ class WeightLogsNotifier extends StateNotifier<List<ScaleWeightEntry>> {
   void logWeight(String date, double weightKg, String? note) {
     _db.insertWeightLog(date, weightKg, note);
     refresh();
+    _ref?.invalidate(userProfileProvider);
   }
 
   void deleteWeight(String date) {
     _db.deleteWeightLogForDate(date);
     refresh();
+    _ref?.invalidate(userProfileProvider);
   }
 }
 
@@ -353,7 +356,7 @@ final weightLogsProvider =
     StateNotifierProvider<WeightLogsNotifier, List<ScaleWeightEntry>>((ref) {
   ref.watch(userDataEpochProvider);
   final db = ref.watch(databaseProvider);
-  return WeightLogsNotifier(db);
+  return WeightLogsNotifier(db, ref);
 });
 
 /// Smoothed bidirectional Weight Trend series with noise envelopes.

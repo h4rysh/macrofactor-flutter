@@ -120,7 +120,7 @@ class _ExpenditureSettingsScreenState
                       ),
                       const SizedBox(height: 2),
                       const Text(
-                        'Bayesian Kalman Estimate',
+                        'Adaptive Expenditure Estimate',
                         style: TextStyle(
                           fontSize: 10,
                           color: AppTheme.textMuted,
@@ -265,7 +265,7 @@ class _ExpenditureSettingsScreenState
   Widget _buildSensitivityCard() {
     final modes = [
       {'name': 'Conservative', 'desc': 'Dampened updates, lower variance.'},
-      {'name': 'Standard', 'desc': 'Authentic Sique Kalman response.'},
+      {'name': 'Standard', 'desc': 'Balanced day-to-day adaptation.'},
       {
         'name': 'Dynamic',
         'desc': 'Fast tracking for rapid training cycle shifts.'
@@ -283,7 +283,7 @@ class _ExpenditureSettingsScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Kalman Filter Responsiveness',
+            'Adaptation Speed',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,

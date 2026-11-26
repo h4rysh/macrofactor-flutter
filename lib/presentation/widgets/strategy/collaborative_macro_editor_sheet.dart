@@ -171,7 +171,7 @@ class _CollaborativeMacroEditorSheetState
                 const SizedBox(height: 10),
                 Text(
                   isManual
-                      ? 'Set your exact daily macro targets. Sique continues estimating your Bayesian expenditure in the background.'
+                      ? 'Set your exact daily macro targets. Sique continues tracking your daily burn in the background.'
                       : 'Your energy budget (${avgCals.round()} kcal/day) is optimized by the expenditure engine. Fine-tune your carb-to-fat balance and high-day schedule below.',
                   style: const TextStyle(
                     fontSize: 12,

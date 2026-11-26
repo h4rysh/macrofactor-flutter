@@ -394,7 +394,7 @@ class _SevenDayDistributionChartState
                 SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    'Exact weekly energy conservation: sum of 7 days matches your target deficit.',
+                    'Your 7-day total matches your weekly calorie goal.',
                     style: TextStyle(
                       fontSize: 11,
                       color: AppTheme.textSecondary,

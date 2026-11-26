@@ -160,7 +160,7 @@ void main() {
       expect(find.text('Physical Stats & Targets'), findsOneWidget);
 
       // Health Connect Card
-      expect(find.byKey(const Key('profile_sync_now_btn')), findsOneWidget);
+      expect(find.text('Google Health Connect'), findsOneWidget);
       expect(find.byKey(const Key('profile_last_sync_text')), findsOneWidget);
     });
 
@@ -196,26 +196,22 @@ void main() {
       expect(authService.signOutCalled, isTrue);
     });
 
-    testWidgets(
-        'tapping sync now button in HealthConnectSyncCard triggers sync',
+    testWidgets('HealthConnectSyncCard renders automatic sync status cleanly',
         (tester) async {
       configureViewport(tester);
 
       await tester.pumpWidget(buildTestableWidget());
       await tester.pumpAndSettle();
 
-      // Scroll to HealthConnectSyncCard
       await tester.scrollUntilVisible(
-        find.byKey(const Key('profile_sync_now_btn')),
+        find.byKey(const Key('profile_last_sync_text')),
         300,
         scrollable: find.byType(Scrollable).first,
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('profile_sync_now_btn')));
-      await tester.pumpAndSettle();
-
-      expect(syncAdapter.fetchWorkoutsCalled, isTrue);
+      expect(find.textContaining('Auto-syncs on open'), findsOneWidget);
+      expect(find.byKey(const Key('profile_sync_now_btn')), findsNothing);
     });
 
     testWidgets('demo profile button is not present on account screen',

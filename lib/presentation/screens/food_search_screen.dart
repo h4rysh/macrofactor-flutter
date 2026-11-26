@@ -7,7 +7,6 @@ import '../providers/app_providers.dart';
 import '../providers/plate_staging_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/apple_tactile_card.dart';
-import '../widgets/food/ai_describe_meal_sheet.dart';
 import '../widgets/food/barcode_scanner_sheet.dart';
 import '../widgets/food/recipe_builder_sheet.dart';
 import '../widgets/food/search_food_result_tile.dart';
@@ -195,8 +194,9 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     }
 
     if (!mounted || searchId != _searchSequence) return;
+    final rankedResults = _rankSearchResults(results, query);
     setState(() {
-      _searchResults = results;
+      _searchResults = rankedResults;
       _isLoading = false;
     });
     SemanticsService.sendAnnouncement(
@@ -204,6 +204,55 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
       '${results.length} food items found for "$query"',
       TextDirection.ltr,
     );
+  }
+
+  List<FoodItem> _rankSearchResults(List<FoodItem> items, String rawQuery) {
+    final q = rawQuery.trim().toLowerCase();
+    if (q.isEmpty || items.length <= 1) return items;
+
+    final ranked = List<FoodItem>.from(items);
+    ranked
+        .sort((a, b) => _canonicalScore(b, q).compareTo(_canonicalScore(a, q)));
+    return ranked;
+  }
+
+  int _canonicalScore(FoodItem item, String q) {
+    final name = item.name.toLowerCase().trim();
+    int score = 0;
+    if (name == q) {
+      score += 1000;
+    } else if (name.startsWith('$q ') || name.startsWith('$q/')) {
+      score += 500;
+    } else if (name.startsWith(q)) {
+      score += 350;
+    } else if (name.contains(q)) {
+      score += 150;
+    }
+
+    // Penalize size/restaurant qualifiers so the plain canonical staple ranks #1
+    const variantKeywords = [
+      'regular serving',
+      'large',
+      'small',
+      'mini',
+      'extra',
+      'restaurant',
+      'combo',
+      'stuffed',
+      'cheese',
+      'butter',
+      'ghee',
+      'dum',
+    ];
+    for (final kw in variantKeywords) {
+      if (name.contains(kw) && !q.contains(kw)) {
+        score -= 120;
+      }
+    }
+
+    // Shorter, cleaner canonical names win ties
+    score -= name.length;
+    return score;
   }
 
   void _openPlateSheet(FoodItem food) {
@@ -299,18 +348,6 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            tooltip: 'AI Describe Meal',
-            icon: const Icon(Icons.auto_awesome_rounded,
-                size: 21, color: AppTheme.calories),
-            onPressed: () {
-              AiDescribeMealSheet.show(
-                context,
-                mealType: widget.mealType,
-                loggedAt: widget.initialLoggedAt ?? DateTime.now(),
-              );
-            },
-          ),
           IconButton(
             tooltip: 'Custom Recipes',
             icon: const Icon(Icons.menu_book_rounded, size: 22),
@@ -628,6 +665,34 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                                 const SizedBox(height: 8),
                             itemBuilder: (context, index) {
                               final food = _searchResults[index];
+                              final hasQuery =
+                                  _searchController.text.trim().isNotEmpty;
+                              if (hasQuery && index == 0) {
+                                return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    _BestMatchFoodCard(
+                                      food: food,
+                                      isStaged: stagedFoodIds.contains(food.id),
+                                      onTap: () => _openPlateSheet(food),
+                                      onQuickStage: () =>
+                                          _quickAddFromSearch(food),
+                                    ),
+                                    if (_searchResults.length > 1) ...[
+                                      const SizedBox(height: 16),
+                                      const Text(
+                                        'OTHER VARIATIONS',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
+                                          color: AppTheme.textSecondary,
+                                          letterSpacing: 0.7,
+                                        ),
+                                      ),
+                                    ],
+                                  ],
+                                );
+                              }
                               return SearchFoodResultTile(
                                 food: food,
                                 searchQuery: _searchController.text,
@@ -661,6 +726,178 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
               onDone: _commitStagedPlate,
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _BestMatchFoodCard extends StatelessWidget {
+  const _BestMatchFoodCard({
+    required this.food,
+    required this.isStaged,
+    required this.onTap,
+    required this.onQuickStage,
+  });
+
+  final FoodItem food;
+  final bool isStaged;
+  final VoidCallback onTap;
+  final VoidCallback onQuickStage;
+
+  @override
+  Widget build(BuildContext context) {
+    final nutrition = food.calculateNutrition(
+      quantity: 1.0,
+      unit: food.defaultPortionUnit,
+    );
+
+    return AppleBouncy(
+      scaleDown: 0.98,
+      onTap: onTap,
+      child: Container(
+        key: const Key('food_search_best_match_card'),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              AppTheme.activeBlue.withValues(alpha: 0.16),
+              AppTheme.cardSurface,
+            ],
+          ),
+          borderRadius: AppRadii.xlBorderRadius,
+          border: Border.all(
+            color: AppTheme.activeBlue.withValues(alpha: 0.55),
+            width: 1.2,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppTheme.cardElevated,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: AppTheme.cardBorder),
+              ),
+              alignment: Alignment.center,
+              child: FoodSvgIcon(iconName: food.iconName, size: 40),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 7,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppTheme.activeBlue,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          'BEST MATCH',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: 0.6,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          food.defaultPortionUnit.unitName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppTheme.textSecondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  Text(
+                    food.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 4,
+                    children: [
+                      Text(
+                        '${nutrition.calories.round()} kcal',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: AppTheme.calories,
+                        ),
+                      ),
+                      Text(
+                        '${nutrition.protein.toStringAsFixed(1)}P',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.protein,
+                        ),
+                      ),
+                      Text(
+                        '${nutrition.fat.toStringAsFixed(1)}F',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.fat,
+                        ),
+                      ),
+                      Text(
+                        '${nutrition.carbs.toStringAsFixed(1)}C',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.carbs,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: onQuickStage,
+              child: Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: isStaged ? AppTheme.success : AppTheme.activeBlue,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  isStaged ? Icons.check_rounded : Icons.add_rounded,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

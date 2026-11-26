@@ -117,7 +117,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verify Strategy screen is displayed
-    expect(find.text('Coaching & Strategy'), findsOneWidget);
+    expect(find.text('Strategy'), findsWidgets);
     expect(find.text('ADAPTIVE TDEE'), findsOneWidget);
     expect(find.text('kcal / day avg'), findsOneWidget);
     expect(find.text('PROTEIN'), findsOneWidget);

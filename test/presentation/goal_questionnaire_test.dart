@@ -91,6 +91,16 @@ void main() {
       await tester
           .tap(find.byKey(const Key('strategy_goal_questionnaire_btn')));
       await tester.pumpAndSettle();
+      final editGoalBtn =
+          find.byKey(const Key('strategy_personalize_goal_btn'));
+      await tester.scrollUntilVisible(
+        editGoalBtn,
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(editGoalBtn);
+      await tester.pumpAndSettle();
 
       // Questionnaire sheet should be displayed
       expect(find.text('GOAL SELECTION'), findsOneWidget);
@@ -115,6 +125,16 @@ void main() {
       await tester.pumpAndSettle();
       await tester
           .tap(find.byKey(const Key('strategy_goal_questionnaire_btn')));
+      await tester.pumpAndSettle();
+      final editGoalBtn =
+          find.byKey(const Key('strategy_personalize_goal_btn'));
+      await tester.scrollUntilVisible(
+        editGoalBtn,
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(editGoalBtn);
       await tester.pumpAndSettle();
 
       // Case A: Fat Loss
@@ -173,6 +193,16 @@ void main() {
       await tester.pumpAndSettle();
       await tester
           .tap(find.byKey(const Key('strategy_goal_questionnaire_btn')));
+      await tester.pumpAndSettle();
+      final editGoalBtn =
+          find.byKey(const Key('strategy_personalize_goal_btn'));
+      await tester.scrollUntilVisible(
+        editGoalBtn,
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(editGoalBtn);
       await tester.pumpAndSettle();
 
       // Step 0: Goal -> Fat Loss
@@ -259,6 +289,16 @@ void main() {
       await tester
           .tap(find.byKey(const Key('strategy_goal_questionnaire_btn')));
       await tester.pumpAndSettle();
+      final editGoalBtn =
+          find.byKey(const Key('strategy_personalize_goal_btn'));
+      await tester.scrollUntilVisible(
+        editGoalBtn,
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(editGoalBtn);
+      await tester.pumpAndSettle();
 
       // Advance to step 5
       for (var i = 0; i < 5; i++) {
@@ -298,6 +338,16 @@ void main() {
       // Open questionnaire
       await tester
           .tap(find.byKey(const Key('strategy_goal_questionnaire_btn')));
+      await tester.pumpAndSettle();
+      final editGoalBtn =
+          find.byKey(const Key('strategy_personalize_goal_btn'));
+      await tester.scrollUntilVisible(
+        editGoalBtn,
+        200,
+        scrollable: find.byType(Scrollable).last,
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(editGoalBtn);
       await tester.pumpAndSettle();
 
       // Select Muscle Gain

@@ -27,9 +27,9 @@ class AboutScreen extends StatelessWidget {
           _buildPillarTile(
             icon: Icons.biotech_rounded,
             color: AppTheme.activeBlue,
-            title: 'Bayesian Adaptive Science',
+            title: 'Adaptive Nutrition Science',
             description:
-                'Engineered from first-principles metabolic mathematics and recursive Bayesian expenditure estimation. Caloric targets adapt dynamically to body mass standard deviations without proprietary heuristics.',
+                'Daily calorie and macro targets adapt automatically from your real weight trends and food logs—no static formulas or guesswork.',
           ),
           const SizedBox(height: 12),
           _buildPillarTile(
@@ -37,7 +37,7 @@ class AboutScreen extends StatelessWidget {
             color: AppTheme.expenditure,
             title: 'Adherence-Neutral Philosophy',
             description:
-                'Caloric recommendations adapt dynamically through a Bayesian Kalman filter. The engine does not punish deviations or reward compliance—it neutrally measures thermodynamic reality.',
+                'Targets adjust smoothly to your real progress. Sique never punishes off-plan days—every log simply helps refine your daily burn.',
           ),
           const SizedBox(height: 12),
           _buildPillarTile(
@@ -53,7 +53,7 @@ class AboutScreen extends StatelessWidget {
             color: AppTheme.trendWeight,
             title: 'Local Data Sovereignty',
             description:
-                'All nutrition entries, body weights, and profile settings are stored locally on-device in SQLite. Zero cloud tracking, zero telemetry, and 100% offline functionality.',
+                'All nutrition entries, body weights, and profile settings stay privately on your device with zero cloud tracking.',
           ),
           const SizedBox(height: 16),
           _buildLegalSection(context),

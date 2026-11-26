@@ -27,7 +27,7 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
     _defaultPortionUnit = db.getSetting('default_portion_unit', 'Grams (g)');
     _defaultOilModifier =
         db.getSetting('default_oil_modifier', 'Standard (1 tbsp oil/ghee)');
-    _showEmptyHours = db.getSetting('show_empty_hours', 'true') == 'true';
+    _showEmptyHours = db.getSetting('show_empty_hours', 'false') == 'true';
     _autoExpandMeals = db.getSetting('auto_expand_meals', 'true') == 'true';
   }
 
@@ -438,54 +438,25 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Icon(
+                syncState.isSyncing
+                    ? Icons.sync_rounded
+                    : Icons.autorenew_rounded,
+                size: 16,
+                color: AppTheme.activeBlue,
+              ),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Last synced: ${syncState.formattedLastSync}',
+                  syncState.isSyncing
+                      ? 'Auto-syncing health data...'
+                      : 'Auto-syncs on app open • Last synced: ${syncState.formattedLastSync}',
                   key: const Key('settings_last_sync_text'),
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppTheme.textMuted,
                   ),
                   overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
-              ElevatedButton.icon(
-                key: const Key('settings_sync_now_btn'),
-                onPressed: syncState.isSyncing
-                    ? null
-                    : () {
-                        ref.read(healthConnectSyncProvider.notifier).syncNow();
-                      },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.activeBlue,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppTheme.cardElevated,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-                icon: syncState.isSyncing
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.white),
-                        ),
-                      )
-                    : const Icon(Icons.refresh_rounded, size: 16),
-                label: Text(
-                  syncState.isSyncing ? 'Syncing...' : 'Sync Now',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                  ),
                 ),
               ),
             ],

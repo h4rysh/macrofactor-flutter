@@ -337,6 +337,7 @@ void main() {
 
       final food = createTestFood(id: 10, name: 'Masala Dosa');
       db.insertFood(food);
+      db.setSetting('show_empty_hours', 'true');
 
       final todayStr = DateFormat('yyyy-MM-dd').format(fixedClock);
       final yesterdayClock = fixedClock.subtract(const Duration(days: 1));

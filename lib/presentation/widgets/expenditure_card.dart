@@ -162,7 +162,7 @@ class DynamicExpenditureCard extends StatelessWidget {
             Text(
               isPaused
                   ? 'Expenditure updates paused due to ${expenditureState.consecutiveMissingDays} days of missing logs. Resume logging to reactivate.'
-                  : 'Bayesian state-space tracker adapts to your true metabolism without manual formula guesswork.',
+                  : 'Smart expenditure tracking adapts to your true metabolism over time.',
               style: AppTypography.bodySmall.copyWith(
                 fontSize: 12,
                 color: AppTheme.textSecondary,

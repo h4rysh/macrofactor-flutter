@@ -174,6 +174,7 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
 
     final db = ref.read(databaseProvider);
     db.setSetting('dietary_preference', _dietaryPref);
+    db.setSetting('strategy_program_finalized', 'true');
 
     // Return to calling screen (e.g. StrategyScreen / Dashboard)
     if (Navigator.of(context).canPop()) {

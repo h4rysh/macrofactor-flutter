@@ -210,7 +210,7 @@ class _LiveMiniPreviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       label:
-          'Dynamic Bayesian Expenditure preview showing adaptive calorie and macro target rings',
+          'Adaptive Daily Targets preview showing calorie and macro target rings',
       container: true,
       child: Container(
         padding: const EdgeInsets.all(16),
@@ -239,7 +239,7 @@ class _LiveMiniPreviewCard extends StatelessWidget {
                 const SizedBox(width: 10),
                 const Expanded(
                   child: Text(
-                    'Dynamic Bayesian Expenditure',
+                    'Adaptive Daily Targets',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -318,7 +318,7 @@ class _LiveMiniPreviewCard extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             const Text(
-              'Continuous Kalman-filter expenditure decodes your true metabolic burn from daily weigh-ins and food logs.',
+              'Your daily targets adapt automatically from your weight trends and food logs.',
               style: TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondary,

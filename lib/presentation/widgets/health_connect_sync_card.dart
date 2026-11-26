@@ -182,63 +182,37 @@ class HealthConnectSyncCard extends ConsumerWidget {
               ),
             ),
           ],
-          const SizedBox(height: 16),
-          AppleBouncy(
-            onTap: isSyncing
-                ? null
-                : () {
-                    ref.read(healthConnectSyncProvider.notifier).syncNow();
-                  },
-            child: Container(
-              key: const Key('profile_sync_now_btn'),
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: isSyncing ? AppTheme.cardElevated : AppTheme.activeBlue,
-                borderRadius: AppRadii.mdBorderRadius,
-                border:
-                    isSyncing ? Border.all(color: AppTheme.cardBorder) : null,
-              ),
-              alignment: Alignment.center,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (isSyncing) ...[
-                    const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
+          const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppTheme.cardElevated,
+              borderRadius: AppRadii.mdBorderRadius,
+              border: Border.all(color: AppTheme.cardBorder),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  isSyncing ? Icons.sync_rounded : Icons.autorenew_rounded,
+                  size: 16,
+                  color: AppTheme.activeBlue,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    isSyncing
+                        ? 'Syncing workouts & weights automatically...'
+                        : healthState.syncedWorkoutsCount == 0
+                            ? 'Auto-syncs on open. Using Google Fit? Enable "Sync Fit with Health Connect" in Fit Settings.'
+                            : 'Workouts & weights sync automatically on open.',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondary,
                     ),
-                    const SizedBox(width: 10),
-                    const Text(
-                      'Synchronizing Health Data...',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ] else ...[
-                    const Icon(
-                      Icons.sync_rounded,
-                      size: 18,
-                      color: Colors.white,
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'Sync Now',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],

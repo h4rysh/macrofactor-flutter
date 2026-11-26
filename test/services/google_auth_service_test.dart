@@ -332,8 +332,8 @@ void main() {
             (e) => e.toString(),
             'message',
             allOf(
-              contains('DEVELOPER_ERROR'),
-              contains('Firebase Console'),
+              contains('build signature'),
+              contains('Guest Mode'),
             ),
           ),
         ),

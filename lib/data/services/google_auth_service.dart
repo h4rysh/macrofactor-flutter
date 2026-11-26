@@ -117,8 +117,8 @@ class GoogleAuthServiceImpl implements AuthService {
           msg.contains('10') ||
           msg.contains('DEVELOPER_ERROR')) {
         throw Exception(
-          'Google Play Services configuration error (Code 10: DEVELOPER_ERROR). '
-          'Please ensure the Google Sign-In provider is enabled in Firebase Console.',
+          'Google Sign-In is unavailable for this build signature. '
+          'You can continue using all features in Guest Mode.',
         );
       }
       throw Exception('Google Sign-In failed: ${msg.isNotEmpty ? msg : code}');

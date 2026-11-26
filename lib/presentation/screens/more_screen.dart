@@ -87,8 +87,7 @@ class MoreScreen extends ConsumerWidget {
                   context: context,
                   icon: Icons.monitor_weight_outlined,
                   title: 'Expenditure & Weight Settings',
-                  subtitle:
-                      'Bayesian Kalman sensitivity, trend weight noise smoothing',
+                  subtitle: 'Adaptation speed & weight trend smoothing',
                   destination: const ExpenditureSettingsScreen(),
                 ),
               ),

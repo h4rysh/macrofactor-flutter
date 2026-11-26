@@ -3,7 +3,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/food_models.dart';
-import '../../domain/models/user_profile.dart';
 import '../../domain/services/home_widget_sync_service.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
@@ -14,7 +13,6 @@ import '../widgets/food/day_note_banner.dart';
 import '../widgets/food/quick_add_macros_sheet.dart';
 import '../widgets/nutrition_summary_banner.dart';
 import '../widgets/persistent_search_bar.dart';
-import '../widgets/sique_frosted_chrome.dart';
 import '../widgets/timeline_hour_slot.dart';
 import 'food_search_screen.dart';
 import 'plate_serving_sheet.dart';
@@ -287,8 +285,12 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     final db = ref.read(databaseProvider);
     final yesterdayLogs = db.getFoodLogsForDate(yesterdayStr);
 
-    // Continuous 24-hour timeline slots (12 AM to 11 PM)
-    final allHours = List<int>.generate(24, (i) => i);
+    // Continuous 24-hour timeline slots (12 AM to 11 PM) when enabled;
+    // otherwise only show hours with logged meals for a clean diary view.
+    final showEmptyHours = db.getSetting('show_empty_hours', 'false') == 'true';
+    final visibleHours = showEmptyHours
+        ? List<int>.generate(24, (i) => i)
+        : (dayLogs.map((e) => e.loggedAt.hour).toSet().toList()..sort());
 
     return Scaffold(
       backgroundColor: AppTheme.background,
@@ -373,17 +375,6 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
 
                 const SliverToBoxAdapter(child: SizedBox(height: 8)),
 
-                // 3. Sticky collapsing 44dp remaining-macros strip pinned on scroll
-                SliverPersistentHeader(
-                  pinned: true,
-                  delegate: _StickyMacroHeaderDelegate(
-                    consumed: dailyAggregate,
-                    targets: macroTargets,
-                  ),
-                ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
                 SliverToBoxAdapter(
                   child: DayNoteAndRepeatsBanner(date: selectedDate),
                 ),
@@ -400,98 +391,161 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                     ),
                   ),
 
-                // 4. Hourly Timeline Slots
-                SliverList(
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) {
-                      final hour = allHours[index];
-                      final hourEntries = dayLogs
-                          .where((e) => e.loggedAt.hour == hour)
-                          .toList();
-                      final hourYesterday = yesterdayLogs
-                          .where((e) => e.loggedAt.hour == hour)
-                          .toList();
-                      final activeFast = ref.watch(fastingSessionProvider);
-                      final slotDt = DateTime(selectedDate.year,
-                          selectedDate.month, selectedDate.day, hour);
-                      final isFastingHour = activeFast != null &&
-                          !slotDt.isBefore(activeFast.startTime) &&
-                          slotDt.isBefore(activeFast.targetEndTime);
-
-                      return TimelineHourSlot(
-                        hour: hour,
-                        entries: hourEntries,
-                        isCollapsed: _isCollapsed,
-                        isFastingWindow: isFastingHour,
-                        onAddTap: () => _onAddForHour(hour),
-                        onEntryTap: _onEntryTap,
-                        yesterdayEntries: hourYesterday,
-                        onCopyYesterday: (entriesToCopy) =>
-                            _copyYesterdayEntries(
-                          entriesToCopy,
-                          selectedDate,
-                          hour,
+                // 4. Hourly Timeline Slots (or clean empty state when empty slots are hidden)
+                if (visibleHours.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+                      child: Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppTheme.cardSurface,
+                          borderRadius: BorderRadius.circular(18),
+                          border: Border.all(color: AppTheme.cardBorder),
                         ),
-                        onEntryDuplicate: (entry) {
-                          HapticFeedback.lightImpact();
-                          final newLoggedAt = ref.read(clockProvider)();
-                          ref.read(dailyFoodLogsProvider.notifier).addEntry(
-                                food: entry.food,
-                                portionUnit: entry.portionUnit,
-                                quantity: entry.quantity,
-                                mealType: entry.mealType,
-                                oilModifier: entry.oilModifier,
-                                loggedAt: newLoggedAt,
-                              );
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Duplicated ${entry.foodName}'),
-                              action: SnackBarAction(
-                                label: 'Undo',
-                                textColor: AppTheme.activeBlue,
-                                onPressed: () {
-                                  final logs = ref.read(dailyFoodLogsProvider);
-                                  if (logs.isNotEmpty) {
+                        child: Column(
+                          children: [
+                            const Icon(
+                              Icons.restaurant_menu_rounded,
+                              size: 36,
+                              color: AppTheme.textMuted,
+                            ),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'No meals logged yet',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Search or scan a food below to start your day.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  FoodSearchScreen.route(
+                                    initialLoggedAt: selectedDate,
+                                  ),
+                                );
+                              },
+                              icon: const Icon(Icons.add_rounded, size: 18),
+                              label: const Text('Log Food'),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppTheme.activeBlue,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) {
+                        final hour = visibleHours[index];
+                        final hourEntries = dayLogs
+                            .where((e) => e.loggedAt.hour == hour)
+                            .toList();
+                        final hourYesterday = yesterdayLogs
+                            .where((e) => e.loggedAt.hour == hour)
+                            .toList();
+                        final activeFast = ref.watch(fastingSessionProvider);
+                        final slotDt = DateTime(selectedDate.year,
+                            selectedDate.month, selectedDate.day, hour);
+                        final isFastingHour = activeFast != null &&
+                            !slotDt.isBefore(activeFast.startTime) &&
+                            slotDt.isBefore(activeFast.targetEndTime);
+
+                        return TimelineHourSlot(
+                          hour: hour,
+                          entries: hourEntries,
+                          isCollapsed: _isCollapsed,
+                          isFastingWindow: isFastingHour,
+                          onAddTap: () => _onAddForHour(hour),
+                          onEntryTap: _onEntryTap,
+                          yesterdayEntries: hourYesterday,
+                          onCopyYesterday: (entriesToCopy) =>
+                              _copyYesterdayEntries(
+                            entriesToCopy,
+                            selectedDate,
+                            hour,
+                          ),
+                          onEntryDuplicate: (entry) {
+                            HapticFeedback.lightImpact();
+                            final newLoggedAt = ref.read(clockProvider)();
+                            ref.read(dailyFoodLogsProvider.notifier).addEntry(
+                                  food: entry.food,
+                                  portionUnit: entry.portionUnit,
+                                  quantity: entry.quantity,
+                                  mealType: entry.mealType,
+                                  oilModifier: entry.oilModifier,
+                                  loggedAt: newLoggedAt,
+                                );
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Duplicated ${entry.foodName}'),
+                                action: SnackBarAction(
+                                  label: 'Undo',
+                                  textColor: AppTheme.activeBlue,
+                                  onPressed: () {
+                                    final logs =
+                                        ref.read(dailyFoodLogsProvider);
+                                    if (logs.isNotEmpty) {
+                                      ref
+                                          .read(dailyFoodLogsProvider.notifier)
+                                          .removeEntry(logs.last.id);
+                                    }
+                                  },
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 5),
+                              ),
+                            );
+                          },
+                          onEntryDelete: (entry) {
+                            HapticFeedback.heavyImpact();
+                            ref
+                                .read(dailyFoodLogsProvider.notifier)
+                                .removeEntry(entry.id);
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Removed ${entry.foodName}'),
+                                action: SnackBarAction(
+                                  label: 'Undo',
+                                  textColor: AppTheme.activeBlue,
+                                  onPressed: () {
                                     ref
                                         .read(dailyFoodLogsProvider.notifier)
-                                        .removeEntry(logs.last.id);
-                                  }
-                                },
+                                        .restoreEntry(entry);
+                                  },
+                                ),
+                                behavior: SnackBarBehavior.floating,
+                                duration: const Duration(seconds: 5),
                               ),
-                              behavior: SnackBarBehavior.floating,
-                              duration: const Duration(seconds: 5),
-                            ),
-                          );
-                        },
-                        onEntryDelete: (entry) {
-                          HapticFeedback.heavyImpact();
-                          ref
-                              .read(dailyFoodLogsProvider.notifier)
-                              .removeEntry(entry.id);
-                          ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Removed ${entry.foodName}'),
-                              action: SnackBarAction(
-                                label: 'Undo',
-                                textColor: AppTheme.activeBlue,
-                                onPressed: () {
-                                  ref
-                                      .read(dailyFoodLogsProvider.notifier)
-                                      .restoreEntry(entry);
-                                },
-                              ),
-                              behavior: SnackBarBehavior.floating,
-                              duration: const Duration(seconds: 5),
-                            ),
-                          );
-                        },
-                      );
-                    },
-                    childCount: allHours.length,
+                            );
+                          },
+                        );
+                      },
+                      childCount: visibleHours.length,
+                    ),
                   ),
-                ),
 
                 // Bottom padding to avoid persistent search bar and navigation dock overlap (ISS-7-01)
                 const SliverToBoxAdapter(child: SizedBox(height: 110)),
@@ -546,130 +600,5 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
         ),
       ),
     );
-  }
-}
-
-/// Sticky collapsing 44dp remaining-macros strip pinned at the top on scroll.
-class _StickyMacroHeaderDelegate extends SliverPersistentHeaderDelegate {
-  _StickyMacroHeaderDelegate({
-    required this.consumed,
-    required this.targets,
-  });
-
-  final DailyNutritionAggregate consumed;
-  final MacroTargets targets;
-
-  @override
-  double get minExtent => 44.0;
-
-  @override
-  double get maxExtent => 44.0;
-
-  @override
-  Widget build(
-    BuildContext context,
-    double shrinkOffset,
-    bool overlapsContent,
-  ) {
-    final remCals = (targets.targetCalories - consumed.totalCalories).round();
-    final isOver = remCals < 0;
-    final calsText = isOver
-        ? '+${remCals.abs()} kcal · Adapts automatically'
-        : '$remCals kcal left';
-    final calsColor = isOver ? const Color(0xFF818CF8) : AppTheme.calories;
-
-    final remP = (targets.targetProteinGrams - consumed.totalProtein)
-        .clamp(0.0, 999.0)
-        .round();
-    final remF =
-        (targets.targetFatGrams - consumed.totalFat).clamp(0.0, 999.0).round();
-    final remC = (targets.targetCarbsGrams - consumed.totalCarbs)
-        .clamp(0.0, 999.0)
-        .round();
-
-    return SiqueFrostedChrome(
-      child: Container(
-        height: 44,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: AppTheme.cardSurface.withValues(alpha: 0.90),
-          border: const Border(
-            bottom: BorderSide(color: AppTheme.cardBorder, width: 0.5),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    isOver
-                        ? Icons.auto_mode_rounded
-                        : Icons.local_fire_department_rounded,
-                    size: 16,
-                    color: calsColor,
-                  ),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(
-                      calsText,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: calsColor,
-                        fontFeatures: const [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  '${remP}P',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.protein,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${remF}F',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.fat,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  '${remC}C',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: AppTheme.carbs,
-                    fontFeatures: [FontFeature.tabularFigures()],
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  @override
-  bool shouldRebuild(covariant _StickyMacroHeaderDelegate oldDelegate) {
-    return oldDelegate.consumed != consumed || oldDelegate.targets != targets;
   }
 }

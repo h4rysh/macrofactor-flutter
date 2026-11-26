@@ -692,7 +692,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Zero Tracking • Local-First Architecture\nYour health and nutrition data never leaves your device. All calculations, database tables, and algorithm filters operate 100% offline via local SQLite.',
+              'Zero Tracking • Private by Default\nYour health and nutrition data never leaves your device. All calculations and logs stay 100% offline on this device.',
               style: TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondary,

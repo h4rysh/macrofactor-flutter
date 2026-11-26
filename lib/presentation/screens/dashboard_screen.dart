@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../domain/models/lifestyle_models.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animated_primitives.dart';
@@ -40,8 +39,6 @@ class DashboardScreen extends ConsumerWidget {
     final latestTrendPoint = ref.watch(latestTrendWeightProvider);
     final profile = ref.watch(userProfileProvider);
     final useLbs = ref.watch(useImperialUnitsProvider);
-    final waterMl = ref.watch(dailyWaterProvider);
-    final activeFast = ref.watch(fastingSessionProvider);
     final currentUser = ref.watch(currentUserProvider);
     final syncState = ref.watch(healthConnectSyncProvider);
 
@@ -230,21 +227,9 @@ class DashboardScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(height: 12),
-
-                      // Compact Daily Lifestyle Rhythm Strip (Water + Fasting 1-Tap Controls)
-                      AppleStaggeredEntrance(
-                        index: 1,
-                        child: _buildDailyHabitStrip(
-                          ref: ref,
-                          waterMl: waterMl,
-                          waterTargetMl: profile.dailyWaterTargetMl,
-                          activeFast: activeFast,
-                        ),
-                      ),
                       const SizedBox(height: 16),
 
-                      // B. Dynamic Bayesian Energy Expenditure V3 + Chart
+                      // B. Adaptive Energy Expenditure + Chart
                       AppleStaggeredEntrance(
                         index: 2,
                         child: DynamicExpenditureCard(
@@ -282,135 +267,6 @@ class DashboardScreen extends ConsumerWidget {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildDailyHabitStrip({
-    required WidgetRef ref,
-    required int waterMl,
-    required int waterTargetMl,
-    required FastingSession? activeFast,
-  }) {
-    final targetL = (waterTargetMl / 1000).toStringAsFixed(1);
-    final currentL = (waterMl / 1000).toStringAsFixed(2);
-    final elapsedHrs = activeFast != null
-        ? DateTime.now().difference(activeFast.startTime).inHours
-        : 0;
-    final elapsedMins = activeFast != null
-        ? DateTime.now().difference(activeFast.startTime).inMinutes % 60
-        : 0;
-
-    return Row(
-      children: [
-        Expanded(
-          child: AppleBouncy(
-            scaleDown: 0.96,
-            onTap: () {
-              AppHaptics.lightImpact();
-              ref.read(dailyWaterProvider.notifier).addWater(250);
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppTheme.cardSurface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: AppTheme.activeBlue.withValues(alpha: 0.28),
-                  width: 0.9,
-                ),
-              ),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.water_drop_rounded,
-                        size: 16, color: AppTheme.activeBlue),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${currentL}L / ${targetL}L',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.textPrimary,
-                        fontFeatures: [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppTheme.activeBlue.withValues(alpha: 0.16),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Text(
-                        '+250ml',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.activeBlue,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: AppleBouncy(
-            scaleDown: 0.96,
-            onTap: () {
-              AppHaptics.mediumImpact();
-              if (activeFast == null) {
-                ref
-                    .read(fastingSessionProvider.notifier)
-                    .startFast(FastingProtocol.f16_8);
-              } else {
-                ref.read(fastingSessionProvider.notifier).endFast();
-              }
-            },
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: AppTheme.cardSurface,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: const Color(0xFFAB47BC).withValues(alpha: 0.28),
-                  width: 0.9,
-                ),
-              ),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.timer_outlined,
-                        size: 16, color: Color(0xFFAB47BC)),
-                    const SizedBox(width: 6),
-                    Text(
-                      activeFast != null
-                          ? 'Fasting ${elapsedHrs}h ${elapsedMins}m'
-                          : 'Start 16:8 Fast',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.textPrimary,
-                        fontFeatures: [FontFeature.tabularFigures()],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 

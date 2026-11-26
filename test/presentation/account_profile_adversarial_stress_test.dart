@@ -496,18 +496,6 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
       await tester.pumpAndSettle();
 
-      // Rapidly burst tap Health Connect Sync Now button
-      final syncBtn = find.byKey(const Key('profile_sync_now_btn'));
-      await tester.scrollUntilVisible(syncBtn, 300,
-          scrollable: find.byType(Scrollable).first);
-      await tester.pumpAndSettle();
-
-      for (int i = 0; i < 15; i++) {
-        await tester.tap(syncBtn, warnIfMissed: false);
-      }
-      await tester.pump(const Duration(milliseconds: 50));
-      await tester.pumpAndSettle();
-
       // Rapidly burst tap Edit button on PhysicalStatsSummaryCard
       final editBtn = find.byKey(const Key('physical_stats_edit_btn'));
       expect(editBtn, findsOneWidget);

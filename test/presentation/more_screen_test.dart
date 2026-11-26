@@ -202,7 +202,7 @@ void main() {
       expect(find.byType(AboutScreen), findsOneWidget);
       expect(find.text('Sique'), findsOneWidget);
       expect(find.text('Indian Edition • Adherence-Neutral'), findsOneWidget);
-      expect(find.text('Bayesian Adaptive Science'), findsOneWidget);
+      expect(find.text('Adaptive Nutrition Science'), findsOneWidget);
       expect(find.text('ICMR-NIN IFCT 2017 Database'), findsOneWidget);
       expect(find.text('Local Data Sovereignty'), findsOneWidget);
 
