@@ -19,17 +19,23 @@ class OpenFoodFactsService {
   final http.Client _client;
 
   static const Duration _requestTimeout = Duration(seconds: 5);
+  static const Duration _cacheTtl = Duration(days: 30);
+
+  void close() {
+    _client.close();
+  }
 
   /// Resolves a scanned barcode string. Checks SQLite `barcode_cache` first;
-  /// if missing and device is online, queries OpenFoodFacts v2, caches locally,
+  /// if missing or stale and device is online, queries OpenFoodFacts v2, caches locally,
   /// and returns the normalized product. Never throws on network loss.
   Future<BarcodeFoodProduct?> lookupBarcode(String rawBarcode) async {
     final normalized = _normalizeBarcode(rawBarcode);
     if (normalized == null) return null;
 
-    // 1. Offline cache hit
+    // 1. Offline cache hit (within TTL)
     final cached = _barcodeDao.getByBarcode(normalized);
-    if (cached != null) {
+    if (cached != null &&
+        DateTime.now().difference(cached.cachedAt) <= _cacheTtl) {
       return cached;
     }
 
@@ -62,8 +68,13 @@ class OpenFoodFactsService {
 
       final rawName = (productMap['product_name'] as String?)?.trim() ?? '';
       if (rawName.isEmpty) return null;
+      final safeName =
+          rawName.length > 160 ? rawName.substring(0, 160) : rawName;
 
       final rawBrand = (productMap['brands'] as String?)?.trim();
+      final safeBrand = rawBrand != null && rawBrand.isNotEmpty
+          ? (rawBrand.length > 120 ? rawBrand.substring(0, 120) : rawBrand)
+          : null;
       final nutriments = productMap['nutriments'];
       if (nutriments is! Map<String, dynamic>) return null;
 
@@ -80,20 +91,32 @@ class OpenFoodFactsService {
           !carbs.isFinite ||
           !fat.isFinite ||
           !fiber.isFinite ||
-          !servingG.isFinite) {
+          !servingG.isFinite ||
+          kcal < 0 ||
+          kcal > 1000 ||
+          protein < 0 ||
+          protein > 100 ||
+          carbs < 0 ||
+          carbs > 100 ||
+          fat < 0 ||
+          fat > 100 ||
+          fiber < 0 ||
+          fiber > 100 ||
+          servingG <= 0 ||
+          servingG > 5000) {
         return null;
       }
 
       final product = BarcodeFoodProduct(
         barcode: normalized,
-        foodName: rawName,
-        brandName: (rawBrand != null && rawBrand.isNotEmpty) ? rawBrand : null,
+        foodName: safeName,
+        brandName: safeBrand,
         servingSizeG: servingG,
-        caloriesPer100g: kcal < 0 ? 0.0 : kcal,
-        proteinPer100g: protein < 0 ? 0.0 : protein,
-        carbsPer100g: carbs < 0 ? 0.0 : carbs,
-        fatPer100g: fat < 0 ? 0.0 : fat,
-        fiberPer100g: fiber < 0 ? 0.0 : fiber,
+        caloriesPer100g: kcal,
+        proteinPer100g: protein,
+        carbsPer100g: carbs,
+        fatPer100g: fat,
+        fiberPer100g: fiber,
         cachedAt: DateTime.now(),
       );
 
@@ -132,10 +155,13 @@ class OpenFoodFactsService {
   }
 
   double _parseServingGrams(Object? raw) {
-    if (raw is num && raw > 0) return raw.toDouble();
+    if (raw is num && raw.isFinite && raw > 0) return raw.toDouble();
     if (raw is String) {
-      final parsed = double.tryParse(raw.replaceAll(RegExp(r'[^0-9.]'), ''));
-      if (parsed != null && parsed > 0) return parsed;
+      final match = RegExp(r'(\d+(?:[.,]\d+)?)').firstMatch(raw);
+      if (match != null) {
+        final parsed = double.tryParse(match.group(1)!.replaceAll(',', '.'));
+        if (parsed != null && parsed.isFinite && parsed > 0) return parsed;
+      }
     }
     return 100.0;
   }

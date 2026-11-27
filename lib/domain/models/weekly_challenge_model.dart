@@ -79,6 +79,7 @@ class WeeklyChallengeModel {
 
   /// Progress fraction in [0.0, 1.0].
   double get progressFraction {
+    if (!targetValue.isFinite || !currentValue.isFinite) return 0.0;
     if (targetValue <= 0.0) return 1.0;
     return math.min(1.0, math.max(0.0, currentValue / targetValue));
   }
@@ -103,6 +104,7 @@ class WeeklyChallengeModel {
     DateTime? weekStartDate,
     DateTime? weekEndDate,
     DateTime? completedAt,
+    bool clearCompletedAt = false,
     DateTime? createdAt,
   }) {
     return WeeklyChallengeModel(
@@ -118,7 +120,7 @@ class WeeklyChallengeModel {
       status: status ?? this.status,
       weekStartDate: weekStartDate ?? this.weekStartDate,
       weekEndDate: weekEndDate ?? this.weekEndDate,
-      completedAt: completedAt ?? this.completedAt,
+      completedAt: clearCompletedAt ? null : (completedAt ?? this.completedAt),
       createdAt: createdAt ?? this.createdAt,
     );
   }

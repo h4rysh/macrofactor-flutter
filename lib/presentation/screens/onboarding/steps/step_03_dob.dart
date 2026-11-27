@@ -125,7 +125,7 @@ class _Step03DobState extends ConsumerState<Step03Dob> {
     return OnboardingStepScaffold(
       title: 'How old are you?',
       subtitle:
-          'Metabolic expenditure and TDEE shift predictably with biological age.',
+          'Metabolic expenditure and daily calorie targets shift predictably with biological age.',
       icon: Icons.cake_outlined,
       continueKey: const Key('step_03_continue_btn'),
       isContinueEnabled: _isAdult,

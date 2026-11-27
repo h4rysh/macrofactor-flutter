@@ -62,6 +62,12 @@ class AppColors {
   /// (4.08:1 on cardBorder, 4.45:1 on cardElevated, 5.34:1 on background).
   static const Color activeBlue = Color(0xFF3B82F6);
 
+  /// Accessible blue text/icon color on dark surfaces (#60A5FA, 6.65:1 on cardElevated).
+  static const Color activeBlueText = Color(0xFF60A5FA);
+
+  /// Accessible error/rose text color on dark surfaces (#FB7185, 5.92:1 on cardElevated).
+  static const Color errorText = Color(0xFFFB7185);
+
   /// High-contrast foreground text/icon color for primary buttons (#0B0B0E).
   /// Ensures 6.21:1 contrast on flame orange ([calories]) button backgrounds.
   static const Color buttonForeground = Color(0xFF0B0B0E);

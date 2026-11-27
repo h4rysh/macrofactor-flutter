@@ -45,7 +45,7 @@ class WizardPreviewStep extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Algorithmic targets calibrated to your physiology and preferences.',
+          'Personalised targets calibrated to your physiology and preferences.',
           style: TextStyle(
             fontSize: 14,
             color: AppTheme.textSecondary,
@@ -67,7 +67,7 @@ class WizardPreviewStep extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Estimated Burn (TDEE)',
+                    'Estimated Daily Burn',
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textSecondary,

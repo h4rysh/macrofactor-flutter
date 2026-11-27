@@ -225,8 +225,7 @@ void main() {
       // Calculation card is expandable
       await tester.tap(find.byKey(const Key('step_13_calculation_expandable')));
       await tester.pumpAndSettle();
-      expect(
-          find.textContaining('Resting BMR (Mifflin-St Jeor)'), findsOneWidget);
+      expect(find.textContaining('Resting Daily Burn (BMR)'), findsOneWidget);
 
       // Enable manual override switch
       await tester.tap(find.byKey(const Key('step_13_override_toggle')));

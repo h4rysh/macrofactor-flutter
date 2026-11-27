@@ -103,8 +103,10 @@ class GoogleAccountCard extends ConsumerWidget {
                           size: 16,
                           color: AppTheme.calories,
                         ),
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                        constraints: const BoxConstraints(
+                          minWidth: 48,
+                          minHeight: 48,
+                        ),
                         onPressed: () => ref
                             .read(authNotifierProvider.notifier)
                             .clearError(),
@@ -181,13 +183,14 @@ class GoogleAccountCard extends ConsumerWidget {
         width: 52,
         height: 52,
         child: user.photoUrl != null && user.photoUrl!.isNotEmpty
-            ? CircleAvatar(
-                radius: 26,
-                backgroundColor: AppTheme.cardElevated,
-                backgroundImage: NetworkImage(user.photoUrl!),
-                onBackgroundImageError: (_, __) {},
-                child:
-                    user.photoUrl == null ? _buildFallbackInitial(user) : null,
+            ? ClipOval(
+                child: Image.network(
+                  user.photoUrl!,
+                  width: 52,
+                  height: 52,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => _buildFallbackInitial(user),
+                ),
               )
             : _buildFallbackInitial(user),
       ),

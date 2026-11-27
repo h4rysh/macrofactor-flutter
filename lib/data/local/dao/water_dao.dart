@@ -86,18 +86,27 @@ class WaterDao {
     }
   }
 
-  /// Retrieves all water logs for the tenant ordered chronologically.
-  List<WaterLog> getAllWaterLogs({int limit = 2000, String? userId}) {
+  /// Retrieves water logs for the tenant ordered chronologically.
+  List<WaterLog> getAllWaterLogs({int? limit, String? userId}) {
     final uid = userId ?? effectiveUserId;
-    final stmt = _db.prepare('''
-      SELECT * FROM water_logs
-      WHERE user_id = ?
-      ORDER BY date ASC, logged_at ASC
-      LIMIT ?;
-    ''');
+    final sql = limit != null && limit > 0
+        ? '''
+          SELECT * FROM water_logs
+          WHERE user_id = ?
+          ORDER BY date DESC, logged_at DESC
+          LIMIT ?;
+        '''
+        : '''
+          SELECT * FROM water_logs
+          WHERE user_id = ?
+          ORDER BY date ASC, logged_at ASC;
+        ''';
+    final stmt = _db.prepare(sql);
 
     try {
-      final rows = stmt.select([uid, limit]);
+      final rows = limit != null && limit > 0
+          ? stmt.select([uid, limit]).reversed
+          : stmt.select([uid]);
       return rows.map(WaterLog.fromRow).toList();
     } finally {
       stmt.dispose();

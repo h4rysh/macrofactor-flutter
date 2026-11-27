@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:sique/presentation/providers/health_sync_providers.dart';
+import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 
 /// Dedicated settings and diagnostics screen for Health Connect synchronization.
@@ -15,6 +15,14 @@ class HealthSyncSettingsScreen extends ConsumerStatefulWidget {
 class _HealthSyncSettingsScreenState
     extends ConsumerState<HealthSyncSettingsScreen> {
   int _selectedDays = 30;
+
+  @override
+  void initState() {
+    super.initState();
+    final saved =
+        ref.read(databaseProvider).getSetting('hc_trailing_days', '30');
+    _selectedDays = int.tryParse(saved) == 90 ? 90 : 30;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -175,7 +183,11 @@ class _HealthSyncSettingsScreenState
             ],
             selected: {_selectedDays},
             onSelectionChanged: (Set<int> newSelection) {
-              setState(() => _selectedDays = newSelection.first);
+              final next = newSelection.first;
+              ref
+                  .read(databaseProvider)
+                  .setSetting('hc_trailing_days', next.toString());
+              setState(() => _selectedDays = next);
             },
             style: SegmentedButton.styleFrom(
               selectedBackgroundColor:

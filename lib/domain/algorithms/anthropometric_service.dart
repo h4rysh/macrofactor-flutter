@@ -31,7 +31,14 @@ class AnthropometricService {
     required double neckCm,
     double? hipsCm,
   }) {
-    if (heightCm <= 0 || waistCm <= 0 || neckCm <= 0) return null;
+    if (!heightCm.isFinite ||
+        !waistCm.isFinite ||
+        !neckCm.isFinite ||
+        heightCm <= 0 ||
+        waistCm <= 0 ||
+        neckCm <= 0) {
+      return null;
+    }
 
     final heightIn = heightCm / 2.54;
     final waistIn = waistCm / 2.54;
@@ -39,22 +46,22 @@ class AnthropometricService {
 
     if (isMale) {
       final waistMinusNeckIn = waistIn - neckIn;
-      if (waistMinusNeckIn <= 0) return null;
+      if (waistMinusNeckIn <= 0.5) return null;
 
       final logDiff = _log10(waistMinusNeckIn);
       final logHeight = _log10(heightIn);
       final bf = (86.010 * logDiff) - (70.041 * logHeight) + 36.76;
-      return bf.clamp(3.0, 60.0);
+      return bf.isFinite ? bf.clamp(3.0, 60.0) : null;
     } else {
-      if (hipsCm == null || hipsCm <= 0) return null;
+      if (hipsCm == null || !hipsCm.isFinite || hipsCm <= 0) return null;
       final hipsIn = hipsCm / 2.54;
       final sumMinusNeckIn = waistIn + hipsIn - neckIn;
-      if (sumMinusNeckIn <= 0) return null;
+      if (sumMinusNeckIn <= 0.5) return null;
 
       final logSum = _log10(sumMinusNeckIn);
       final logHeight = _log10(heightIn);
       final bf = (163.205 * logSum) - (97.684 * logHeight) - 78.387;
-      return bf.clamp(8.0, 65.0);
+      return bf.isFinite ? bf.clamp(8.0, 65.0) : null;
     }
   }
 
@@ -102,6 +109,15 @@ class AnthropometricService {
     double alpha = 0.30,
     int deltaDays = 7,
   }) {
+    if (!currentObservedCm.isFinite || currentObservedCm <= 0) {
+      return previousSmoothedCm.isFinite ? previousSmoothedCm : 0.0;
+    }
+    if (!previousSmoothedCm.isFinite || previousSmoothedCm <= 0) {
+      return currentObservedCm;
+    }
+    if (deltaDays <= 0) {
+      return (currentObservedCm + previousSmoothedCm) / 2.0;
+    }
     final baseAlpha = alpha.clamp(0.05, 0.95);
     final effectiveDays = deltaDays.clamp(1, 30);
     final alphaEff = (1.0 - math.pow(1.0 - baseAlpha, effectiveDays / 7.0))

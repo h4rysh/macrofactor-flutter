@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/algorithms/coaching_engine.dart';
 import '../../../domain/models/user_profile.dart';
+import '../../../utils/unit_formatter.dart';
 import '../../providers/app_providers.dart';
 import '../../theme/app_theme.dart';
 import '../apple_sheet_grabber.dart';
@@ -27,6 +28,7 @@ class CheckinReviewSheet extends ConsumerWidget {
         Icon(icon, size: 16, color: iconColor),
         const SizedBox(width: 8),
         Expanded(
+          flex: 3,
           child: Text(
             label,
             style: const TextStyle(
@@ -36,13 +38,21 @@ class CheckinReviewSheet extends ConsumerWidget {
             ),
           ),
         ),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w700,
-            color: AppTheme.textPrimary,
-            fontFeatures: [FontFeature.tabularFigures()],
+        const SizedBox(width: 8),
+        Flexible(
+          flex: 2,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
           ),
         ),
       ],
@@ -51,7 +61,6 @@ class CheckinReviewSheet extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bottomPadding = MediaQuery.of(context).padding.bottom;
     final delta = recommendation.calorieDelta;
     final isIncrease = delta > 0;
     final isZero = delta == 0;
@@ -68,12 +77,7 @@ class CheckinReviewSheet extends ConsumerWidget {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            12,
-            20,
-            bottomPadding > 0 ? bottomPadding : 16,
-          ),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -286,7 +290,7 @@ class CheckinReviewSheet extends ConsumerWidget {
                           child: Text(
                             recommendation.silentRecompDetected
                                 ? 'Silent Recomp: Calories held to preserve muscle gain.'
-                                : 'Flux Damping: Adjustment smoothed within safe asymmetric boundaries ([-100, +150 kcal]).',
+                                : 'Protected Adjustment: Weekly changes stay within safe bounds (-100 to +150 kcal).',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -333,9 +337,10 @@ class CheckinReviewSheet extends ConsumerWidget {
                       const Divider(height: 16, color: AppTheme.cardBorder),
                       _buildMathRow(
                         label: 'Trend Weight Shift vs Target',
-                        value: recommendation.calorieDelta >= 0
-                            ? '+${(recommendation.calorieDelta / 7700 * 7).toStringAsFixed(2)} kg/wk'
-                            : '-${(recommendation.calorieDelta.abs() / 7700 * 7).toStringAsFixed(2)} kg/wk',
+                        value: UnitFormatter.formatWeeklyRate(
+                          recommendation.calorieDelta / 7700.0 * 7.0,
+                          useLbs: ref.watch(useImperialUnitsProvider),
+                        ),
                         icon: Icons.trending_up_rounded,
                         iconColor: AppTheme.trendWeight,
                       ),

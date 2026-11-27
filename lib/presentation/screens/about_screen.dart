@@ -43,9 +43,9 @@ class AboutScreen extends StatelessWidget {
           _buildPillarTile(
             icon: Icons.restaurant_rounded,
             color: AppTheme.fat,
-            title: 'ICMR-NIN IFCT 2017 Database',
+            title: 'Verified Regional & Global Food Database',
             description:
-                'Nutritional values are directly sourced and transcribed from the Indian Council of Medical Research and National Institute of Nutrition (ICMR-NIN Indian Food Composition Tables 2017). Features 528 verified Indian foods from National Institute of Nutrition, Hyderabad with authentic regional staples and verified macro profiles.',
+                'Over 2,400 curated foods grounded in the Indian Food Composition Tables (NIN Hyderabad) alongside global staples, with verified macro and micronutrient profiles.',
           ),
           const SizedBox(height: 12),
           _buildPillarTile(
@@ -197,7 +197,7 @@ class AboutScreen extends StatelessWidget {
               border: Border.all(color: AppTheme.cardBorder),
             ),
             child: const Text(
-              'v2.1.1 • Build 2026.11',
+              'v4.1.0 • Build 2026.11',
               style: TextStyle(
                 fontSize: 11,
                 color: AppTheme.textMuted,

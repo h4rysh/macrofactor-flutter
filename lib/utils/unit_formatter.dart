@@ -165,6 +165,13 @@ class UnitFormatter {
     return (feet: feet, inches: inches);
   }
 
+  /// Converts centimeters to rounded integer (feet, inches), carrying 12 in -> +1 ft.
+  static ({int feet, int inches}) cmToRoundedFeetInches(double cm) {
+    if (cm <= 0 || !cm.isFinite) return (feet: 0, inches: 0);
+    final totalInches = (cm / cmPerInch).round();
+    return (feet: totalInches ~/ 12, inches: totalInches % 12);
+  }
+
   /// Converts imperial (feet, inches) to centimeters.
   static double feetInchesToCm(int feet, double inches) {
     return (feet * cmPerFoot) + (inches * cmPerInch);
@@ -173,8 +180,8 @@ class UnitFormatter {
   /// Returns formatted height string, e.g. '175 cm' or '5 ft 9 in'.
   static String formatHeight(double heightCm, {bool useImperial = false}) {
     if (useImperial) {
-      final imperial = cmToFeetInches(heightCm);
-      return '${imperial.feet} ft ${imperial.inches.round()} in';
+      final imperial = cmToRoundedFeetInches(heightCm);
+      return '${imperial.feet} ft ${imperial.inches} in';
     }
     return '${heightCm.round()} cm';
   }

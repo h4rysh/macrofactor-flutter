@@ -14,11 +14,15 @@ class LifestyleTelemetryStrip extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final waterMl = ref.watch(dailyWaterProvider);
+    final useImperial = ref.watch(useImperialUnitsProvider);
     final fast = ref.watch(fastingSessionProvider);
     final workouts = ref.watch(workoutSessionsProvider);
     final weekAgo = DateTime.now().subtract(const Duration(days: 7));
     final weekWorkouts =
         workouts.where((w) => w.startTime.isAfter(weekAgo)).length;
+    final waterLabel = useImperial
+        ? '${(waterMl / 29.5735).round()} oz'
+        : '${(waterMl / 1000.0).toStringAsFixed(1)}L';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -26,7 +30,7 @@ class LifestyleTelemetryStrip extends ConsumerWidget {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 4),
           child: Text(
-            'LIFESTYLE TELEMETRY (FEEDS KALMAN V5)',
+            'LIFESTYLE TELEMETRY',
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w800,
@@ -44,7 +48,7 @@ class LifestyleTelemetryStrip extends ConsumerWidget {
                 icon: Icons.water_drop_rounded,
                 color: AppTheme.activeBlue,
                 label: 'Water',
-                value: '${(waterMl / 1000.0).toStringAsFixed(1)}L',
+                value: waterLabel,
                 onTap: () => _showModal(context, const WaterDialCard()),
               ),
             ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sique/presentation/screens/data_export_screen.dart';
 import 'package:sique/presentation/screens/onboarding/onboarding_flow_screen.dart';
 import 'package:sique/presentation/widgets/auth_legal_footer.dart';
 import '../../providers/app_providers.dart';
@@ -248,6 +249,32 @@ class _AuthGateScreenState extends ConsumerState<AuthGateScreen> {
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppTheme.textSecondary,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        TextButton.icon(
+                          key: const Key('auth_gate_restore_backup_btn'),
+                          onPressed: _isLoading
+                              ? null
+                              : () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute<void>(
+                                      builder: (_) => const DataExportScreen(),
+                                    ),
+                                  );
+                                },
+                          icon: const Icon(
+                            Icons.restore_rounded,
+                            size: 16,
+                            color: AppTheme.activeBlue,
+                          ),
+                          label: const Text(
+                            'Restore from Encrypted Backup',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.activeBlue,
                             ),
                           ),
                         ),

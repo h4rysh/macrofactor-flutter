@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/algorithms/fasting_service.dart';
 import '../../domain/models/lifestyle_models.dart';
-import '../providers/strategy_providers.dart';
+import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import 'animated_primitives.dart';
 import 'apple_tactile_card.dart';
@@ -22,17 +22,17 @@ class _FastingClockCardState extends ConsumerState<FastingClockCard> {
   Timer? _ticker;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    final fast = ref.watch(fastingSessionProvider);
-    if (fast != null && _ticker == null) {
-      _ticker = Timer.periodic(const Duration(seconds: 30), (_) {
-        if (mounted) setState(() {});
-      });
-    } else if (fast == null) {
-      _ticker?.cancel();
-      _ticker = null;
+  void initState() {
+    super.initState();
+    if (ref.read(fastingSessionProvider) != null) {
+      _startTicker();
     }
+  }
+
+  void _startTicker() {
+    _ticker ??= Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -43,6 +43,14 @@ class _FastingClockCardState extends ConsumerState<FastingClockCard> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<FastingSession?>(fastingSessionProvider, (prev, next) {
+      if (next != null) {
+        _startTicker();
+      } else {
+        _ticker?.cancel();
+        _ticker = null;
+      }
+    });
     final activeFast = ref.watch(fastingSessionProvider);
 
     return AppleTactileCard(
@@ -59,7 +67,7 @@ class _FastingClockCardState extends ConsumerState<FastingClockCard> {
   }
 
   Widget _buildActiveFastView(FastingSession fast) {
-    final now = DateTime.now();
+    final now = ref.read(clockProvider)();
     final elapsed = now.difference(fast.startTime);
     final stage = FastingService.getStage(elapsed);
     final targetEnd = fast.targetEndTime;
@@ -189,13 +197,36 @@ class _FastingClockCardState extends ConsumerState<FastingClockCard> {
         // End Fast Button
         AppleBouncy(
           scaleDown: 0.96,
-          onTap: () {
+          onTap: () async {
             AppHaptics.selectionClick();
-            ref
-                .read(fastingSessionProvider.notifier)
-                .endFast(completed: isTargetMet);
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: AppTheme.cardSurface,
+                title: const Text('End current fast?'),
+                content: const Text(
+                  'This will log your fasting session and end the active timer.',
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(false),
+                    child: const Text('Keep Fasting'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.of(ctx).pop(true),
+                    child: const Text('End Fast'),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true && context.mounted) {
+              ref
+                  .read(fastingSessionProvider.notifier)
+                  .endFast(completed: isTargetMet);
+            }
           },
           child: Container(
+            constraints: const BoxConstraints(minHeight: 44),
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: BoxDecoration(
               color: AppTheme.cardElevated,
@@ -290,6 +321,7 @@ class _FastingClockCardState extends ConsumerState<FastingClockCard> {
                 .startFast(_selectedProtocol);
           },
           child: Container(
+            constraints: const BoxConstraints(minHeight: 44),
             padding: const EdgeInsets.symmetric(vertical: 10),
             decoration: const BoxDecoration(
               color: Color(0xFFAB47BC),
@@ -308,7 +340,7 @@ class _FastingClockCardState extends ConsumerState<FastingClockCard> {
                     'Start ${_selectedProtocol.displayName}',
                     style: const TextStyle(
                       fontSize: 13,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),

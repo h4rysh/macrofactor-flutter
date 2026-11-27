@@ -44,52 +44,66 @@ class _StagingPlateSheetState extends ConsumerState<StagingPlateSheet> {
   Future<void> _promptSaveRecipe() async {
     final nameController = TextEditingController();
     final servingsController = TextEditingController(text: '1');
+    String? nameError;
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.cardSurface,
-        title: const Text(
-          'Save Plate as Custom Recipe',
-          style: TextStyle(color: AppTheme.textPrimary, fontSize: 17),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              autofocus: true,
-              style: const TextStyle(color: AppTheme.textPrimary),
-              decoration: const InputDecoration(
-                labelText: 'Recipe Name (e.g. Post-Workout Shake)',
-                labelStyle: TextStyle(color: AppTheme.textSecondary),
-              ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (dialogCtx, setDialogState) => AlertDialog(
+          backgroundColor: AppTheme.cardSurface,
+          title: const Text(
+            'Save Plate as Custom Recipe',
+            style: TextStyle(color: AppTheme.textPrimary, fontSize: 17),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  autofocus: true,
+                  style: const TextStyle(color: AppTheme.textPrimary),
+                  decoration: InputDecoration(
+                    labelText: 'Recipe Name (e.g. Post-Workout Shake)',
+                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
+                    errorText: nameError,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: servingsController,
+                  keyboardType: TextInputType.number,
+                  style: const TextStyle(color: AppTheme.textPrimary),
+                  decoration: const InputDecoration(
+                    labelText: 'Total Servings Yielded',
+                    labelStyle: TextStyle(color: AppTheme.textSecondary),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: servingsController,
-              keyboardType: TextInputType.number,
-              style: const TextStyle(color: AppTheme.textPrimary),
-              decoration: const InputDecoration(
-                labelText: 'Total Servings Yielded',
-                labelStyle: TextStyle(color: AppTheme.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (nameController.text.trim().isEmpty) {
+                  setDialogState(() {
+                    nameError = 'Please enter a recipe name';
+                  });
+                  return;
+                }
+                Navigator.of(ctx).pop(true);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.activeBlue,
+                foregroundColor: AppTheme.buttonForeground,
               ),
+              child: const Text('Save Recipe'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(ctx).pop(true),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.activeBlue,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Save Recipe'),
-          ),
-        ],
       ),
     );
 
@@ -167,10 +181,32 @@ class _StagingPlateSheetState extends ConsumerState<StagingPlateSheet> {
                         Icons.delete_sweep_outlined,
                         color: AppTheme.textSecondary,
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         AppHaptics.lightImpact();
-                        notifier.clear();
-                        Navigator.of(context).pop();
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: AppTheme.cardSurface,
+                            title: const Text('Clear staging plate?'),
+                            content: Text(
+                              'Remove all ${items.length} staged item${items.length == 1 ? '' : 's'} without logging?',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(false),
+                                child: const Text('Keep'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(true),
+                                child: const Text('Clear'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true && context.mounted) {
+                          notifier.clear();
+                          Navigator.of(context).pop();
+                        }
                       },
                     ),
                 ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:sique/domain/models/food_models.dart';
 import 'package:sique/domain/models/oil_modifier_display.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
@@ -25,15 +26,33 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
     super.initState();
     final db = ref.read(databaseProvider);
     _defaultPortionUnit = db.getSetting('default_portion_unit', 'Grams (g)');
-    _defaultOilModifier =
-        db.getSetting('default_oil_modifier', 'Standard (1 tbsp oil/ghee)');
+    _defaultOilModifier = _normalizeOilDisplaySetting(
+      db.getSetting(
+          'default_oil_modifier', 'Standard (1 tbsp oil/ghee, ~120 kcal)'),
+    );
     _showEmptyHours = db.getSetting('show_empty_hours', 'false') == 'true';
     _autoExpandMeals = db.getSetting('auto_expand_meals', 'true') == 'true';
   }
 
+  String _normalizeOilDisplaySetting(String raw) {
+    final mod = OilModifierDisplay.fromPreferenceSetting(raw);
+    switch (mod) {
+      case OilModifier.standard:
+      case OilModifier.lowOil:
+        return 'Zero Oil (Raw / Boiled / Steamed)';
+      case OilModifier.halfTsp:
+      case OilModifier.oneTsp:
+        return 'Low Oil (1 tsp, ~40 kcal)';
+      case OilModifier.oneTbsp:
+        return 'Standard (1 tbsp oil/ghee, ~120 kcal)';
+      case OilModifier.twoTbsp:
+        return 'Extra Ghee / Restaurant Style (2 tbsp, ~240 kcal)';
+    }
+  }
+
   void _updateSetting(String key, String value, VoidCallback onUpdate) {
     ref.read(databaseProvider).setSetting(key, value);
-    ref.read(foodLogsRevisionProvider.notifier).state++;
+    ref.read(foodLogSettingsRevisionProvider.notifier).state++;
     setState(onUpdate);
   }
 
@@ -481,7 +500,7 @@ class _FoodLogSettingsScreenState extends ConsumerState<FoodLogSettingsScreen> {
           SizedBox(width: 12),
           Expanded(
             child: Text(
-              'All settings are instantly auto-saved to SQLite. Changes immediately adjust portion selectors across plate sheets and food search.',
+              'All settings are instantly auto-saved on device. Changes immediately adjust portion selectors across plate sheets and food search.',
               style: TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondary,

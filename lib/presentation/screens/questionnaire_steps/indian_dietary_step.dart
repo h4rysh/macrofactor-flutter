@@ -72,7 +72,7 @@ class IndianDietaryStep extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         const Text(
-          'Tailor search ranking, default logging portions, and cooking oil modifiers (ICMR-NIN IFCT).',
+          'Tailor search ranking, default logging portions, and cooking oil modifiers.',
           style: TextStyle(
             fontSize: 14,
             color: AppTheme.textSecondary,

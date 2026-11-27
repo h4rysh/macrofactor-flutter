@@ -197,7 +197,7 @@ void showBackupRestoreDialog(
                 ),
                 decoration: InputDecoration(
                   hintText:
-                      '{\n  "app": "Sique",\n  "schemaVersion": 6,\n  ...\n}',
+                      '{\n  "app": "Sique",\n  "schemaVersion": 7,\n  ...\n}',
                   hintStyle: const TextStyle(color: AppTheme.textMuted),
                   filled: true,
                   fillColor: AppTheme.cardElevated,

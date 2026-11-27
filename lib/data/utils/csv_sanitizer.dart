@@ -11,6 +11,8 @@ class CsvSanitizer {
     if (input == null || input.isEmpty) return '';
 
     final firstChar = input[0];
+    final trimmedLeft = input.trimLeft();
+    final trimmedFirst = trimmedLeft.isNotEmpty ? trimmedLeft[0] : '';
     String sanitized = input;
 
     if (firstChar == '=' ||
@@ -18,7 +20,12 @@ class CsvSanitizer {
         firstChar == '-' ||
         firstChar == '@' ||
         firstChar == '\t' ||
-        firstChar == '\r') {
+        firstChar == '\r' ||
+        firstChar == '\n' ||
+        trimmedFirst == '=' ||
+        trimmedFirst == '+' ||
+        trimmedFirst == '-' ||
+        trimmedFirst == '@') {
       sanitized = "'$input";
     }
 

@@ -12,8 +12,15 @@ class WaterDialCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentWaterMl = ref.watch(dailyWaterProvider);
+    final useImperial = ref.watch(useImperialUnitsProvider);
     final profile = ref.watch(userProfileProvider);
     final targetWaterMl = profile.dailyWaterTargetMl;
+    const mlPerOz = 29.5735;
+    final currentDisplay =
+        useImperial ? (currentWaterMl / mlPerOz).round() : currentWaterMl;
+    final targetDisplay =
+        useImperial ? (targetWaterMl / mlPerOz).round() : targetWaterMl;
+    final unitSuffix = useImperial ? 'oz' : 'ml';
 
     final progress = targetWaterMl > 0
         ? (currentWaterMl / targetWaterMl).clamp(0.0, 1.0)
@@ -53,8 +60,8 @@ class WaterDialCard extends ConsumerWidget {
                       'DAILY HYDRATION',
                       style: TextStyle(
                         fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.activeBlue,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.activeBlueText,
                         letterSpacing: 0.8,
                       ),
                     ),
@@ -65,16 +72,16 @@ class WaterDialCard extends ConsumerWidget {
                       child: Row(
                         children: [
                           Text(
-                            '$currentWaterMl',
+                            '$currentDisplay',
                             style: const TextStyle(
                               fontSize: 16,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w700,
                               color: AppTheme.textPrimary,
                               fontFeatures: [FontFeature.tabularFigures()],
                             ),
                           ),
                           Text(
-                            ' / $targetWaterMl ml',
+                            ' / $targetDisplay $unitSuffix',
                             style: const TextStyle(
                               fontSize: 13,
                               color: AppTheme.textSecondary,
@@ -99,14 +106,14 @@ class WaterDialCard extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.check_circle_rounded,
-                          size: 13, color: AppTheme.activeBlue),
+                          size: 13, color: AppTheme.activeBlueText),
                       SizedBox(width: 4),
                       Text(
                         'OPTIMAL',
                         style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.activeBlue,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.activeBlueText,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -137,34 +144,64 @@ class WaterDialCard extends ConsumerWidget {
           Row(
             children: [
               _buildWaterBtn(
-                label: '+250ml',
+                label: useImperial ? '+8 oz' : '+250ml',
                 onTap: () {
                   AppHaptics.lightImpact();
-                  ref.read(dailyWaterProvider.notifier).addWater(250);
+                  ref
+                      .read(dailyWaterProvider.notifier)
+                      .addWater(useImperial ? 237 : 250);
                 },
               ),
               const SizedBox(width: 8),
               _buildWaterBtn(
-                label: '+500ml',
+                label: useImperial ? '+16 oz' : '+500ml',
                 onTap: () {
                   AppHaptics.lightImpact();
-                  ref.read(dailyWaterProvider.notifier).addWater(500);
+                  ref
+                      .read(dailyWaterProvider.notifier)
+                      .addWater(useImperial ? 473 : 500);
                 },
               ),
               const SizedBox(width: 8),
               _buildWaterBtn(
-                label: '+750ml',
+                label: useImperial ? '+24 oz' : '+750ml',
                 onTap: () {
                   AppHaptics.lightImpact();
-                  ref.read(dailyWaterProvider.notifier).addWater(750);
+                  ref
+                      .read(dailyWaterProvider.notifier)
+                      .addWater(useImperial ? 710 : 750);
                 },
               ),
               const SizedBox(width: 8),
               _buildResetBtn(
-                onTap: () {
-                  AppHaptics.selectionClick();
-                  ref.read(dailyWaterProvider.notifier).resetToday();
-                },
+                onTap: currentWaterMl <= 0
+                    ? null
+                    : () async {
+                        AppHaptics.selectionClick();
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (ctx) => AlertDialog(
+                            backgroundColor: AppTheme.cardSurface,
+                            title: const Text('Reset daily water?'),
+                            content: const Text(
+                              'This clears today’s logged water intake back to 0.',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(false),
+                                child: const Text('Cancel'),
+                              ),
+                              TextButton(
+                                onPressed: () => Navigator.of(ctx).pop(true),
+                                child: const Text('Reset'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirmed == true && context.mounted) {
+                          ref.read(dailyWaterProvider.notifier).resetToday();
+                        }
+                      },
               ),
             ],
           ),
@@ -182,6 +219,7 @@ class WaterDialCard extends ConsumerWidget {
         scaleDown: 0.94,
         onTap: onTap,
         child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
             color: AppTheme.cardElevated,
@@ -199,7 +237,7 @@ class WaterDialCard extends ConsumerWidget {
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.activeBlue,
+                color: AppTheme.activeBlueText,
               ),
             ),
           ),
@@ -208,24 +246,36 @@ class WaterDialCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildResetBtn({required VoidCallback onTap}) {
-    return AppleBouncy(
-      scaleDown: 0.92,
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: AppTheme.cardElevated,
-          borderRadius: AppRadii.mdBorderRadius,
-          border: Border.all(
-            color: AppTheme.cardBorder,
-            width: 1,
+  Widget _buildResetBtn({required VoidCallback? onTap}) {
+    return Tooltip(
+      message: 'Reset water',
+      child: Semantics(
+        button: true,
+        enabled: onTap != null,
+        label: 'Reset today water intake',
+        child: AppleBouncy(
+          scaleDown: 0.92,
+          enabled: onTap != null,
+          onTap: onTap,
+          child: Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: AppTheme.cardElevated,
+              borderRadius: AppRadii.mdBorderRadius,
+              border: Border.all(
+                color: AppTheme.cardBorder,
+                width: 1,
+              ),
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.refresh_rounded,
+              size: 18,
+              color:
+                  onTap != null ? AppTheme.textSecondary : AppTheme.textMuted,
+            ),
           ),
-        ),
-        child: const Icon(
-          Icons.refresh_rounded,
-          size: 16,
-          color: AppTheme.textSecondary,
         ),
       ),
     );

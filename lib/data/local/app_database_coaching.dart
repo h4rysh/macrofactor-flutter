@@ -51,7 +51,6 @@ extension AppDatabaseCoachingExtension on AppDatabase {
         raw_calorie_delta, damped_calorie_delta, was_clamped, silent_recomp_detected
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
-        user_id = excluded.user_id,
         previous_calories = excluded.previous_calories,
         recommended_calories = excluded.recommended_calories,
         expenditure_kcal = excluded.expenditure_kcal,
@@ -61,7 +60,8 @@ extension AppDatabaseCoachingExtension on AppDatabase {
         raw_calorie_delta = excluded.raw_calorie_delta,
         damped_calorie_delta = excluded.damped_calorie_delta,
         was_clamped = excluded.was_clamped,
-        silent_recomp_detected = excluded.silent_recomp_detected;
+        silent_recomp_detected = excluded.silent_recomp_detected
+      WHERE coaching_check_ins.user_id = excluded.user_id;
     ''');
 
     try {

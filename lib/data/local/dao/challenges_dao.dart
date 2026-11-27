@@ -44,12 +44,7 @@ class ChallengesDao {
 
   /// Saves or updates a weekly challenge record.
   void upsertChallenge(WeeklyChallengeModel challenge, {String? userId}) {
-    final uid = userId ??
-        (effectiveUserId != 'default_user'
-            ? effectiveUserId
-            : (challenge.userId.isNotEmpty
-                ? challenge.userId
-                : 'default_user'));
+    final uid = userId ?? effectiveUserId;
     final stmt = _db.prepare('''
       INSERT INTO weekly_challenges (
         id, user_id, type, title, description, target_metric, target_value,
@@ -165,12 +160,16 @@ class ChallengesDao {
     final stmt = _db.prepare('''
       UPDATE weekly_challenges
       SET status = ?,
-          completed_at = COALESCE(?, completed_at)
+          completed_at = CASE
+            WHEN ? = 'completed' THEN COALESCE(?, completed_at)
+            ELSE NULL
+          END
       WHERE id = ? AND user_id = ?;
     ''');
 
     try {
       stmt.execute([
+        status.name,
         status.name,
         completedAt?.toIso8601String(),
         challengeId,
@@ -186,19 +185,33 @@ class ChallengesDao {
     String challengeId,
     String dateStr,
     double achievedValue,
-    bool isHit,
-  ) {
+    bool isHit, {
+    String? userId,
+  }) {
+    final uid = userId ?? effectiveUserId;
     final id = '${challengeId}_$dateStr';
     final stmt = _db.prepare('''
       INSERT INTO challenge_daily_progress (id, challenge_id, date, achieved_value, is_target_hit)
-      VALUES (?, ?, ?, ?, ?)
+      SELECT ?, ?, ?, ?, ?
+      WHERE EXISTS (
+        SELECT 1 FROM weekly_challenges wc
+        WHERE wc.id = ? AND wc.user_id = ?
+      )
       ON CONFLICT(challenge_id, date) DO UPDATE SET
         achieved_value = excluded.achieved_value,
         is_target_hit = excluded.is_target_hit;
     ''');
 
     try {
-      stmt.execute([id, challengeId, dateStr, achievedValue, isHit ? 1 : 0]);
+      stmt.execute([
+        id,
+        challengeId,
+        dateStr,
+        achievedValue,
+        isHit ? 1 : 0,
+        challengeId,
+        uid,
+      ]);
     } finally {
       stmt.dispose();
     }
@@ -211,6 +224,7 @@ class ChallengesDao {
     WeeklyChallengeModel challenge, {
     required double proteinTargetG,
     String? userId,
+    bool manageTransaction = true,
   }) {
     final uid = userId ?? effectiveUserId;
     final startStr = challenge.weekStartDate.toIso8601String().substring(0, 10);
@@ -231,14 +245,18 @@ class ChallengesDao {
         args = [uid, startStr, endStr, proteinTargetG];
         break;
       case ChallengeType.fiberBuilder:
+        final fiberParts = challenge.targetMetric.split(':');
+        final fiberThreshold = fiberParts.length >= 2
+            ? (double.tryParse(fiberParts[1]) ?? 25.0)
+            : 25.0;
         sql = '''
           SELECT date, SUM(fiber) AS metric_val
           FROM food_logs
           WHERE user_id = ? AND date >= ? AND date <= ?
           GROUP BY date
-          HAVING SUM(fiber) >= 25.0;
+          HAVING SUM(fiber) >= ?;
         ''';
-        args = [uid, startStr, endStr];
+        args = [uid, startStr, endStr, fiberThreshold];
         break;
       case ChallengeType.proteinVolume:
         // Cumulative grams across the week (handled directly below).
@@ -298,14 +316,18 @@ class ChallengesDao {
         args = [uid, startStr, endStr];
         break;
       case ChallengeType.hydrationHero:
+        final waterParts = challenge.targetMetric.split(':');
+        final waterThreshold = waterParts.length >= 2
+            ? (int.tryParse(waterParts[1]) ?? 2000)
+            : 2000;
         sql = '''
           SELECT date, SUM(amount_ml) AS metric_val
           FROM water_logs
           WHERE user_id = ? AND date >= ? AND date <= ?
           GROUP BY date
-          HAVING SUM(amount_ml) >= 2000;
+          HAVING SUM(amount_ml) >= ?;
         ''';
-        args = [uid, startStr, endStr];
+        args = [uid, startStr, endStr, waterThreshold];
         break;
       case ChallengeType.trainingConsistency:
         sql = '''
@@ -390,30 +412,40 @@ class ChallengesDao {
       stmt.dispose();
     }
 
-    _db.execute('BEGIN TRANSACTION;');
+    if (manageTransaction) {
+      _db.execute('BEGIN TRANSACTION;');
+    }
     try {
       // Reconcile daily progress within the challenge window so undone/deleted logs revert cleanly.
       final resetStmt = _db.prepare('''
         UPDATE challenge_daily_progress
         SET is_target_hit = 0
-        WHERE challenge_id = ? AND date >= ? AND date <= ?;
+        WHERE challenge_id = ? AND date >= ? AND date <= ?
+          AND EXISTS (
+            SELECT 1 FROM weekly_challenges wc
+            WHERE wc.id = challenge_daily_progress.challenge_id AND wc.user_id = ?
+          );
       ''');
       try {
-        resetStmt.execute([challenge.id, startStr, endStr]);
+        resetStmt.execute([challenge.id, startStr, endStr, uid]);
       } finally {
         resetStmt.dispose();
       }
 
       for (final (dateStr, val) in hitDates) {
-        recordDailyProgress(challenge.id, dateStr, val, true);
+        recordDailyProgress(challenge.id, dateStr, val, true, userId: uid);
       }
 
-      final countStmt = _db.prepare(
-        'SELECT COUNT(*) AS hits FROM challenge_daily_progress WHERE challenge_id = ? AND is_target_hit = 1;',
-      );
+      final countStmt = _db.prepare('''
+        SELECT COUNT(*) AS hits
+        FROM challenge_daily_progress cdp
+        INNER JOIN weekly_challenges wc ON wc.id = cdp.challenge_id
+        WHERE cdp.challenge_id = ? AND wc.user_id = ?
+          AND cdp.date >= ? AND cdp.date <= ? AND cdp.is_target_hit = 1;
+      ''');
       int autoHits = hitDates.length;
       try {
-        final res = countStmt.select([challenge.id]);
+        final res = countStmt.select([challenge.id, uid, startStr, endStr]);
         if (res.isNotEmpty) {
           autoHits = (res.first['hits'] as int?) ?? hitDates.length;
         }
@@ -441,12 +473,16 @@ class ChallengesDao {
           userId: uid,
         );
       }
-      _db.execute('COMMIT;');
+      if (manageTransaction) {
+        _db.execute('COMMIT;');
+      }
       return syncedVal;
     } catch (_) {
-      try {
-        _db.execute('ROLLBACK;');
-      } catch (_) {}
+      if (manageTransaction) {
+        try {
+          _db.execute('ROLLBACK;');
+        } catch (_) {}
+      }
       rethrow;
     }
   }
@@ -583,11 +619,14 @@ class ChallengesDao {
         stmt.dispose();
       }
     } else {
-      final stmt = _db.prepare(
-        'SELECT date FROM challenge_daily_progress WHERE challenge_id = ? AND is_target_hit = 1;',
-      );
+      final stmt = _db.prepare('''
+        SELECT cdp.date
+        FROM challenge_daily_progress cdp
+        INNER JOIN weekly_challenges wc ON wc.id = cdp.challenge_id
+        WHERE cdp.challenge_id = ? AND wc.user_id = ? AND cdp.is_target_hit = 1;
+      ''');
       try {
-        for (final row in stmt.select([challenge.id])) {
+        for (final row in stmt.select([challenge.id, uid])) {
           final d = row['date'] as String?;
           if (d != null) hitSet.add(d);
         }
@@ -597,7 +636,7 @@ class ChallengesDao {
     }
 
     return List<bool>.generate(7, (i) {
-      final d = start.add(Duration(days: i));
+      final d = DateTime(start.year, start.month, start.day + i);
       final dStr =
           '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
       return hitSet.contains(dStr);

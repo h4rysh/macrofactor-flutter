@@ -4,11 +4,11 @@
 
 ![Flutter](https://img.shields.io/badge/Flutter-3.29+-02569B?style=for-the-badge&logo=flutter&logoColor=white)
 ![Dart](https://img.shields.io/badge/Dart-3.7+-0175C2?style=for-the-badge&logo=dart&logoColor=white)
-![Tests](https://img.shields.io/badge/Tests-896%20Passing%20(100%25)-2ea44f?style=for-the-badge&logo=githubactions&logoColor=white)
+![Tests](https://img.shields.io/badge/Tests-904%20Passing%20(100%25)-2ea44f?style=for-the-badge&logo=githubactions&logoColor=white)
 ![Analysis](https://img.shields.io/badge/Analysis-0%20Issues-brightgreen?style=for-the-badge&logo=dart&logoColor=white)
 ![Architecture](https://img.shields.io/badge/Architecture-Clean%20%2B%20Riverpod%202-purple?style=for-the-badge)
 ![Storage](https://img.shields.io/badge/Storage-SQLite%20v7%20WAL%20(Local--First)-orange?style=for-the-badge&logo=sqlite&logoColor=white)
-![Release](https://img.shields.io/badge/Release-v4.0.0-blue?style=for-the-badge)
+![Release](https://img.shields.io/badge/Release-v4.1.0-blue?style=for-the-badge)
 ![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)
 
 <br/>
@@ -17,7 +17,7 @@
 
 <br/>
 
-[📥 **Download Latest Release (v4.0.0 APK)**](https://github.com/h4rysh/macrofactor-flutter/releases/latest) • [📖 **Algorithmic Specs**](docs/ALGORITHMS.md) • [🏛️ **Architecture Specs**](docs/ARCHITECTURE.md) • [🔒 **Privacy Statement**](docs/PRIVACY.md)
+[📥 **Download Latest Release (v4.1.0 APK)**](https://github.com/h4rysh/macrofactor-flutter/releases/latest) • [📖 **Algorithmic Specs**](docs/ALGORITHMS.md) • [🏛️ **Architecture Specs**](docs/ARCHITECTURE.md) • [🔒 **Privacy Statement**](docs/PRIVACY.md)
 
 </div>
 

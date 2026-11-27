@@ -92,13 +92,13 @@ class TimelineHourSlot extends StatelessWidget {
                   },
                   child: Container(
                     constraints: BoxConstraints(
-                      minHeight: isEmptySlot ? 24 : 36,
-                      minWidth: 44,
+                      minHeight: isEmptySlot ? 28 : 44,
+                      minWidth: 56,
                     ),
                     alignment: Alignment.center,
                     padding: EdgeInsets.symmetric(
-                      horizontal: isEmptySlot ? 8 : 10,
-                      vertical: isEmptySlot ? 2 : 5,
+                      horizontal: isEmptySlot ? 8 : 12,
+                      vertical: isEmptySlot ? 3 : 8,
                     ),
                     decoration: BoxDecoration(
                       color: isEmptySlot
@@ -150,9 +150,9 @@ class TimelineHourSlot extends StatelessWidget {
                   child: const Text(
                     'Fasting Window',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFFAB47BC),
+                      color: Color(0xFFCE93D8),
                     ),
                   ),
                 ),

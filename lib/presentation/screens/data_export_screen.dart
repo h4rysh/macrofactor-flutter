@@ -99,6 +99,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
     final waterLogs = db.waterDao.getAllWaterLogs();
     final fastingSessions = db.fastingDao.getRecentFasts(limit: 500);
     final customRecipes = db.recipesDao.getAllRecipes();
+    final repeatItems = db.diaryToolsDao.getAllRepeatItems();
+    final dayNotes = db.diaryToolsDao.getAllDayNotes();
+    final microGoals = db.diaryToolsDao.getCustomMicroGoals();
 
     return BackupCodec.encodeBackup(
       profile: profile,
@@ -114,6 +117,9 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       waterLogs: waterLogs,
       fastingSessions: fastingSessions,
       customRecipes: customRecipes,
+      repeatItems: repeatItems,
+      dayNotes: dayNotes,
+      microGoals: microGoals,
     );
   }
 
@@ -165,11 +171,19 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       }
       if (mounted) {
         final xFile = XFile(file.path, mimeType: mimeType, name: filename);
-        // ignore: deprecated_member_use
-        await Share.shareXFiles(
-          [xFile],
-          text: 'Sique Data Export: $filename',
-        );
+        try {
+          // ignore: deprecated_member_use
+          await Share.shareXFiles(
+            [xFile],
+            text: 'Sique Data Export: $filename',
+          );
+        } finally {
+          try {
+            if (await file.exists()) {
+              await file.delete();
+            }
+          } catch (_) {}
+        }
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -298,7 +312,15 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
   }
 
   Future<void> _restoreFromBackupContent(String rawContent) async {
+    if (_isProcessing) return;
+    setState(() => _isProcessing = true);
+    const maxBackupBytes = 25 * 1024 * 1024;
     try {
+      if (rawContent.length > maxBackupBytes) {
+        throw const FormatException(
+          'Backup payload exceeds the 25 MB safety limit.',
+        );
+      }
       var jsonContent = rawContent;
       if (BackupCrypto.isEncryptedEnvelope(rawContent)) {
         final password = await showBackupPassphraseDialog(
@@ -311,15 +333,17 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           envelopeJson: rawContent,
           password: password,
         );
+        if (!mounted) return;
       }
 
       final decoded = BackupCodec.decodeAndValidate(jsonContent);
       final db = ref.read(databaseProvider);
+      final uid = db.currentUserId;
 
       db.rawDb.execute('BEGIN TRANSACTION;');
       try {
         if (decoded.profile != null) {
-          db.profileDao.saveUserProfile(decoded.profile!);
+          db.profileDao.saveUserProfile(decoded.profile!, userId: uid);
         }
 
         for (final w in decoded.weightLogs) {
@@ -328,28 +352,37 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             dateStr,
             w.weightKg,
             w.note,
+            userId: uid,
             source: w.source,
           );
         }
 
         for (final f in decoded.foodLogs) {
-          db.foodDao.restoreFoodLog(f);
+          db.foodDao.restoreFoodLog(f, userId: uid);
         }
 
         if (decoded.workoutSessions.isNotEmpty) {
-          db.insertWorkoutSessions(decoded.workoutSessions);
+          db.workoutDao.insertWorkoutSessions(
+            decoded.workoutSessions,
+            userId: uid,
+            manageTransaction: false,
+          );
         }
 
         if (decoded.expenditureHistory.isNotEmpty) {
-          db.expenditureDao.saveExpenditures(decoded.expenditureHistory);
+          db.expenditureDao.saveExpenditures(
+            decoded.expenditureHistory,
+            userId: uid,
+            manageTransaction: false,
+          );
         }
 
         for (final c in decoded.coachingCheckIns) {
-          db.insertCoachingCheckIn(c);
+          db.insertCoachingCheckIn(c, userId: uid);
         }
 
         decoded.dayCompletions.forEach((date, isComplete) {
-          db.expenditureDao.setDayComplete(date, isComplete);
+          db.expenditureDao.setDayComplete(date, isComplete, userId: uid);
         });
 
         decoded.appSettings.forEach((k, v) {
@@ -357,11 +390,11 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
         });
 
         for (final bm in decoded.bodyMeasurements) {
-          db.bodyMeasurementsDao.upsertMeasurement(bm);
+          db.bodyMeasurementsDao.upsertMeasurement(bm, userId: uid);
         }
 
         for (final ch in decoded.weeklyChallenges) {
-          db.challengesDao.upsertChallenge(ch);
+          db.challengesDao.upsertChallenge(ch, userId: uid);
         }
 
         final restoredWaterDates = <String>{};
@@ -369,7 +402,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           if (restoredWaterDates.add(w.date)) {
             final parsedDate = DateTime.tryParse(w.date);
             if (parsedDate != null) {
-              db.waterDao.clearDayWater(parsedDate);
+              db.waterDao.clearDayWater(parsedDate, userId: uid);
             }
           }
         }
@@ -377,16 +410,33 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
           db.waterDao.logWater(
             w.amountMl,
             date: DateTime.tryParse(w.date),
+            userId: uid,
             loggedAt: w.loggedAt,
           );
         }
 
         for (final fs in decoded.fastingSessions) {
-          db.fastingDao.upsertFastingSession(fs);
+          db.fastingDao.upsertFastingSession(fs, userId: uid);
         }
 
         for (final rec in decoded.customRecipes) {
-          db.recipesDao.upsertRecipe(rec, manageTransaction: false);
+          db.recipesDao.upsertRecipe(
+            rec,
+            userId: uid,
+            manageTransaction: false,
+          );
+        }
+
+        for (final rep in decoded.repeatItems) {
+          db.diaryToolsDao.upsertRepeatItem(rep, userId: uid);
+        }
+
+        for (final entry in decoded.dayNotes.entries) {
+          db.diaryToolsDao.saveDayNote(entry.key, entry.value, userId: uid);
+        }
+
+        for (final mg in decoded.microGoals.entries) {
+          db.diaryToolsDao.setCustomMicroGoal(mg.key, mg.value, userId: uid);
         }
         db.rawDb.execute('COMMIT;');
       } catch (_) {
@@ -396,6 +446,8 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
 
       // Refresh providers
       ref.read(userDataEpochProvider.notifier).state++;
+      ref.read(foodLogSettingsRevisionProvider.notifier).state++;
+      ref.invalidate(useImperialUnitsProvider);
       ref.invalidate(userProfileProvider);
       ref.invalidate(weightLogsProvider);
       ref.invalidate(dailyFoodLogsProvider);
@@ -404,6 +456,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
       ref.invalidate(bodyMeasurementsProvider);
       ref.invalidate(weeklyChallengesProvider);
       ref.invalidate(customRecipesProvider);
+      ref.invalidate(healthConnectSyncProvider);
       _loadStats();
 
       if (mounted) {
@@ -439,6 +492,10 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             duration: const Duration(seconds: 5),
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
       }
     }
   }
@@ -547,6 +604,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             badgeText: '$_totalFoodLogs meals logged',
             primaryButtonLabel: 'Share File',
             primaryButtonIcon: Icons.share_rounded,
+            isLoading: _isProcessing,
             onPrimaryPressed: _exportFoodLogs,
             secondaryButtonLabel: 'Preview',
             secondaryButtonIcon: Icons.preview_rounded,
@@ -563,6 +621,7 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             badgeText: '$_totalWeightLogs weigh-ins logged',
             primaryButtonLabel: 'Share File',
             primaryButtonIcon: Icons.share_rounded,
+            isLoading: _isProcessing,
             onPrimaryPressed: _exportWeightLogs,
             secondaryButtonLabel: 'Preview',
             secondaryButtonIcon: Icons.preview_rounded,
@@ -577,9 +636,10 @@ class _DataExportScreenState extends ConsumerState<DataExportScreen> {
             title: 'Full Backup & Recovery (.sique.enc / .json)',
             subtitle:
                 'Export or restore an encrypted AES-256-GCM or plaintext snapshot of all nutrition, metabolic, lifestyle, and recipe data.',
-            badgeText: 'Complete schema snapshot (v6)',
+            badgeText: 'Complete schema snapshot (v7)',
             primaryButtonLabel: 'Export Backup',
             primaryButtonIcon: Icons.download_rounded,
+            isLoading: _isProcessing,
             onPrimaryPressed: _exportFullBackup,
             secondaryButtonLabel: 'Restore Backup',
             secondaryButtonIcon: Icons.restore_rounded,

@@ -108,12 +108,39 @@ class WeightTrendV2Series {
     TrendWeightAlpha alpha = TrendWeightAlpha.standard,
     bool bidirectional = false,
   }) {
-    if (entries.isEmpty) {
+    final validEntries =
+        entries.where((e) => e.weightKg.isFinite && e.weightKg > 0.0).toList();
+    if (validEntries.isEmpty) {
       return const WeightTrendV2Series(points: []);
     }
 
-    final sorted = List<ScaleWeightEntry>.from(entries)
-      ..sort((a, b) => a.date.compareTo(b.date));
+    // Average multiple observations on the same calendar day so same-day
+    // duplicates do not skew day-based EWMA intervals.
+    final groupedByDay = <DateTime, List<ScaleWeightEntry>>{};
+    for (final e in validEntries) {
+      final day = DateTime(e.date.year, e.date.month, e.date.day);
+      groupedByDay.putIfAbsent(day, () => []).add(e);
+    }
+    final sortedDays = groupedByDay.keys.toList()..sort();
+    final sorted = sortedDays.map((day) {
+      final list = groupedByDay[day]!;
+      if (list.length == 1) {
+        return ScaleWeightEntry(
+          date: day,
+          weightKg: list.first.weightKg,
+          note: list.first.note,
+          source: list.first.source,
+        );
+      }
+      final avgWeight =
+          list.fold<double>(0.0, (sum, e) => sum + e.weightKg) / list.length;
+      return ScaleWeightEntry(
+        date: day,
+        weightKg: avgWeight,
+        note: list.last.note,
+        source: list.last.source,
+      );
+    }).toList();
 
     // Forward causal pass
     final forwardTrends = <double>[];
@@ -192,12 +219,15 @@ class WeightTrendV2Series {
     required int days,
   }) {
     assert(days >= 0, 'Days must be non-negative');
+    if (days <= 0 || !startingTrendKg.isFinite || !dailyDeficitKcal.isFinite) {
+      return const [];
+    }
     final predictions = <WeightTrendPredictionPoint>[];
-    double runningWeight = startingTrendKg;
+    double runningWeight = math.max(0.0, startingTrendKg);
     final dailyDeltaKg = dailyDeficitKcal / kcalPerKg;
 
     for (int day = 1; day <= days; day++) {
-      runningWeight -= dailyDeltaKg;
+      runningWeight = math.max(0.0, runningWeight - dailyDeltaKg);
       predictions.add(
         WeightTrendPredictionPoint(
           dayIndex: day,

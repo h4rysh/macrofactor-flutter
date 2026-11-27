@@ -446,9 +446,35 @@ class _RecipeBuilderSheetState extends ConsumerState<RecipeBuilderSheet> {
                                   size: 20,
                                   color: AppTheme.textSecondary,
                                 ),
-                                onPressed: () => ref
-                                    .read(customRecipesProvider.notifier)
-                                    .deleteRecipe(recipe.id),
+                                onPressed: () async {
+                                  final confirmed = await showDialog<bool>(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      backgroundColor: AppTheme.cardSurface,
+                                      title: const Text('Delete recipe?'),
+                                      content: Text(
+                                        'Delete "${recipe.name}" permanently?',
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(ctx).pop(false),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.of(ctx).pop(true),
+                                          child: const Text('Delete'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (confirmed == true && mounted) {
+                                    ref
+                                        .read(customRecipesProvider.notifier)
+                                        .deleteRecipe(recipe.id);
+                                  }
+                                },
                               ),
                             ],
                           ),
@@ -478,28 +504,30 @@ class _RecipeBuilderSheetState extends ConsumerState<RecipeBuilderSheet> {
         backgroundColor: AppTheme.cardSurface,
         title: const Text('Edit Recipe',
             style: TextStyle(color: AppTheme.textPrimary)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Recipe Name'),
-            ),
-            TextField(
-              controller: servingsCtrl,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Servings'),
-            ),
-            TextField(
-              controller: cookedCtrl,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              decoration: const InputDecoration(
-                labelText: 'Total Cooked Weight (g, optional)',
-                hintText: 'Overrides raw ingredient weight',
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: nameCtrl,
+                decoration: const InputDecoration(labelText: 'Recipe Name'),
               ),
-            ),
-          ],
+              TextField(
+                controller: servingsCtrl,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: 'Servings'),
+              ),
+              TextField(
+                controller: cookedCtrl,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                decoration: const InputDecoration(
+                  labelText: 'Total Cooked Weight (g, optional)',
+                  hintText: 'Overrides raw ingredient weight',
+                ),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(

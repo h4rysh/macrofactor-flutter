@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/algorithms/anthropometric_service.dart';
 import '../../domain/models/body_measurement_entry.dart';
+import '../../utils/unit_formatter.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import 'animated_primitives.dart';
@@ -98,7 +99,7 @@ class AnthropometricsCard extends ConsumerWidget {
                     Text(
                       isSilentRecomp
                           ? 'SILENT RECOMPOSITION ACTIVE'
-                          : 'BODY COMPOSITION & ANTHROPOMETRICS',
+                          : 'BODY COMPOSITION & MEASUREMENTS',
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
@@ -172,12 +173,20 @@ class AnthropometricsCard extends ConsumerWidget {
           Row(
             children: [
               Expanded(
-                child: _buildMetricTile(
-                  label: 'Waist',
-                  value: waist != null ? '${waist.toStringAsFixed(1)} cm' : '—',
-                  sub: whtrClassification ?? 'Not logged',
-                  color: AppTheme.activeBlue,
-                ),
+                child: Builder(builder: (context) {
+                  final useImperial = ref.watch(useImperialUnitsProvider);
+                  final waistDisplay = waist == null
+                      ? '—'
+                      : useImperial
+                          ? '${(waist / UnitFormatter.cmPerInch).toStringAsFixed(1)} in'
+                          : '${waist.toStringAsFixed(1)} cm';
+                  return _buildMetricTile(
+                    label: 'Waist',
+                    value: waistDisplay,
+                    sub: whtrClassification ?? 'Not logged',
+                    color: AppTheme.activeBlue,
+                  );
+                }),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -310,6 +319,14 @@ class _BodyMeasurementsSheetState extends ConsumerState<BodyMeasurementsSheet> {
   late final TextEditingController _chestCtrl;
   late final TextEditingController _thighCtrl;
   late final TextEditingController _bicepsCtrl;
+  late bool _useImperial;
+  String? _errorText;
+
+  String _formatField(double? cm) {
+    if (cm == null || !cm.isFinite || cm <= 0) return '';
+    final v = _useImperial ? cm / UnitFormatter.cmPerInch : cm;
+    return v.toStringAsFixed(1);
+  }
 
   @override
   void initState() {
@@ -317,27 +334,16 @@ class _BodyMeasurementsSheetState extends ConsumerState<BodyMeasurementsSheet> {
     final profile = ref.read(userProfileProvider);
     final recent = ref.read(bodyMeasurementsProvider);
     final latest = recent.isNotEmpty ? recent.first : null;
+    _useImperial = ref.read(useImperialUnitsProvider);
 
-    _waistCtrl = TextEditingController(
-      text: latest?.waistCm?.toString() ?? '',
-    );
+    _waistCtrl = TextEditingController(text: _formatField(latest?.waistCm));
     _neckCtrl = TextEditingController(
-      text: latest?.neckCm?.toString() ??
-          profile.neckCircumferenceCm?.toString() ??
-          '',
+      text: _formatField(latest?.neckCm ?? profile.neckCircumferenceCm),
     );
-    _hipsCtrl = TextEditingController(
-      text: latest?.hipsCm?.toString() ?? '',
-    );
-    _chestCtrl = TextEditingController(
-      text: latest?.chestCm?.toString() ?? '',
-    );
-    _thighCtrl = TextEditingController(
-      text: latest?.thighCm?.toString() ?? '',
-    );
-    _bicepsCtrl = TextEditingController(
-      text: latest?.bicepsCm?.toString() ?? '',
-    );
+    _hipsCtrl = TextEditingController(text: _formatField(latest?.hipsCm));
+    _chestCtrl = TextEditingController(text: _formatField(latest?.chestCm));
+    _thighCtrl = TextEditingController(text: _formatField(latest?.thighCm));
+    _bicepsCtrl = TextEditingController(text: _formatField(latest?.bicepsCm));
   }
 
   @override
@@ -352,27 +358,32 @@ class _BodyMeasurementsSheetState extends ConsumerState<BodyMeasurementsSheet> {
   }
 
   void _save() {
-    double? parseBound(String text, double min, double max) {
-      final v = double.tryParse(text.trim());
-      if (v == null || v < min || v > max) return null;
-      return v;
+    double? parseToCm(String text, double minCm, double maxCm) {
+      final raw = double.tryParse(text.trim());
+      if (raw == null) return null;
+      final cm = _useImperial ? raw * UnitFormatter.cmPerInch : raw;
+      if (cm < minCm || cm > maxCm) return null;
+      return cm;
     }
 
-    final waist = parseBound(_waistCtrl.text, 30.0, 250.0);
-    final neck = parseBound(_neckCtrl.text, 15.0, 90.0);
-    final hips = parseBound(_hipsCtrl.text, 30.0, 250.0);
-    final chest = parseBound(_chestCtrl.text, 30.0, 250.0);
-    final thigh = parseBound(_thighCtrl.text, 20.0, 150.0);
-    final biceps = parseBound(_bicepsCtrl.text, 15.0, 100.0);
+    final waist = parseToCm(_waistCtrl.text, 30.0, 250.0);
+    final neck = parseToCm(_neckCtrl.text, 15.0, 90.0);
+    final hips = parseToCm(_hipsCtrl.text, 30.0, 250.0);
+    final chest = parseToCm(_chestCtrl.text, 30.0, 250.0);
+    final thigh = parseToCm(_thighCtrl.text, 20.0, 150.0);
+    final biceps = parseToCm(_bicepsCtrl.text, 15.0, 100.0);
 
-    // Guard: Require at least one valid measurement
+    // Guard: Require at least one valid measurement with clear inline feedback
     if (waist == null &&
         neck == null &&
         hips == null &&
         chest == null &&
         thigh == null &&
         biceps == null) {
-      Navigator.of(context).pop();
+      setState(() {
+        _errorText =
+            'Enter at least one valid measurement in ${_useImperial ? 'inches' : 'cm'}.';
+      });
       return;
     }
 
@@ -419,8 +430,8 @@ class _BodyMeasurementsSheetState extends ConsumerState<BodyMeasurementsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.of(context).viewInsets.bottom +
-        MediaQuery.of(context).padding.bottom;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final unit = _useImperial ? 'in' : 'cm';
 
     return Container(
       decoration: BoxDecoration(
@@ -431,7 +442,7 @@ class _BodyMeasurementsSheetState extends ConsumerState<BodyMeasurementsSheet> {
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: EdgeInsets.fromLTRB(20, 12, 20, bottomPadding + 16),
+          padding: EdgeInsets.fromLTRB(20, 12, 20, bottomInset + 16),
           child: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             child: Column(
@@ -451,15 +462,16 @@ class _BodyMeasurementsSheetState extends ConsumerState<BodyMeasurementsSheet> {
                       ),
                     ),
                     IconButton(
+                      tooltip: 'Close',
                       onPressed: () => Navigator.of(context).pop(),
                       icon: const Icon(Icons.close_rounded),
                     ),
                   ],
                 ),
                 const SizedBox(height: 6),
-                const Text(
-                  'Record circumferences in centimeters. Sique calculates US Navy Body Fat % and monitors waist trends for muscle retention.',
-                  style: TextStyle(
+                Text(
+                  'Record circumferences in ${_useImperial ? 'inches' : 'centimeters'}. Sique calculates US Navy Body Fat % and monitors waist trends for muscle retention.',
+                  style: const TextStyle(
                     fontSize: 12,
                     color: AppTheme.textSecondary,
                     height: 1.35,
@@ -471,16 +483,16 @@ class _BodyMeasurementsSheetState extends ConsumerState<BodyMeasurementsSheet> {
                     Expanded(
                       child: _buildInputField(
                         controller: _waistCtrl,
-                        label: 'Waist (cm)',
-                        hint: 'e.g. 82.0',
+                        label: 'Waist ($unit)',
+                        hint: _useImperial ? 'e.g. 32.3' : 'e.g. 82.0',
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildInputField(
                         controller: _neckCtrl,
-                        label: 'Neck (cm)',
-                        hint: 'e.g. 38.0',
+                        label: 'Neck ($unit)',
+                        hint: _useImperial ? 'e.g. 15.0' : 'e.g. 38.0',
                       ),
                     ),
                   ],
@@ -491,16 +503,16 @@ class _BodyMeasurementsSheetState extends ConsumerState<BodyMeasurementsSheet> {
                     Expanded(
                       child: _buildInputField(
                         controller: _hipsCtrl,
-                        label: 'Hips (cm)',
-                        hint: 'e.g. 96.0',
+                        label: 'Hips ($unit)',
+                        hint: _useImperial ? 'e.g. 37.8' : 'e.g. 96.0',
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildInputField(
                         controller: _chestCtrl,
-                        label: 'Chest (cm)',
-                        hint: 'e.g. 98.0',
+                        label: 'Chest ($unit)',
+                        hint: _useImperial ? 'e.g. 38.6' : 'e.g. 98.0',
                       ),
                     ),
                   ],
@@ -511,25 +523,37 @@ class _BodyMeasurementsSheetState extends ConsumerState<BodyMeasurementsSheet> {
                     Expanded(
                       child: _buildInputField(
                         controller: _thighCtrl,
-                        label: 'Thigh (cm)',
-                        hint: 'e.g. 56.0',
+                        label: 'Thigh ($unit)',
+                        hint: _useImperial ? 'e.g. 22.0' : 'e.g. 56.0',
                       ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: _buildInputField(
                         controller: _bicepsCtrl,
-                        label: 'Bicep (cm)',
-                        hint: 'e.g. 34.0',
+                        label: 'Bicep ($unit)',
+                        hint: _useImperial ? 'e.g. 13.4' : 'e.g. 34.0',
                       ),
                     ),
                   ],
                 ),
+                if (_errorText != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _errorText!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.calories,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 20),
                 AppleBouncy(
                   scaleDown: 0.96,
                   onTap: _save,
                   child: Container(
+                    constraints: const BoxConstraints(minHeight: 48),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: const BoxDecoration(
                       color: AppTheme.activeBlue,
@@ -540,8 +564,8 @@ class _BodyMeasurementsSheetState extends ConsumerState<BodyMeasurementsSheet> {
                       'Save Measurements',
                       style: TextStyle(
                         fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.buttonForeground,
                       ),
                     ),
                   ),

@@ -115,9 +115,10 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
 
   void applyCheckIn(CheckInRecommendation recommendation) {
     final db = _ref.read(databaseProvider);
+    final now = _ref.read(clockProvider)();
     final checkIn = CoachingCheckIn(
-      id: 'chk_${DateTime.now().millisecondsSinceEpoch}',
-      checkInDate: DateTime.now(),
+      id: 'chk_${now.millisecondsSinceEpoch}',
+      checkInDate: now,
       previousCalories: recommendation.previousAverageCalories,
       recommendedCalories: recommendation.recommendedAverageCalories,
       expenditureKcal: recommendation.currentExpenditureKcal,
@@ -125,7 +126,7 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
           _ref.read(userProfileProvider).currentWeightKg,
       isAccepted: true,
       statusNote: recommendation.metabolicInsight,
-      createdAt: DateTime.now(),
+      createdAt: now,
       rawCalorieDelta: recommendation.rawCalorieDelta,
       dampedCalorieDelta: recommendation.dampedCalorieDelta,
       wasClamped: recommendation.wasClamped,
@@ -139,9 +140,10 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
 
   void declineCheckIn(CheckInRecommendation recommendation) {
     final db = _ref.read(databaseProvider);
+    final now = _ref.read(clockProvider)();
     final checkIn = CoachingCheckIn(
-      id: 'chk_${DateTime.now().millisecondsSinceEpoch}',
-      checkInDate: DateTime.now(),
+      id: 'chk_${now.millisecondsSinceEpoch}',
+      checkInDate: now,
       previousCalories: recommendation.previousAverageCalories,
       recommendedCalories: recommendation.recommendedAverageCalories,
       expenditureKcal: recommendation.currentExpenditureKcal,
@@ -149,7 +151,7 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
           _ref.read(userProfileProvider).currentWeightKg,
       isAccepted: false,
       statusNote: 'Program retained without changes.',
-      createdAt: DateTime.now(),
+      createdAt: now,
       rawCalorieDelta: recommendation.rawCalorieDelta,
       dampedCalorieDelta: recommendation.dampedCalorieDelta,
       wasClamped: recommendation.wasClamped,
@@ -158,7 +160,7 @@ class WeeklyMacroProgramNotifier extends StateNotifier<WeeklyMacroProgram> {
 
     db.insertCoachingCheckIn(checkIn);
     // Defer check-in by updating lastCheckInDate to today
-    final updated = state.copyWith(lastCheckInDate: DateTime.now());
+    final updated = state.copyWith(lastCheckInDate: now);
     updateProgram(updated);
     _ref.invalidate(coachingCheckInHistoryProvider);
   }
@@ -193,12 +195,13 @@ final coachingCheckInStatusProvider = Provider<CheckInRecommendation>((ref) {
   final profile = ref.watch(userProfileProvider);
   final expenditure = ref.watch(expenditureStateProvider);
   final silentRecomp = ref.watch(recompositionStatusProvider);
+  final now = ref.watch(clockProvider)();
 
   return CoachingEngine.evaluateWeeklyCheckIn(
     currentProgram: program,
     profile: profile,
     currentExpenditureKcal: expenditure.expenditureKcal,
-    currentDate: DateTime.now(),
+    currentDate: now,
     kalmanConfidence: expenditure.confidence,
     silentRecompActive: silentRecomp,
   );
@@ -215,6 +218,15 @@ final coachingCheckInHistoryProvider = Provider<List<CoachingCheckIn>>((ref) {
 final dayMacroTargetForSelectedDateProvider = Provider<MacroTarget>((ref) {
   final program = ref.watch(weeklyMacroProgramProvider);
   final selectedDateStr = ref.watch(selectedDateProvider);
+
+  if (program.days.isEmpty) {
+    return MacroTarget(
+      calories: program.dailyAverageCalories,
+      proteinGrams: 150,
+      carbsGrams: 150,
+      fatGrams: 60,
+    );
+  }
 
   try {
     final date = DateTime.parse(selectedDateStr);

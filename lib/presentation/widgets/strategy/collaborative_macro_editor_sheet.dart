@@ -46,6 +46,7 @@ class _CollaborativeMacroEditorSheetState
   late TextEditingController _proteinCtrl;
   late TextEditingController _carbsCtrl;
   late TextEditingController _fatCtrl;
+  String? _errorText;
 
   @override
   void initState() {
@@ -184,26 +185,55 @@ class _CollaborativeMacroEditorSheetState
                   _buildManualFields(profile.calorieFloor)
                 else
                   _buildCollaborativeControls(previewMacros),
+                if (_errorText != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    _errorText!,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.calories,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: 18),
                 AppleBouncy(
                   scaleDown: 0.96,
                   onTap: () {
-                    AppHaptics.successFeedback();
                     if (isManual) {
-                      final cal = double.tryParse(_calCtrl.text) ??
-                          program.dailyAverageCalories;
-                      final p = double.tryParse(_proteinCtrl.text) ?? 150.0;
-                      final c = double.tryParse(_carbsCtrl.text) ?? 200.0;
-                      final f = double.tryParse(_fatCtrl.text) ?? 60.0;
+                      final calRaw = double.tryParse(_calCtrl.text.trim());
+                      final pRaw = double.tryParse(_proteinCtrl.text.trim());
+                      final cRaw = double.tryParse(_carbsCtrl.text.trim());
+                      final fRaw = double.tryParse(_fatCtrl.text.trim());
+                      if (calRaw == null ||
+                          pRaw == null ||
+                          cRaw == null ||
+                          fRaw == null ||
+                          calRaw < 800 ||
+                          calRaw > 6500 ||
+                          pRaw < 30 ||
+                          fRaw < 15 ||
+                          cRaw < 0) {
+                        setState(() {
+                          _errorText =
+                              'Enter valid targets: 800–6500 kcal, >=30g P, >=15g F, >=0g C.';
+                        });
+                        return;
+                      }
+                      if (_errorText != null) {
+                        setState(() => _errorText = null);
+                      }
+                      AppHaptics.successFeedback();
                       ref
                           .read(weeklyMacroProgramProvider.notifier)
                           .applyManualTargets(
-                            calories: cal.clamp(800.0, 6500.0),
-                            proteinGrams: p.clamp(30.0, 600.0),
-                            carbsGrams: c.clamp(0.0, 1200.0),
-                            fatGrams: f.clamp(15.0, 400.0),
+                            calories: calRaw.clamp(800.0, 6500.0),
+                            proteinGrams: pRaw.clamp(30.0, 600.0),
+                            carbsGrams: cRaw.clamp(0.0, 1200.0),
+                            fatGrams: fRaw.clamp(15.0, 400.0),
                           );
                     } else {
+                      AppHaptics.successFeedback();
                       ref
                           .read(weeklyMacroProgramProvider.notifier)
                           .applyCollaborativeCustomization(
@@ -215,6 +245,7 @@ class _CollaborativeMacroEditorSheetState
                     Navigator.of(context).pop();
                   },
                   child: Container(
+                    constraints: const BoxConstraints(minHeight: 48),
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     decoration: const BoxDecoration(
                       color: AppTheme.calories,
@@ -227,8 +258,8 @@ class _CollaborativeMacroEditorSheetState
                           : 'Apply Collaborative Split',
                       style: const TextStyle(
                         fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                        color: AppTheme.buttonForeground,
                       ),
                     ),
                   ),
@@ -367,16 +398,24 @@ class _CollaborativeMacroEditorSheetState
                     }
                   });
                 },
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundColor:
-                      active ? AppTheme.calories : AppTheme.cardElevated,
-                  child: Text(
-                    dayLabels[idx],
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                      color: active ? Colors.white : AppTheme.textSecondary,
+                child: SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Center(
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor:
+                          active ? AppTheme.calories : AppTheme.cardElevated,
+                      child: Text(
+                        dayLabels[idx],
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: active
+                              ? AppTheme.buttonForeground
+                              : AppTheme.textSecondary,
+                        ),
+                      ),
                     ),
                   ),
                 ),

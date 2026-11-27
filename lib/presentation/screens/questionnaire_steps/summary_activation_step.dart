@@ -146,7 +146,7 @@ class SummaryActivationStep extends StatelessWidget {
                     ),
                     SizedBox(height: 3),
                     Text(
-                      'Eat more or less than this target without guilt. The Bayesian algorithm continuously calculates expenditure from real weight trends, adapting seamlessly.',
+                      'Eat more or less than this target without guilt. Sique continuously learns your real burn from your weight trends and food logs, adapting smoothly.',
                       style: TextStyle(
                         fontSize: 11,
                         color: AppTheme.textSecondary,

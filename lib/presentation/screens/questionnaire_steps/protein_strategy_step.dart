@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../domain/models/user_profile.dart';
+import '../../../utils/unit_formatter.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/apple_tactile_card.dart';
 
@@ -11,12 +12,14 @@ class ProteinStrategyStep extends StatelessWidget {
     required this.currentWeightKg,
     required this.proteinPref,
     required this.onProteinSelected,
+    this.useLbs = false,
   });
 
   final GoalType selectedGoal;
   final double currentWeightKg;
   final ProteinPreference proteinPref;
   final ValueChanged<ProteinPreference> onProteinSelected;
+  final bool useLbs;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +81,7 @@ class ProteinStrategyStep extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Calculated proportionally to your current scale weight (${currentWeightKg.toStringAsFixed(1)} kg).',
+          'Calculated proportionally to your current scale weight (${UnitFormatter.formatWeight(currentWeightKg, useLbs: useLbs)}).',
           style: const TextStyle(
             fontSize: 14,
             color: AppTheme.textSecondary,

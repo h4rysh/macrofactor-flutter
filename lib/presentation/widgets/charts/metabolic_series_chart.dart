@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import '../../theme/app_theme.dart';
 
 /// A normalized data point for [MetabolicSeriesChart].
@@ -57,14 +58,45 @@ class _MetabolicSeriesChartState extends State<MetabolicSeriesChart> {
     return widget.points.sublist(widget.points.length - _windowDays);
   }
 
-  void _updateScrub(Offset localPos, double width, int count) {
+  void _updateScrub(Offset localPos, double width, List<ChartSeriesPoint> pts) {
+    final count = pts.length;
     if (count < 2 || width <= 0) return;
     final ratio = (localPos.dx / width).clamp(0.0, 1.0);
     final idx = (ratio * (count - 1)).round().clamp(0, count - 1);
     if (idx != _scrubIndex) {
       AppHaptics.selectionClick();
       setState(() => _scrubIndex = idx);
+      final p = pts[idx];
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        '${p.dateLabel}: ${p.value.toStringAsFixed(widget.decimals)} ${widget.unitLabel}',
+        TextDirection.ltr,
+      );
     }
+  }
+
+  (double, double) _computeBounds(List<ChartSeriesPoint> points) {
+    double minV = double.infinity;
+    double maxV = double.negativeInfinity;
+
+    for (final p in points) {
+      minV = math.min(minV, p.bandLow ?? p.value);
+      maxV = math.max(maxV, p.bandHigh ?? p.value);
+      if (p.scatterValue != null) {
+        minV = math.min(minV, p.scatterValue!);
+        maxV = math.max(maxV, p.scatterValue!);
+      }
+    }
+    if (widget.targetLineValue != null) {
+      minV = math.min(minV, widget.targetLineValue!);
+      maxV = math.max(maxV, widget.targetLineValue!);
+    }
+
+    if ((maxV - minV).abs() < 1e-3) {
+      return (minV - 1.0, maxV + 1.0);
+    }
+    final pad = (maxV - minV) * 0.12;
+    return (minV - pad, maxV + pad);
   }
 
   @override
@@ -76,6 +108,7 @@ class _MetabolicSeriesChartState extends State<MetabolicSeriesChart> {
 
     final activeIdx = _scrubIndex?.clamp(0, pts.length - 1);
     final scrubbed = activeIdx != null ? pts[activeIdx] : null;
+    final (minV, maxV) = _computeBounds(pts);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -86,16 +119,19 @@ class _MetabolicSeriesChartState extends State<MetabolicSeriesChart> {
           children: [
             Expanded(
               child: scrubbed != null
-                  ? Text(
-                      '${scrubbed.dateLabel}: ${scrubbed.value.toStringAsFixed(widget.decimals)} ${widget.unitLabel}'
-                      '${scrubbed.scatterValue != null ? ' (Raw: ${scrubbed.scatterValue!.toStringAsFixed(widget.decimals)})' : ''}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: widget.accentColor,
-                        fontFeatures: const [FontFeature.tabularFigures()],
+                  ? GestureDetector(
+                      onTap: () => setState(() => _scrubIndex = null),
+                      child: Text(
+                        '${scrubbed.dateLabel}: ${scrubbed.value.toStringAsFixed(widget.decimals)} ${widget.unitLabel}'
+                        '${scrubbed.scatterValue != null ? ' (Raw: ${scrubbed.scatterValue!.toStringAsFixed(widget.decimals)})' : ''}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: widget.accentColor,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
                       ),
                     )
                   : Text(
@@ -114,38 +150,53 @@ class _MetabolicSeriesChartState extends State<MetabolicSeriesChart> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 for (final w in const [(30, '30D'), (90, '90D'), (0, 'ALL')])
-                  GestureDetector(
-                    onTap: () {
-                      AppHaptics.selectionClick();
-                      setState(() {
-                        _windowDays = w.$1;
-                        _scrubIndex = null;
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(left: 4),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: _windowDays == w.$1
-                            ? widget.accentColor.withValues(alpha: 0.2)
-                            : AppTheme.surface,
-                        borderRadius: BorderRadius.circular(6),
-                        border: Border.all(
-                          color: _windowDays == w.$1
-                              ? widget.accentColor.withValues(alpha: 0.5)
-                              : AppTheme.cardBorder,
-                          width: 0.8,
+                  Semantics(
+                    button: true,
+                    selected: _windowDays == w.$1,
+                    label: '${w.$2} time window',
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8),
+                      onTap: () {
+                        AppHaptics.selectionClick();
+                        setState(() {
+                          _windowDays = w.$1;
+                          _scrubIndex = null;
+                        });
+                      },
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          minWidth: 44,
+                          minHeight: 44,
                         ),
-                      ),
-                      child: Text(
-                        w.$2,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: _windowDays == w.$1
-                              ? widget.accentColor
-                              : AppTheme.textMuted,
+                        child: Center(
+                          widthFactor: 1.0,
+                          child: Container(
+                            margin: const EdgeInsets.only(left: 4),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: _windowDays == w.$1
+                                  ? widget.accentColor.withValues(alpha: 0.2)
+                                  : AppTheme.surface,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color: _windowDays == w.$1
+                                    ? widget.accentColor.withValues(alpha: 0.5)
+                                    : AppTheme.cardBorder,
+                                width: 0.8,
+                              ),
+                            ),
+                            child: Text(
+                              w.$2,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: _windowDays == w.$1
+                                    ? widget.accentColor
+                                    : AppTheme.textMuted,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -154,19 +205,15 @@ class _MetabolicSeriesChartState extends State<MetabolicSeriesChart> {
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 4),
         LayoutBuilder(
           builder: (context, constraints) {
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
-              onTapDown: (d) => _updateScrub(
-                  d.localPosition, constraints.maxWidth, pts.length),
-              onTapUp: (_) => setState(() => _scrubIndex = null),
-              onTapCancel: () => setState(() => _scrubIndex = null),
-              onHorizontalDragUpdate: (d) => _updateScrub(
-                  d.localPosition, constraints.maxWidth, pts.length),
-              onHorizontalDragEnd: (_) => setState(() => _scrubIndex = null),
-              onHorizontalDragCancel: () => setState(() => _scrubIndex = null),
+              onTapDown: (d) =>
+                  _updateScrub(d.localPosition, constraints.maxWidth, pts),
+              onHorizontalDragUpdate: (d) =>
+                  _updateScrub(d.localPosition, constraints.maxWidth, pts),
               child: RepaintBoundary(
                 child: SizedBox(
                   height: widget.height,
@@ -183,6 +230,30 @@ class _MetabolicSeriesChartState extends State<MetabolicSeriesChart> {
               ),
             );
           },
+        ),
+        const SizedBox(height: 4),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Range: ${minV.toStringAsFixed(widget.decimals)}–${maxV.toStringAsFixed(widget.decimals)} ${widget.unitLabel}',
+              style: const TextStyle(
+                fontSize: 11,
+                color: AppTheme.textMuted,
+                fontFeatures: [FontFeature.tabularFigures()],
+              ),
+            ),
+            if (widget.targetLineLabel != null)
+              Text(
+                widget.targetLineLabel!,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.textSecondary,
+                  fontWeight: FontWeight.w600,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+          ],
         ),
       ],
     );

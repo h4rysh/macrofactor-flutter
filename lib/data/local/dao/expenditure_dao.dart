@@ -47,12 +47,18 @@ class ExpenditureDao {
     }
   }
 
-  /// Atomically saves a batch of expenditure records inside a single SQLite transaction scoped to user_id.
-  void saveExpenditures(List<ExpenditureRecord> records, {String? userId}) {
+  /// Atomically saves a batch of expenditure records scoped to user_id.
+  void saveExpenditures(
+    List<ExpenditureRecord> records, {
+    String? userId,
+    bool manageTransaction = true,
+  }) {
     if (records.isEmpty) return;
     final uid = userId ?? effectiveUserId;
 
-    _db.execute('BEGIN TRANSACTION;');
+    if (manageTransaction) {
+      _db.execute('BEGIN TRANSACTION;');
+    }
     try {
       final stmt = _db.prepare('''
         INSERT INTO expenditure_history (
@@ -75,20 +81,24 @@ class ExpenditureDao {
             record.confidence,
           ]);
         }
-        _db.execute('COMMIT;');
+        if (manageTransaction) {
+          _db.execute('COMMIT;');
+        }
       } finally {
         stmt.dispose();
       }
-    } on SqliteException catch (e, st) {
+    } catch (e, st) {
       developer.log(
         'Transaction failed during saveExpenditures; executing rollback',
         name: 'ExpenditureDao',
         error: e,
         stackTrace: st,
       );
-      try {
-        _db.execute('ROLLBACK;');
-      } catch (_) {}
+      if (manageTransaction) {
+        try {
+          _db.execute('ROLLBACK;');
+        } catch (_) {}
+      }
       rethrow;
     }
   }

@@ -33,9 +33,10 @@ class OilModifierDisplay {
   /// - Rich (+240 kcal)
   static String getTierLabel(OilModifier modifier, {bool isVegan = false}) {
     switch (modifier) {
+      case OilModifier.lowOil:
+        return 'Low Oil (-30 kcal)';
       case OilModifier.standard:
         return 'None (0 kcal)';
-      case OilModifier.lowOil:
       case OilModifier.halfTsp:
       case OilModifier.oneTsp:
         return 'Light (+40 kcal)';
@@ -50,9 +51,10 @@ class OilModifierDisplay {
   static String getTierSubtitle(OilModifier modifier, {bool isVegan = false}) {
     final fat = isVegan ? 'oil' : 'oil or ghee';
     switch (modifier) {
+      case OilModifier.lowOil:
+        return 'Trimmed / blotted preparation (-30 kcal)';
       case OilModifier.standard:
         return 'Raw, steamed, or boiled without added $fat';
-      case OilModifier.lowOil:
       case OilModifier.halfTsp:
       case OilModifier.oneTsp:
         return 'Light tadka (~1 tsp $fat, +40 kcal)';
@@ -67,9 +69,10 @@ class OilModifierDisplay {
   static String getTimelineBadge(OilModifier modifier, {bool isVegan = false}) {
     final fat = isVegan ? 'Oil' : 'Ghee';
     switch (modifier) {
+      case OilModifier.lowOil:
+        return 'Low $fat';
       case OilModifier.standard:
         return '';
-      case OilModifier.lowOil:
       case OilModifier.halfTsp:
       case OilModifier.oneTsp:
         return 'Light $fat';
@@ -78,5 +81,67 @@ class OilModifierDisplay {
       case OilModifier.twoTbsp:
         return 'Rich $fat';
     }
+  }
+
+  /// Resolves either slug ('none'/'low'/'standard'/'extra') or display label into an [OilModifier].
+  static OilModifier fromPreferenceSetting(String? raw) {
+    final s = (raw ?? '').trim().toLowerCase();
+    if (s.isEmpty) return OilModifier.standard;
+    if (s == 'none' || s.startsWith('zero oil') || s.contains('0 kcal')) {
+      return OilModifier.standard;
+    }
+    if (s == 'low' || s.startsWith('low oil') || s.contains('1 tsp')) {
+      return OilModifier.oneTsp;
+    }
+    if (s == 'extra' || s.startsWith('extra') || s.contains('2 tbsp')) {
+      return OilModifier.twoTbsp;
+    }
+    if (s == 'standard' || s.startsWith('standard') || s.contains('1 tbsp')) {
+      return OilModifier.oneTbsp;
+    }
+    return OilModifier.standard;
+  }
+
+  /// Selects a [PortionUnit] matching the saved `default_portion_unit` preference.
+  static PortionUnit resolveDefaultUnit(
+    List<PortionUnit> units,
+    String? pref,
+    PortionUnit fallback,
+  ) {
+    if (units.isEmpty) return fallback;
+    final p = (pref ?? '').trim().toLowerCase();
+    if (p.contains('katori')) {
+      return units.firstWhere(
+        (u) => u.unitName.toLowerCase().contains('katori'),
+        orElse: () => units.first,
+      );
+    }
+    if (p.contains('piece') || p.contains('roti') || p.contains('idli')) {
+      return units.firstWhere(
+        (u) {
+          final n = u.unitName.toLowerCase();
+          return n.contains('roti') ||
+              n.contains('piece') ||
+              n.contains('idli');
+        },
+        orElse: () => units.first,
+      );
+    }
+    if (p.contains('tablespoon') || p.contains('tbsp')) {
+      return units.firstWhere(
+        (u) {
+          final n = u.unitName.toLowerCase();
+          return n.contains('tbsp') || n.contains('tablespoon');
+        },
+        orElse: () => units.first,
+      );
+    }
+    if (p.contains('gram')) {
+      return units.firstWhere(
+        (u) => u.unitName.toLowerCase().contains('gram'),
+        orElse: () => units.first,
+      );
+    }
+    return units.first;
   }
 }

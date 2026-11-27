@@ -37,7 +37,6 @@ class ProfileDao {
         default_fasting_protocol, peri_workout_timing_enabled, neck_circumference_cm
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
-        user_id = excluded.user_id,
         name = excluded.name,
         current_weight = excluded.current_weight,
         target_weight = excluded.target_weight,
@@ -70,7 +69,8 @@ class ProfileDao {
         daily_water_target_ml = excluded.daily_water_target_ml,
         default_fasting_protocol = excluded.default_fasting_protocol,
         peri_workout_timing_enabled = excluded.peri_workout_timing_enabled,
-        neck_circumference_cm = excluded.neck_circumference_cm;
+        neck_circumference_cm = excluded.neck_circumference_cm
+      WHERE user_profile.user_id = excluded.user_id;
     ''');
 
     try {
@@ -120,9 +120,10 @@ class ProfileDao {
   UserProfile? getUserProfile({String? userId}) {
     final uid = userId ?? effectiveUserId;
     final stmt = _db.prepare(
-        'SELECT * FROM user_profile WHERE user_id = ? OR id = ? LIMIT 1;');
+      "SELECT * FROM user_profile WHERE user_id = ? OR (id = ? AND user_id = 'default_user') ORDER BY CASE WHEN user_id = ? THEN 0 ELSE 1 END LIMIT 1;",
+    );
     try {
-      final result = stmt.select([uid, uid]);
+      final result = stmt.select([uid, uid, uid]);
       if (result.isEmpty) return null;
 
       final row = result.first;
@@ -233,19 +234,32 @@ class ProfileDao {
   /// Clears the active user account session upon sign-out.
   void clearAccountSession() {
     final stmt = _db.prepare('DELETE FROM user_account_session;');
-    stmt.execute();
-    stmt.dispose();
+    try {
+      stmt.execute();
+    } finally {
+      stmt.dispose();
+    }
   }
 
   void _executeScopedDelete(String table, String targetUserId) {
+    final tableExists = _db.select(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name=?;",
+      [table],
+    );
+    if (tableExists.isEmpty) return;
+
+    final cols = _db
+        .select("PRAGMA table_info('$table');")
+        .map((r) => (r['name'] as String).toLowerCase())
+        .toSet();
+    if (!cols.contains('user_id')) return;
+
+    final stmt = _db.prepare('DELETE FROM $table WHERE user_id = ?;');
     try {
-      final stmt = _db.prepare('DELETE FROM $table WHERE user_id = ?;');
-      try {
-        stmt.execute([targetUserId]);
-      } finally {
-        stmt.dispose();
-      }
-    } catch (_) {}
+      stmt.execute([targetUserId]);
+    } finally {
+      stmt.dispose();
+    }
   }
 
   void _runWalCheckpointAndVacuum() {
@@ -301,8 +315,8 @@ class ProfileDao {
       _executeScopedDelete('custom_recipes', targetUserId);
       _executeScopedDelete('water_logs', targetUserId);
       _executeScopedDelete('fasting_sessions', targetUserId);
-      final profileStmt =
-          _db.prepare('DELETE FROM user_profile WHERE user_id = ? OR id = ?;');
+      final profileStmt = _db.prepare(
+          "DELETE FROM user_profile WHERE user_id = ? OR (id = ? AND user_id = 'default_user');");
       try {
         profileStmt.execute([targetUserId, targetUserId]);
       } finally {
@@ -316,10 +330,14 @@ class ProfileDao {
       _executeScopedDelete('day_notes', targetUserId);
       _executeScopedDelete('micro_goals', targetUserId);
 
+      final escapedUid = targetUserId
+          .replaceAll(r'\', r'\\')
+          .replaceAll('%', r'\%')
+          .replaceAll('_', r'\_');
       final settingsStmt =
-          _db.prepare("DELETE FROM app_settings WHERE key LIKE ?;");
+          _db.prepare("DELETE FROM app_settings WHERE key LIKE ? ESCAPE '\\';");
       try {
-        settingsStmt.execute(['$targetUserId:%']);
+        settingsStmt.execute(['$escapedUid:%']);
       } finally {
         settingsStmt.dispose();
       }
@@ -404,21 +422,25 @@ class ProfileDao {
   }
 
   /// Saves date of birth (ISO-8601 yyyy-MM-dd) for a user profile.
-  void saveDateOfBirth(String profileId, String dateOfBirth) {
+  void saveDateOfBirth(String profileId, String dateOfBirth, {String? userId}) {
+    final uid = userId ?? effectiveUserId;
     try {
-      final stmt = _db
-          .prepare('UPDATE user_profile SET date_of_birth = ? WHERE id = ?;');
-      stmt.execute([dateOfBirth, profileId]);
+      final stmt = _db.prepare(
+        "UPDATE user_profile SET date_of_birth = ? WHERE id = ? AND (user_id = ? OR user_id = 'default_user');",
+      );
+      stmt.execute([dateOfBirth, profileId, uid]);
       stmt.dispose();
     } catch (_) {}
   }
 
   /// Retrieves date of birth (ISO-8601 yyyy-MM-dd) for a user profile, or null.
-  String? getDateOfBirth(String profileId) {
+  String? getDateOfBirth(String profileId, {String? userId}) {
+    final uid = userId ?? effectiveUserId;
     try {
       final stmt = _db.prepare(
-          'SELECT date_of_birth FROM user_profile WHERE id = ? LIMIT 1;');
-      final result = stmt.select([profileId]);
+        "SELECT date_of_birth FROM user_profile WHERE id = ? AND (user_id = ? OR user_id = 'default_user') LIMIT 1;",
+      );
+      final result = stmt.select([profileId, uid]);
       stmt.dispose();
       if (result.isEmpty) return null;
       return result.first['date_of_birth'] as String?;

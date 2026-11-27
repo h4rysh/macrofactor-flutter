@@ -85,6 +85,7 @@ class SiqueEmptyState extends StatelessWidget {
                 scaleDown: 0.96,
                 onTap: onAction,
                 child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
                     vertical: 10,
@@ -102,7 +103,7 @@ class SiqueEmptyState extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.activeBlue,
+                      color: AppColors.activeBlueText,
                     ),
                   ),
                 ),

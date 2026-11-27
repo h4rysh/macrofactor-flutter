@@ -42,8 +42,8 @@ class PlateMacroPill extends StatelessWidget {
               child: Text(
                 '$percentage%',
                 style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
                   color: color,
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
@@ -51,7 +51,7 @@ class PlateMacroPill extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              '${grams.toStringAsFixed(1)}g',
+              '${grams.toStringAsFixed(1)}g ${label.isNotEmpty ? label[0] : ''}',
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -157,8 +157,10 @@ class PlatePresetRow extends StatelessWidget {
               scaleDown: 0.92,
               onTap: () => onSelect(preset),
               child: Container(
+                constraints: const BoxConstraints(minHeight: 44, minWidth: 44),
+                alignment: Alignment.center,
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppTheme.buttonBackground
@@ -197,19 +199,22 @@ class PlateOilModifierSelector extends StatelessWidget {
     super.key,
     required this.selectedOil,
     required this.onSelected,
+    this.isVegan = false,
   });
 
   final OilModifier selectedOil;
   final ValueChanged<OilModifier> onSelected;
+  final bool isVegan;
 
   @override
   Widget build(BuildContext context) {
+    final fatLabel = OilModifierDisplay.fatMedium(isVegan, capitalize: true);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          '1-TAP OIL / GHEE MODIFIER',
-          style: TextStyle(
+        Text(
+          isVegan ? '1-TAP OIL MODIFIER' : '1-TAP OIL / GHEE MODIFIER',
+          style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w800,
             color: AppTheme.textSecondary,
@@ -218,7 +223,7 @@ class PlateOilModifierSelector extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          OilModifierDisplay.getTierSubtitle(selectedOil),
+          OilModifierDisplay.getTierSubtitle(selectedOil, isVegan: isVegan),
           style: const TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w500,
@@ -237,7 +242,8 @@ class PlateOilModifierSelector extends StatelessWidget {
                   inMutuallyExclusiveGroup: true,
                   selected: isSelected,
                   button: true,
-                  label: OilModifierDisplay.getTierLabel(oil),
+                  label:
+                      '${OilModifierDisplay.getTierLabel(oil, isVegan: isVegan)} $fatLabel',
                   child: AppleBouncy(
                     scaleDown: 0.94,
                     onTap: () {
@@ -245,8 +251,12 @@ class PlateOilModifierSelector extends StatelessWidget {
                       onSelected(oil);
                     },
                     child: AnimatedContainer(
-                      duration: AppMotion.normal,
+                      duration: MediaQuery.disableAnimationsOf(context)
+                          ? Duration.zero
+                          : AppMotion.normal,
                       curve: Curves.easeOutCubic,
+                      constraints: const BoxConstraints(minHeight: 44),
+                      alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
                       decoration: BoxDecoration(
@@ -262,7 +272,7 @@ class PlateOilModifierSelector extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        OilModifierDisplay.getTierLabel(oil),
+                        OilModifierDisplay.getTierLabel(oil, isVegan: isVegan),
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight:

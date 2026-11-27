@@ -148,23 +148,46 @@ class UserProfile {
 
   /// Calculates dynamic daily calorie and macro targets given current Bayesian expenditure.
   MacroTarget calculateTargetMacros(double currentExpenditureKcal) {
-    if (customCalories != null) {
-      final pG = customProteinGrams ??
-          (proteinPreference.gramsPerKg * currentWeightKg).roundToDouble();
-      final lowerFatBound = customCalories! * 0.25 / 9.0;
-      final upperFatBound = math.max(
-          lowerFatBound, math.max(150.0, customCalories! * 0.35 / 9.0));
-      final fG = customFatGrams ??
-          (currentWeightKg * 0.7)
+    final safeExpenditure =
+        currentExpenditureKcal.isFinite && currentExpenditureKcal > 0
+            ? currentExpenditureKcal
+            : 2000.0;
+    final safeWeightKg = (currentWeightKg.isFinite && currentWeightKg > 0)
+        ? currentWeightKg
+        : 70.0;
+
+    if (programMode == ProgramMode.manual &&
+        customCalories != null &&
+        customCalories!.isFinite) {
+      final totalCals = customCalories!.clamp(400.0, 10000.0).roundToDouble();
+      var pG = customProteinGrams ??
+          (proteinPreference.gramsPerKg * safeWeightKg).roundToDouble();
+      final lowerFatBound = totalCals * 0.25 / 9.0;
+      final upperFatBound =
+          math.max(lowerFatBound, math.max(150.0, totalCals * 0.35 / 9.0));
+      var fG = customFatGrams ??
+          (safeWeightKg * 0.7)
               .clamp(math.min(lowerFatBound, upperFatBound),
                   math.max(lowerFatBound, upperFatBound))
               .roundToDouble();
-      final remainingCals = (customCalories! - (pG * 4.0) - (fG * 9.0))
-          .clamp(0.0, double.infinity);
+      if (customProteinGrams == null || customFatGrams == null) {
+        final maxProteinFat = totalCals;
+        if ((pG * 4.0) + (fG * 9.0) > maxProteinFat && customFatGrams == null) {
+          fG = math.max(
+              20.0, ((maxProteinFat - (pG * 4.0)) / 9.0).floorToDouble());
+        }
+        if ((pG * 4.0) + (fG * 9.0) > maxProteinFat &&
+            customProteinGrams == null) {
+          pG = math.max(
+              30.0, ((maxProteinFat - (fG * 9.0)) / 4.0).floorToDouble());
+        }
+      }
+      final remainingCals =
+          (totalCals - (pG * 4.0) - (fG * 9.0)).clamp(0.0, double.infinity);
       final cG = customCarbsGrams ?? (remainingCals / 4.0).roundToDouble();
 
       return MacroTarget(
-        calories: customCalories!.roundToDouble(),
+        calories: totalCals,
         proteinGrams: pG,
         carbsGrams: cG,
         fatGrams: fG,
@@ -179,7 +202,7 @@ class UserProfile {
     switch (goalType) {
       case GoalType.fatLoss:
         final weeklyKgLoss =
-            currentWeightKg * (weeklyRateOfChangePct.abs() / 100.0);
+            safeWeightKg * (weeklyRateOfChangePct.abs() / 100.0);
         dailyEnergyDeltaKcal = -(weeklyKgLoss * 1100.0);
         break;
       case GoalType.maintenance:
@@ -187,12 +210,12 @@ class UserProfile {
         break;
       case GoalType.muscleGain:
         final weeklyKgGain =
-            currentWeightKg * (weeklyRateOfChangePct.abs() / 100.0);
+            safeWeightKg * (weeklyRateOfChangePct.abs() / 100.0);
         dailyEnergyDeltaKcal = (weeklyKgGain * 1100.0);
         break;
     }
 
-    final rawTargetCalories = currentExpenditureKcal + dailyEnergyDeltaKcal;
+    final rawTargetCalories = safeExpenditure + dailyEnergyDeltaKcal;
     final effectiveFloor = math.min(calorieFloor, 6000.0);
     final targetCalories = rawTargetCalories.clamp(
         effectiveFloor, math.max(effectiveFloor, 6000.0));

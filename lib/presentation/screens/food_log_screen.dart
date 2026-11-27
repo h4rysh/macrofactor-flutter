@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../domain/models/food_models.dart';
+import '../../domain/models/oil_modifier_display.dart';
 import '../../domain/services/home_widget_sync_service.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
@@ -27,9 +28,18 @@ class FoodLogScreen extends ConsumerStatefulWidget {
 }
 
 class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
-  bool _isCollapsed = false;
+  late bool _isCollapsed;
   bool _isMultiSelect = false;
   final Set<int> _selectedIds = <int>{};
+
+  @override
+  void initState() {
+    super.initState();
+    final autoExpand =
+        ref.read(databaseProvider).getSetting('auto_expand_meals', 'true') ==
+            'true';
+    _isCollapsed = !autoExpand;
+  }
 
   /// Tracks whether we have already fired the celebratory haptic this session
   /// for calories and protein independently to avoid repeat firing.
@@ -96,32 +106,55 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
       return;
     }
     final db = ref.read(databaseProvider);
-    final portionUnits = db.getPortionUnits(entry.food.id);
+    final profile = ref.read(userProfileProvider);
+    final rawFood = entry.foodId > 0 ? db.getFoodById(entry.foodId) : null;
+    final sheetFood = rawFood ?? entry.food;
+    final portionUnits =
+        rawFood != null ? db.getPortionUnits(rawFood.id) : [entry.portionUnit];
     final macroTargets = ref.read(macroTargetProvider);
+    final currentDayLogs = ref.read(dailyFoodLogsProvider);
+    final consumedToday =
+        currentDayLogs.fold<double>(0.0, (s, e) => s + e.effectiveCalories);
 
     PlateServingSheet.show(
       context: context,
-      food: entry.food,
+      food: sheetFood,
       portionUnits: portionUnits,
       macroTargets: macroTargets,
       initialLoggedAt: entry.loggedAt,
+      initialMealType: entry.mealType,
+      initialQuantity: entry.quantity,
+      initialUnit: entry.portionUnit,
+      initialOilModifier: entry.oilModifier,
+      defaultPortionPreference:
+          db.getSetting('default_portion_unit', 'Grams (g)'),
+      isVegan: OilModifierDisplay.isVegan(profile.dietType),
+      remainingCaloriesToday:
+          macroTargets.targetCalories - consumedToday + entry.effectiveCalories,
+      onDetailedConfirm: ({
+        required FoodItem food,
+        required PortionUnit unit,
+        required double quantity,
+        required OilModifier oilModifier,
+        required MealType mealType,
+        required DateTime loggedAt,
+      }) {
+        ref.read(dailyFoodLogsProvider.notifier).removeEntry(entry.id);
+        ref.read(dailyFoodLogsProvider.notifier).addEntry(
+              food: food,
+              portionUnit: unit,
+              quantity: quantity,
+              mealType: mealType,
+              oilModifier: oilModifier,
+              loggedAt: loggedAt,
+            );
+      },
       onLogConfirmed: ({
         required PortionUnit unit,
         required double quantity,
         required OilModifier oilModifier,
         required DateTime loggedAt,
-      }) {
-        // Remove old and add updated
-        ref.read(dailyFoodLogsProvider.notifier).removeEntry(entry.id);
-        ref.read(dailyFoodLogsProvider.notifier).addEntry(
-              food: entry.food,
-              portionUnit: unit,
-              quantity: quantity,
-              mealType: entry.mealType,
-              oilModifier: oilModifier,
-              loggedAt: loggedAt,
-            );
-      },
+      }) {},
     );
   }
 
@@ -227,6 +260,7 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
       }
     });
 
+    ref.watch(foodLogSettingsRevisionProvider);
     final clock = ref.watch(clockProvider);
     final now = clock();
     final selectedDateStr = ref.watch(selectedDateProvider);
@@ -291,264 +325,332 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
     final visibleHours = showEmptyHours
         ? List<int>.generate(24, (i) => i)
         : (dayLogs.map((e) => e.loggedAt.hour).toSet().toList()..sort());
+    final loggedDateSet = db.foodDao.getDailyCalorieTotals().keys.toSet();
 
     return Scaffold(
       backgroundColor: AppTheme.background,
       body: SafeArea(
         child: Stack(
           children: [
-            CustomScrollView(
-              key: const PageStorageKey('timeline_scroll_view'),
-              slivers: [
-                // 1. Signature Date Carousel Ribbon with Authentic Header:
-                // [ ≡ ]           < Today ▾ >           [ ☰ ]
-                // and 7-day circular ribbon (M 12, T 13, W 14...)
-                SliverToBoxAdapter(
-                  child: DateCarouselRibbon(
-                    selectedDate: selectedDate,
-                    now: now,
-                    loggedDates: allLogs.map((e) => e.date).toSet(),
-                    onDateSelected: (date) {
-                      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                      ref.read(selectedDateProvider.notifier).state =
-                          DateFormat('yyyy-MM-dd').format(date);
-                    },
-                    leading: IconButton(
-                      icon: const Icon(Icons.bolt_rounded, size: 22),
-                      color: AppTheme.calories,
-                      tooltip: 'Quick Add Macros',
-                      onPressed: () => QuickAddMacrosSheet.show(
-                        context,
-                        date: selectedDate,
-                      ),
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        IconButton(
-                          icon: Icon(
-                            _isMultiSelect
-                                ? Icons.checklist_rtl_rounded
-                                : Icons.checklist_rounded,
-                            size: 21,
-                          ),
-                          color: _isMultiSelect
-                              ? AppTheme.activeBlue
-                              : AppTheme.textSecondary,
-                          tooltip: 'Batch Select',
-                          onPressed: () {
-                            setState(() {
-                              _isMultiSelect = !_isMultiSelect;
-                              _selectedIds.clear();
-                            });
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            _isCollapsed
-                                ? Icons.view_agenda_outlined
-                                : Icons.format_list_bulleted_rounded,
-                            size: 21,
-                          ),
-                          color: AppTheme.textSecondary,
-                          tooltip: _isCollapsed
-                              ? 'Expand Timeline'
-                              : 'Collapse Timeline',
-                          onPressed: () {
-                            setState(() => _isCollapsed = !_isCollapsed);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-                // 2. Nutrition Summary Progress Banner
-                SliverToBoxAdapter(
-                  child: NutritionSummaryBanner(
-                    consumed: dailyAggregate,
-                    targets: macroTargets,
-                  ),
-                ),
-
-                const SliverToBoxAdapter(child: SizedBox(height: 8)),
-
-                SliverToBoxAdapter(
-                  child: DayNoteAndRepeatsBanner(date: selectedDate),
-                ),
-
+            Column(
+              children: [
                 if (_isMultiSelect)
-                  SliverToBoxAdapter(
-                    child: BatchDiaryToolbar(
-                      selectedIds: _selectedIds,
-                      dayLogs: dayLogs,
-                      onClear: () => setState(() {
-                        _isMultiSelect = false;
-                        _selectedIds.clear();
-                      }),
-                    ),
+                  BatchDiaryToolbar(
+                    selectedIds: _selectedIds,
+                    dayLogs: dayLogs,
+                    onClear: () => setState(() {
+                      _isMultiSelect = false;
+                      _selectedIds.clear();
+                    }),
                   ),
-
-                // 4. Hourly Timeline Slots (or clean empty state when empty slots are hidden)
-                if (visibleHours.isEmpty)
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
-                      child: Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: AppTheme.cardSurface,
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: AppTheme.cardBorder),
-                        ),
-                        child: Column(
-                          children: [
-                            const Icon(
-                              Icons.restaurant_menu_rounded,
-                              size: 36,
-                              color: AppTheme.textMuted,
+                Expanded(
+                  child: CustomScrollView(
+                    key: const PageStorageKey('timeline_scroll_view'),
+                    slivers: [
+                      // 1. Signature Date Carousel Ribbon with Authentic Header:
+                      // [ ≡ ]           < Today ▾ >           [ ☰ ]
+                      // and 7-day circular ribbon (M 12, T 13, W 14...)
+                      SliverToBoxAdapter(
+                        child: DateCarouselRibbon(
+                          selectedDate: selectedDate,
+                          now: now,
+                          loggedDates: loggedDateSet,
+                          onDateSelected: (date) {
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            ref.read(selectedDateProvider.notifier).state =
+                                DateFormat('yyyy-MM-dd').format(date);
+                          },
+                          leading: IconButton(
+                            icon: const Icon(Icons.bolt_rounded, size: 22),
+                            color: AppTheme.calories,
+                            tooltip: 'Quick Add Macros',
+                            onPressed: () => QuickAddMacrosSheet.show(
+                              context,
+                              date: selectedDate,
+                              mealType: _getMealTypeForHour(now.hour),
+                              loggedAt: _selectedDateWithCurrentTime,
                             ),
-                            const SizedBox(height: 12),
-                            const Text(
-                              'No meals logged yet',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.textPrimary,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'Search or scan a food below to start your day.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: AppTheme.textSecondary,
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-                            ElevatedButton.icon(
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  FoodSearchScreen.route(
-                                    initialLoggedAt: selectedDate,
-                                  ),
-                                );
-                              },
-                              icon: const Icon(Icons.add_rounded, size: 18),
-                              label: const Text('Log Food'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.activeBlue,
-                                foregroundColor: Colors.white,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                          ),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  _isMultiSelect
+                                      ? Icons.checklist_rtl_rounded
+                                      : Icons.checklist_rounded,
+                                  size: 21,
                                 ),
+                                color: _isMultiSelect
+                                    ? AppTheme.activeBlue
+                                    : AppTheme.textSecondary,
+                                tooltip: 'Batch Select',
+                                onPressed: () {
+                                  setState(() {
+                                    _isMultiSelect = !_isMultiSelect;
+                                    _selectedIds.clear();
+                                  });
+                                },
                               ),
-                            ),
-                          ],
+                              IconButton(
+                                icon: Icon(
+                                  _isCollapsed
+                                      ? Icons.view_agenda_outlined
+                                      : Icons.format_list_bulleted_rounded,
+                                  size: 21,
+                                ),
+                                color: AppTheme.textSecondary,
+                                tooltip: _isCollapsed
+                                    ? 'Expand Timeline'
+                                    : 'Collapse Timeline',
+                                onPressed: () {
+                                  setState(() => _isCollapsed = !_isCollapsed);
+                                },
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                  )
-                else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) {
-                        final hour = visibleHours[index];
-                        final hourEntries = dayLogs
-                            .where((e) => e.loggedAt.hour == hour)
-                            .toList();
-                        final hourYesterday = yesterdayLogs
-                            .where((e) => e.loggedAt.hour == hour)
-                            .toList();
-                        final activeFast = ref.watch(fastingSessionProvider);
-                        final slotDt = DateTime(selectedDate.year,
-                            selectedDate.month, selectedDate.day, hour);
-                        final isFastingHour = activeFast != null &&
-                            !slotDt.isBefore(activeFast.startTime) &&
-                            slotDt.isBefore(activeFast.targetEndTime);
 
-                        return TimelineHourSlot(
-                          hour: hour,
-                          entries: hourEntries,
-                          isCollapsed: _isCollapsed,
-                          isFastingWindow: isFastingHour,
-                          onAddTap: () => _onAddForHour(hour),
-                          onEntryTap: _onEntryTap,
-                          yesterdayEntries: hourYesterday,
-                          onCopyYesterday: (entriesToCopy) =>
-                              _copyYesterdayEntries(
-                            entriesToCopy,
-                            selectedDate,
-                            hour,
+                      const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+                      // 2. Nutrition Summary Progress Banner
+                      SliverToBoxAdapter(
+                        child: NutritionSummaryBanner(
+                          consumed: dailyAggregate,
+                          targets: macroTargets,
+                        ),
+                      ),
+
+                      const SliverToBoxAdapter(child: SizedBox(height: 8)),
+
+                      SliverToBoxAdapter(
+                        child: DayNoteAndRepeatsBanner(date: selectedDate),
+                      ),
+
+                      // 4. Hourly Timeline Slots (or clean empty state when empty slots are hidden)
+                      if (visibleHours.isEmpty)
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+                            child: Container(
+                              padding: const EdgeInsets.all(24),
+                              decoration: BoxDecoration(
+                                color: AppTheme.cardSurface,
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(color: AppTheme.cardBorder),
+                              ),
+                              child: Column(
+                                children: [
+                                  const Icon(
+                                    Icons.restaurant_menu_rounded,
+                                    size: 36,
+                                    color: AppTheme.textMuted,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'No meals logged yet',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.textPrimary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  const Text(
+                                    'Search or scan a food below to start your day.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: AppTheme.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Wrap(
+                                    spacing: 10,
+                                    runSpacing: 8,
+                                    alignment: WrapAlignment.center,
+                                    children: [
+                                      ElevatedButton.icon(
+                                        onPressed: () {
+                                          Navigator.push(
+                                            context,
+                                            FoodSearchScreen.route(
+                                              mealType:
+                                                  _getMealTypeForHour(now.hour),
+                                              initialLoggedAt:
+                                                  _selectedDateWithCurrentTime,
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(Icons.add_rounded,
+                                            size: 18),
+                                        label: const Text('Log Food'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: AppTheme.activeBlue,
+                                          foregroundColor: Colors.white,
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                        ),
+                                      ),
+                                      if (yesterdayLogs.isNotEmpty)
+                                        OutlinedButton.icon(
+                                          onPressed: () {
+                                            final count = ref
+                                                .read(dailyFoodLogsProvider
+                                                    .notifier)
+                                                .copyFromDate(yesterdayStr);
+                                            if (count > 0) {
+                                              ScaffoldMessenger.of(context)
+                                                  .hideCurrentSnackBar();
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                      'Copied $count items from yesterday'),
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                ),
+                                              );
+                                            }
+                                          },
+                                          icon: const Icon(
+                                              Icons.content_copy_rounded,
+                                              size: 16),
+                                          label: const Text('Copy Yesterday'),
+                                          style: OutlinedButton.styleFrom(
+                                            foregroundColor:
+                                                AppTheme.textPrimary,
+                                            side: const BorderSide(
+                                                color: AppTheme.cardBorder),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                          onEntryDuplicate: (entry) {
-                            HapticFeedback.lightImpact();
-                            final newLoggedAt = ref.read(clockProvider)();
-                            ref.read(dailyFoodLogsProvider.notifier).addEntry(
-                                  food: entry.food,
-                                  portionUnit: entry.portionUnit,
-                                  quantity: entry.quantity,
-                                  mealType: entry.mealType,
-                                  oilModifier: entry.oilModifier,
-                                  loggedAt: newLoggedAt,
-                                );
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Duplicated ${entry.foodName}'),
-                                action: SnackBarAction(
-                                  label: 'Undo',
-                                  textColor: AppTheme.activeBlue,
-                                  onPressed: () {
-                                    final logs =
-                                        ref.read(dailyFoodLogsProvider);
-                                    if (logs.isNotEmpty) {
-                                      ref
-                                          .read(dailyFoodLogsProvider.notifier)
-                                          .removeEntry(logs.last.id);
-                                    }
-                                  },
-                                ),
-                                behavior: SnackBarBehavior.floating,
-                                duration: const Duration(seconds: 5),
-                              ),
-                            );
-                          },
-                          onEntryDelete: (entry) {
-                            HapticFeedback.heavyImpact();
-                            ref
-                                .read(dailyFoodLogsProvider.notifier)
-                                .removeEntry(entry.id);
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Removed ${entry.foodName}'),
-                                action: SnackBarAction(
-                                  label: 'Undo',
-                                  textColor: AppTheme.activeBlue,
-                                  onPressed: () {
-                                    ref
-                                        .read(dailyFoodLogsProvider.notifier)
-                                        .restoreEntry(entry);
-                                  },
-                                ),
-                                behavior: SnackBarBehavior.floating,
-                                duration: const Duration(seconds: 5),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                      childCount: visibleHours.length,
-                    ),
-                  ),
+                        )
+                      else
+                        SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) {
+                              final hour = visibleHours[index];
+                              final hourEntries = dayLogs
+                                  .where((e) => e.loggedAt.hour == hour)
+                                  .toList();
+                              final hourYesterday = yesterdayLogs
+                                  .where((e) => e.loggedAt.hour == hour)
+                                  .toList();
+                              final activeFast =
+                                  ref.watch(fastingSessionProvider);
+                              final slotDt = DateTime(selectedDate.year,
+                                  selectedDate.month, selectedDate.day, hour);
+                              final isFastingHour = activeFast != null &&
+                                  !slotDt.isBefore(activeFast.startTime) &&
+                                  slotDt.isBefore(activeFast.targetEndTime);
 
-                // Bottom padding to avoid persistent search bar and navigation dock overlap (ISS-7-01)
-                const SliverToBoxAdapter(child: SizedBox(height: 110)),
+                              return TimelineHourSlot(
+                                hour: hour,
+                                entries: hourEntries,
+                                isCollapsed: _isCollapsed,
+                                isFastingWindow: isFastingHour,
+                                onAddTap: () => _onAddForHour(hour),
+                                onEntryTap: _onEntryTap,
+                                yesterdayEntries: hourYesterday,
+                                onCopyYesterday: (entriesToCopy) =>
+                                    _copyYesterdayEntries(
+                                  entriesToCopy,
+                                  selectedDate,
+                                  hour,
+                                ),
+                                onEntryDuplicate: (entry) {
+                                  HapticFeedback.lightImpact();
+                                  final newLoggedAt =
+                                      _isSameDay(selectedDate, now)
+                                          ? _selectedDateWithCurrentTime
+                                          : DateTime(
+                                              selectedDate.year,
+                                              selectedDate.month,
+                                              selectedDate.day,
+                                              entry.loggedAt.hour,
+                                              entry.loggedAt.minute,
+                                            );
+                                  final insertedId = ref
+                                      .read(dailyFoodLogsProvider.notifier)
+                                      .addEntry(
+                                        food: entry.food,
+                                        portionUnit: entry.portionUnit,
+                                        quantity: entry.quantity,
+                                        mealType: entry.mealType,
+                                        oilModifier: entry.oilModifier,
+                                        loggedAt: newLoggedAt,
+                                      );
+                                  ScaffoldMessenger.of(context)
+                                      .hideCurrentSnackBar();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content:
+                                          Text('Duplicated ${entry.foodName}'),
+                                      action: SnackBarAction(
+                                        label: 'Undo',
+                                        textColor: AppTheme.activeBlue,
+                                        onPressed: () {
+                                          ref
+                                              .read(dailyFoodLogsProvider
+                                                  .notifier)
+                                              .removeEntry(insertedId);
+                                        },
+                                      ),
+                                      behavior: SnackBarBehavior.floating,
+                                      duration: const Duration(seconds: 5),
+                                    ),
+                                  );
+                                },
+                                onEntryDelete: (entry) {
+                                  HapticFeedback.heavyImpact();
+                                  ref
+                                      .read(dailyFoodLogsProvider.notifier)
+                                      .removeEntry(entry.id);
+                                  ScaffoldMessenger.of(context)
+                                      .hideCurrentSnackBar();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content:
+                                          Text('Removed ${entry.foodName}'),
+                                      action: SnackBarAction(
+                                        label: 'Undo',
+                                        textColor: AppTheme.activeBlue,
+                                        onPressed: () {
+                                          ref
+                                              .read(dailyFoodLogsProvider
+                                                  .notifier)
+                                              .restoreEntry(entry);
+                                        },
+                                      ),
+                                      behavior: SnackBarBehavior.floating,
+                                      duration: const Duration(seconds: 5),
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                            childCount: visibleHours.length,
+                          ),
+                        ),
+
+                      // Bottom padding to avoid persistent search bar and navigation dock overlap (ISS-7-01)
+                      const SliverToBoxAdapter(child: SizedBox(height: 110)),
+                    ],
+                  ),
+                ),
               ],
             ),
 
@@ -578,12 +680,11 @@ class _FoodLogScreenState extends ConsumerState<FoodLogScreen> {
                 },
                 onCustomFoodTap: () {
                   final nowHour = ref.read(clockProvider)().hour;
-                  Navigator.push(
+                  QuickAddMacrosSheet.show(
                     context,
-                    FoodSearchScreen.route(
-                      mealType: _getMealTypeForHour(nowHour),
-                      initialLoggedAt: _selectedDateWithCurrentTime,
-                    ),
+                    date: selectedDate,
+                    mealType: _getMealTypeForHour(nowHour),
+                    loggedAt: _selectedDateWithCurrentTime,
                   );
                 },
                 onBarcodeTap: () {

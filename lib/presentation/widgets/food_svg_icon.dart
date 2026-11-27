@@ -48,12 +48,23 @@ class FoodSvgIcon extends StatelessWidget {
         return 'i549.svg'; // grains & rice
     }
 
+    // Map missing legacy numbered icon refs to valid bundled SVGs
+    const remapped = {
+      'i8.svg': 'i549.svg',
+      'i9.svg': 'i549.svg',
+      'i11.svg': 'i1.svg',
+    };
+    if (remapped.containsKey(clean)) {
+      return remapped[clean]!;
+    }
+
     // Numbered icon format: i123 or i123.svg
     if (RegExp(r'^i\d+\.svg$').hasMatch(clean)) {
       return clean;
     }
     if (RegExp(r'^i\d+$').hasMatch(clean)) {
-      return '$clean.svg';
+      final candidate = '$clean.svg';
+      return remapped[candidate] ?? candidate;
     }
 
     // Safe general food icon fallback
@@ -78,6 +89,11 @@ class FoodSvgIcon extends StatelessWidget {
         width: size * 0.7,
         height: size * 0.7,
         placeholderBuilder: (_) => Icon(
+          Icons.restaurant_menu,
+          size: size * 0.5,
+          color: AppTheme.textSecondary,
+        ),
+        errorBuilder: (_, __, ___) => Icon(
           Icons.restaurant_menu,
           size: size * 0.5,
           color: AppTheme.textSecondary,

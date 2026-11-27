@@ -101,17 +101,22 @@ class SettingsDao {
     }
   }
 
+  String _escapeLikePrefix(String raw) =>
+      raw.replaceAll(r'\', r'\\').replaceAll('%', r'\%').replaceAll('_', r'\_');
+
   /// Clears settings entries scoped to user_id, or across all users if [allUsers] is true.
   void clearSettings({String? userId, bool allUsers = false}) {
     if (allUsers) {
       _db.execute('DELETE FROM app_settings;');
     } else {
       final uid = userId ?? effectiveUserId;
-      final prefix = '$uid:';
-      final stmt = _db.prepare(
-          'DELETE FROM app_settings WHERE key LIKE ? OR key NOT LIKE "%:%";');
+      final escapedPrefix = '${_escapeLikePrefix(uid)}:%';
+      final sql = uid == 'default_user'
+          ? "DELETE FROM app_settings WHERE key LIKE ? ESCAPE '\\' OR key NOT LIKE '%:%';"
+          : "DELETE FROM app_settings WHERE key LIKE ? ESCAPE '\\';";
+      final stmt = _db.prepare(sql);
       try {
-        stmt.execute(['$prefix%']);
+        stmt.execute([escapedPrefix]);
       } finally {
         stmt.dispose();
       }

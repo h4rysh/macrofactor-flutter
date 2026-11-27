@@ -61,8 +61,8 @@ class _Card07SaveStrategyState extends ConsumerState<Card07SaveStrategy> {
                 'Program Ready',
                 style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: AppTheme.activeBlue,
+                  fontWeight: FontWeight.w700,
+                  color: AppTheme.activeBlueText,
                   letterSpacing: 0.8,
                 ),
               ),
@@ -178,7 +178,7 @@ class _Card07SaveStrategyState extends ConsumerState<Card07SaveStrategy> {
                     SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Adherence-Neutral: Sique never judges food choices. Log what you actually eat, and the Bayesian Kalman filter will continuously refine your metabolic rate.',
+                        'Adherence-Neutral: Sique never judges food choices. Log what you actually eat, and your targets will continuously adapt to your true burn.',
                         style: TextStyle(
                           fontSize: 12,
                           color: AppTheme.textSecondary,
@@ -242,6 +242,9 @@ class _Card07SaveStrategyState extends ConsumerState<Card07SaveStrategy> {
                           activeTrackColor: AppTheme.activeBlue,
                           onChanged: (val) {
                             setState(() => _healthConnectEnabled = val);
+                            ref
+                                .read(authNotifierProvider.notifier)
+                                .setHealthConnectEnabled(val);
                             if (val) {
                               ref
                                   .read(healthConnectSyncProvider.notifier)
@@ -316,22 +319,59 @@ class _Card07SaveStrategyState extends ConsumerState<Card07SaveStrategy> {
                         ),
                       ),
                     ] else ...[
+                      if (authState is AuthError) ...[
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppTheme.calories.withValues(alpha: 0.12),
+                            borderRadius: AppRadii.mdBorderRadius,
+                            border: Border.all(
+                              color: AppTheme.calories.withValues(alpha: 0.35),
+                            ),
+                          ),
+                          child: Text(
+                            authState.message,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: AppTheme.caloriesSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
                       SizedBox(
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           key: const Key('onboarding_google_sign_in_btn'),
-                          onPressed: () {
-                            AppHaptics.lightImpact();
-                            ref
-                                .read(authNotifierProvider.notifier)
-                                .signInWithGoogle();
-                          },
-                          icon:
-                              const Icon(Icons.g_mobiledata_rounded, size: 22),
-                          label: const Text('Sign in with Google'),
+                          onPressed: authState is AuthLoading
+                              ? null
+                              : () {
+                                  AppHaptics.lightImpact();
+                                  ref
+                                      .read(authNotifierProvider.notifier)
+                                      .signInWithGoogle();
+                                },
+                          icon: authState is AuthLoading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.g_mobiledata_rounded,
+                                  size: 22),
+                          label: Text(
+                            authState is AuthLoading
+                                ? 'Signing in...'
+                                : (authState is AuthError
+                                    ? 'Retry Google Sign-In'
+                                    : 'Sign in with Google'),
+                          ),
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppTheme.textPrimary,
                             side: const BorderSide(color: AppTheme.cardBorder),
+                            minimumSize: const Size(0, 46),
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             shape: const RoundedRectangleBorder(
                               borderRadius: AppRadii.mdBorderRadius,

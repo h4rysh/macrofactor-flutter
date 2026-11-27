@@ -75,6 +75,7 @@ class PlateStagingNotifier extends StateNotifier<List<StagedPlateItem>> {
     double quantity = 1.0,
     OilModifier oilModifier = OilModifier.standard,
   }) {
+    final safeQty = (quantity.isFinite && quantity > 0) ? quantity : 1.0;
     final resolvedUnit = unit ?? food.defaultPortionUnit;
     final idx = state.indexWhere(
       (i) =>
@@ -85,17 +86,18 @@ class PlateStagingNotifier extends StateNotifier<List<StagedPlateItem>> {
     if (idx >= 0) {
       final existing = state[idx];
       final next = List<StagedPlateItem>.from(state);
-      next[idx] = existing.copyWith(quantity: existing.quantity + quantity);
+      next[idx] = existing.copyWith(quantity: existing.quantity + safeQty);
       state = next;
       return;
     }
 
     _seq++;
+    final now = _ref.read(clockProvider)();
     final newItem = StagedPlateItem(
-      id: 'stage_${DateTime.now().microsecondsSinceEpoch}_$_seq',
+      id: 'stage_${now.microsecondsSinceEpoch}_$_seq',
       food: food,
       portionUnit: resolvedUnit,
-      quantity: math.max(0.25, quantity),
+      quantity: math.max(0.25, safeQty),
       oilModifier: oilModifier,
     );
     state = [...state, newItem];
@@ -103,6 +105,7 @@ class PlateStagingNotifier extends StateNotifier<List<StagedPlateItem>> {
 
   /// Updates the quantity multiplier for a staged item, removing if <= 0.
   void updateQuantity(String itemId, double quantity) {
+    if (!quantity.isFinite) return;
     if (quantity <= 0) {
       removeItem(itemId);
       return;
@@ -162,7 +165,7 @@ class PlateStagingNotifier extends StateNotifier<List<StagedPlateItem>> {
         fiber: n.fiber,
         oilModifier: item.oilModifier,
         loggedAt: loggedAt,
-        iconSvg: item.food.category,
+        iconSvg: item.food.iconSvg,
       );
     }).toList(growable: false);
     logsNotifier.addEntries(entries);
@@ -179,7 +182,7 @@ class PlateStagingNotifier extends StateNotifier<List<StagedPlateItem>> {
     final trimmed = name.trim();
     if (state.isEmpty || trimmed.isEmpty) return null;
     final db = _ref.read(databaseProvider);
-    final now = DateTime.now();
+    final now = _ref.read(clockProvider)();
     final recipeId = 'rec_${now.millisecondsSinceEpoch}';
     final safeServings = math.max(1, servings);
 

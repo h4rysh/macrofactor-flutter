@@ -26,7 +26,7 @@ class DayNoteAndRepeatsBanner extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           SizedBox(
-            height: 36,
+            height: 44,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
@@ -61,9 +61,31 @@ class DayNoteAndRepeatsBanner extends ConsumerWidget {
                     backgroundColor: AppTheme.cardSurface,
                     side: BorderSide(
                         color: AppTheme.activeBlue.withValues(alpha: 0.4)),
-                    onDeleted: () {
-                      db.diaryToolsDao.deleteRepeatItem(r.id);
-                      ref.read(foodLogsRevisionProvider.notifier).state++;
+                    onDeleted: () async {
+                      final confirmed = await showDialog<bool>(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          backgroundColor: AppTheme.cardSurface,
+                          title: const Text('Remove repeat item?'),
+                          content: Text(
+                            'Stop showing "${r.foodName}" as a daily repeat suggestion?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(ctx).pop(true),
+                              child: const Text('Remove'),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirmed == true && context.mounted) {
+                        db.diaryToolsDao.deleteRepeatItem(r.id);
+                        ref.read(foodLogsRevisionProvider.notifier).state++;
+                      }
                     },
                     onPressed: () {
                       final meal = MealType.values.firstWhere(
@@ -116,7 +138,8 @@ class DayNoteAndRepeatsBanner extends ConsumerWidget {
             onTap: () => _editNote(context, ref, dateStr, note ?? ''),
             borderRadius: BorderRadius.circular(12),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              constraints: const BoxConstraints(minHeight: 44),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
                 color: AppTheme.cardSurface,
                 borderRadius: BorderRadius.circular(12),
@@ -156,45 +179,20 @@ class DayNoteAndRepeatsBanner extends ConsumerWidget {
     );
   }
 
-  void _editNote(
+  Future<void> _editNote(
     BuildContext context,
     WidgetRef ref,
     String dateStr,
     String initial,
-  ) {
-    final ctrl = TextEditingController(text: initial);
-    showDialog<void>(
+  ) async {
+    final savedText = await showDialog<String>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.cardSurface,
-        title: Text('Note for $dateStr',
-            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16)),
-        content: TextField(
-          controller: ctrl,
-          maxLines: 3,
-          decoration: const InputDecoration(
-            hintText: 'High-sodium dinner, travel, GI notes...',
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              ref.read(databaseProvider).diaryToolsDao.saveDayNote(
-                    dateStr,
-                    ctrl.text,
-                  );
-              ref.read(foodLogsRevisionProvider.notifier).state++;
-              Navigator.pop(ctx);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
+      builder: (_) => _DayNoteDialog(dateStr: dateStr, initial: initial),
     );
+    if (savedText != null && context.mounted) {
+      ref.read(databaseProvider).diaryToolsDao.saveDayNote(dateStr, savedText);
+      ref.read(foodLogsRevisionProvider.notifier).state++;
+    }
   }
 
   void _pickRepeatFood(BuildContext context, WidgetRef ref, DateTime date) {
@@ -252,6 +250,65 @@ class DayNoteAndRepeatsBanner extends ConsumerWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _DayNoteDialog extends StatefulWidget {
+  const _DayNoteDialog({
+    required this.dateStr,
+    required this.initial,
+  });
+
+  final String dateStr;
+  final String initial;
+
+  @override
+  State<_DayNoteDialog> createState() => _DayNoteDialogState();
+}
+
+class _DayNoteDialogState extends State<_DayNoteDialog> {
+  late final TextEditingController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = TextEditingController(text: widget.initial);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      backgroundColor: AppTheme.cardSurface,
+      title: Text(
+        'Note for ${widget.dateStr}',
+        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16),
+      ),
+      content: SingleChildScrollView(
+        child: TextField(
+          controller: _ctrl,
+          maxLines: 3,
+          decoration: const InputDecoration(
+            hintText: 'High-sodium dinner, travel, GI notes...',
+          ),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.pop(context, _ctrl.text),
+          child: const Text('Save'),
+        ),
+      ],
     );
   }
 }

@@ -49,7 +49,7 @@ class MicronutrientBreakdownSheet extends ConsumerWidget {
                       'Micronutrients & Electrolytes',
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w700,
                         color: AppTheme.textPrimary,
                       ),
                     ),
@@ -76,7 +76,8 @@ class MicronutrientBreakdownSheet extends ConsumerWidget {
                   padding: EdgeInsets.symmetric(vertical: 28),
                   child: Center(
                     child: Text(
-                      'No micronutrient definitions available.',
+                      'No micronutrient data yet. Log meals today to see your estimated vitamin, mineral, and electrolyte intake.',
+                      textAlign: TextAlign.center,
                       style: TextStyle(color: AppTheme.textSecondary),
                     ),
                   ),

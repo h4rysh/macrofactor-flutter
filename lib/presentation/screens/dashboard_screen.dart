@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import '../../domain/models/food_models.dart';
 import '../providers/app_providers.dart';
 import '../theme/app_theme.dart';
 import '../widgets/animated_primitives.dart';
 import '../widgets/expenditure_card.dart';
+import '../widgets/food/quick_add_macros_sheet.dart';
 import '../widgets/macro_gauge_ring.dart';
 import '../widgets/profile_avatar_button.dart';
 import '../widgets/weight_trend_card.dart';
 import 'account_profile_screen.dart';
 import 'food_search_screen.dart';
-import 'quick_actions_sheet.dart';
 import 'weight_log_modal.dart';
 
 /// Authentic Sique Dashboard Screen (Insights & Analytics Hub).
-/// Displays Focus Tile (Macro Gauge Ring), Live Bayesian Expenditure V3,
+/// Displays Focus Tile (Macro Gauge Ring), Adaptive Expenditure,
 /// Smoothed Weight Trend V2, and Energy Balance cards.
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({
@@ -26,10 +27,26 @@ class DashboardScreen extends ConsumerWidget {
   final VoidCallback? onNavigateToStrategy;
   final VoidCallback? onNavigateToFoodLog;
 
+  MealType _mealTypeForHour(int hour) {
+    if (hour < 11) return MealType.breakfast;
+    if (hour < 16) return MealType.lunch;
+    if (hour < 21) return MealType.dinner;
+    return MealType.snacks;
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final now = ref.watch(clockProvider)();
     final selectedDateStr = ref.watch(selectedDateProvider);
-    final selectedDate = DateTime.tryParse(selectedDateStr) ?? DateTime.now();
+    final selectedDate = DateTime.tryParse(selectedDateStr) ?? now;
+    final selectedDateWithTime = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+      now.hour,
+      now.minute,
+      now.second,
+    );
 
     final dailyNutrition = ref.watch(dailyNutritionSummaryProvider);
     final macroTarget = ref.watch(dailyMacroTargetProvider);
@@ -53,7 +70,19 @@ class DashboardScreen extends ConsumerWidget {
           backgroundColor: AppTheme.cardElevated,
           onRefresh: () async {
             AppHaptics.lightImpact();
+            final messenger = ScaffoldMessenger.of(context);
             await ref.read(healthConnectSyncProvider.notifier).syncNow();
+            if (!context.mounted) return;
+            final after = ref.read(healthConnectSyncProvider);
+            if (after.errorMessage != null) {
+              messenger.hideCurrentSnackBar();
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(after.errorMessage!),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
           },
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -87,16 +116,30 @@ class DashboardScreen extends ConsumerWidget {
                                     ),
                                   ),
                                   const SizedBox(width: 6),
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: syncState.isSyncing
-                                          ? AppTheme.activeBlue
+                                  Tooltip(
+                                    message: syncState.isSyncing
+                                        ? 'Health Connect syncing'
+                                        : (syncState.hasPermissions
+                                            ? 'Health Connect synced'
+                                            : 'Health Connect not connected'),
+                                    child: Semantics(
+                                      label: syncState.isSyncing
+                                          ? 'Health Connect syncing'
                                           : (syncState.hasPermissions
-                                              ? AppTheme.expenditure
-                                              : AppTheme.cardBorder),
+                                              ? 'Health Connect synced'
+                                              : 'Health Connect not connected'),
+                                      child: Container(
+                                        width: 7,
+                                        height: 7,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: syncState.isSyncing
+                                              ? AppTheme.activeBlue
+                                              : (syncState.hasPermissions
+                                                  ? AppTheme.expenditure
+                                                  : AppTheme.cardBorder),
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -119,52 +162,17 @@ class DashboardScreen extends ConsumerWidget {
                           ],
                         ),
                       ),
-                      Flexible(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerRight,
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              // Scale Weight Log Action
-                              IconButton(
-                                tooltip: 'Log Scale Weight',
-                                icon: const Icon(
-                                  Icons.monitor_weight_outlined,
-                                  color: AppTheme.trendWeight,
-                                  size: 24,
-                                ),
-                                onPressed: () => WeightLogModal.show(context),
-                              ),
-                              // Strategy Action
-                              if (onNavigateToStrategy != null)
-                                IconButton(
-                                  tooltip: 'Strategy',
-                                  icon: const Icon(
-                                    Icons.hub_outlined,
-                                    color: AppTheme.textSecondary,
-                                    size: 22,
-                                  ),
-                                  onPressed: onNavigateToStrategy,
-                                ),
-                              const SizedBox(width: 6),
-                              // Profile Avatar Action (36x36 Circular AppleBouncy)
-                              ProfileAvatarButton(
-                                key: const Key('dashboard_profile_avatar_btn'),
-                                user: currentUser,
-                                size: 36,
-                                onTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute<void>(
-                                      builder: (_) =>
-                                          const AccountProfileScreen(),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
+                      ProfileAvatarButton(
+                        key: const Key('dashboard_profile_avatar_btn'),
+                        user: currentUser,
+                        size: 36,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => const AccountProfileScreen(),
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -197,14 +205,13 @@ class DashboardScreen extends ConsumerWidget {
                                 icon: Icons.add_rounded,
                                 label: 'Log Food',
                                 onTap: () {
-                                  if (onNavigateToFoodLog != null) {
-                                    onNavigateToFoodLog!();
-                                  } else {
-                                    Navigator.push(
-                                      context,
-                                      FoodSearchScreen.route(),
-                                    );
-                                  }
+                                  Navigator.push(
+                                    context,
+                                    FoodSearchScreen.route(
+                                      mealType: _mealTypeForHour(now.hour),
+                                      initialLoggedAt: selectedDateWithTime,
+                                    ),
+                                  );
                                 },
                               ),
                             ),
@@ -221,7 +228,12 @@ class DashboardScreen extends ConsumerWidget {
                               child: _buildActionPill(
                                 icon: Icons.bolt_rounded,
                                 label: 'Quick Add',
-                                onTap: () => QuickActionsSheet.show(context),
+                                onTap: () => QuickAddMacrosSheet.show(
+                                  context,
+                                  date: selectedDate,
+                                  mealType: _mealTypeForHour(now.hour),
+                                  loggedAt: selectedDateWithTime,
+                                ),
                               ),
                             ),
                           ],
@@ -256,7 +268,10 @@ class DashboardScreen extends ConsumerWidget {
                       // D. Energy Balance Tile
                       AppleStaggeredEntrance(
                         index: 4,
-                        child: _buildEnergyBalanceCard(energyBalanceKcal),
+                        child: _buildEnergyBalanceCard(
+                          energyBalanceKcal,
+                          hasLoggedFood: dailyNutrition.calories > 0,
+                        ),
                       ),
                       const SizedBox(height: 110),
                     ],
@@ -278,7 +293,9 @@ class DashboardScreen extends ConsumerWidget {
     return AppleBouncy(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        constraints: const BoxConstraints(minHeight: 44),
+        alignment: Alignment.center,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
         decoration: BoxDecoration(
           color: AppTheme.cardSurface,
           borderRadius: BorderRadius.circular(12),
@@ -317,10 +334,36 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildEnergyBalanceCard(int energyBalanceKcal) {
-    final isDeficit = energyBalanceKcal <= 0;
+  Widget _buildEnergyBalanceCard(
+    int energyBalanceKcal, {
+    required bool hasLoggedFood,
+  }) {
+    final bool isBalanced = energyBalanceKcal == 0;
+    final bool isDeficit = energyBalanceKcal < 0;
     final absBalance = energyBalanceKcal.abs();
-    final badgeColor = isDeficit ? AppTheme.activeBlue : AppTheme.warning;
+    final Color badgeColor;
+    final String badgeText;
+    final String helperText;
+    if (!hasLoggedFood) {
+      badgeColor = AppTheme.textMuted;
+      badgeText = 'UNLOGGED';
+      helperText =
+          'No meals logged yet for this day. Log food to track your net energy balance.';
+    } else if (isBalanced) {
+      badgeColor = AppTheme.textSecondary;
+      badgeText = 'BALANCED';
+      helperText = 'Daily intake matches your estimated daily expenditure.';
+    } else if (isDeficit) {
+      badgeColor = AppTheme.activeBlueText;
+      badgeText = 'DEFICIT';
+      helperText =
+          'Your daily net caloric deficit is supporting steady weight reduction.';
+    } else {
+      badgeColor = AppTheme.warning;
+      badgeText = 'SURPLUS';
+      helperText =
+          'Your daily intake exceeds expenditure for lean tissue accrual.';
+    }
 
     return AppleTactileCard(
       padding: const EdgeInsets.all(18),
@@ -353,7 +396,7 @@ class DashboardScreen extends ConsumerWidget {
                   ),
                 ),
                 child: Text(
-                  isDeficit ? 'DEFICIT' : 'SURPLUS',
+                  badgeText,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
@@ -370,12 +413,13 @@ class DashboardScreen extends ConsumerWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               AnimatedCountText(
-                value: absBalance.toDouble(),
-                prefix: isDeficit ? '-' : '+',
+                value: !hasLoggedFood ? 0.0 : absBalance.toDouble(),
+                prefix:
+                    !hasLoggedFood || isBalanced ? '' : (isDeficit ? '-' : '+'),
                 style: TextStyle(
                   fontSize: 30,
                   fontWeight: FontWeight.w900,
-                  color: isDeficit ? AppTheme.activeBlue : AppTheme.warning,
+                  color: badgeColor,
                   letterSpacing: -0.5,
                 ),
               ),
@@ -392,9 +436,7 @@ class DashboardScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 5),
           Text(
-            isDeficit
-                ? 'Your daily net caloric deficit is driving body fat loss according to your plan.'
-                : 'Your daily intake exceeds expenditure for lean tissue accrual.',
+            helperText,
             style: const TextStyle(
               fontSize: 12,
               color: AppTheme.textMuted,

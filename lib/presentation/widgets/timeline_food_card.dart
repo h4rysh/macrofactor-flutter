@@ -21,8 +21,9 @@ class TimelineFoodCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final period = entry.loggedAt.hour < 12 ? 'AM' : 'PM';
     final timeStr =
-        '${entry.loggedAt.hour % 12 == 0 ? 12 : entry.loggedAt.hour % 12}:${entry.loggedAt.minute.toString().padLeft(2, '0')}';
+        '${entry.loggedAt.hour % 12 == 0 ? 12 : entry.loggedAt.hour % 12}:${entry.loggedAt.minute.toString().padLeft(2, '0')} $period';
 
     return Dismissible(
       key: ValueKey(entry.id),
@@ -41,20 +42,20 @@ class TimelineFoodCard extends StatelessWidget {
         alignment: Alignment.centerLeft,
         padding: const EdgeInsets.only(left: 20),
         decoration: BoxDecoration(
-          color: AppTheme.calories.withValues(alpha: 0.15),
+          color: AppTheme.activeBlue.withValues(alpha: 0.16),
           borderRadius: AppRadii.lgBorderRadius,
         ),
         child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.copy_rounded, color: AppTheme.calories, size: 20),
+            Icon(Icons.copy_rounded, color: AppTheme.activeBlueText, size: 20),
             SizedBox(width: 8),
             Text(
               'Duplicate',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.calories,
+                color: AppTheme.activeBlueText,
               ),
             ),
           ],
@@ -139,13 +140,6 @@ class TimelineFoodCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                ),
-
-                const SizedBox(width: 6),
-                const Icon(
-                  Icons.menu_rounded,
-                  size: 18,
-                  color: AppTheme.textMuted,
                 ),
               ],
             ),

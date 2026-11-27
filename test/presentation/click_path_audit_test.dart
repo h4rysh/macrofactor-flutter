@@ -185,9 +185,9 @@ void main() {
       await tester.tap(saveBtn);
       await tester.pumpAndSettle();
 
-      // Verify updated note is persisted in DB
+      // Verify updated note is persisted in DiaryToolsDao
       expect(
-        db.getSetting('day_note:2026-11-22', ''),
+        db.diaryToolsDao.getDayNote('2026-11-22'),
         'Updated reflection: Great recovery and high focus.',
       );
       expect(find.text('Day note saved'), findsOneWidget);

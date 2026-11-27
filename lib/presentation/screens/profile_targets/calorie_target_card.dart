@@ -77,7 +77,10 @@ class CalorieTargetCard extends StatelessWidget {
                 TextButton(
                   onPressed: () {
                     ref.read(userProfileProvider.notifier).updateProfile(
-                          profile.copyWith(clearCustom: true),
+                          profile.copyWith(
+                            programMode: ProgramMode.coached,
+                            clearCustom: true,
+                          ),
                         );
                   },
                   child: const FittedBox(
@@ -139,7 +142,10 @@ class CalorieTargetCard extends StatelessWidget {
               divisions: 112,
               onChanged: (val) {
                 ref.read(userProfileProvider.notifier).updateProfile(
-                      profile.copyWith(customCalories: val.roundToDouble()),
+                      profile.copyWith(
+                        programMode: ProgramMode.manual,
+                        customCalories: val.roundToDouble(),
+                      ),
                     );
               },
             ),

@@ -56,8 +56,7 @@ class _Step05WeightState extends State<Step05Weight> {
 
     return OnboardingStepScaffold(
       title: 'Current Weight',
-      subtitle:
-          'Your initial benchmark to seed Bayesian Kalman trend weight tracking.',
+      subtitle: 'Your initial benchmark to start smooth trend weight tracking.',
       icon: Icons.monitor_weight_outlined,
       continueKey: const Key('step_05_continue_btn'),
       isContinueEnabled: _isValid,

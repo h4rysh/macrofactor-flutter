@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
+import 'package:sique/presentation/widgets/food/quick_add_macros_sheet.dart';
 import 'package:sique/presentation/widgets/sique_bouncy.dart';
 import '../../domain/models/food_models.dart';
 import '../theme/app_theme.dart';
@@ -24,12 +25,43 @@ class QuickActionsSheet extends StatelessWidget {
     );
   }
 
+  MealType _mealTypeForHour(int hour) {
+    if (hour < 11) return MealType.breakfast;
+    if (hour < 16) return MealType.lunch;
+    if (hour < 21) return MealType.dinner;
+    return MealType.snacks;
+  }
+
+  (DateTime, DateTime, String) _resolveSelectedDateAndTime(
+      BuildContext context) {
+    final now = DateTime.now();
+    try {
+      final container = ProviderScope.containerOf(context, listen: false);
+      final clockNow = container.read(clockProvider)();
+      final dateStr = container.read(selectedDateProvider);
+      final parsed = DateTime.tryParse(dateStr) ?? clockNow;
+      final loggedAt = DateTime(
+        parsed.year,
+        parsed.month,
+        parsed.day,
+        clockNow.hour,
+        clockNow.minute,
+        clockNow.second,
+      );
+      return (parsed, loggedAt, dateStr);
+    } catch (_) {
+      return (now, now, DateFormat('yyyy-MM-dd').format(now));
+    }
+  }
+
   void _handleCopyYesterday(BuildContext context) {
+    final messenger = ScaffoldMessenger.of(context);
     Navigator.pop(context);
     try {
       final container = ProviderScope.containerOf(context, listen: false);
+      final now = container.read(clockProvider)();
       final selectedDateStr = container.read(selectedDateProvider);
-      final selectedDate = DateTime.tryParse(selectedDateStr) ?? DateTime.now();
+      final selectedDate = DateTime.tryParse(selectedDateStr) ?? now;
       final yesterday = DateTime(
         selectedDate.year,
         selectedDate.month,
@@ -41,8 +73,8 @@ class QuickActionsSheet extends StatelessWidget {
           .read(dailyFoodLogsProvider.notifier)
           .copyFromDate(yesterdayStr);
 
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
         SnackBar(
           content: Text(
             count > 0
@@ -53,7 +85,7 @@ class QuickActionsSheet extends StatelessWidget {
         ),
       );
     } catch (_) {
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.showSnackBar(
         const SnackBar(
           content: Text('Failed to copy yesterday’s meals. Please try again.'),
           behavior: SnackBarBehavior.floating,
@@ -63,12 +95,7 @@ class QuickActionsSheet extends StatelessWidget {
   }
 
   void _handleDayNote(BuildContext context) {
-    String selectedDateStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    try {
-      final container = ProviderScope.containerOf(context, listen: false);
-      selectedDateStr = container.read(selectedDateProvider);
-    } catch (_) {}
-
+    final (_, _, selectedDateStr) = _resolveSelectedDateAndTime(context);
     final navigator = Navigator.of(context);
     navigator.pop();
 
@@ -134,11 +161,15 @@ class QuickActionsSheet extends StatelessWidget {
                             subtitle: 'Log meals & items',
                             color: AppTheme.calories,
                             onTap: () {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
+                              final (_, loggedAt, _) =
+                                  _resolveSelectedDateAndTime(context);
+                              final nav = Navigator.of(context);
+                              nav.pop();
+                              nav.push(
                                 FoodSearchScreen.route(
-                                    mealType: MealType.lunch),
+                                  mealType: _mealTypeForHour(loggedAt.hour),
+                                  initialLoggedAt: loggedAt,
+                                ),
                               );
                             },
                           ),
@@ -171,11 +202,15 @@ class QuickActionsSheet extends StatelessWidget {
                             title: 'Quick Add Calories',
                             color: AppTheme.fat,
                             onTap: () {
-                              Navigator.pop(context);
-                              Navigator.push(
-                                context,
-                                FoodSearchScreen.route(
-                                    mealType: MealType.snacks),
+                              final (selectedDate, loggedAt, _) =
+                                  _resolveSelectedDateAndTime(context);
+                              final nav = Navigator.of(context);
+                              nav.pop();
+                              QuickAddMacrosSheet.show(
+                                nav.context,
+                                date: selectedDate,
+                                mealType: _mealTypeForHour(loggedAt.hour),
+                                loggedAt: loggedAt,
                               );
                             },
                           ),
@@ -343,7 +378,8 @@ class _DayNoteSheetState extends ConsumerState<DayNoteSheet> {
   void initState() {
     super.initState();
     final db = ref.read(databaseProvider);
-    final existing = db.getSetting('day_note:${widget.date}', '');
+    final existing = db.diaryToolsDao.getDayNote(widget.date) ??
+        db.getSetting('day_note:${widget.date}', '');
     _controller = TextEditingController(text: existing);
   }
 
@@ -356,11 +392,13 @@ class _DayNoteSheetState extends ConsumerState<DayNoteSheet> {
   void _saveNote() {
     final text = _controller.text.trim();
     final db = ref.read(databaseProvider);
-    db.setSetting('day_note:${widget.date}', text);
+    db.diaryToolsDao.saveDayNote(widget.date, text);
+    ref.read(foodLogsRevisionProvider.notifier).state++;
+    final messenger = ScaffoldMessenger.of(context);
 
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
       SnackBar(
         content: Text(text.isEmpty ? 'Day note cleared' : 'Day note saved'),
         behavior: SnackBarBehavior.floating,

@@ -64,6 +64,13 @@ class _GoalQuestionnaireSheetState
     _weeklyRate = profile.weeklyRateOfChangePct;
     _proteinPref = profile.proteinPreference;
     _baselineExpenditure = profile.baselineExpenditureKcal;
+    _activityMultiplier = switch (profile.dailyActivity.toLowerCase()) {
+      'sedentary' => 1.2,
+      'light' || 'lightly_active' => 1.375,
+      'very' || 'very_active' => 1.725,
+      'extra' || 'athlete' => 1.9,
+      _ => 1.55,
+    };
 
     // Load initial dietary habits from database settings if available
     final db = ref.read(databaseProvider);
@@ -85,6 +92,10 @@ class _GoalQuestionnaireSheetState
       _stapleSlug = 'roti';
     } else if (savedStaple.contains('rice')) {
       _stapleSlug = 'rice';
+    } else if (savedStaple.contains('millet')) {
+      _stapleSlug = 'millet';
+    } else if (savedStaple.contains('poha') || savedStaple.contains('upma')) {
+      _stapleSlug = 'poha_upma';
     } else {
       _stapleSlug = 'balanced';
     }
@@ -98,7 +109,7 @@ class _GoalQuestionnaireSheetState
     } else if (savedOil.contains('heavy') ||
         savedOil.contains('generous') ||
         savedOil.contains('extra')) {
-      _oilSlug = 'generous';
+      _oilSlug = 'heavy';
     } else {
       _oilSlug = 'standard';
     }
@@ -141,6 +152,7 @@ class _GoalQuestionnaireSheetState
       weeklyRateOfChangePct: safeRate,
       proteinPreference: _proteinPref,
       baselineExpenditureKcal: _baselineExpenditure,
+      dietType: _dietSlug,
       clearCustom: true,
     );
 
@@ -235,11 +247,9 @@ class _GoalQuestionnaireSheetState
                           icon: const Icon(Icons.arrow_back_ios_new_rounded,
                               size: 18, color: AppTheme.textSecondary),
                           onPressed: _prevStep,
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
                         )
                       else
-                        const SizedBox(width: 18),
+                        const SizedBox(width: 48),
                       const Spacer(),
                       Text(
                         'Step ${_currentStep + 1} of $_totalSteps',
@@ -256,11 +266,8 @@ class _GoalQuestionnaireSheetState
                         icon: const Icon(Icons.close_rounded,
                             size: 20, color: AppTheme.textSecondary),
                         onPressed: () {
-                          _autoSaveCurrentState();
                           Navigator.of(context).pop(false);
                         },
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
                       ),
                     ],
                   ),
@@ -364,6 +371,7 @@ class _GoalQuestionnaireSheetState
           selectedGoal: _selectedGoal,
           weeklyRate: _weeklyRate,
           currentWeightKg: profile.currentWeightKg,
+          useLbs: ref.watch(useImperialUnitsProvider),
           onRateSelected: (rate) {
             final safeRate =
                 DomainValidator.clampRateOfChange(rate, _selectedGoal);
@@ -398,6 +406,7 @@ class _GoalQuestionnaireSheetState
           selectedGoal: _selectedGoal,
           currentWeightKg: profile.currentWeightKg,
           proteinPref: _proteinPref,
+          useLbs: ref.watch(useImperialUnitsProvider),
           onProteinSelected: (pref) => setState(() => _proteinPref = pref),
         );
       case 5:

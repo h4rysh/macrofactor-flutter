@@ -68,6 +68,38 @@ class BarcodeDao {
 
   /// Saves or refreshes a scanned barcode product into offline SQLite cache.
   void upsertProduct(BarcodeFoodProduct product) {
+    final normalized = _normalizeBarcode(product.barcode);
+    final trimmedName = product.foodName.trim();
+    if (normalized == null || trimmedName.isEmpty) {
+      throw ArgumentError('Invalid barcode or food name');
+    }
+    final safeName =
+        trimmedName.length > 160 ? trimmedName.substring(0, 160) : trimmedName;
+    final trimmedBrand = product.brandName?.trim();
+    final safeBrand = trimmedBrand != null && trimmedBrand.isNotEmpty
+        ? (trimmedBrand.length > 120
+            ? trimmedBrand.substring(0, 120)
+            : trimmedBrand)
+        : null;
+    final safeServing = product.servingSizeG.isFinite
+        ? product.servingSizeG.clamp(1.0, 5000.0)
+        : 100.0;
+    final safeCalories = product.caloriesPer100g.isFinite
+        ? product.caloriesPer100g.clamp(0.0, 1000.0)
+        : 0.0;
+    final safeProtein = product.proteinPer100g.isFinite
+        ? product.proteinPer100g.clamp(0.0, 100.0)
+        : 0.0;
+    final safeCarbs = product.carbsPer100g.isFinite
+        ? product.carbsPer100g.clamp(0.0, 100.0)
+        : 0.0;
+    final safeFat = product.fatPer100g.isFinite
+        ? product.fatPer100g.clamp(0.0, 100.0)
+        : 0.0;
+    final safeFiber = product.fiberPer100g.isFinite
+        ? product.fiberPer100g.clamp(0.0, 100.0)
+        : 0.0;
+
     final stmt = _db.prepare('''
       INSERT OR REPLACE INTO barcode_cache (
         barcode, food_name, brand_name, serving_size_g,
@@ -76,15 +108,15 @@ class BarcodeDao {
     ''');
     try {
       stmt.execute([
-        product.barcode.trim(),
-        product.foodName.trim(),
-        product.brandName?.trim(),
-        product.servingSizeG,
-        product.caloriesPer100g,
-        product.proteinPer100g,
-        product.carbsPer100g,
-        product.fatPer100g,
-        product.fiberPer100g,
+        normalized,
+        safeName,
+        safeBrand,
+        safeServing,
+        safeCalories,
+        safeProtein,
+        safeCarbs,
+        safeFat,
+        safeFiber,
         product.microsJson,
         product.cachedAt.toIso8601String(),
       ]);
@@ -175,12 +207,30 @@ class BarcodeDao {
       stmt.dispose();
     }
 
+    final customGoals = <int, double>{};
+    try {
+      final goalStmt = _db.prepare(
+        'SELECT nutrient_id, custom_target FROM micro_goals WHERE user_id = ?;',
+      );
+      try {
+        for (final row in goalStmt.select([uid])) {
+          customGoals[(row['nutrient_id'] as num).toInt()] =
+              (row['custom_target'] as num).toDouble();
+        }
+      } finally {
+        goalStmt.dispose();
+      }
+    } on SqliteException catch (_) {
+      // micro_goals table may not exist on older pre-v7 fixtures
+    }
+
     return definitions
         .map(
           (def) => DailyMicronutrientIntake(
             definition: def,
             consumedAmount: consumedByNutrientId[def.id] ?? 0.0,
-            targetAmount: def.targetForSex(isFemale: isFemale),
+            targetAmount:
+                customGoals[def.id] ?? def.targetForSex(isFemale: isFemale),
           ),
         )
         .toList(growable: false);
@@ -195,10 +245,12 @@ class BarcodeDao {
     final stmt = _db.prepare('''
       SELECT fl.date AS date,
              SUM(fl.calories) AS total_kcal,
+             SUM(fl.gram_weight) AS total_grams,
              SUM(CASE WHEN fn.nutrient_id = 4
                       THEN (fl.gram_weight / 100.0) * fn.amount_per_100g
                       ELSE 0.0 END) AS sodium_mg,
-             SUM(CASE WHEN fn.nutrient_id = 4 THEN fl.calories ELSE 0.0 END) AS covered_kcal
+             SUM(CASE WHEN fn.nutrient_id = 4 THEN fl.calories ELSE 0.0 END) AS covered_kcal,
+             SUM(CASE WHEN fn.nutrient_id = 4 THEN fl.gram_weight ELSE 0.0 END) AS covered_grams
       FROM food_logs fl
       LEFT JOIN food_nutrients fn
         ON fl.food_id = fn.food_id AND fn.nutrient_id = 4
@@ -211,10 +263,15 @@ class BarcodeDao {
         final date = row['date'] as String?;
         if (date == null || date.isEmpty) continue;
         final totalKcal = (row['total_kcal'] as num?)?.toDouble() ?? 0.0;
+        final totalGrams = (row['total_grams'] as num?)?.toDouble() ?? 0.0;
         final sodiumMg = (row['sodium_mg'] as num?)?.toDouble() ?? 0.0;
         final coveredKcal = (row['covered_kcal'] as num?)?.toDouble() ?? 0.0;
-        final cov =
-            totalKcal > 0 ? (coveredKcal / totalKcal).clamp(0.0, 1.0) : 0.0;
+        final coveredGrams = (row['covered_grams'] as num?)?.toDouble() ?? 0.0;
+        final cov = totalKcal > 0
+            ? (coveredKcal / totalKcal).clamp(0.0, 1.0)
+            : (totalGrams > 0
+                ? (coveredGrams / totalGrams).clamp(0.0, 1.0)
+                : 0.0);
         result[date] = (sodiumMg: sodiumMg, coverageRatio: cov);
       }
       return result;

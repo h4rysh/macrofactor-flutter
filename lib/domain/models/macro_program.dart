@@ -159,6 +159,17 @@ class WeeklyMacroProgram {
 
   /// Retrieves target for a specific DateTime.
   DayMacroTarget targetForDate(DateTime date) {
+    if (days.isEmpty) {
+      return DayMacroTarget(
+        dayOfWeek: date.weekday,
+        dayName: '',
+        isWorkoutDay: workoutDays.contains(date.weekday),
+        calories: dailyAverageCalories,
+        proteinGrams: (dailyAverageCalories * 0.30 / 4.0).roundToDouble(),
+        carbsGrams: (dailyAverageCalories * 0.40 / 4.0).roundToDouble(),
+        fatGrams: (dailyAverageCalories * 0.30 / 9.0).roundToDouble(),
+      );
+    }
     final weekday = date.weekday; // 1..7
     return days.firstWhere(
       (d) => d.dayOfWeek == weekday,

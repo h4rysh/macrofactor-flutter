@@ -21,10 +21,7 @@ class BodyMeasurementsDao {
 
   /// Inserts or updates body measurements for a specific date.
   void upsertMeasurement(BodyMeasurementEntry entry, {String? userId}) {
-    final uid = userId ??
-        (effectiveUserId != 'default_user'
-            ? effectiveUserId
-            : (entry.userId.isNotEmpty ? entry.userId : 'default_user'));
+    final uid = userId ?? effectiveUserId;
     final stmt = _db.prepare('''
       INSERT INTO body_measurements (
         id, user_id, date, waist_cm, hips_cm, chest_cm, neck_cm,

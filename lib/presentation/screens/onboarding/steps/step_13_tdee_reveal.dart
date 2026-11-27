@@ -195,7 +195,7 @@ class _Step13TdeeRevealState extends State<Step13TdeeReveal> {
                   const Divider(height: 1, color: AppTheme.cardBorder),
                   const SizedBox(height: 12),
                   _CalcRow(
-                    label: 'Resting BMR (Mifflin-St Jeor):',
+                    label: 'Resting Daily Burn (BMR):',
                     value: '$bmr kcal',
                   ),
                   const SizedBox(height: 8),
@@ -210,7 +210,7 @@ class _Step13TdeeRevealState extends State<Step13TdeeReveal> {
                   ),
                   const SizedBox(height: 10),
                   const Text(
-                    'Note: This baseline serves only as the Kalman filter prior. As you log foods and weights, Sique mathematically discovers your true expenditure.',
+                    'Note: This serves only as your starting estimate. As you log foods and weights, Sique continuously learns your true daily burn.',
                     style: TextStyle(
                       fontSize: 11,
                       color: AppTheme.textMuted,

@@ -29,11 +29,14 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
   // Index 3: More
   int _currentIndex = 1;
 
-  final List<Widget> _screens = const [
-    DashboardScreen(),
-    FoodLogScreen(),
-    StrategyScreen(),
-    MoreScreen(),
+  late final List<Widget> _screens = [
+    DashboardScreen(
+      onNavigateToStrategy: () => _onTabSelected(2),
+      onNavigateToFoodLog: () => _onTabSelected(1),
+    ),
+    const FoodLogScreen(),
+    const StrategyScreen(),
+    const MoreScreen(),
   ];
 
   void _onTabSelected(int index) {
@@ -58,20 +61,9 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
         child: Scaffold(
           extendBody: true,
           backgroundColor: AppTheme.background,
-          body: AnimatedSwitcher(
-            duration: AppMotion.fast,
-            switchInCurve: AppMotion.decelerated,
-            switchOutCurve: AppMotion.decelerated,
-            transitionBuilder: (child, animation) {
-              return FadeTransition(
-                opacity: animation,
-                child: child,
-              );
-            },
-            child: KeyedSubtree(
-              key: ValueKey<int>(_currentIndex),
-              child: _screens[_currentIndex],
-            ),
+          body: IndexedStack(
+            index: _currentIndex,
+            children: _screens,
           ),
           bottomNavigationBar: Container(
             decoration: BoxDecoration(
@@ -96,94 +88,101 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
                 child: SafeArea(
                   top: false,
                   bottom: true,
-                  child: SizedBox(
-                    height: 66,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        // 1. Dashboard Tab
-                        _buildNavItem(
-                          index: 0,
-                          icon: Icons.grid_view_outlined,
-                          selectedIcon: Icons.grid_view_rounded,
-                          label: 'Dashboard',
-                        ),
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 68),
+                    child: IntrinsicHeight(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          // 1. Dashboard Tab
+                          _buildNavItem(
+                            index: 0,
+                            icon: Icons.grid_view_outlined,
+                            selectedIcon: Icons.grid_view_rounded,
+                            label: 'Dashboard',
+                          ),
 
-                        // 2. Food Log Tab
-                        _buildNavItem(
-                          index: 1,
-                          icon: Icons.restaurant_outlined,
-                          selectedIcon: Icons.restaurant,
-                          label: 'Food Log',
-                        ),
+                          // 2. Food Log Tab
+                          _buildNavItem(
+                            index: 1,
+                            icon: Icons.restaurant_outlined,
+                            selectedIcon: Icons.restaurant,
+                            label: 'Food Log',
+                          ),
 
-                        // 3. Center Floating Action Button (+) with specular glow
-                        Expanded(
-                          child: Center(
-                            child: Semantics(
-                              button: true,
-                              label: 'Open quick actions menu',
-                              child: SiqueBouncy(
-                                semanticLabel: 'Open quick actions menu',
-                                onTap: () {
-                                  AppHaptics.mediumImpact();
-                                  QuickActionsSheet.show(context);
-                                },
-                                onLongPress: () {
-                                  AppHaptics.heavyImpact();
-                                  Navigator.push(
-                                    context,
-                                    FoodSearchScreen.route(),
-                                  );
-                                },
-                                child: Container(
-                                  key: const Key('center_action_fab'),
-                                  width: 50,
-                                  height: 50,
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.buttonBackground,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.white
-                                            .withValues(alpha: 0.15),
-                                        blurRadius: 14,
-                                        spreadRadius: 1,
+                          // 3. Center Floating Action Button (+) with specular glow
+                          Expanded(
+                            child: Center(
+                              child: Tooltip(
+                                message:
+                                    'Quick actions (long press to search food)',
+                                child: Semantics(
+                                  button: true,
+                                  label: 'Open quick actions menu',
+                                  hint: 'Long press to search food directly',
+                                  child: SiqueBouncy(
+                                    semanticLabel: 'Open quick actions menu',
+                                    onTap: () {
+                                      AppHaptics.mediumImpact();
+                                      QuickActionsSheet.show(context);
+                                    },
+                                    onLongPress: () {
+                                      AppHaptics.heavyImpact();
+                                      Navigator.push(
+                                        context,
+                                        FoodSearchScreen.route(),
+                                      );
+                                    },
+                                    child: Container(
+                                      key: const Key('center_action_fab'),
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.buttonBackground,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.white
+                                                .withValues(alpha: 0.15),
+                                            blurRadius: 14,
+                                            spreadRadius: 1,
+                                          ),
+                                          const BoxShadow(
+                                            color: Color(0x55000000),
+                                            blurRadius: 12,
+                                            offset: Offset(0, 4),
+                                          ),
+                                        ],
                                       ),
-                                      const BoxShadow(
-                                        color: Color(0x55000000),
-                                        blurRadius: 12,
-                                        offset: Offset(0, 4),
+                                      child: const Icon(
+                                        Icons.add_rounded,
+                                        color: AppTheme.buttonText,
+                                        size: 30,
                                       ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.add_rounded,
-                                    color: AppTheme.buttonText,
-                                    size: 30,
+                                    ),
                                   ),
                                 ),
                               ),
                             ),
                           ),
-                        ),
 
-                        // 4. Strategy Tab (3 interconnected nodes)
-                        _buildNavItem(
-                          index: 2,
-                          icon: Icons.hub_outlined,
-                          selectedIcon: Icons.hub_rounded,
-                          label: 'Strategy',
-                        ),
+                          // 4. Strategy Tab (3 interconnected nodes)
+                          _buildNavItem(
+                            index: 2,
+                            icon: Icons.hub_outlined,
+                            selectedIcon: Icons.hub_rounded,
+                            label: 'Strategy',
+                          ),
 
-                        // 5. More Tab
-                        _buildNavItem(
-                          index: 3,
-                          icon: Icons.more_horiz_outlined,
-                          selectedIcon: Icons.more_horiz_rounded,
-                          label: 'More',
-                        ),
-                      ],
+                          // 5. More Tab
+                          _buildNavItem(
+                            index: 3,
+                            icon: Icons.more_horiz_outlined,
+                            selectedIcon: Icons.more_horiz_rounded,
+                            label: 'More',
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -207,51 +206,61 @@ class _ScaffoldWithNavBarState extends State<ScaffoldWithNavBar> {
     final effectiveIcon =
         (isSelected && selectedIcon != null) ? selectedIcon : icon;
 
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+    final animDuration =
+        disableAnimations ? Duration.zero : const Duration(milliseconds: 200);
+
     return Expanded(
-      child: AppleBouncy(
-        semanticLabel: label,
-        onTap: () => _onTabSelected(index),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 220),
-          curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          decoration: BoxDecoration(
-            color: isSelected
-                ? Colors.white.withValues(alpha: 0.08)
-                : Colors.transparent,
-            borderRadius: AppRadii.lgBorderRadius,
-            border: Border.all(
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: label,
+        child: AppleBouncy(
+          semanticLabel: label,
+          onTap: () => _onTabSelected(index),
+          child: AnimatedContainer(
+            duration: animDuration,
+            curve: Curves.easeOutCubic,
+            margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            decoration: BoxDecoration(
               color: isSelected
-                  ? Colors.white.withValues(alpha: 0.16)
+                  ? Colors.white.withValues(alpha: 0.08)
                   : Colors.transparent,
-              width: 0.8,
+              borderRadius: AppRadii.lgBorderRadius,
+              border: Border.all(
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.16)
+                    : Colors.transparent,
+                width: 0.8,
+              ),
             ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              AnimatedScale(
-                scale: isSelected ? 1.08 : 1.0,
-                duration: const Duration(milliseconds: 200),
-                curve: Curves.easeOutCubic,
-                child: Icon(effectiveIcon, color: color, size: 21),
-              ),
-              const SizedBox(height: 3),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: AppTypography.labelSmall.copyWith(
-                  fontSize: 10,
-                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
-                  color: color,
-                  letterSpacing: isSelected ? 0.2 : 0.0,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AnimatedScale(
+                  scale: isSelected ? 1.08 : 1.0,
+                  duration: animDuration,
+                  curve: Curves.easeOutCubic,
+                  child: Icon(effectiveIcon, color: color, size: 21),
                 ),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(label, maxLines: 1),
+                const SizedBox(height: 3),
+                AnimatedDefaultTextStyle(
+                  duration: animDuration,
+                  style: AppTypography.labelSmall.copyWith(
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    color: color,
+                    letterSpacing: isSelected ? 0.2 : 0.0,
+                  ),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(label, maxLines: 1),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

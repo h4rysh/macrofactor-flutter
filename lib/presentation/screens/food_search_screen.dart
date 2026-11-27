@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../domain/models/food_models.dart';
+import '../../domain/models/oil_modifier_display.dart';
 import '../providers/app_providers.dart';
 import '../providers/plate_staging_provider.dart';
 import '../theme/app_theme.dart';
 import '../widgets/apple_tactile_card.dart';
 import '../widgets/food/barcode_scanner_sheet.dart';
+import '../widgets/food/quick_add_macros_sheet.dart';
 import '../widgets/food/recipe_builder_sheet.dart';
 import '../widgets/food/search_food_result_tile.dart';
 import '../widgets/food/staging_plate_sheet.dart';
@@ -61,20 +63,30 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   int _searchSequence = 0;
   List<FoodItem> _searchResults = [];
   bool _isLoading = false;
+  String? _searchError;
   FoodFilterType _selectedFilter = FoodFilterType.all;
+
+  DateTime get _resolvedLoggedAt =>
+      widget.initialLoggedAt ?? ref.read(clockProvider)();
 
   void _quickAddFromSearch(FoodItem food) {
     AppHaptics.mediumImpact();
     final db = ref.read(databaseProvider);
     final portionUnits = db.getPortionUnits(food.id);
-    final defaultUnit =
-        portionUnits.isNotEmpty ? portionUnits.first : food.defaultPortionUnit;
+    final defaultUnit = OilModifierDisplay.resolveDefaultUnit(
+      portionUnits,
+      db.getSetting('default_portion_unit', 'Grams (g)'),
+      food.defaultPortionUnit,
+    );
+    final defaultOil = OilModifierDisplay.fromPreferenceSetting(
+      db.getSetting('default_oil_modifier', 'none'),
+    );
 
     ref.read(plateStagingProvider.notifier).addItem(
           food,
           unit: defaultUnit,
           quantity: 1.0,
-          oilModifier: OilModifier.none,
+          oilModifier: defaultOil,
         );
 
     final staged = ref.read(plateStagingProvider);
@@ -88,7 +100,7 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   }
 
   void _commitStagedPlate() {
-    final loggedAt = widget.initialLoggedAt ?? DateTime.now();
+    final loggedAt = _resolvedLoggedAt;
     final count = ref.read(plateStagingProvider.notifier).commitToLog(
           mealType: widget.mealType,
           loggedAt: loggedAt,
@@ -109,31 +121,13 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
   }
 
   void _openManualFoodSheet() {
-    final query = _searchController.text.trim();
-    final customFood = FoodItem(
-      id: 999000 + DateTime.now().millisecondsSinceEpoch % 1000,
-      uuid: 'custom_${DateTime.now().millisecondsSinceEpoch}',
-      name: query.isNotEmpty ? query : 'Custom Food',
-      category: 'Custom',
-      region: 'Custom',
-      caloriesPer100g: 100.0,
-      proteinPer100g: 5.0,
-      carbsPer100g: 15.0,
-      fatPer100g: 2.0,
-      fiberPer100g: 1.0,
-      iconSvg: 'food',
-      source: 'custom',
-      aliases: '',
-      portionUnits: const [
-        PortionUnit(
-          id: 0,
-          foodId: 0,
-          unitName: 'Serving',
-          gramWeight: 100.0,
-        ),
-      ],
+    final loggedAt = _resolvedLoggedAt;
+    QuickAddMacrosSheet.show(
+      context,
+      date: loggedAt,
+      mealType: widget.mealType,
+      loggedAt: loggedAt,
     );
-    _openPlateSheet(customFood);
   }
 
   @override
@@ -158,52 +152,48 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
 
   Future<void> _performSearch(String query) async {
     final searchId = ++_searchSequence;
-    setState(() => _isLoading = true);
-    final db = ref.read(databaseProvider);
-    var results = await db.searchFoodsAsync(query, limit: 60);
-    if (results.isEmpty && query.trim().isNotEmpty) {
-      final alias = IndianFoodAliases.resolveAlias(query);
-      if (alias != null && alias.toLowerCase() != query.trim().toLowerCase()) {
-        results = await db.searchFoodsAsync(alias, limit: 60);
-      }
-    }
-    if (!mounted || searchId != _searchSequence) return;
-
-    // Apply active filter
-    if (_selectedFilter == FoodFilterType.southIndian) {
-      results = results
-          .where((f) =>
-              f.region.toLowerCase().contains('south') ||
-              f.cuisine.toLowerCase().contains('south'))
-          .toList();
-    } else if (_selectedFilter == FoodFilterType.northIndian) {
-      results = results
-          .where((f) =>
-              f.region.toLowerCase().contains('north') ||
-              f.cuisine.toLowerCase().contains('north'))
-          .toList();
-    } else if (_selectedFilter == FoodFilterType.highProtein) {
-      results = results.where((f) => f.proteinPer100g >= 12.0).toList();
-    } else if (_selectedFilter == FoodFilterType.vegetarian) {
-      results = results
-          .where((f) =>
-              !f.category.toLowerCase().contains('meat') &&
-              !f.category.toLowerCase().contains('poultry') &&
-              !f.category.toLowerCase().contains('fish'))
-          .toList();
-    }
-
-    if (!mounted || searchId != _searchSequence) return;
-    final rankedResults = _rankSearchResults(results, query);
     setState(() {
-      _searchResults = rankedResults;
-      _isLoading = false;
+      _isLoading = true;
+      _searchError = null;
     });
-    SemanticsService.sendAnnouncement(
-      View.of(context),
-      '${results.length} food items found for "$query"',
-      TextDirection.ltr,
-    );
+    try {
+      final db = ref.read(databaseProvider);
+      final filterKey = _selectedFilter.name;
+      var results = await db.foodDao.searchFoodsFilteredAsync(
+        query,
+        filterKey: filterKey,
+        limit: 60,
+      );
+      if (results.isEmpty && query.trim().isNotEmpty) {
+        final alias = IndianFoodAliases.resolveAlias(query);
+        if (alias != null &&
+            alias.toLowerCase() != query.trim().toLowerCase()) {
+          results = await db.foodDao.searchFoodsFilteredAsync(
+            alias,
+            filterKey: filterKey,
+            limit: 60,
+          );
+        }
+      }
+      if (!mounted || searchId != _searchSequence) return;
+
+      final rankedResults = _rankSearchResults(results, query);
+      setState(() {
+        _searchResults = rankedResults;
+        _isLoading = false;
+      });
+      SemanticsService.sendAnnouncement(
+        View.of(context),
+        '${results.length} food items found for "$query"',
+        TextDirection.ltr,
+      );
+    } catch (_) {
+      if (!mounted || searchId != _searchSequence) return;
+      setState(() {
+        _isLoading = false;
+        _searchError = 'Unable to search local food catalog right now.';
+      });
+    }
   }
 
   List<FoodItem> _rankSearchResults(List<FoodItem> items, String rawQuery) {
@@ -257,32 +247,46 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
 
   void _openPlateSheet(FoodItem food) {
     final db = ref.read(databaseProvider);
+    final profile = ref.read(userProfileProvider);
     final portionUnits = db.getPortionUnits(food.id);
     final macroTargets = ref.read(macroTargetProvider);
+    final summary = ref.read(dailyNutritionSummaryProvider);
+    final defaultOil = OilModifierDisplay.fromPreferenceSetting(
+      db.getSetting('default_oil_modifier', 'none'),
+    );
+    final nav = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
 
     PlateServingSheet.show(
       context: context,
       food: food,
       portionUnits: portionUnits,
       macroTargets: macroTargets,
-      initialLoggedAt: widget.initialLoggedAt ?? DateTime.now(),
+      initialLoggedAt: _resolvedLoggedAt,
       initialMealType: widget.mealType,
-      onLogConfirmed: ({
+      initialOilModifier: defaultOil,
+      defaultPortionPreference:
+          db.getSetting('default_portion_unit', 'Grams (g)'),
+      isVegan: OilModifierDisplay.isVegan(profile.dietType),
+      remainingCaloriesToday: macroTargets.targetCalories - summary.calories,
+      onDetailedConfirm: ({
+        required FoodItem food,
         required PortionUnit unit,
         required double quantity,
         required OilModifier oilModifier,
+        required MealType mealType,
         required DateTime loggedAt,
       }) {
         ref.read(dailyFoodLogsProvider.notifier).addEntry(
               food: food,
               portionUnit: unit,
               quantity: quantity,
-              mealType: widget.mealType,
+              mealType: mealType,
               oilModifier: oilModifier,
               loggedAt: loggedAt,
             );
 
-        ScaffoldMessenger.of(context).showSnackBar(
+        messenger.showSnackBar(
           SnackBar(
             content: Text('Logged ${food.name} to Plate'),
             backgroundColor: AppTheme.cardElevated,
@@ -291,8 +295,14 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
           ),
         );
 
-        Navigator.pop(context);
+        nav.pop();
       },
+      onLogConfirmed: ({
+        required PortionUnit unit,
+        required double quantity,
+        required OilModifier oilModifier,
+        required DateTime loggedAt,
+      }) {},
     );
   }
 
@@ -300,16 +310,22 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
     AppHaptics.mediumImpact();
     final db = ref.read(databaseProvider);
     final portionUnits = db.getPortionUnits(food.id);
-    final defaultUnit =
-        portionUnits.isNotEmpty ? portionUnits.first : food.defaultPortionUnit;
+    final defaultUnit = OilModifierDisplay.resolveDefaultUnit(
+      portionUnits,
+      db.getSetting('default_portion_unit', 'Grams (g)'),
+      food.defaultPortionUnit,
+    );
+    final defaultOil = OilModifierDisplay.fromPreferenceSetting(
+      db.getSetting('default_oil_modifier', 'none'),
+    );
 
     ref.read(dailyFoodLogsProvider.notifier).addEntry(
           food: food,
           portionUnit: defaultUnit,
           quantity: 1.0,
           mealType: widget.mealType,
-          oilModifier: OilModifier.none,
-          loggedAt: widget.initialLoggedAt ?? DateTime.now(),
+          oilModifier: defaultOil,
+          loggedAt: _resolvedLoggedAt,
         );
 
     ScaffoldMessenger.of(context).showSnackBar(
@@ -485,9 +501,11 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                             _performSearch(_searchController.text);
                           },
                           child: Container(
+                            constraints: const BoxConstraints(minHeight: 44),
+                            alignment: Alignment.center,
                             padding: const EdgeInsets.symmetric(
                               horizontal: 14,
-                              vertical: 7,
+                              vertical: 10,
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
@@ -602,18 +620,30 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              GestureDetector(
-                                onTap: () => _quickLogFood(food),
-                                child: Container(
-                                  padding: const EdgeInsets.all(2),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.activeBlue.withAlpha(35),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.add_rounded,
-                                    size: 14,
-                                    color: AppTheme.activeBlue,
+                              Semantics(
+                                button: true,
+                                label: 'Quick log ${food.name}',
+                                child: GestureDetector(
+                                  behavior: HitTestBehavior.opaque,
+                                  onTap: () => _quickLogFood(food),
+                                  child: SizedBox(
+                                    width: 44,
+                                    height: 44,
+                                    child: Center(
+                                      child: Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color:
+                                              AppTheme.activeBlue.withAlpha(35),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.add_rounded,
+                                          size: 16,
+                                          color: AppTheme.activeBlue,
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -627,83 +657,108 @@ class _FoodSearchScreenState extends ConsumerState<FoodSearchScreen> {
                 const SizedBox(height: 8),
                 const Divider(height: 1, color: AppTheme.cardBorder),
               ],
+              if (_searchController.text.isEmpty &&
+                  _selectedFilter == FoodFilterType.all &&
+                  _searchResults.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(0, 4, 0, 4),
+                  child: IndianStapleChips(
+                    onStapleSelected: (staple) {
+                      _searchController.text = staple;
+                      _performSearch(staple);
+                    },
+                  ),
+                ),
+              ],
               Expanded(
                 child: _isLoading
                     ? const FoodSearchSkeletonList()
-                    : _searchResults.isEmpty
-                        ? (_searchController.text.isEmpty
-                            ? IndianStapleChips(
-                                onStapleSelected: (staple) {
-                                  _searchController.text = staple;
-                                  _performSearch(staple);
-                                },
-                              )
-                            : SiqueEmptyState(
-                                icon: Icons.search_off_rounded,
-                                title: 'No foods found',
-                                message:
-                                    'Couldn\'t find "${_searchController.text}". You can quick-add it in 5 seconds.',
-                                actionLabel: _searchController.text
-                                        .trim()
-                                        .isNotEmpty
-                                    ? 'Quick add "${_searchController.text.trim()}" manually'
-                                    : null,
-                                onAction:
-                                    _searchController.text.trim().isNotEmpty
-                                        ? _openManualFoodSheet
+                    : _searchError != null
+                        ? SiqueEmptyState(
+                            icon: Icons.error_outline_rounded,
+                            title: 'Search unavailable',
+                            message: _searchError!,
+                            actionLabel: 'Retry',
+                            onAction: () =>
+                                _performSearch(_searchController.text),
+                          )
+                        : _searchResults.isEmpty
+                            ? (_searchController.text.isEmpty
+                                ? IndianStapleChips(
+                                    onStapleSelected: (staple) {
+                                      _searchController.text = staple;
+                                      _performSearch(staple);
+                                    },
+                                  )
+                                : SiqueEmptyState(
+                                    icon: Icons.search_off_rounded,
+                                    title: 'No foods found',
+                                    message:
+                                        'Couldn\'t find "${_searchController.text}". You can quick-add it in 5 seconds.',
+                                    actionLabel: _searchController.text
+                                            .trim()
+                                            .isNotEmpty
+                                        ? 'Quick add "${_searchController.text.trim()}" manually'
                                         : null,
-                              ))
-                        : ListView.separated(
-                            padding: EdgeInsets.fromLTRB(
-                              16,
-                              16,
-                              16,
-                              stagedItems.isNotEmpty ? 96 : 16,
-                            ),
-                            itemCount: _searchResults.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 8),
-                            itemBuilder: (context, index) {
-                              final food = _searchResults[index];
-                              final hasQuery =
-                                  _searchController.text.trim().isNotEmpty;
-                              if (hasQuery && index == 0) {
-                                return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    _BestMatchFoodCard(
-                                      food: food,
-                                      isStaged: stagedFoodIds.contains(food.id),
-                                      onTap: () => _openPlateSheet(food),
-                                      onQuickStage: () =>
-                                          _quickAddFromSearch(food),
-                                    ),
-                                    if (_searchResults.length > 1) ...[
-                                      const SizedBox(height: 16),
-                                      const Text(
-                                        'OTHER VARIATIONS',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w800,
-                                          color: AppTheme.textSecondary,
-                                          letterSpacing: 0.7,
+                                    onAction:
+                                        _searchController.text.trim().isNotEmpty
+                                            ? _openManualFoodSheet
+                                            : null,
+                                  ))
+                            : ListView.separated(
+                                padding: EdgeInsets.fromLTRB(
+                                  16,
+                                  16,
+                                  16,
+                                  stagedItems.isNotEmpty ? 96 : 16,
+                                ),
+                                itemCount: _searchResults.length,
+                                separatorBuilder: (_, __) =>
+                                    const SizedBox(height: 8),
+                                itemBuilder: (context, index) {
+                                  final food = _searchResults[index];
+                                  final hasQuery =
+                                      _searchController.text.trim().isNotEmpty;
+                                  if (hasQuery && index == 0) {
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _BestMatchFoodCard(
+                                          food: food,
+                                          isStaged:
+                                              stagedFoodIds.contains(food.id),
+                                          onTap: () => _openPlateSheet(food),
+                                          onQuickStage: () =>
+                                              _quickAddFromSearch(food),
                                         ),
-                                      ),
-                                    ],
-                                  ],
-                                );
-                              }
-                              return SearchFoodResultTile(
-                                food: food,
-                                searchQuery: _searchController.text,
-                                index: index,
-                                totalCount: _searchResults.length,
-                                isStaged: stagedFoodIds.contains(food.id),
-                                onTap: () => _openPlateSheet(food),
-                                onQuickStage: () => _quickAddFromSearch(food),
-                              );
-                            },
-                          ),
+                                        if (_searchResults.length > 1) ...[
+                                          const SizedBox(height: 16),
+                                          const Text(
+                                            'OTHER VARIATIONS',
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppTheme.textSecondary,
+                                              letterSpacing: 0.7,
+                                            ),
+                                          ),
+                                        ],
+                                      ],
+                                    );
+                                  }
+                                  return SearchFoodResultTile(
+                                    food: food,
+                                    searchQuery: _searchController.text,
+                                    index: index,
+                                    totalCount: _searchResults.length,
+                                    isStaged: stagedFoodIds.contains(food.id),
+                                    onTap: () => _openPlateSheet(food),
+                                    onQuickStage: () =>
+                                        _quickAddFromSearch(food),
+                                  );
+                                },
+                              ),
               ),
             ],
           ),
@@ -880,19 +935,33 @@ class _BestMatchFoodCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            GestureDetector(
-              onTap: onQuickStage,
-              child: Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: isStaged ? AppTheme.success : AppTheme.activeBlue,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  isStaged ? Icons.check_rounded : Icons.add_rounded,
-                  color: Colors.white,
-                  size: 20,
+            Semantics(
+              button: true,
+              label: isStaged
+                  ? '${food.name} staged on plate'
+                  : 'Stage ${food.name} on plate',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onQuickStage,
+                child: SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Center(
+                    child: Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color:
+                            isStaged ? AppTheme.success : AppTheme.activeBlue,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        isStaged ? Icons.check_rounded : Icons.add_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),

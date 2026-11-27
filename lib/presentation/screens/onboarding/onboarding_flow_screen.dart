@@ -128,9 +128,15 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     _dailyActivity = profile.dailyActivity;
     _liftingExperience = profile.liftingExperience;
     _cardioExperience = profile.cardioExperience;
-    _customTdeeOverride = profile.baselineExpenditureKcal > 0
-        ? profile.baselineExpenditureKcal
-        : null;
+    // Only preserve explicit custom TDEE override if onboarding was already completed
+    // or user has a custom baseline distinct from factory 2350 default.
+    final db = ref.read(databaseProvider);
+    final isOnboardingDone =
+        db.getSetting('onboarding_completed', 'false').toLowerCase() == 'true';
+    _customTdeeOverride =
+        (isOnboardingDone && profile.baselineExpenditureKcal > 0)
+            ? profile.baselineExpenditureKcal
+            : null;
 
     _goalType = profile.goalType;
     _targetWeightKg =
@@ -143,7 +149,6 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     _proteinPref = profile.proteinPreference;
 
     // Load persisted step and workout days
-    final db = ref.read(databaseProvider);
     final savedWorkoutDays = db.getSetting('onboarding_workout_days', '');
     if (savedWorkoutDays.isNotEmpty) {
       final parsedDays = savedWorkoutDays
@@ -310,7 +315,9 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     );
 
     final db = ref.read(databaseProvider);
+    ref.read(weeklyMacroProgramProvider.notifier).updateProgram(program);
     db.saveCoachingProgram(program);
+    db.setSetting('strategy_program_finalized', 'true');
 
     setState(() {
       _generatedProgram = program;
@@ -323,7 +330,9 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
     _persistCurrentProfile();
     final program = _ensureProgram();
     final db = ref.read(databaseProvider);
+    ref.read(weeklyMacroProgramProvider.notifier).updateProgram(program);
     db.saveCoachingProgram(program);
+    db.setSetting('strategy_program_finalized', 'true');
     db.setSetting('onboarding_completed', 'true');
     db.setSetting('onboarding_step', '0');
 
@@ -335,16 +344,20 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final progress = 0.22 + (_currentStep / (_totalSteps - 1)) * 0.78;
+    final progress = (_currentStep + 1) / _totalSteps;
     final tdee = _calculateBaselineTDEE();
     final bmr = _calculateBmr();
+    final floorCalories = _calorieFloorType == 'aggressive'
+        ? (_isMale ? 1300.0 : 1000.0)
+        : (_isMale ? 1500.0 : 1200.0);
 
-    // Compute live macro targets for preview
-    final targetCals = _goalType == GoalType.maintenance
+    // Compute live macro targets for preview respecting calorie floor
+    final rawTargetCals = _goalType == GoalType.maintenance
         ? tdee
         : (_goalType == GoalType.fatLoss
             ? tdee - (_currentWeightKg * (_ratePct.abs() / 100.0) * 7700 / 7)
             : tdee + (_currentWeightKg * (_ratePct.abs() / 100.0) * 7700 / 7));
+    final targetCals = rawTargetCals.clamp(floorCalories, 6000.0);
     final proteinGrams = _currentWeightKg * _proteinPref.gramsPerKg;
     final fatGrams = (targetCals * 0.25 / 9.0).clamp(30.0, 150.0);
     final carbsGrams =
@@ -444,6 +457,11 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
                 _currentWeightKg = weightKg;
               });
             },
+            onUseImperialChanged: (useImperial) {
+              ref
+                  .read(useImperialUnitsProvider.notifier)
+                  .setImperial(useImperial);
+            },
             onNext: _nextStep,
           ),
 
@@ -454,6 +472,7 @@ class _OnboardingFlowScreenState extends ConsumerState<OnboardingFlowScreen> {
             heightCm: _heightCm,
             initialTargetWeightKg: _targetWeightKg,
             initialRatePct: _ratePct,
+            useImperialUnits: ref.watch(useImperialUnitsProvider),
             onPacingChanged: ({
               required targetWeightKg,
               required ratePct,

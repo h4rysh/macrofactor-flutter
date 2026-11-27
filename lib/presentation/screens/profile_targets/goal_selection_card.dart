@@ -78,8 +78,24 @@ class GoalSelectionCard extends StatelessWidget {
                       ),
                       onSelected: (selected) {
                         if (selected) {
+                          final defaultRate = switch (goal) {
+                            GoalType.fatLoss =>
+                              profile.weeklyRateOfChangePct < 0
+                                  ? DomainValidator.clampRateOfChange(
+                                      profile.weeklyRateOfChangePct, goal)
+                                  : -0.5,
+                            GoalType.maintenance => 0.0,
+                            GoalType.muscleGain =>
+                              profile.weeklyRateOfChangePct > 0
+                                  ? DomainValidator.clampRateOfChange(
+                                      profile.weeklyRateOfChangePct, goal)
+                                  : 0.25,
+                          };
                           ref.read(userProfileProvider.notifier).updateProfile(
-                                profile.copyWith(goalType: goal),
+                                profile.copyWith(
+                                  goalType: goal,
+                                  weeklyRateOfChangePct: defaultRate,
+                                ),
                               );
                         }
                       },
@@ -142,13 +158,17 @@ class GoalSelectionCard extends StatelessWidget {
                 min: -1.5,
                 max: 1.0,
                 divisions: 50,
-                onChanged: (val) {
-                  final safeRate =
-                      DomainValidator.clampRateOfChange(val, profile.goalType);
-                  ref.read(userProfileProvider.notifier).updateProfile(
-                        profile.copyWith(weeklyRateOfChangePct: safeRate),
-                      );
-                },
+                onChanged: profile.goalType == GoalType.maintenance
+                    ? null
+                    : (val) {
+                        final safeRate = DomainValidator.clampRateOfChange(
+                          val,
+                          profile.goalType,
+                        );
+                        ref.read(userProfileProvider.notifier).updateProfile(
+                              profile.copyWith(weeklyRateOfChangePct: safeRate),
+                            );
+                      },
               ),
             ),
           ),

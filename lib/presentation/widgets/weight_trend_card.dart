@@ -197,7 +197,7 @@ class WeightTrendCard extends StatelessWidget {
                 MetabolicSeriesChart(
                   points: trendSeries
                       .map((p) => ChartSeriesPoint(
-                            dateLabel: DateFormat('MM-dd').format(p.date),
+                            dateLabel: DateFormat('MMM d').format(p.date),
                             value: _toDisplay(p.trendWeightKg),
                             bandLow: _toDisplay(p.noiseMinKg),
                             bandHigh: _toDisplay(p.noiseMaxKg),
@@ -209,6 +209,9 @@ class WeightTrendCard extends StatelessWidget {
                   decimals: 1,
                   targetLineValue: targetWeightKg != null
                       ? _toDisplay(targetWeightKg!)
+                      : null,
+                  targetLineLabel: targetWeightKg != null
+                      ? 'Goal: ${_toDisplay(targetWeightKg!).toStringAsFixed(1)} $unit'
                       : null,
                 ),
               ],

@@ -21,48 +21,54 @@ class FastingDao {
 
   /// Starts a new fasting session. Cancels/completes any currently active session first.
   void startFast(FastingSession session, {String? userId}) {
-    final uid = userId ??
-        (effectiveUserId != 'default_user'
-            ? effectiveUserId
-            : (session.userId.isNotEmpty ? session.userId : 'default_user'));
-
-    // Conclude any existing active fast
+    final uid = userId ?? effectiveUserId;
     final nowStr = DateTime.now().toIso8601String();
-    final cancelStmt = _db.prepare('''
-      UPDATE fasting_sessions
-      SET state = CASE
-            WHEN ? >= target_end_time THEN 'completed'
-            ELSE 'broken_early'
-          END,
-          actual_end_time = ?
-      WHERE user_id = ? AND state = 'active';
-    ''');
-    try {
-      cancelStmt.execute([nowStr, nowStr, uid]);
-    } finally {
-      cancelStmt.dispose();
-    }
 
-    // Insert new active fast
-    final stmt = _db.prepare('''
-      INSERT INTO fasting_sessions (
-        id, user_id, protocol, start_time, target_end_time, actual_end_time, state, notes
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
-    ''');
-
+    _db.execute('BEGIN TRANSACTION;');
     try {
-      stmt.execute([
-        session.id,
-        uid,
-        session.protocol.name,
-        session.startTime.toIso8601String(),
-        session.targetEndTime.toIso8601String(),
-        session.actualEndTime?.toIso8601String(),
-        session.state,
-        session.notes,
-      ]);
-    } finally {
-      stmt.dispose();
+      // Conclude any existing active fast
+      final cancelStmt = _db.prepare('''
+        UPDATE fasting_sessions
+        SET state = CASE
+              WHEN ? >= target_end_time THEN 'completed'
+              ELSE 'broken_early'
+            END,
+            actual_end_time = ?
+        WHERE user_id = ? AND state = 'active';
+      ''');
+      try {
+        cancelStmt.execute([nowStr, nowStr, uid]);
+      } finally {
+        cancelStmt.dispose();
+      }
+
+      // Insert new active fast
+      final stmt = _db.prepare('''
+        INSERT INTO fasting_sessions (
+          id, user_id, protocol, start_time, target_end_time, actual_end_time, state, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?);
+      ''');
+
+      try {
+        stmt.execute([
+          session.id,
+          uid,
+          session.protocol.name,
+          session.startTime.toIso8601String(),
+          session.targetEndTime.toIso8601String(),
+          session.actualEndTime?.toIso8601String(),
+          session.state,
+          session.notes,
+        ]);
+      } finally {
+        stmt.dispose();
+      }
+      _db.execute('COMMIT;');
+    } catch (_) {
+      try {
+        _db.execute('ROLLBACK;');
+      } catch (_) {}
+      rethrow;
     }
   }
 
@@ -86,10 +92,7 @@ class FastingDao {
 
   /// Inserts or updates a historical/restored fasting session idempotently.
   void upsertFastingSession(FastingSession session, {String? userId}) {
-    final uid = userId ??
-        (effectiveUserId != 'default_user'
-            ? effectiveUserId
-            : (session.userId.isNotEmpty ? session.userId : 'default_user'));
+    final uid = userId ?? effectiveUserId;
 
     final stmt = _db.prepare('''
       INSERT INTO fasting_sessions (

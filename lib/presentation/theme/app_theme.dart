@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sique/presentation/theme/extensions/macro_colors.dart';
@@ -40,6 +41,8 @@ class AppTheme {
   static const Color expenditure = AppColors.expenditure;
   static const Color trendWeight = AppColors.trendWeight;
   static const Color activeBlue = AppColors.activeBlue;
+  static const Color activeBlueText = AppColors.activeBlueText;
+  static const Color errorText = AppColors.errorText;
   static const Color buttonForeground = AppColors.buttonForeground;
   static const Color buttonBackground = AppColors.buttonBackground;
   static const Color buttonText = AppColors.buttonText;
@@ -134,7 +137,7 @@ class AppTheme {
         contentTextStyle: AppTypography.bodyMedium.copyWith(
           color: textPrimary,
         ),
-        actionTextColor: calories,
+        actionTextColor: activeBlue,
       ),
 
       // Dialog Component Theme
@@ -189,7 +192,7 @@ class AppTheme {
           color: textMuted,
         ),
         errorStyle: AppTypography.bodySmall.copyWith(
-          color: protein,
+          color: errorText,
         ),
       ),
 
@@ -255,8 +258,8 @@ class AppTheme {
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: ZoomPageTransitionsBuilder(),
-          TargetPlatform.iOS: ZoomPageTransitionsBuilder(),
-          TargetPlatform.macOS: ZoomPageTransitionsBuilder(),
+          TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+          TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
           TargetPlatform.linux: ZoomPageTransitionsBuilder(),
           TargetPlatform.windows: ZoomPageTransitionsBuilder(),
         },

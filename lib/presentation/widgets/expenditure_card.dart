@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:sique/data/local/app_database_expenditure.dart';
 import 'package:sique/domain/algorithms/expenditure_kalman_v4.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
@@ -145,9 +146,11 @@ class DynamicExpenditureCard extends StatelessWidget {
               MetabolicSeriesChart(
                 points: historySeries.map((r) {
                   final sigma = math.sqrt(math.max(0.0, r.variance));
+                  final parsedDate = DateTime.tryParse(r.date);
                   return ChartSeriesPoint(
-                    dateLabel:
-                        r.date.length >= 10 ? r.date.substring(5) : r.date,
+                    dateLabel: parsedDate != null
+                        ? DateFormat('MMM d').format(parsedDate)
+                        : (r.date.length >= 10 ? r.date.substring(5) : r.date),
                     value: r.expenditureKcal,
                     bandLow: r.expenditureKcal - sigma,
                     bandHigh: r.expenditureKcal + sigma,

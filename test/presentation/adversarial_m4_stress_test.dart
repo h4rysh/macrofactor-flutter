@@ -348,8 +348,14 @@ void main() {
       saveBtn = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
       expect(saveBtn.onPressed, isNull);
 
-      // Enter extreme large positive weight - no crash, button enabled
+      // Enter extreme out-of-range positive weight - guarded and button disabled
       await tester.enterText(weightField, '99999.9');
+      await tester.pumpAndSettle();
+      saveBtn = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
+      expect(saveBtn.onPressed, isNull);
+
+      // Enter valid realistic weight - button enabled
+      await tester.enterText(weightField, '85.5');
       await tester.pumpAndSettle();
       saveBtn = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
       expect(saveBtn.onPressed, isNotNull);

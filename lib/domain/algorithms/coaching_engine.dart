@@ -88,8 +88,8 @@ class CoachingEngine {
     double? previousAvgCalories,
     bool applyReverseRamp = true,
   }) {
-    if (profile.customCalories != null) {
-      return profile.customCalories!.roundToDouble();
+    if (profile.customCalories != null && profile.customCalories!.isFinite) {
+      return profile.customCalories!.clamp(400.0, 10000.0).roundToDouble();
     }
 
     if (profile.isInDietBreak) {
@@ -235,18 +235,35 @@ class CoachingEngine {
     if (carbShareOverride == null &&
         (style == MacroProgramStyle.keto ||
             style == MacroProgramStyle.lowCarb)) {
-      final maxAvailableForProtein =
-          calories - (carbsGrams * 4.0) - (minFatGrams * 9.0);
-      if (proteinGrams * 4.0 > maxAvailableForProtein) {
-        proteinGrams = math.max(
-          minProteinGrams,
-          (maxAvailableForProtein / 4.0).roundToDouble(),
-        );
+      final carbCap = style == MacroProgramStyle.keto ? 35.0 : 120.0;
+      carbsGrams = carbsGrams.clamp(0.0, carbCap);
+      final minProteinCals = minProteinGrams * 4.0;
+      final minFatCals = minFatGrams * 9.0;
+      final availableForProteinFat =
+          math.max(0.0, calories - (carbsGrams * 4.0));
+      if (availableForProteinFat < (minProteinCals + minFatCals)) {
+        final floorCals = minProteinCals + minFatCals;
+        final scale = floorCals > 0
+            ? (availableForProteinFat / floorCals).clamp(0.3, 1.0)
+            : 1.0;
+        proteinGrams =
+            math.max(30.0, (minProteinGrams * scale).roundToDouble());
+        fatGrams = math.max(20.0, (minFatGrams * scale).roundToDouble());
+      } else {
+        final maxAvailableForProtein = availableForProteinFat - minFatCals;
+        if (proteinGrams * 4.0 > maxAvailableForProtein) {
+          proteinGrams = math.max(
+            minProteinGrams,
+            (maxAvailableForProtein / 4.0).roundToDouble(),
+          );
+        }
         final remForFat = calories - (proteinGrams * 4.0) - (carbsGrams * 4.0);
         fatGrams = math.max(minFatGrams, (remForFat / 9.0).roundToDouble());
       }
       final remForCarbs = calories - (proteinGrams * 4.0) - (fatGrams * 9.0);
-      carbsGrams = math.max(0.0, (remForCarbs / 4.0).roundToDouble());
+      carbsGrams = math
+          .max(0.0, (remForCarbs / 4.0).roundToDouble())
+          .clamp(0.0, carbCap);
     } else {
       final maxAvailableForProteinFat = calories - (minCarbsGrams * 4.0);
       final currentProteinFatCals = (proteinGrams * 4.0) + (fatGrams * 9.0);
@@ -345,6 +362,7 @@ class CoachingEngine {
     double? previousAvgCalories,
     bool applyReverseRamp = true,
   }) {
+    final validWorkoutDays = workoutDays.where((d) => d >= 1 && d <= 7).toSet();
     final dailyAvgCalories = customDailyAverage ??
         calculateDailyAverageCalories(
           profile: profile,
@@ -367,7 +385,7 @@ class CoachingEngine {
         break;
 
       case DayAllocationType.shiftedWorkout:
-        final numWorkoutDays = workoutDays.length;
+        final numWorkoutDays = validWorkoutDays.length;
         if (numWorkoutDays == 0 || numWorkoutDays == 7) {
           // If all days or no days are workouts, shift is meaningless -> even
           for (int day = 1; day <= 7; day++) {
@@ -401,7 +419,7 @@ class CoachingEngine {
           // Apply and ensure conservation by absorbing rounding in Sunday
           double assignedSum = 0.0;
           for (int day = 1; day <= 7; day++) {
-            final isWorkout = workoutDays.contains(day);
+            final isWorkout = validWorkoutDays.contains(day);
             final cals = isWorkout ? workoutCals : restCals;
             dayCaloriesMap[day] = cals;
             assignedSum += cals;
@@ -497,7 +515,7 @@ class CoachingEngine {
         profile.customFatGrams != null;
 
     for (int day = 1; day <= 7; day++) {
-      final isWorkout = workoutDays.contains(day);
+      final isWorkout = validWorkoutDays.contains(day);
       final MacroTarget macros;
       if (isManualCustom) {
         // Honor exact Manual calories and macros uniformly without floor clamping or day-shifting.
@@ -508,8 +526,11 @@ class CoachingEngine {
           fatGrams: profile.customFatGrams!,
         );
       } else {
-        final cals = math.max(
-            profile.calorieFloor, dayCaloriesMap[day] ?? dailyAvgCalories);
+        final rawDayCals = dayCaloriesMap[day] ?? dailyAvgCalories;
+        final cals = (profile.programMode == ProgramMode.manual &&
+                profile.customCalories != null)
+            ? rawDayCals
+            : math.max(profile.calorieFloor, rawDayCals);
         macros = computeDayMacros(
           calories: cals,
           weightKg: profile.currentWeightKg,
@@ -537,7 +558,7 @@ class CoachingEngine {
       style: style,
       mode: profile.programMode,
       allocationType: allocationType,
-      workoutDays: workoutDays,
+      workoutDays: validWorkoutDays,
       dailyAverageCalories: dailyAvgCalories,
       days: days,
       createdAt: programStartDate ?? now,
@@ -571,8 +592,8 @@ class CoachingEngine {
       );
     }
 
-    // 2. Cognitive Deadband Filter (Disregard noise < 20 kcal)
-    if (rawDelta.abs() < 20.0) {
+    // 2. Cognitive Deadband Filter (Disregard noise < 20 kcal unless below floor)
+    if (rawDelta.abs() < 20.0 && currentAvgCalories >= calorieFloor) {
       return DampedAdjustmentResult(
         recommendedCalories: currentAvgCalories,
         appliedDelta: 0.0,
@@ -653,8 +674,14 @@ class CoachingEngine {
       );
     }
 
-    final daysSinceCheckIn =
-        currentDate.difference(currentProgram.lastCheckInDate).inDays;
+    final currentDay =
+        DateTime(currentDate.year, currentDate.month, currentDate.day);
+    final lastDay = DateTime(
+      currentProgram.lastCheckInDate.year,
+      currentProgram.lastCheckInDate.month,
+      currentProgram.lastCheckInDate.day,
+    );
+    final daysSinceCheckIn = currentDay.difference(lastDay).inDays;
     final isDue = daysSinceCheckIn >= 7;
     final daysUntilNext = isDue ? 0 : (7 - daysSinceCheckIn).clamp(0, 7);
 
@@ -729,9 +756,13 @@ class CoachingEngine {
     final totalWeeklyBudget = currentProgram.dailyAverageCalories * 7.0;
     final rawRemainingDaily =
         (totalWeeklyBudget - consumedCaloriesSoFar) / remainingDays;
-    final safeRemainingDaily = rawRemainingDaily.clamp(
+    final upperBound = math.max(
       profile.calorieFloor,
       currentProgram.dailyAverageCalories * 1.30,
+    );
+    final safeRemainingDaily = rawRemainingDaily.clamp(
+      profile.calorieFloor,
+      upperBound,
     );
     return buildWeeklyProgram(
       profile: profile,

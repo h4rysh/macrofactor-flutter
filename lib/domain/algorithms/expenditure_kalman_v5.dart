@@ -181,8 +181,12 @@ class ExpenditureKalmanV5 {
     _lastDate = input.date;
 
     // 1. Cold start bootstrap if weight uninitialized
-    if (_weightKg == 0.0 && input.scaleWeightKg != null) {
-      _weightKg = input.scaleWeightKg!;
+    final incomingWeight = input.scaleWeightKg;
+    if (_weightKg == 0.0 &&
+        incomingWeight != null &&
+        incomingWeight.isFinite &&
+        incomingWeight > 0.0) {
+      _weightKg = incomingWeight;
       _pWW = rBase;
     }
 
@@ -195,7 +199,23 @@ class ExpenditureKalmanV5 {
         _trailingAdherence7.where((logged) => !logged).length;
     _isPaused = unloggedCount7 > pauseThresholdDays;
 
-    // 3. Training-volume tracking & constrained prior drift
+    // 3. Compute heteroscedastic observation noise R_t
+    final effectiveR = _computeHeteroscedasticR(input);
+
+    // 4. Measurement update step (Scale weight observation)
+    if (incomingWeight != null &&
+        incomingWeight.isFinite &&
+        incomingWeight > 0.0 &&
+        _weightKg > 0.0) {
+      _performMeasurementUpdate(incomingWeight, effectiveR);
+    }
+
+    // 5. Incomplete day gating (skip prior drift & intake time-update until day completes)
+    if (!input.isDayComplete) {
+      return _buildState(input.date, isComplete: false);
+    }
+
+    // 6. Training-volume tracking & constrained prior drift (complete days only)
     final double deltaLoad = _updateTrainingBuffersAndDelta(
       workoutLoadKcal: input.workoutLoadKcal,
       hasWorkout: input.hasWorkoutOnDay,
@@ -206,23 +226,9 @@ class ExpenditureKalmanV5 {
         final rawDrift = (1.0 - trainingCompensationBeta) * deltaLoad;
         final clampedDrift =
             rawDrift.clamp(-maxTrainingDriftKcal, maxTrainingDriftKcal);
-        // Apply fractional daily prior drift (scaled by 1/7 so 7-day step converges smoothly)
         _expenditureKcal = (_expenditureKcal + (clampedDrift / 7.0))
             .clamp(minExpenditureBound, maxExpenditureBound);
       }
-    }
-
-    // 4. Compute heteroscedastic observation noise R_t
-    final effectiveR = _computeHeteroscedasticR(input);
-
-    // 5. Measurement update step (Scale weight observation)
-    if (input.scaleWeightKg != null && _weightKg > 0.0) {
-      _performMeasurementUpdate(input.scaleWeightKg!, effectiveR);
-    }
-
-    // 6. Incomplete day gating
-    if (!input.isDayComplete) {
-      return _buildState(input.date, isComplete: false);
     }
 
     // 7. Complete day: compute effective intake & record history
@@ -321,9 +327,15 @@ class ExpenditureKalmanV5 {
   }
 
   void _performMeasurementUpdate(double scaleWeightKg, double effectiveR) {
+    if (!scaleWeightKg.isFinite ||
+        scaleWeightKg <= 0.0 ||
+        !effectiveR.isFinite) {
+      return;
+    }
     final innovation = scaleWeightKg - _weightKg;
-    final sVar = _pWW + effectiveR;
-    final sigmaS = math.sqrt(math.max(sVar, 1e-9));
+    if (!innovation.isFinite) return;
+    final sVar = math.max(_pWW + effectiveR, 1e-9);
+    final sigmaS = math.sqrt(sVar);
 
     final tau = huberSigma * sigmaS;
     final clippedInnovation = innovation.clamp(-tau, tau);
@@ -450,7 +462,13 @@ class GoalEtaCalculator {
     double? waistDelta14Cm,
     double? heightCm,
   }) {
-    if (goalType == 'maintain') {
+    if (goalType == 'maintain' ||
+        !trendWeightKg.isFinite ||
+        !goalWeightKg.isFinite ||
+        !observedVelocityKgPerWeek.isFinite ||
+        !expenditureKcal.isFinite ||
+        trendWeightKg <= 0 ||
+        goalWeightKg <= 0) {
       return const GoalEtaProjection();
     }
 
@@ -490,22 +508,24 @@ class GoalEtaCalculator {
       }
       recompLabel ??= 'Recomp Mode — Hold & Track Waist';
 
-      final optWks = (remainingKg / targetRateKgWk).ceil().clamp(1, 260);
-      final safeWks = (remainingKg / math.max(directedVelocity, 0.10))
-          .ceil()
-          .clamp(optWks, 260);
+      final rawOptWks = (remainingKg / targetRateKgWk).ceil().clamp(1, 260);
+      final safeWks =
+          (remainingKg / math.max(directedVelocity, 0.10)).ceil().clamp(1, 260);
+      final expWks = (waistWeeks ?? safeWks).clamp(1, 260);
+      final optWks = math.min(rawOptWks, expWks);
       final sigmaE = math.sqrt(math.max(expenditureVariance, 1.0));
       final uncFactor =
           (1.0 + (sigmaE / math.max(expenditureKcal, 1200.0)) * 2.0)
               .clamp(1.1, 1.6);
-      final consWks = (safeWks * uncFactor).ceil().clamp(safeWks, 260);
+      final consWks =
+          (math.max(safeWks, expWks) * uncFactor).ceil().clamp(expWks, 260);
 
       return GoalEtaProjection(
         optimisticWeeks: optWks,
-        expectedWeeks: waistWeeks ?? safeWks,
+        expectedWeeks: expWks,
         conservativeWeeks: consWks,
         optimisticDate: now.add(Duration(days: optWks * 7)),
-        expectedDate: now.add(Duration(days: (waistWeeks ?? safeWks) * 7)),
+        expectedDate: now.add(Duration(days: expWks * 7)),
         conservativeDate: now.add(Duration(days: consWks * 7)),
         isRecompMode: true,
         recompSummary: recompLabel,

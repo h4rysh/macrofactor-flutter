@@ -22,20 +22,38 @@ class BatchDiaryToolbar extends ConsumerWidget {
       dayLogs.where((e) => selectedIds.contains(e.id)).toList();
 
   Future<void> _batchCopyToDate(BuildContext context, WidgetRef ref) async {
+    final now = ref.read(clockProvider)();
+    final messenger = ScaffoldMessenger.of(context);
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: now,
       firstDate: DateTime(2020),
       lastDate: DateTime(2035),
     );
     if (picked == null || !context.mounted) return;
     final notifier = ref.read(dailyFoodLogsProvider.notifier);
-    for (final entry in _selectedEntries) {
-      notifier.addEntry(
-        food: entry.food,
-        portionUnit: entry.portionUnit,
+    final dateStr = DateFormat('yyyy-MM-dd').format(picked);
+    final selected = _selectedEntries;
+    final entries = selected.map((entry) {
+      final n = entry.food.calculateNutrition(
         quantity: entry.quantity,
+        unit: entry.portionUnit,
+        oilModifier: entry.oilModifier,
+      );
+      return FoodLogEntry(
+        id: 0,
+        date: dateStr,
         mealType: entry.mealType,
+        foodId: entry.food.id,
+        foodName: entry.food.name,
+        servingQuantity: entry.quantity,
+        unitName: entry.portionUnit.unitName,
+        gramWeight: n.totalGrams,
+        calories: n.calories,
+        protein: n.protein,
+        carbs: n.carbs,
+        fat: n.fat,
+        fiber: n.fiber,
         oilModifier: entry.oilModifier,
         loggedAt: DateTime(
           picked.year,
@@ -44,11 +62,13 @@ class BatchDiaryToolbar extends ConsumerWidget {
           entry.loggedAt.hour,
           entry.loggedAt.minute,
         ),
+        iconSvg: entry.iconSvg,
       );
-    }
-    final count = _selectedEntries.length;
+    }).toList();
+    notifier.addEntries(entries);
+    final count = entries.length;
     onClear();
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       SnackBar(
         content: Text(
           'Copied $count item(s) to ${DateFormat('MMM d').format(picked)}',
@@ -58,20 +78,38 @@ class BatchDiaryToolbar extends ConsumerWidget {
   }
 
   Future<void> _batchMoveToDate(BuildContext context, WidgetRef ref) async {
+    final now = ref.read(clockProvider)();
+    final messenger = ScaffoldMessenger.of(context);
     final picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now(),
+      initialDate: now,
       firstDate: DateTime(2020),
       lastDate: DateTime(2035),
     );
     if (picked == null || !context.mounted) return;
     final notifier = ref.read(dailyFoodLogsProvider.notifier);
-    for (final entry in _selectedEntries) {
-      notifier.addEntry(
-        food: entry.food,
-        portionUnit: entry.portionUnit,
+    final dateStr = DateFormat('yyyy-MM-dd').format(picked);
+    final selected = _selectedEntries;
+    final entries = selected.map((entry) {
+      final n = entry.food.calculateNutrition(
         quantity: entry.quantity,
+        unit: entry.portionUnit,
+        oilModifier: entry.oilModifier,
+      );
+      return FoodLogEntry(
+        id: 0,
+        date: dateStr,
         mealType: entry.mealType,
+        foodId: entry.food.id,
+        foodName: entry.food.name,
+        servingQuantity: entry.quantity,
+        unitName: entry.portionUnit.unitName,
+        gramWeight: n.totalGrams,
+        calories: n.calories,
+        protein: n.protein,
+        carbs: n.carbs,
+        fat: n.fat,
+        fiber: n.fiber,
         oilModifier: entry.oilModifier,
         loggedAt: DateTime(
           picked.year,
@@ -80,12 +118,16 @@ class BatchDiaryToolbar extends ConsumerWidget {
           entry.loggedAt.hour,
           entry.loggedAt.minute,
         ),
+        iconSvg: entry.iconSvg,
       );
+    }).toList();
+    notifier.addEntries(entries);
+    for (final entry in selected) {
       notifier.removeEntry(entry.id);
     }
-    final count = _selectedEntries.length;
+    final count = entries.length;
     onClear();
-    ScaffoldMessenger.of(context).showSnackBar(
+    messenger.showSnackBar(
       SnackBar(
         content: Text(
           'Moved $count item(s) to ${DateFormat('MMM d').format(picked)}',
@@ -94,9 +136,31 @@ class BatchDiaryToolbar extends ConsumerWidget {
     );
   }
 
-  void _batchDelete(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(dailyFoodLogsProvider.notifier);
+  Future<void> _batchDelete(BuildContext context, WidgetRef ref) async {
     final count = _selectedEntries.length;
+    if (count == 0) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppTheme.cardSurface,
+        title: Text('Delete $count selected item${count == 1 ? '' : 's'}?'),
+        content: const Text(
+          'This removes the selected food log entries from this day.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Delete'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    final notifier = ref.read(dailyFoodLogsProvider.notifier);
     for (final entry in _selectedEntries) {
       notifier.removeEntry(entry.id);
     }
@@ -142,12 +206,16 @@ class BatchDiaryToolbar extends ConsumerWidget {
             label: const Text('Move', style: TextStyle(fontSize: 12)),
           ),
           IconButton(
+            tooltip: 'Delete selected',
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             icon: const Icon(Icons.delete_outline_rounded,
-                size: 18, color: Colors.redAccent),
+                size: 18, color: AppTheme.errorText),
             onPressed:
                 selectedIds.isEmpty ? null : () => _batchDelete(context, ref),
           ),
           IconButton(
+            tooltip: 'Clear selection',
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
             icon: const Icon(Icons.close_rounded,
                 size: 18, color: AppTheme.textSecondary),
             onPressed: onClear,

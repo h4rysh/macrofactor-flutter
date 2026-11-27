@@ -92,63 +92,82 @@ class DateCarouselRibbon extends StatelessWidget {
                         },
                       ),
                       const SizedBox(width: 6),
-                      GestureDetector(
-                        onTap: () async {
-                          AppHaptics.selectionClick();
-                          final picked = await showDatePicker(
-                            context: context,
-                            initialDate: selectedDate,
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime(2030),
-                            builder: (context, child) {
-                              return Theme(
-                                data: ThemeData.dark().copyWith(
-                                  colorScheme: const ColorScheme.dark(
-                                    primary: AppTheme.activeBlue,
-                                    surface: AppTheme.cardSurface,
+                      Semantics(
+                        button: true,
+                        label: 'Pick date',
+                        child: GestureDetector(
+                          onTap: () async {
+                            AppHaptics.selectionClick();
+                            final picked = await showDatePicker(
+                              context: context,
+                              initialDate: selectedDate,
+                              firstDate: DateTime(2020),
+                              lastDate: DateTime(2030),
+                              builder: (context, child) {
+                                return Theme(
+                                  data: ThemeData.dark().copyWith(
+                                    colorScheme: const ColorScheme.dark(
+                                      primary: AppTheme.activeBlue,
+                                      surface: AppTheme.cardSurface,
+                                    ),
+                                  ),
+                                  child: child!,
+                                );
+                              },
+                            );
+                            if (picked != null && context.mounted) {
+                              onDateSelected(picked);
+                            }
+                          },
+                          child: Container(
+                            constraints: const BoxConstraints(
+                              minHeight: 44,
+                              minWidth: 44,
+                            ),
+                            alignment: Alignment.center,
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                AnimatedSwitcher(
+                                  duration:
+                                      MediaQuery.disableAnimationsOf(context)
+                                          ? Duration.zero
+                                          : const Duration(milliseconds: 220),
+                                  transitionBuilder: (child, animation) =>
+                                      FadeTransition(
+                                    opacity: animation,
+                                    child: SlideTransition(
+                                      position: Tween<Offset>(
+                                        begin: const Offset(0.0, 0.15),
+                                        end: Offset.zero,
+                                      ).animate(animation),
+                                      child: child,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    _formatHeaderDate(selectedDate, currentNow),
+                                    key: ValueKey(selectedDate),
+                                    style: const TextStyle(
+                                      fontSize: 17,
+                                      fontWeight: FontWeight.w800,
+                                      color: AppTheme.textPrimary,
+                                      letterSpacing: -0.3,
+                                      fontFeatures: [
+                                        FontFeature.tabularFigures()
+                                      ],
+                                    ),
                                   ),
                                 ),
-                                child: child!,
-                              );
-                            },
-                          );
-                          if (picked != null) onDateSelected(picked);
-                        },
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 220),
-                              transitionBuilder: (child, animation) =>
-                                  FadeTransition(
-                                opacity: animation,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: const Offset(0.0, 0.15),
-                                    end: Offset.zero,
-                                  ).animate(animation),
-                                  child: child,
+                                const SizedBox(width: 2),
+                                const Icon(
+                                  Icons.arrow_drop_down_rounded,
+                                  color: AppTheme.textSecondary,
+                                  size: 22,
                                 ),
-                              ),
-                              child: Text(
-                                _formatHeaderDate(selectedDate, currentNow),
-                                key: ValueKey(selectedDate),
-                                style: const TextStyle(
-                                  fontSize: 17,
-                                  fontWeight: FontWeight.w800,
-                                  color: AppTheme.textPrimary,
-                                  letterSpacing: -0.3,
-                                  fontFeatures: [FontFeature.tabularFigures()],
-                                ),
-                              ),
+                              ],
                             ),
-                            const SizedBox(width: 2),
-                            const Icon(
-                              Icons.arrow_drop_down_rounded,
-                              color: AppTheme.textSecondary,
-                              size: 22,
-                            ),
-                          ],
+                          ),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -235,7 +254,7 @@ class DateCarouselRibbon extends StatelessWidget {
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: isSelected
-                                  ? AppTheme.activeBlue
+                                  ? AppTheme.activeBlueText
                                   : AppTheme.textSecondary,
                             ),
                           ),

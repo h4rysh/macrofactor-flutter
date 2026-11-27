@@ -34,7 +34,11 @@ class WorkoutDao {
 
   /// Inserts or updates a list of workout sessions with deduplication on workout_uuid / deterministic ID.
   /// Enforces try/finally statement disposal and comprehensive rollback safety (ISS-8-04, ISS-8-05).
-  void insertWorkoutSessions(List<WorkoutSession> sessions, {String? userId}) {
+  void insertWorkoutSessions(
+    List<WorkoutSession> sessions, {
+    String? userId,
+    bool manageTransaction = true,
+  }) {
     if (sessions.isEmpty) return;
     final uid = userId ?? effectiveUserId;
 
@@ -73,18 +77,20 @@ class WorkoutDao {
         id, user_id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
-        user_id = excluded.user_id,
         source = excluded.source,
         title = excluded.title,
         start_time = excluded.start_time,
         end_time = excluded.end_time,
         duration_minutes = excluded.duration_minutes,
         calories_burned = excluded.calories_burned,
-        notes = excluded.notes;
+        notes = excluded.notes
+      WHERE workout_sessions.user_id = excluded.user_id;
     ''');
 
     try {
-      _db.execute('BEGIN TRANSACTION;');
+      if (manageTransaction) {
+        _db.execute('BEGIN TRANSACTION;');
+      }
       try {
         for (final session in deduplicatedBatch.values) {
           stmt.execute([
@@ -100,7 +106,9 @@ class WorkoutDao {
             session.createdAt.toIso8601String(),
           ]);
         }
-        _db.execute('COMMIT;');
+        if (manageTransaction) {
+          _db.execute('COMMIT;');
+        }
       } catch (e, st) {
         developer.log(
           'Transaction failed during insertWorkoutSessions; executing rollback',
@@ -108,15 +116,17 @@ class WorkoutDao {
           error: e,
           stackTrace: st,
         );
-        try {
-          _db.execute('ROLLBACK;');
-        } catch (rollbackErr, rollbackSt) {
-          developer.log(
-            'Rollback failed during insertWorkoutSessions',
-            name: 'WorkoutDao',
-            error: rollbackErr,
-            stackTrace: rollbackSt,
-          );
+        if (manageTransaction) {
+          try {
+            _db.execute('ROLLBACK;');
+          } catch (rollbackErr, rollbackSt) {
+            developer.log(
+              'Rollback failed during insertWorkoutSessions',
+              name: 'WorkoutDao',
+              error: rollbackErr,
+              stackTrace: rollbackSt,
+            );
+          }
         }
         rethrow;
       }
@@ -143,20 +153,47 @@ class WorkoutDao {
     }
   }
 
-  /// Retrieves workout sessions whose start_time is between [start] and [end] (inclusive).
+  /// Retrieves workout sessions whose start_time is between [start] and [end] dates (inclusive of end day).
   List<WorkoutSession> getWorkoutSessionsInRange(DateTime start, DateTime end,
       {String? userId}) {
     final uid = userId ?? effectiveUserId;
+    if (end.isBefore(start)) return const [];
 
-    final stmt = _db.prepare('''
-      SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
-      FROM workout_sessions
-      WHERE user_id = ? AND start_time >= ? AND start_time <= ?
-      ORDER BY start_time DESC;
-    ''');
+    final isDateOnlyRange = start.hour == 0 &&
+        start.minute == 0 &&
+        start.second == 0 &&
+        start.millisecond == 0 &&
+        start.microsecond == 0 &&
+        end.hour == 0 &&
+        end.minute == 0 &&
+        end.second == 0 &&
+        end.millisecond == 0 &&
+        end.microsecond == 0;
+
+    final String sql;
+    final List<Object?> args;
+    if (isDateOnlyRange) {
+      final endExclusive = DateTime(end.year, end.month, end.day + 1);
+      sql = '''
+        SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
+        FROM workout_sessions
+        WHERE user_id = ? AND start_time >= ? AND start_time < ?
+        ORDER BY start_time DESC;
+      ''';
+      args = [uid, start.toIso8601String(), endExclusive.toIso8601String()];
+    } else {
+      sql = '''
+        SELECT id, source, title, start_time, end_time, duration_minutes, calories_burned, notes, created_at
+        FROM workout_sessions
+        WHERE user_id = ? AND start_time >= ? AND start_time <= ?
+        ORDER BY start_time DESC;
+      ''';
+      args = [uid, start.toIso8601String(), end.toIso8601String()];
+    }
+
+    final stmt = _db.prepare(sql);
     try {
-      final result =
-          stmt.select([uid, start.toIso8601String(), end.toIso8601String()]);
+      final result = stmt.select(args);
       return result.map(_mapWorkoutSessionRow).toList();
     } finally {
       stmt.dispose();

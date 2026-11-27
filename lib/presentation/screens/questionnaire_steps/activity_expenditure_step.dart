@@ -48,7 +48,7 @@ class ActivityExpenditureStep extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
       children: [
         const Text(
-          'PHYSICAL ACTIVITY & TDEE',
+          'PHYSICAL ACTIVITY & BURN',
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w800,
@@ -68,7 +68,7 @@ class ActivityExpenditureStep extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         const Text(
-          'Used to seed your initial Bayesian expenditure algorithm baseline before observation data.',
+          'Used to estimate your starting daily energy burn before real tracking data arrives.',
           style: TextStyle(
             fontSize: 14,
             color: AppTheme.textSecondary,
@@ -102,7 +102,7 @@ class ActivityExpenditureStep extends StatelessWidget {
                     ),
                     SizedBox(height: 2),
                     Text(
-                      'Bayesian Seed Point',
+                      'Starting Baseline',
                       style: TextStyle(
                         fontSize: 12,
                         color: AppTheme.textSecondary,

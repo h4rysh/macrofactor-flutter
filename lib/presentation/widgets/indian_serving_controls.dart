@@ -54,11 +54,15 @@ class IndianServingChips extends StatelessWidget {
                     onUnitSelected(unit);
                   },
                   child: AnimatedContainer(
-                    duration: AppMotion.normal,
+                    duration: MediaQuery.disableAnimationsOf(context)
+                        ? Duration.zero
+                        : AppMotion.normal,
                     curve: Curves.easeOutCubic,
+                    constraints: const BoxConstraints(minHeight: 44),
+                    alignment: Alignment.center,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 12,
-                      vertical: 6,
+                      vertical: 8,
                     ),
                     decoration: BoxDecoration(
                       color: isSelected
@@ -79,7 +83,7 @@ class IndianServingChips extends StatelessWidget {
                         fontWeight:
                             isSelected ? FontWeight.w700 : FontWeight.w500,
                         color: isSelected
-                            ? AppTheme.activeBlue
+                            ? AppTheme.activeBlueText
                             : AppTheme.textSecondary,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),
@@ -141,38 +145,48 @@ class PreparationStateSelector extends StatelessWidget {
                   Text(
                     'Values reflect cooked preparation by default',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 11,
                       color: AppTheme.textSecondary,
                     ),
                   ),
                 ],
               ),
             ),
-            AppleBouncy(
-              scaleDown: 0.94,
-              onTap: () {
-                AppHaptics.selectionClick();
-                onChanged(!isRaw);
-              },
-              child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isRaw
-                      ? AppTheme.calories.withValues(alpha: 0.2)
-                      : AppTheme.activeBlue.withValues(alpha: 0.16),
-                  borderRadius: AppRadii.smBorderRadius,
-                  border: Border.all(
-                    color: isRaw ? AppTheme.calories : AppTheme.activeBlue,
-                    width: 0.8,
+            Semantics(
+              button: true,
+              toggled: isRaw,
+              label:
+                  'Preparation state: ${isRaw ? 'Raw Uncooked' : 'Cooked / Boiled'}',
+              child: AppleBouncy(
+                scaleDown: 0.94,
+                onTap: () {
+                  AppHaptics.selectionClick();
+                  onChanged(!isRaw);
+                },
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
+                  alignment: Alignment.center,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isRaw
+                        ? AppTheme.calories.withValues(alpha: 0.2)
+                        : AppTheme.activeBlue.withValues(alpha: 0.16),
+                    borderRadius: AppRadii.smBorderRadius,
+                    border: Border.all(
+                      color: isRaw ? AppTheme.calories : AppTheme.activeBlue,
+                      width: 0.8,
+                    ),
                   ),
-                ),
-                child: Text(
-                  isRaw ? 'Raw Uncooked' : 'Cooked / Boiled',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: isRaw ? AppTheme.calories : AppTheme.activeBlue,
+                  child: Text(
+                    isRaw ? 'Raw Uncooked' : 'Cooked / Boiled',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: isRaw
+                          ? AppTheme.caloriesSecondary
+                          : AppTheme.activeBlueText,
+                    ),
                   ),
                 ),
               ),

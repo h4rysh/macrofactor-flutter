@@ -19,6 +19,15 @@ typedef PlateLogCallback = void Function({
   required DateTime loggedAt,
 });
 
+typedef PlateDetailedLogCallback = void Function({
+  required FoodItem food,
+  required PortionUnit unit,
+  required double quantity,
+  required OilModifier oilModifier,
+  required MealType mealType,
+  required DateTime loggedAt,
+});
+
 /// Authentic Sique Plate Serving Selector Bottom Sheet.
 /// Implements portion sizing, weight calculations, and macro target delta preview.
 class PlateServingSheet extends StatefulWidget {
@@ -29,8 +38,14 @@ class PlateServingSheet extends StatefulWidget {
     required this.macroTargets,
     required this.initialLoggedAt,
     this.initialMealType = MealType.lunch,
+    this.initialQuantity = 1.0,
+    this.initialUnit,
+    this.initialOilModifier,
+    this.defaultPortionPreference,
+    this.isVegan = false,
     this.remainingCaloriesToday,
     this.onMealChanged,
+    this.onDetailedConfirm,
     required this.onLogConfirmed,
   });
 
@@ -39,8 +54,14 @@ class PlateServingSheet extends StatefulWidget {
   final MacroTargets macroTargets;
   final DateTime initialLoggedAt;
   final MealType initialMealType;
+  final double initialQuantity;
+  final PortionUnit? initialUnit;
+  final OilModifier? initialOilModifier;
+  final String? defaultPortionPreference;
+  final bool isVegan;
   final double? remainingCaloriesToday;
   final ValueChanged<MealType>? onMealChanged;
+  final PlateDetailedLogCallback? onDetailedConfirm;
   final PlateLogCallback onLogConfirmed;
 
   static Future<void> show({
@@ -50,8 +71,14 @@ class PlateServingSheet extends StatefulWidget {
     required MacroTargets macroTargets,
     DateTime? initialLoggedAt,
     MealType initialMealType = MealType.lunch,
+    double initialQuantity = 1.0,
+    PortionUnit? initialUnit,
+    OilModifier? initialOilModifier,
+    String? defaultPortionPreference,
+    bool isVegan = false,
     double? remainingCaloriesToday,
     ValueChanged<MealType>? onMealChanged,
+    PlateDetailedLogCallback? onDetailedConfirm,
     required PlateLogCallback onLogConfirmed,
   }) {
     return showModalBottomSheet(
@@ -64,8 +91,14 @@ class PlateServingSheet extends StatefulWidget {
         macroTargets: macroTargets,
         initialLoggedAt: initialLoggedAt ?? DateTime.now(),
         initialMealType: initialMealType,
+        initialQuantity: initialQuantity,
+        initialUnit: initialUnit,
+        initialOilModifier: initialOilModifier,
+        defaultPortionPreference: defaultPortionPreference,
+        isVegan: isVegan,
         remainingCaloriesToday: remainingCaloriesToday,
         onMealChanged: onMealChanged,
+        onDetailedConfirm: onDetailedConfirm,
         onLogConfirmed: onLogConfirmed,
       ),
     );
@@ -149,6 +182,26 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
   static double? _parseQuantity(String text) => QuantityParser.parse(text);
   String _formatQuantity(double q) => QuantityParser.format(q);
 
+  FoodItem get _confirmedFood {
+    if (!(_isGrainOrLentil && _isRaw)) return widget.food;
+    return FoodItem(
+      id: widget.food.id,
+      uuid: widget.food.uuid,
+      name: '${widget.food.name} (Raw)',
+      category: widget.food.category,
+      region: widget.food.region,
+      caloriesPer100g: widget.food.caloriesPer100g * 2.5,
+      proteinPer100g: widget.food.proteinPer100g * 2.5,
+      carbsPer100g: widget.food.carbsPer100g * 2.5,
+      fatPer100g: widget.food.fatPer100g * 2.5,
+      fiberPer100g: widget.food.fiberPer100g * 2.5,
+      iconSvg: widget.food.iconSvg,
+      source: widget.food.source,
+      aliases: widget.food.aliases,
+      portionUnits: widget.food.portionUnits,
+    );
+  }
+
   void _onConfirmLog() {
     if (_isSubmitting) return;
     final latestParsed = _parseQuantity(_quantityController.text);
@@ -159,6 +212,17 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
     AppHaptics.mediumImpact();
     Navigator.of(context).pop();
     widget.onMealChanged?.call(_selectedMeal);
+    if (widget.onDetailedConfirm != null) {
+      widget.onDetailedConfirm!(
+        food: _confirmedFood,
+        unit: _selectedUnit,
+        quantity: _quantity,
+        oilModifier: _selectedOil,
+        mealType: _selectedMeal,
+        loggedAt: _loggedAt,
+      );
+      return;
+    }
     widget.onLogConfirmed(
       unit: _selectedUnit,
       quantity: _quantity,
@@ -167,11 +231,49 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
     );
   }
 
+  PortionUnit _resolveInitialUnit() {
+    final units = _effectiveUnits;
+    if (widget.initialUnit != null) {
+      final match = units.where((u) =>
+          u.unitName.toLowerCase() ==
+          widget.initialUnit!.unitName.toLowerCase());
+      if (match.isNotEmpty) return match.first;
+      return widget.initialUnit!;
+    }
+    final pref = widget.defaultPortionPreference?.toLowerCase() ?? '';
+    if (pref.contains('katori')) {
+      return units.firstWhere(
+        (u) => u.unitName.toLowerCase().contains('katori'),
+        orElse: () => units.first,
+      );
+    }
+    if (pref.contains('gram')) {
+      return units.firstWhere(
+        (u) => u.unitName.toLowerCase().contains('gram'),
+        orElse: () => units.first,
+      );
+    }
+    if (pref.contains('roti') || pref.contains('piece')) {
+      return units.firstWhere(
+        (u) {
+          final n = u.unitName.toLowerCase();
+          return n.contains('roti') ||
+              n.contains('piece') ||
+              n.contains('idli');
+        },
+        orElse: () => units.first,
+      );
+    }
+    return units.first;
+  }
+
   @override
   void initState() {
     super.initState();
-    _selectedUnit = _effectiveUnits.first;
+    _selectedUnit = _resolveInitialUnit();
     _selectedMeal = widget.initialMealType;
+    _quantity = widget.initialQuantity > 0 ? widget.initialQuantity : 1.0;
+    _selectedOil = widget.initialOilModifier ?? OilModifier.standard;
     _loggedAt = widget.initialLoggedAt;
     _quantityController = TextEditingController(
       text: _formatQuantity(_quantity),
@@ -573,10 +675,8 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                           border: InputBorder.none,
                                         ),
                                         onChanged: (val) {
-                                          final parsed =
-                                              SiqueMathEvaluator.evaluate(
-                                                      val) ??
-                                                  _parseQuantity(val);
+                                          final parsed = _parseQuantity(val) ??
+                                              SiqueMathEvaluator.evaluate(val);
                                           if (parsed != null && parsed > 0) {
                                             setState(() => _quantity = parsed);
                                           }
@@ -677,6 +777,7 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                         // 1-Tap Oil Modifier
                         PlateOilModifierSelector(
                           selectedOil: _selectedOil,
+                          isVegan: widget.isVegan,
                           onSelected: (oil) =>
                               setState(() => _selectedOil = oil),
                         ),
@@ -761,10 +862,11 @@ class _PlateServingSheetState extends State<PlateServingSheet> {
                                 ),
                                 Text(
                                   '${_effectiveCalories.round()} kcal to ${_selectedMeal.displayName}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.textMuted,
+                                    color: AppTheme.buttonText
+                                        .withValues(alpha: 0.78),
                                   ),
                                 ),
                               ],

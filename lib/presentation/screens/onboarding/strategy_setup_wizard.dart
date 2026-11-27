@@ -4,12 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../domain/algorithms/coaching_engine.dart';
 import '../../../domain/models/macro_program.dart';
 import '../../../domain/models/user_profile.dart';
+import '../../../utils/unit_formatter.dart';
 import '../../providers/app_providers.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/apple_tactile_card.dart';
 import '../../widgets/onboarding/wizard_input_tiles.dart';
 import '../../widgets/onboarding/wizard_preview_step.dart';
-import 'auth_gate_screen.dart';
+import '../scaffold_with_nav_bar.dart';
 
 /// Interactive Strategy Setup Questionnaire Wizard configuring the user's 7-day program.
 class StrategySetupWizard extends ConsumerStatefulWidget {
@@ -51,14 +52,28 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
   void initState() {
     super.initState();
     final profile = ref.read(userProfileProvider);
+    final program = ref.read(weeklyMacroProgramProvider);
+    final db = ref.read(databaseProvider);
     _currentWeightKg = profile.currentWeightKg;
     _heightCm = profile.heightCm;
-    _age = profile.age;
+    _age = profile.age >= 18 ? profile.age : 28;
     _isMale = profile.isMale;
     _goalType = profile.goalType;
     _targetRatePct = profile.weeklyRateOfChangePct;
     _programMode = profile.programMode;
     _proteinPref = profile.proteinPreference;
+    _programStyle = program.style;
+    _allocationType = program.allocationType;
+    final loadedWorkoutDays = program.days
+        .where((d) => d.isWorkoutDay)
+        .map((d) => d.dayOfWeek)
+        .toSet();
+    if (loadedWorkoutDays.isNotEmpty) {
+      _workoutDays
+        ..clear()
+        ..addAll(loadedWorkoutDays);
+    }
+    _dietaryPref = db.getSetting('dietary_preference', profile.dietType);
   }
 
   @override
@@ -119,6 +134,8 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
       programMode: _programMode,
       weeklyRateOfChangePct: _targetRatePct,
       proteinPreference: _proteinPref,
+      dietType: _dietaryPref,
+      clearCustom: _programMode != ProgramMode.manual,
       calorieFloor: existingProfile.calorieFloor > 0
           ? existingProfile.calorieFloor
           : (_isMale ? 1500.0 : 1200.0),
@@ -153,6 +170,8 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
       programMode: _programMode,
       weeklyRateOfChangePct: _targetRatePct,
       proteinPreference: _proteinPref,
+      dietType: _dietaryPref,
+      clearCustom: _programMode != ProgramMode.manual,
       calorieFloor: existingProfile.calorieFloor > 0
           ? existingProfile.calorieFloor
           : (_isMale ? 1500.0 : 1200.0),
@@ -181,7 +200,7 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
       Navigator.of(context).pop();
     } else {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const AuthGateScreen()),
+        MaterialPageRoute(builder: (_) => const ScaffoldWithNavBar()),
       );
     }
   }
@@ -335,33 +354,46 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         const SizedBox(height: 24),
 
         // Weight Slider
-        WizardSliderTile(
-          title: 'Current Weight',
-          valueText: '${_currentWeightKg.toStringAsFixed(1)} kg',
-          value: _currentWeightKg,
-          min: 40.0,
-          max: 160.0,
-          onChanged: (v) => setState(() => _currentWeightKg = v),
-        ),
-        const SizedBox(height: 20),
+        Builder(builder: (context) {
+          final useImperial = ref.watch(useImperialUnitsProvider);
+          return Column(
+            children: [
+              WizardSliderTile(
+                title: 'Current Weight',
+                valueText: UnitFormatter.formatWeight(
+                  _currentWeightKg,
+                  useLbs: useImperial,
+                ),
+                value: _currentWeightKg,
+                min: 40.0,
+                max: 160.0,
+                onChanged: (v) => setState(() => _currentWeightKg = v),
+              ),
+              const SizedBox(height: 20),
 
-        // Height Slider
-        WizardSliderTile(
-          title: 'Height',
-          valueText: '${_heightCm.toStringAsFixed(0)} cm',
-          value: _heightCm,
-          min: 130.0,
-          max: 220.0,
-          onChanged: (v) => setState(() => _heightCm = v),
-        ),
+              // Height Slider
+              WizardSliderTile(
+                title: 'Height',
+                valueText: UnitFormatter.formatHeight(
+                  _heightCm,
+                  useImperial: useImperial,
+                ),
+                value: _heightCm,
+                min: 130.0,
+                max: 220.0,
+                onChanged: (v) => setState(() => _heightCm = v),
+              ),
+            ],
+          );
+        }),
         const SizedBox(height: 20),
 
         // Age Slider
         WizardSliderTile(
           title: 'Age',
           valueText: '$_age yrs',
-          value: _age.toDouble(),
-          min: 16.0,
+          value: _age.toDouble().clamp(18.0, 80.0),
+          min: 18.0,
           max: 80.0,
           onChanged: (v) => setState(() => _age = v.toInt()),
         ),
@@ -472,7 +504,7 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'How much algorithmic automation do you want in your weekly check-ins?',
+          'How much adaptive guidance do you want in your weekly check-ins?',
           style: TextStyle(
             fontSize: 14,
             color: AppTheme.textSecondary,
@@ -482,7 +514,7 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         WizardSelectionCard(
           title: 'Coached (Recommended)',
           subtitle:
-              'Full algorithmic guidance. Calories & macros automatically adjust weekly based on your Bayesian metabolic expenditure.',
+              'Full automated coaching. Calories & macros adjust weekly based on your adaptive daily energy burn.',
           icon: Icons.auto_awesome_rounded,
           accentColor: AppTheme.calories,
           selected: _programMode == ProgramMode.coached,
@@ -492,7 +524,7 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         WizardSelectionCard(
           title: 'Collaborative',
           subtitle:
-              'The algorithm recommends calorie adjustments, but you choose macro split and day-to-day distributions.',
+              'Sique recommends weekly calorie adjustments, while you customise macro splits and day-to-day distributions.',
           icon: Icons.handshake_outlined,
           accentColor: AppTheme.carbs,
           selected: _programMode == ProgramMode.collaborative,
@@ -502,7 +534,7 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
         WizardSelectionCard(
           title: 'Manual',
           subtitle:
-              'You set all calorie and macro targets manually. The Bayesian expenditure engine continues tracking your burn in the background.',
+              'You set all calorie and macro targets yourself while Sique keeps estimating your true daily burn in the background.',
           icon: Icons.edit_note_rounded,
           accentColor: AppTheme.textSecondary,
           selected: _programMode == ProgramMode.manual,
@@ -563,6 +595,11 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
               label: 'Pure Vegetarian',
               selected: _dietaryPref == 'pure_veg',
               onTap: () => setState(() => _dietaryPref = 'pure_veg'),
+            ),
+            WizardSmallChoiceChip(
+              label: 'Vegan',
+              selected: _dietaryPref == 'vegan',
+              onTap: () => setState(() => _dietaryPref = 'vegan'),
             ),
             WizardSmallChoiceChip(
               label: 'Eggetarian',
@@ -634,8 +671,10 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
             ),
           ),
           const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.spaceBetween,
             children: daysOfWeek.map((day) {
               final id = day['id'] as int;
               final isWorkout = _workoutDays.contains(id);
@@ -655,8 +694,8 @@ class _StrategySetupWizardState extends ConsumerState<StrategySetupWizard> {
                     });
                   },
                   child: Container(
-                    width: 42,
-                    height: 48,
+                    constraints:
+                        const BoxConstraints(minWidth: 44, minHeight: 48),
                     decoration: BoxDecoration(
                       color:
                           isWorkout ? AppTheme.calories : AppTheme.cardSurface,

@@ -218,7 +218,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Step 2: Activity -> Moderately Active
-      expect(find.text('PHYSICAL ACTIVITY & TDEE'), findsOneWidget);
+      expect(find.text('PHYSICAL ACTIVITY & BURN'), findsOneWidget);
       await tester.tap(find.text('Moderately Active'));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('questionnaire_next_btn')));
@@ -318,7 +318,7 @@ void main() {
 
       // Strategy should still be rendered and not popped out
       expect(find.text('Strategy'), findsWidgets);
-      expect(find.text('ADAPTIVE TDEE'), findsOneWidget);
+      expect(find.text('ADAPTIVE BURN'), findsOneWidget);
     });
 
     testWidgets(

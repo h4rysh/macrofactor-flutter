@@ -312,7 +312,7 @@ class WeeklyChallengeCard extends ConsumerWidget {
                       Text(
                         dayLabels[wd],
                         style: const TextStyle(
-                          fontSize: 8,
+                          fontSize: 11,
                           fontWeight: FontWeight.w700,
                           color: AppTheme.textMuted,
                         ),
@@ -336,8 +336,9 @@ class WeeklyChallengeCard extends ConsumerWidget {
                 scaleDown: 0.96,
                 onTap: () => _showFixingFoodsSheet(context, db, themeColor),
                 child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: themeColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
@@ -346,8 +347,8 @@ class WeeklyChallengeCard extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(Icons.restaurant_rounded,
-                          size: 13, color: themeColor),
-                      const SizedBox(width: 5),
+                          size: 14, color: themeColor),
+                      const SizedBox(width: 6),
                       Text(
                         'Foods that fix this',
                         style: TextStyle(
@@ -363,15 +364,39 @@ class WeeklyChallengeCard extends ConsumerWidget {
             if (!isDone)
               AppleBouncy(
                 scaleDown: 0.96,
-                onTap: () {
+                onTap: () async {
                   AppHaptics.lightImpact();
+                  if (challenge.currentValue > 0) {
+                    final confirmed = await showDialog<bool>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        backgroundColor: AppTheme.cardSurface,
+                        title: const Text('Swap active challenge?'),
+                        content: const Text(
+                          'You already have progress on this challenge. Swapping will replace it with a new one.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(false),
+                            child: const Text('Keep'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(ctx).pop(true),
+                            child: const Text('Swap'),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirmed != true || !context.mounted) return;
+                  }
                   ref
                       .read(weeklyChallengesProvider.notifier)
                       .swapChallenge(challenge.id);
                 },
                 child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
                     color: AppTheme.cardElevated,
                     borderRadius: BorderRadius.circular(10),

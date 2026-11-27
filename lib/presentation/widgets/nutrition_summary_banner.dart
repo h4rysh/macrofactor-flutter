@@ -137,50 +137,42 @@ class NutritionSummaryBanner extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: 6),
+            const SizedBox(height: 2),
 
-            // Two-dot page indicator + quick Micros pill
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 5,
-                  height: 5,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.textPrimary,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 4),
-                Container(
-                  width: 4,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppTheme.textMuted.withAlpha(120),
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                GestureDetector(
+            // Quick Micros pill (44dp accessible touch target)
+            Align(
+              alignment: Alignment.center,
+              child: Semantics(
+                button: true,
+                label: 'View micronutrient breakdown',
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(10),
                   onTap: () => MicronutrientBreakdownSheet.show(context),
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.activeBlue.withValues(alpha: 0.14),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      'Micros ▸',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.activeBlue,
+                  child: ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(minHeight: 44, minWidth: 88),
+                    child: Center(
+                      widthFactor: 1.0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: AppTheme.activeBlue.withValues(alpha: 0.14),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'Micros ▸',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.activeBlueText,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ],
+              ),
             ),
           ],
         ),
@@ -256,7 +248,7 @@ class _WeeklyCoverageBadge extends StatelessWidget {
       child: Text(
         '$coverage/7d logged',
         style: AppTypography.labelSmall.copyWith(
-          fontSize: 10,
+          fontSize: 11,
           fontWeight: FontWeight.w600,
           color: AppTheme.textSecondary,
         ),

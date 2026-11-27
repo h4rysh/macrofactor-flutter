@@ -16,6 +16,7 @@ class ExportCardTile extends StatelessWidget {
   final IconData? secondaryButtonIcon;
   final VoidCallback? onSecondaryPressed;
   final Key? secondaryButtonKey;
+  final bool isLoading;
 
   const ExportCardTile({
     super.key,
@@ -32,6 +33,7 @@ class ExportCardTile extends StatelessWidget {
     this.secondaryButtonIcon,
     this.onSecondaryPressed,
     this.secondaryButtonKey,
+    this.isLoading = false,
   });
 
   @override
@@ -105,7 +107,7 @@ class ExportCardTile extends StatelessWidget {
                         shape: const RoundedRectangleBorder(
                             borderRadius: AppRadii.mdBorderRadius),
                       ),
-                      onPressed: onSecondaryPressed,
+                      onPressed: isLoading ? null : onSecondaryPressed,
                     ),
                   ),
                 ),
@@ -116,7 +118,13 @@ class ExportCardTile extends StatelessWidget {
                   button: true,
                   label: '$primaryButtonLabel for $title',
                   child: ElevatedButton.icon(
-                    icon: Icon(primaryButtonIcon, size: 16),
+                    icon: isLoading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(primaryButtonIcon, size: 16),
                     label: Text(primaryButtonLabel),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: color.withAlpha(40),
@@ -126,7 +134,7 @@ class ExportCardTile extends StatelessWidget {
                       shape: const RoundedRectangleBorder(
                           borderRadius: AppRadii.mdBorderRadius),
                     ),
-                    onPressed: onPrimaryPressed,
+                    onPressed: isLoading ? null : onPrimaryPressed,
                   ),
                 ),
               ),

@@ -83,6 +83,51 @@ class FoodDao {
     return searchFoods(query, limit: limit);
   }
 
+  /// Asynchronously searches foods with SQL-level filter predicates applied BEFORE `LIMIT`.
+  Future<List<FoodItem>> searchFoodsFilteredAsync(
+    String query, {
+    String filterKey = 'all',
+    int limit = 60,
+  }) async {
+    final path = dbPath;
+    if (path != null && path.isNotEmpty) {
+      try {
+        return await Isolate.run(
+          () => _isolateSearchFoodsFiltered(path, query, filterKey, limit),
+        );
+      } catch (e, st) {
+        developer.log(
+          'Filtered worker isolate search failed; falling back to local query',
+          name: 'FoodDao',
+          error: e,
+          stackTrace: st,
+        );
+      }
+    }
+    return searchFoodsFiltered(query, filterKey: filterKey, limit: limit);
+  }
+
+  static List<FoodItem> _isolateSearchFoodsFiltered(
+    String path,
+    String query,
+    String filterKey,
+    int limit,
+  ) {
+    final isolateDb = sqlite3.open(path);
+    try {
+      isolateDb.execute('PRAGMA busy_timeout = 5000;');
+      isolateDb.execute('PRAGMA query_only = ON;');
+      final dao = FoodDao(isolateDb, dbPath: path);
+      return dao.searchFoodsFiltered(
+        query,
+        filterKey: filterKey,
+        limit: limit,
+      );
+    } finally {
+      isolateDb.dispose();
+    }
+  }
+
   static List<FoodItem> _isolateSearchFoods(
     String path,
     String query,
@@ -90,6 +135,8 @@ class FoodDao {
   ) {
     final isolateDb = sqlite3.open(path);
     try {
+      isolateDb.execute('PRAGMA busy_timeout = 5000;');
+      isolateDb.execute('PRAGMA query_only = ON;');
       final dao = FoodDao(isolateDb, dbPath: path);
       return dao.searchFoods(query, limit: limit);
     } finally {
@@ -100,55 +147,63 @@ class FoodDao {
   /// Searches foods using SQLite FTS5 with operator escaping and rank ordering, falling back to LIKE.
   /// Guarantees prepared statement disposal in try/finally (ISS-8-04).
   List<FoodItem> searchFoods(String query, {int limit = 30}) {
+    final safeLimit = limit < 1 ? 1 : limit;
     final ftsQuery = sanitizeFts5Query(query);
-    if (ftsQuery.isEmpty) {
+    if (ftsQuery.isEmpty && query.trim().isEmpty) {
       final stmt = _db.prepare(
           'SELECT * FROM foods ORDER BY is_verified DESC, name ASC LIMIT ?;');
       try {
-        final result = stmt.select([limit]);
+        final result = stmt.select([safeLimit]);
         return result.map(_mapFoodRow).toList();
       } finally {
         stmt.dispose();
       }
     }
 
-    try {
-      final ftsStmt = _db.prepare('''
-        SELECT f.* FROM foods f
-        JOIN foods_fts fts ON f.id = fts.rowid
-        WHERE foods_fts MATCH ?
-        ORDER BY fts.rank, f.is_verified DESC, f.name ASC
-        LIMIT ?;
-      ''');
+    if (ftsQuery.isNotEmpty) {
       try {
-        final result = ftsStmt.select([ftsQuery, limit]);
-        if (result.isNotEmpty) {
-          return result.map(_mapFoodRow).toList();
+        final ftsStmt = _db.prepare('''
+          SELECT f.* FROM foods f
+          JOIN foods_fts fts ON f.id = fts.rowid
+          WHERE foods_fts MATCH ?
+          ORDER BY fts.rank, f.is_verified DESC, f.name ASC
+          LIMIT ?;
+        ''');
+        try {
+          final result = ftsStmt.select([ftsQuery, safeLimit]);
+          if (result.isNotEmpty) {
+            return result.map(_mapFoodRow).toList();
+          }
+        } finally {
+          ftsStmt.dispose();
         }
-      } finally {
-        ftsStmt.dispose();
+      } on SqliteException catch (e, st) {
+        developer.log(
+          'FTS search failed; falling back to LIKE',
+          name: 'FoodDao',
+          error: e,
+          stackTrace: st,
+        );
       }
-    } on SqliteException catch (e, st) {
-      developer.log(
-        'FTS search failed; falling back to LIKE',
-        name: 'FoodDao',
-        error: e,
-        stackTrace: st,
-      );
     }
 
     final rawTokens =
         query.replaceAll(RegExp(r'''['"*\(\)\-\+\:]'''), ' ').trim();
-    final likePattern = '%$rawTokens%';
+    if (rawTokens.isEmpty) return const [];
+    final escaped = rawTokens
+        .replaceAll(r'\', r'\\')
+        .replaceAll('%', r'\%')
+        .replaceAll('_', r'\_');
+    final likePattern = '%$escaped%';
     final fallbackStmt = _db.prepare('''
       SELECT * FROM foods
-      WHERE name LIKE ? OR aliases LIKE ? OR category LIKE ?
+      WHERE name LIKE ? ESCAPE '\\' OR aliases LIKE ? ESCAPE '\\' OR category LIKE ? ESCAPE '\\'
       ORDER BY is_verified DESC, name ASC
       LIMIT ?;
     ''');
     try {
-      final fallbackResult =
-          fallbackStmt.select([likePattern, likePattern, likePattern, limit]);
+      final fallbackResult = fallbackStmt
+          .select([likePattern, likePattern, likePattern, safeLimit]);
       return fallbackResult.map(_mapFoodRow).toList();
     } finally {
       fallbackStmt.dispose();
@@ -229,32 +284,36 @@ class FoodDao {
     } finally {
       stmt.dispose();
     }
-
-    try {
-      final ftsStmt = _db.prepare('''
-        INSERT INTO foods_fts (rowid, name, aliases, category)
-        VALUES (?, ?, ?, ?);
-      ''');
-      try {
-        ftsStmt.execute([food.id, food.name, food.aliases, food.category]);
-      } finally {
-        ftsStmt.dispose();
-      }
-    } on SqliteException catch (e, st) {
-      developer.log(
-        'FTS manual insertion note for food ${food.id}',
-        name: 'FoodDao',
-        error: e,
-        stackTrace: st,
-      );
-    }
   }
 
   /// Inserts a portion unit for a food item.
   void insertPortionUnit(PortionUnit unit) {
+    if (unit.id <= 0) {
+      final stmt = _db.prepare('''
+        INSERT INTO portion_units (food_id, unit_name, gram_weight, is_default)
+        VALUES (?, ?, ?, ?);
+      ''');
+      try {
+        stmt.execute([
+          unit.foodId,
+          unit.unitName,
+          unit.gramWeight,
+          unit.isDefault ? 1 : 0,
+        ]);
+      } finally {
+        stmt.dispose();
+      }
+      return;
+    }
+
     final stmt = _db.prepare('''
       INSERT INTO portion_units (id, food_id, unit_name, gram_weight, is_default)
-      VALUES (?, ?, ?, ?, ?);
+      VALUES (?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        food_id = excluded.food_id,
+        unit_name = excluded.unit_name,
+        gram_weight = excluded.gram_weight,
+        is_default = excluded.is_default;
     ''');
     try {
       stmt.execute([
@@ -318,7 +377,6 @@ class FoodDao {
         fat, fiber, oil_modifier, logged_at, icon_svg
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
-        user_id = excluded.user_id,
         date = excluded.date,
         meal_type = excluded.meal_type,
         food_id = excluded.food_id,
@@ -333,7 +391,8 @@ class FoodDao {
         fiber = excluded.fiber,
         oil_modifier = excluded.oil_modifier,
         logged_at = excluded.logged_at,
-        icon_svg = excluded.icon_svg;
+        icon_svg = excluded.icon_svg
+      WHERE food_logs.user_id = excluded.user_id;
     ''');
     try {
       stmt.execute([
@@ -530,5 +589,130 @@ class FoodDao {
       loggedAt: DateTime.parse(row['logged_at'] as String),
       iconSvg: row['icon_svg'] as String,
     );
+  }
+
+  static String _escapeLikeToken(String raw) =>
+      raw.replaceAll(r'\', r'\\').replaceAll('%', r'\%').replaceAll('_', r'\_');
+
+  static String _buildFilterPredicate(String filterKey, String tableAlias) {
+    final col = tableAlias.isEmpty ? '' : '$tableAlias.';
+    switch (filterKey) {
+      case 'southIndian':
+        return "LOWER(${col}region) LIKE '%south%'";
+      case 'northIndian':
+        return "LOWER(${col}region) LIKE '%north%'";
+      case 'highProtein':
+        return '${col}protein >= 12.0';
+      case 'vegetarian':
+        return '''
+          LOWER(${col}category) NOT LIKE '%meat%'
+          AND LOWER(${col}category) NOT LIKE '%poultry%'
+          AND LOWER(${col}category) NOT LIKE '%fish%'
+          AND LOWER(${col}category) NOT LIKE '%seafood%'
+          AND LOWER(${col}category) NOT LIKE '%egg%'
+          AND LOWER(${col}name) NOT LIKE '%chicken%'
+          AND LOWER(${col}name) NOT LIKE '%mutton%'
+          AND LOWER(${col}name) NOT LIKE '%fish%'
+          AND LOWER(${col}name) NOT LIKE '%prawn%'
+          AND LOWER(${col}name) NOT LIKE '%shrimp%'
+          AND LOWER(${col}name) NOT LIKE '%crab%'
+          AND LOWER(${col}name) NOT LIKE '%beef%'
+          AND LOWER(${col}name) NOT LIKE '%pork%'
+          AND LOWER(${col}name) NOT LIKE '%lamb%'
+          AND LOWER(${col}name) NOT LIKE '%turkey%'
+          AND LOWER(${col}name) NOT LIKE '%keema%'
+          AND LOWER(${col}name) NOT LIKE '%tuna%'
+          AND LOWER(${col}name) NOT LIKE '%salmon%'
+          AND (
+            LOWER(${col}name) NOT LIKE '%egg%'
+            OR LOWER(${col}name) LIKE '%eggplant%'
+            OR LOWER(${col}name) LIKE '%eggless%'
+          )
+        ''';
+      default:
+        return '1 = 1';
+    }
+  }
+
+  /// Searches foods applying [filterKey] predicates in SQLite before `LIMIT`.
+  List<FoodItem> searchFoodsFiltered(
+    String query, {
+    String filterKey = 'all',
+    int limit = 60,
+  }) {
+    final safeLimit = limit.clamp(1, 200);
+    final trimmed = query.trim();
+    if (trimmed.isEmpty) {
+      final predicate = _buildFilterPredicate(filterKey, '');
+      final stmt = _db.prepare(
+        'SELECT * FROM foods WHERE $predicate ORDER BY id ASC LIMIT ?;',
+      );
+      try {
+        return stmt.select([safeLimit]).map(_mapFoodRow).toList();
+      } finally {
+        stmt.dispose();
+      }
+    }
+
+    final sanitized = sanitizeFts5Query(trimmed);
+    if (sanitized.isNotEmpty) {
+      final ftsPredicate = _buildFilterPredicate(filterKey, 'f');
+      try {
+        final ftsStmt = _db.prepare('''
+          SELECT f.* FROM foods f
+          INNER JOIN foods_fts ON f.id = foods_fts.rowid
+          WHERE foods_fts MATCH ? AND ($ftsPredicate)
+          ORDER BY bm25(foods_fts) ASC
+          LIMIT ?;
+        ''');
+        try {
+          final rows = ftsStmt.select([sanitized, safeLimit]);
+          if (rows.isNotEmpty) {
+            return rows.map(_mapFoodRow).toList();
+          }
+        } finally {
+          ftsStmt.dispose();
+        }
+      } catch (e, st) {
+        developer.log(
+          'FTS5 filtered search fallback to LIKE',
+          name: 'FoodDao',
+          error: e,
+          stackTrace: st,
+        );
+      }
+    }
+
+    final tokens = trimmed
+        .toLowerCase()
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty)
+        .take(4)
+        .toList();
+    if (tokens.isEmpty) return const [];
+
+    final likeClauses = <String>[];
+    final args = <Object?>[];
+    for (final tok in tokens) {
+      final pattern = '%${_escapeLikeToken(tok)}%';
+      likeClauses.add(
+        "(LOWER(name) LIKE ? ESCAPE '\\' OR LOWER(aliases) LIKE ? ESCAPE '\\' OR LOWER(category) LIKE ? ESCAPE '\\')",
+      );
+      args.addAll([pattern, pattern, pattern]);
+    }
+    args.add(safeLimit);
+
+    final predicate = _buildFilterPredicate(filterKey, '');
+    final stmt = _db.prepare('''
+      SELECT * FROM foods
+      WHERE ${likeClauses.join(' AND ')} AND ($predicate)
+      ORDER BY id ASC
+      LIMIT ?;
+    ''');
+    try {
+      return stmt.select(args).map(_mapFoodRow).toList();
+    } finally {
+      stmt.dispose();
+    }
   }
 }

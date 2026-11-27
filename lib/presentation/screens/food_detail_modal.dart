@@ -49,7 +49,15 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
   @override
   void initState() {
     super.initState();
-    _selectedUnit = widget.food.defaultPortionUnit;
+    final db = ref.read(databaseProvider);
+    _selectedUnit = OilModifierDisplay.resolveDefaultUnit(
+      widget.food.portionUnits,
+      db.getSetting('default_portion_unit', 'Grams (g)'),
+      widget.food.defaultPortionUnit,
+    );
+    _oilModifier = OilModifierDisplay.fromPreferenceSetting(
+      db.getSetting('default_oil_modifier', 'none'),
+    );
     _quantityController = TextEditingController(
       text: _formatQuantity(_quantity),
     );
@@ -101,7 +109,7 @@ class _FoodDetailModalState extends ConsumerState<FoodDetailModal> {
     try {
       HapticFeedback.mediumImpact();
       final dateStr = ref.read(selectedDateProvider);
-      final now = DateTime.now();
+      final now = ref.read(clockProvider)();
       final parsedDate = DateTime.tryParse(dateStr);
       final loggedAt = parsedDate != null
           ? DateTime(parsedDate.year, parsedDate.month, parsedDate.day,

@@ -51,7 +51,7 @@ class SiqueButton extends StatelessWidget {
         break;
       case SiqueButtonVariant.destructive:
         bg = isEnabled ? AppColors.protein : AppColors.protein.withAlpha(80);
-        fg = Colors.white;
+        fg = AppColors.buttonForeground;
         break;
       case SiqueButtonVariant.ghost:
         bg = Colors.transparent;
@@ -137,28 +137,41 @@ class SiqueSegmentedControl<T> extends StatelessWidget {
         children: segments.entries.map((entry) {
           final isSelected = entry.key == selected;
           return Expanded(
-            child: SiqueBouncy(
-              onTap: () {
-                if (!isSelected) {
-                  AppHaptics.selectionClick();
-                  onChanged(entry.key);
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                curve: Curves.easeOutCubic,
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                decoration: BoxDecoration(
-                  color: isSelected ? AppColors.activeBlue : Colors.transparent,
-                  borderRadius: AppRadii.pillShape,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  entry.value,
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                    color: isSelected ? Colors.white : AppColors.textSecondary,
+            child: Semantics(
+              button: true,
+              selected: isSelected,
+              child: SiqueBouncy(
+                onTap: () {
+                  if (!isSelected) {
+                    AppHaptics.selectionClick();
+                    onChanged(entry.key);
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: MediaQuery.disableAnimationsOf(context)
+                      ? Duration.zero
+                      : const Duration(milliseconds: 180),
+                  curve: Curves.easeOutCubic,
+                  constraints: const BoxConstraints(minHeight: 44),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color:
+                        isSelected ? AppColors.activeBlue : Colors.transparent,
+                    borderRadius: AppRadii.pillShape,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    entry.value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight:
+                          isSelected ? FontWeight.w700 : FontWeight.w500,
+                      color: isSelected
+                          ? AppColors.buttonForeground
+                          : AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ),
@@ -203,23 +216,29 @@ class SiqueStepper extends StatelessWidget {
         children: [
           SiqueBouncy(
             enabled: canDecrement,
+            semanticLabel: 'Decrease',
             onTap: () {
               AppHaptics.selectionClick();
               onDecrement();
             },
             child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.cardSurface,
-                borderRadius: BorderRadius.circular(8),
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.cardSurface,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.remove,
+                    size: 18, color: AppColors.textPrimary),
               ),
-              child: const Icon(Icons.remove,
-                  size: 18, color: AppColors.textPrimary),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -243,19 +262,25 @@ class SiqueStepper extends StatelessWidget {
           ),
           SiqueBouncy(
             enabled: canIncrement,
+            semanticLabel: 'Increase',
             onTap: () {
               AppHaptics.selectionClick();
               onIncrement();
             },
             child: Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: AppColors.cardSurface,
-                borderRadius: BorderRadius.circular(8),
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              child: Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: AppColors.cardSurface,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.add,
+                    size: 18, color: AppColors.textPrimary),
               ),
-              child:
-                  const Icon(Icons.add, size: 18, color: AppColors.textPrimary),
             ),
           ),
         ],

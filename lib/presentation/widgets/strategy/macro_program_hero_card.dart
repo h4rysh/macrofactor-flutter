@@ -13,7 +13,17 @@ class MacroProgramHeroCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final program = ref.watch(weeklyMacroProgramProvider);
     final expenditure = ref.watch(expenditureStateProvider);
-    final avgTarget = program.days.first; // representative macro split
+    final daysCount = program.days.isNotEmpty ? program.days.length : 1;
+    final avgProtein = program.days.isNotEmpty
+        ? program.days.fold<double>(0.0, (s, d) => s + d.proteinGrams) /
+            daysCount
+        : (program.dailyAverageCalories * 0.30 / 4.0);
+    final avgFat = program.days.isNotEmpty
+        ? program.days.fold<double>(0.0, (s, d) => s + d.fatGrams) / daysCount
+        : (program.dailyAverageCalories * 0.30 / 9.0);
+    final avgCarbs = program.days.isNotEmpty
+        ? program.days.fold<double>(0.0, (s, d) => s + d.carbsGrams) / daysCount
+        : (program.dailyAverageCalories * 0.40 / 4.0);
 
     final deficitSurplus =
         program.dailyAverageCalories - expenditure.expenditureKcal;
@@ -45,7 +55,7 @@ class MacroProgramHeroCard extends ConsumerWidget {
           fontSize: 12,
           fontWeight: FontWeight.w700,
           color: isDeficit
-              ? AppTheme.calories
+              ? AppTheme.caloriesSecondary
               : isSurplus
                   ? AppTheme.carbs
                   : AppTheme.textSecondary,
@@ -74,11 +84,11 @@ class MacroProgramHeroCard extends ConsumerWidget {
                   children: [
                     _Badge(
                       label: program.mode.displayName.toUpperCase(),
-                      color: AppTheme.calories,
+                      color: AppTheme.caloriesSecondary,
                     ),
                     _Badge(
                       label: program.style.displayName.toUpperCase(),
-                      color: AppTheme.activeBlue,
+                      color: AppTheme.activeBlueText,
                     ),
                   ],
                 ),
@@ -162,19 +172,19 @@ class MacroProgramHeroCard extends ConsumerWidget {
             children: [
               _MacroSplitPill(
                 label: 'PROTEIN',
-                grams: '${avgTarget.proteinGrams.round()}g',
+                grams: '${avgProtein.round()}g',
                 color: AppTheme.protein,
               ),
               const SizedBox(width: 8),
               _MacroSplitPill(
                 label: 'FAT',
-                grams: '${avgTarget.fatGrams.round()}g',
+                grams: '${avgFat.round()}g',
                 color: AppTheme.fat,
               ),
               const SizedBox(width: 8),
               _MacroSplitPill(
                 label: 'CARBS',
-                grams: '${avgTarget.carbsGrams.round()}g',
+                grams: '${avgCarbs.round()}g',
                 color: AppTheme.carbs,
               ),
             ],

@@ -35,7 +35,7 @@ void main() {
           loggedAt: now,
         );
 
-        appDb.bodyMeasurementsDao.upsertMeasurement(entry);
+        appDb.bodyMeasurementsDao.upsertMeasurement(entry, userId: 'test_user');
 
         final retrieved = appDb.bodyMeasurementsDao
             .getMeasurementForDate(now, userId: 'test_user');
@@ -77,7 +77,7 @@ void main() {
           createdAt: now,
         );
 
-        appDb.challengesDao.upsertChallenge(challenge);
+        appDb.challengesDao.upsertChallenge(challenge, userId: 'test_user');
 
         final active =
             appDb.challengesDao.getActiveChallenges(userId: 'test_user');
@@ -97,8 +97,13 @@ void main() {
         expect(updated.progressFraction, 0.60);
 
         // Record daily progress
-        appDb.challengesDao
-            .recordDailyProgress('chk_test_1', '2026-11-24', 155.0, true);
+        appDb.challengesDao.recordDailyProgress(
+          'chk_test_1',
+          '2026-11-24',
+          155.0,
+          true,
+          userId: 'test_user',
+        );
 
         // Complete challenge
         appDb.challengesDao.updateChallengeStatus(
@@ -168,7 +173,7 @@ void main() {
           state: 'active',
         );
 
-        appDb.fastingDao.startFast(session);
+        appDb.fastingDao.startFast(session, userId: 'test_user');
 
         final active = appDb.fastingDao.getActiveFast(userId: 'test_user');
         expect(active, isNotNull);

@@ -77,20 +77,29 @@ class _BarcodeScannerSheetState extends ConsumerState<BarcodeScannerSheet> {
       _resolvedProduct = null;
     });
 
-    final product =
-        await ref.read(openFoodFactsServiceProvider).lookupBarcode(code);
-    if (!mounted) return;
+    try {
+      final product =
+          await ref.read(openFoodFactsServiceProvider).lookupBarcode(code);
+      if (!mounted) return;
 
-    setState(() {
-      _isLookingUp = false;
-      _resolvedProduct = product;
-      if (product == null) {
+      setState(() {
+        _isLookingUp = false;
+        _resolvedProduct = product;
+        if (product == null) {
+          _statusMessage =
+              'Barcode "$code" not found offline or in OpenFoodFacts.';
+        } else {
+          AppHaptics.successFeedback();
+        }
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLookingUp = false;
         _statusMessage =
-            'Barcode "$code" not found offline or in OpenFoodFacts.';
-      } else {
-        AppHaptics.successFeedback();
-      }
-    });
+            'Unable to reach OpenFoodFacts. Try scanning a nutrition label instead.';
+      });
+    }
   }
 
   void _logProduct(BarcodeFoodProduct product, {required bool stageOnly}) {
@@ -170,6 +179,14 @@ class _BarcodeScannerSheetState extends ConsumerState<BarcodeScannerSheet> {
                           // Safe no-op if device camera lacks torch or failed initialization
                         }
                       },
+                    ),
+                    IconButton(
+                      tooltip: 'Close scanner',
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: AppTheme.textSecondary,
+                      ),
+                      onPressed: () => Navigator.of(context).pop(),
                     ),
                   ],
                 ),

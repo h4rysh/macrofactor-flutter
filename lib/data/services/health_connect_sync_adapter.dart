@@ -27,9 +27,13 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
   static const List<HealthDataType> _syncedTypes = [
     HealthDataType.WORKOUT,
     HealthDataType.WEIGHT,
+    HealthDataType.STEPS,
+    HealthDataType.SLEEP_SESSION,
   ];
 
   static const List<HealthDataAccess> _readPermissions = [
+    HealthDataAccess.READ,
+    HealthDataAccess.READ,
     HealthDataAccess.READ,
     HealthDataAccess.READ,
   ];
@@ -133,6 +137,12 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
             ? point.uuid
             : 'hc_workout_${point.dateFrom.millisecondsSinceEpoch}';
 
+        final rawNotes = point.metadata?['notes'];
+        final safeNotes = rawNotes is String && rawNotes.trim().isNotEmpty
+            ? (rawNotes.trim().length > 500
+                ? rawNotes.trim().substring(0, 500)
+                : rawNotes.trim())
+            : null;
         workouts.add(
           WorkoutSession(
             id: id,
@@ -142,7 +152,7 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
             endTime: point.dateTo,
             durationMinutes: duration,
             caloriesBurned: calories,
-            notes: point.metadata?['notes'] as String?,
+            notes: safeNotes,
             createdAt: point.dateFrom,
           ),
         );
@@ -181,7 +191,7 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
         if (value is! NumericHealthValue) continue;
 
         final weightKg = value.numericValue.toDouble();
-        if (weightKg <= 0) continue;
+        if (!weightKg.isFinite || weightKg < 20.0 || weightKg > 350.0) continue;
 
         final note =
             point.sourceName.isNotEmpty ? point.sourceName : 'Health Connect';
@@ -210,8 +220,8 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
   bool _detectHevySource(HealthDataPoint point) {
     final sourceName = point.sourceName.toLowerCase();
     final sourceId = point.sourceId.toLowerCase();
-    final metaSource =
-        (point.metadata?['source'] as String?)?.toLowerCase() ?? '';
+    final rawMeta = point.metadata?['source'];
+    final metaSource = rawMeta is String ? rawMeta.toLowerCase() : '';
     return sourceName.contains('hevy') ||
         sourceId.contains('hevy') ||
         metaSource.contains('hevy');
@@ -219,25 +229,29 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
 
   int _calculateDurationMinutes(DateTime start, DateTime end) {
     final diff = end.difference(start).inMinutes;
-    return diff > 0 ? diff : 1;
+    return diff > 0 ? diff.clamp(1, 10000000) : 1;
   }
 
   double _extractCaloriesBurned(HealthDataPoint point) {
     final value = point.value;
     if (value is WorkoutHealthValue) {
       final burned = value.totalEnergyBurned?.toDouble();
-      if (burned != null && burned > 0) return burned;
+      if (burned != null && burned.isFinite && burned > 0) {
+        return burned.clamp(0.0, 15000.0);
+      }
     }
     final summaryBurned = point.workoutSummary?.totalEnergyBurned.toDouble();
-    if (summaryBurned != null && summaryBurned > 0) return summaryBurned;
+    if (summaryBurned != null && summaryBurned.isFinite && summaryBurned > 0) {
+      return summaryBurned.clamp(0.0, 15000.0);
+    }
 
     return 0.0;
   }
 
   String _formatWorkoutTitle(HealthDataPoint point, {required bool isHevy}) {
-    final metaTitle = point.metadata?['title'] as String?;
-    if (metaTitle != null && metaTitle.trim().isNotEmpty) {
-      return metaTitle.trim();
+    final rawTitle = point.metadata?['title'];
+    if (rawTitle is String && rawTitle.trim().isNotEmpty) {
+      return rawTitle.trim();
     }
 
     final value = point.value;
@@ -269,16 +283,41 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
       final start = DateTime(date.year, date.month, date.day);
       final end = start.add(const Duration(days: 1));
       final steps = await _health.getTotalStepsInInterval(start, end) ?? 0;
+      final windowStart = start.subtract(const Duration(hours: 6));
       final sleepPoints = await _health.getHealthDataFromTypes(
-        startTime: start.subtract(const Duration(hours: 6)),
+        startTime: windowStart,
         endTime: end,
         types: const [HealthDataType.SLEEP_SESSION],
       );
-      var sleepMins = 0;
+      // Merge overlapping sleep intervals (e.g. phone + watch) before summing
+      final intervals = <(DateTime, DateTime)>[];
       for (final p in sleepPoints) {
-        sleepMins += p.dateTo.difference(p.dateFrom).inMinutes.clamp(0, 960);
+        final s = p.dateFrom.isBefore(windowStart) ? windowStart : p.dateFrom;
+        final e = p.dateTo.isAfter(end) ? end : p.dateTo;
+        if (e.isAfter(s)) {
+          intervals.add((s, e));
+        }
       }
-      return (steps: steps, sleepHours: sleepMins / 60.0);
+      intervals.sort((a, b) => a.$1.compareTo(b.$1));
+      var sleepMins = 0;
+      DateTime? curStart;
+      DateTime? curEnd;
+      for (final (s, e) in intervals) {
+        if (curStart == null || curEnd == null) {
+          curStart = s;
+          curEnd = e;
+        } else if (!s.isAfter(curEnd)) {
+          if (e.isAfter(curEnd)) curEnd = e;
+        } else {
+          sleepMins += curEnd.difference(curStart).inMinutes;
+          curStart = s;
+          curEnd = e;
+        }
+      }
+      if (curStart != null && curEnd != null) {
+        sleepMins += curEnd.difference(curStart).inMinutes;
+      }
+      return (steps: steps, sleepHours: (sleepMins.clamp(0, 960)) / 60.0);
     } catch (_) {
       return (steps: 0, sleepHours: 0.0);
     }
@@ -295,19 +334,42 @@ class HealthConnectSyncAdapter implements HealthSyncAdapter {
     required double fat,
     double fiber = 0.0,
   }) async {
-    if (!_isAndroid || calories <= 0) return false;
+    if (!_isAndroid ||
+        !calories.isFinite ||
+        calories <= 0 ||
+        !protein.isFinite ||
+        protein < 0 ||
+        !carbs.isFinite ||
+        carbs < 0 ||
+        !fat.isFinite ||
+        fat < 0 ||
+        !fiber.isFinite ||
+        fiber < 0) {
+      return false;
+    }
     try {
       await _ensureConfigured();
+      final hasWritePerm = await _health.hasPermissions(
+        const [HealthDataType.NUTRITION],
+        permissions: const [HealthDataAccess.WRITE],
+      );
+      if (hasWritePerm != true) {
+        final granted = await _health.requestAuthorization(
+          const [HealthDataType.NUTRITION],
+          permissions: const [HealthDataAccess.WRITE],
+        );
+        if (!granted) return false;
+      }
       return await _health.writeMeal(
         mealType: MealType.UNKNOWN,
         startTime: startTime,
         endTime: endTime,
         name: mealName,
-        caloriesConsumed: calories,
-        protein: protein,
-        carbohydrates: carbs,
-        fatTotal: fat,
-        fiber: fiber,
+        caloriesConsumed: calories.clamp(0.0, 15000.0),
+        protein: protein.clamp(0.0, 1000.0),
+        carbohydrates: carbs.clamp(0.0, 2000.0),
+        fatTotal: fat.clamp(0.0, 1000.0),
+        fiber: fiber.clamp(0.0, 500.0),
       );
     } catch (_) {
       return false;

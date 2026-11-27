@@ -33,29 +33,35 @@ class ProfileAvatarButton extends StatelessWidget {
         child: AppleBouncy(
           onTap: onTap,
           scaleDown: 0.92,
-          child: Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: AppTheme.cardElevated,
-              border: Border.all(
-                color: isAuthenticated
-                    ? AppTheme.activeBlue.withValues(alpha: 0.7)
-                    : AppTheme.cardBorder,
-                width: 1.5,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: (isAuthenticated ? AppTheme.activeBlue : Colors.black)
-                      .withValues(alpha: 0.2),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+            child: Center(
+              child: Container(
+                width: size,
+                height: size,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppTheme.cardElevated,
+                  border: Border.all(
+                    color: isAuthenticated
+                        ? AppTheme.activeBlue.withValues(alpha: 0.7)
+                        : AppTheme.cardBorder,
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color:
+                          (isAuthenticated ? AppTheme.activeBlue : Colors.black)
+                              .withValues(alpha: 0.2),
+                      blurRadius: 6,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: ClipOval(
-              child: _buildAvatarContent(context),
+                child: ClipOval(
+                  child: _buildAvatarContent(context),
+                ),
+              ),
             ),
           ),
         ),

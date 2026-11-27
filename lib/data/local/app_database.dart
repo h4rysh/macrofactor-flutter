@@ -56,7 +56,7 @@ class DatabaseOpenException implements Exception {
 
 /// Local high-performance SQLite database facade delegating to specialized DAOs.
 class AppDatabase {
-  AppDatabase(this._db, {bool isInMemory = false, this.dbPath})
+  AppDatabase(this._db, {this.isInMemory = false, this.dbPath})
       : foodDao = FoodDao(_db, dbPath: dbPath),
         weightDao = WeightDao(_db),
         profileDao = ProfileDao(_db),
@@ -78,6 +78,7 @@ class AppDatabase {
   }
 
   final Database _db;
+  final bool isInMemory;
   final String? dbPath;
   final FoodDao foodDao;
   final WeightDao weightDao;
@@ -412,8 +413,15 @@ class AppDatabase {
   // Workout Sessions Forwarding Methods
   // ==========================================
 
-  void insertWorkoutSessions(List<WorkoutSession> sessions) =>
-      workoutDao.insertWorkoutSessions(sessions, userId: _currentUserId);
+  void insertWorkoutSessions(
+    List<WorkoutSession> sessions, {
+    bool manageTransaction = true,
+  }) =>
+      workoutDao.insertWorkoutSessions(
+        sessions,
+        userId: _currentUserId,
+        manageTransaction: manageTransaction,
+      );
 
   List<WorkoutSession> getAllWorkoutSessions() =>
       workoutDao.getAllWorkoutSessions(userId: _currentUserId);

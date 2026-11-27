@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:sique/domain/models/user_profile.dart';
 import 'package:sique/domain/validation/domain_validator.dart';
@@ -18,6 +19,7 @@ class Card03WeightPacing extends StatefulWidget {
     required this.initialRatePct,
     required this.onPacingChanged,
     required this.onNext,
+    this.useImperialUnits = false,
   });
 
   final GoalType goalType;
@@ -25,6 +27,7 @@ class Card03WeightPacing extends StatefulWidget {
   final double heightCm;
   final double initialTargetWeightKg;
   final double initialRatePct;
+  final bool useImperialUnits;
   final void Function({
     required double targetWeightKg,
     required double ratePct,
@@ -38,6 +41,7 @@ class Card03WeightPacing extends StatefulWidget {
 class _Card03WeightPacingState extends State<Card03WeightPacing> {
   late double _targetWeightKg;
   late double _ratePct;
+  bool _isNumericInputValid = true;
   late TextEditingController _targetWeightController;
 
   @override
@@ -50,8 +54,12 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
       _targetWeightKg = widget.initialTargetWeightKg;
       _ratePct = widget.initialRatePct;
     }
-    _targetWeightController =
-        TextEditingController(text: _targetWeightKg.toStringAsFixed(1));
+    _targetWeightController = TextEditingController(
+      text: UnitFormatter.formatWeightValue(
+        _targetWeightKg,
+        useLbs: widget.useImperialUnits,
+      ),
+    );
   }
 
   @override
@@ -62,7 +70,19 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
       setState(() {
         _targetWeightKg = widget.currentWeightKg;
         _ratePct = 0.0;
-        _targetWeightController.text = _targetWeightKg.toStringAsFixed(1);
+        _isNumericInputValid = true;
+        _targetWeightController.text = UnitFormatter.formatWeightValue(
+          _targetWeightKg,
+          useLbs: widget.useImperialUnits,
+        );
+      });
+    } else if (widget.useImperialUnits != oldWidget.useImperialUnits) {
+      setState(() {
+        _isNumericInputValid = true;
+        _targetWeightController.text = UnitFormatter.formatWeightValue(
+          _targetWeightKg,
+          useLbs: widget.useImperialUnits,
+        );
       });
     }
   }
@@ -98,6 +118,9 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
   }
 
   bool get _isValid {
+    if (widget.goalType != GoalType.maintenance && !_isNumericInputValid) {
+      return false;
+    }
     if (_isUnderweightWarning) return false;
     if (_isDirectionWarning) return false;
     if (_targetWeightKg < DomainValidator.minWeightKg ||
@@ -183,7 +206,10 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                                 fontSize: 11, color: AppTheme.textSecondary)),
                         const SizedBox(height: 4),
                         Text(
-                          '${widget.currentWeightKg.toStringAsFixed(1)} kg',
+                          UnitFormatter.formatWeight(
+                            widget.currentWeightKg,
+                            useLbs: widget.useImperialUnits,
+                          ),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -203,7 +229,10 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                                 fontSize: 11, color: AppTheme.textSecondary)),
                         const SizedBox(height: 4),
                         Text(
-                          '${_targetWeightKg.toStringAsFixed(1)} kg',
+                          UnitFormatter.formatWeight(
+                            _targetWeightKg,
+                            useLbs: widget.useImperialUnits,
+                          ),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -224,7 +253,10 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
 
               // Target Weight Input
               if (!isMaintenance) ...[
-                Text(UnitFormatter.targetWeightLabel(),
+                Text(
+                    UnitFormatter.targetWeightLabel(
+                      useLbs: widget.useImperialUnits,
+                    ),
                     style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
@@ -250,26 +282,44 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                           controller: _targetWeightController,
                           keyboardType: const TextInputType.numberWithOptions(
                               decimal: true),
+                          inputFormatters: [
+                            FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d*\.?\d*')),
+                          ],
                           style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
                               color: AppTheme.textPrimary,
                               fontFeatures: [FontFeature.tabularFigures()]),
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             border: InputBorder.none,
-                            hintText: '70.0',
+                            hintText:
+                                widget.useImperialUnits ? '154.0' : '70.0',
                           ),
                           onChanged: (val) {
-                            final parsed = double.tryParse(val);
-                            if (parsed != null) {
-                              setState(() => _targetWeightKg = parsed);
+                            final parsed = double.tryParse(val.trim());
+                            if (parsed != null &&
+                                parsed.isFinite &&
+                                parsed > 0) {
+                              final kg = widget.useImperialUnits
+                                  ? UnitFormatter.lbsToKg(parsed)
+                                  : parsed;
+                              setState(() {
+                                _targetWeightKg = kg;
+                                _isNumericInputValid = true;
+                              });
                               _notifyUpdate();
+                            } else {
+                              setState(() => _isNumericInputValid = false);
                             }
                           },
                         ),
                       ),
-                      const Text('KG',
-                          style: TextStyle(
+                      Text(
+                          UnitFormatter.weightUnit(
+                            useLbs: widget.useImperialUnits,
+                          ).toUpperCase(),
+                          style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textSecondary)),
@@ -299,8 +349,8 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                       Expanded(
                         child: Text(
                           widget.goalType == GoalType.fatLoss
-                              ? 'Fat loss goal requires target weight lower than current weight (${widget.currentWeightKg.toStringAsFixed(1)} kg).'
-                              : 'Muscle gain goal requires target weight higher than current weight (${widget.currentWeightKg.toStringAsFixed(1)} kg).',
+                              ? 'Fat loss goal requires target weight lower than current weight (${UnitFormatter.formatWeight(widget.currentWeightKg, useLbs: widget.useImperialUnits)}).'
+                              : 'Muscle gain goal requires target weight higher than current weight (${UnitFormatter.formatWeight(widget.currentWeightKg, useLbs: widget.useImperialUnits)}).',
                           style: const TextStyle(
                             fontSize: 12,
                             color: AppTheme.calories,
@@ -337,7 +387,7 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              'Target weight ${_targetWeightKg.toStringAsFixed(1)} kg places BMI in the clinical underweight range (< 18.5). Safe minimum target is ${DomainValidator.minSafeWeightKg(widget.heightCm).toStringAsFixed(1)} kg.',
+                              'Target weight ${UnitFormatter.formatWeight(_targetWeightKg, useLbs: widget.useImperialUnits)} places BMI in the clinical underweight range (< 18.5). Safe minimum target is ${UnitFormatter.formatWeight(DomainValidator.minSafeWeightKg(widget.heightCm), useLbs: widget.useImperialUnits)}.',
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: AppTheme.calories,
@@ -356,8 +406,12 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                               DomainValidator.minSafeWeightKg(widget.heightCm);
                           setState(() {
                             _targetWeightKg = minSafe;
+                            _isNumericInputValid = true;
                             _targetWeightController.text =
-                                minSafe.toStringAsFixed(1);
+                                UnitFormatter.formatWeightValue(
+                              minSafe,
+                              useLbs: widget.useImperialUnits,
+                            );
                           });
                           _notifyUpdate();
                         },
@@ -371,7 +425,7 @@ class _Card03WeightPacingState extends State<Card03WeightPacing> {
                                 color: AppTheme.calories, width: 0.8),
                           ),
                           child: Text(
-                            'Set to safe minimum (${DomainValidator.minSafeWeightKg(widget.heightCm).toStringAsFixed(1)} kg)',
+                            'Set to safe minimum (${UnitFormatter.formatWeight(DomainValidator.minSafeWeightKg(widget.heightCm), useLbs: widget.useImperialUnits)})',
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,

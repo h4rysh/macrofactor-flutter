@@ -54,10 +54,10 @@ class SiqueErrorState extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     message,
-                    style: TextStyle(
-                      fontSize: 11,
+                    style: const TextStyle(
+                      fontSize: 12,
                       fontWeight: FontWeight.w400,
-                      color: AppTheme.calories.withValues(alpha: 0.85),
+                      color: AppTheme.caloriesSecondary,
                     ),
                   ),
                 ],
@@ -67,13 +67,17 @@ class SiqueErrorState extends StatelessWidget {
               const SizedBox(width: 8),
               AppleBouncy(
                 scaleDown: 0.94,
+                semanticLabel: retryLabel,
                 onTap: onRetry,
-                child: const Padding(
-                  padding: EdgeInsets.all(4),
-                  child: Icon(
-                    Icons.refresh_rounded,
-                    size: 18,
-                    color: AppTheme.calories,
+                child: const SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: Center(
+                    child: Icon(
+                      Icons.refresh_rounded,
+                      size: 18,
+                      color: AppTheme.caloriesSecondary,
+                    ),
                   ),
                 ),
               ),
@@ -136,6 +140,7 @@ class SiqueErrorState extends StatelessWidget {
                 scaleDown: 0.96,
                 onTap: onRetry,
                 child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 24,
                     vertical: 10,
@@ -154,7 +159,7 @@ class SiqueErrorState extends StatelessWidget {
                       const Icon(
                         Icons.refresh_rounded,
                         size: 16,
-                        color: AppTheme.calories,
+                        color: AppTheme.caloriesSecondary,
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -162,7 +167,7 @@ class SiqueErrorState extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.calories,
+                          color: AppTheme.caloriesSecondary,
                         ),
                       ),
                     ],

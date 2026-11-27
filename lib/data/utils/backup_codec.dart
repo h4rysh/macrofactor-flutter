@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:sique/data/local/app_database_expenditure.dart';
+import 'package:sique/data/local/dao/diary_tools_dao.dart';
 import 'package:sique/domain/models/body_measurement_entry.dart';
 import 'package:sique/domain/models/food_models.dart';
 import 'package:sique/domain/models/lifestyle_models.dart';
@@ -31,6 +32,9 @@ class BackupCodec {
     List<WaterLog> waterLogs = const [],
     List<FastingSession> fastingSessions = const [],
     List<CustomRecipe> customRecipes = const [],
+    List<RepeatItemRecord> repeatItems = const [],
+    Map<String, String> dayNotes = const {},
+    Map<int, double> microGoals = const {},
   }) {
     final backup = {
       'app': appSignature,
@@ -50,6 +54,9 @@ class BackupCodec {
       'waterLogs': waterLogs.map((w) => w.toMap()).toList(),
       'fastingSessions': fastingSessions.map(fastingSessionToMap).toList(),
       'customRecipes': customRecipes.map(recipeToMap).toList(),
+      'repeatItems': repeatItems.map(repeatItemToMap).toList(),
+      'dayNotes': dayNotes,
+      'microGoals': microGoals.map((k, v) => MapEntry(k.toString(), v)),
     };
 
     return const JsonEncoder.withIndent('  ').convert(backup);
@@ -68,7 +75,8 @@ class BackupCodec {
           'Invalid backup file: missing Sique app signature');
     }
 
-    final schemaVersion = decoded['schemaVersion'] as int?;
+    final rawSchema = decoded['schemaVersion'];
+    final schemaVersion = rawSchema is int ? rawSchema : null;
     if (schemaVersion == null ||
         schemaVersion < 1 ||
         schemaVersion > currentSchemaVersion) {
@@ -195,6 +203,47 @@ class BackupCodec {
       }
     }
 
+    final repeatItems = <RepeatItemRecord>[];
+    if (decoded['repeatItems'] is List) {
+      for (final item in decoded['repeatItems'] as List) {
+        if (item is Map<String, dynamic>) {
+          repeatItems.add(repeatItemFromMap(item));
+        }
+      }
+    }
+
+    final dayNotes = <String, String>{};
+    if (decoded['dayNotes'] is Map) {
+      final isoDateRegex = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+      (decoded['dayNotes'] as Map).forEach((k, v) {
+        if (k is String &&
+            isoDateRegex.hasMatch(k) &&
+            v is String &&
+            v.trim().isNotEmpty &&
+            dayNotes.length < 10000) {
+          final safeNote =
+              v.trim().length > 1000 ? v.trim().substring(0, 1000) : v.trim();
+          dayNotes[k] = safeNote;
+        }
+      });
+    }
+
+    final microGoals = <int, double>{};
+    if (decoded['microGoals'] is Map) {
+      (decoded['microGoals'] as Map).forEach((k, v) {
+        final nid = int.tryParse(k.toString());
+        if (nid != null &&
+            nid > 0 &&
+            v is num &&
+            v.isFinite &&
+            v > 0 &&
+            v <= 100000 &&
+            microGoals.length < 200) {
+          microGoals[nid] = v.toDouble();
+        }
+      });
+    }
+
     return DecodedBackup(
       schemaVersion: schemaVersion,
       exportedAt: decoded['exportedAt'] as String?,
@@ -211,6 +260,9 @@ class BackupCodec {
       waterLogs: waterLogs,
       fastingSessions: fastingSessions,
       customRecipes: customRecipes,
+      repeatItems: repeatItems,
+      dayNotes: dayNotes,
+      microGoals: microGoals,
     );
   }
 
@@ -352,20 +404,31 @@ class BackupCodec {
       (m) => m.name == map['mealType'],
       orElse: () => MealType.lunch,
     );
+    final clampedCalories =
+        ((map['calories'] as num).toDouble()).clamp(0.0, 20000.0);
+    final clampedProtein =
+        ((map['protein'] as num).toDouble()).clamp(0.0, 2000.0);
+    final clampedCarbs = ((map['carbs'] as num).toDouble()).clamp(0.0, 3000.0);
+    final clampedFat = ((map['fat'] as num).toDouble()).clamp(0.0, 2000.0);
+    final clampedFiber =
+        (((map['fiber'] as num?)?.toDouble()) ?? 0.0).clamp(0.0, 500.0);
+    final rawName = map['foodName'] as String? ?? 'Custom Food';
     return FoodLogEntry(
       id: map['id'] as int?,
       date: map['date'] as String,
       mealType: meal,
       foodId: (map['foodId'] as num?)?.toInt() ?? 0,
-      foodName: map['foodName'] as String? ?? 'Custom Food',
-      servingQuantity: (map['servingQuantity'] as num).toDouble(),
+      foodName: rawName.length > 200 ? rawName.substring(0, 200) : rawName,
+      servingQuantity:
+          ((map['servingQuantity'] as num).toDouble()).clamp(0.01, 500.0),
       unitName: map['unitName'] as String? ?? 'serving',
-      gramWeight: (map['gramWeight'] as num?)?.toDouble() ?? 100.0,
-      calories: (map['calories'] as num).toDouble(),
-      protein: (map['protein'] as num).toDouble(),
-      carbs: (map['carbs'] as num).toDouble(),
-      fat: (map['fat'] as num).toDouble(),
-      fiber: (map['fiber'] as num?)?.toDouble() ?? 0.0,
+      gramWeight: (((map['gramWeight'] as num?)?.toDouble()) ?? 100.0)
+          .clamp(0.1, 20000.0),
+      calories: clampedCalories,
+      protein: clampedProtein,
+      carbs: clampedCarbs,
+      fat: clampedFat,
+      fiber: clampedFiber,
       oilModifier: oilMod,
       loggedAt: DateTime.parse(map['loggedAt'] as String),
       iconSvg: map['iconSvg'] as String? ?? 'i10.svg',
@@ -452,6 +515,7 @@ class BackupCodec {
         'name': r.name,
         'servings': r.safeServings,
         'total_weight_g': r.totalWeightG,
+        'cooked_weight_g': r.cookedWeightG,
         'prep_instructions': r.prepInstructions,
         'source_url': r.sourceUrl,
         'created_at': r.createdAt.toIso8601String(),
@@ -480,6 +544,7 @@ class BackupCodec {
         name: m['name'] as String,
         servings: (m['servings'] as num?)?.toInt() ?? 1,
         totalWeightG: (m['total_weight_g'] as num?)?.toDouble(),
+        cookedWeightG: (m['cooked_weight_g'] as num?)?.toDouble(),
         prepInstructions: m['prep_instructions'] as String?,
         sourceUrl: m['source_url'] as String?,
         createdAt: DateTime.parse(m['created_at'] as String),
@@ -502,6 +567,53 @@ class BackupCodec {
                 ))
             .toList(),
       );
+
+  static Map<String, dynamic> repeatItemToMap(RepeatItemRecord r) => {
+        'id': r.id,
+        'user_id': r.userId,
+        'food_id': r.foodId,
+        'food_name': r.foodName,
+        'meal_type': r.mealType,
+        'hour': r.hour,
+        'serving_quantity': r.servingQuantity,
+        'unit_name': r.unitName,
+        'gram_weight': r.gramWeight,
+        'calories': r.calories,
+        'protein': r.protein,
+        'carbs': r.carbs,
+        'fat': r.fat,
+        'fiber': r.fiber,
+        'active_days_mask': r.activeDaysMask,
+        'is_active': r.isActive,
+        'last_logged_date': r.lastLoggedDate,
+        'created_at': r.createdAt,
+      };
+
+  static RepeatItemRecord repeatItemFromMap(Map<String, dynamic> m) =>
+      RepeatItemRecord(
+        id: m['id'] as String,
+        userId: m['user_id'] as String? ?? 'default_user',
+        foodId: (m['food_id'] as num).toInt(),
+        foodName: (m['food_name'] as String).length > 200
+            ? (m['food_name'] as String).substring(0, 200)
+            : m['food_name'] as String,
+        mealType: m['meal_type'] as String? ?? 'lunch',
+        hour: ((m['hour'] as num?)?.toInt() ?? 12).clamp(0, 23),
+        servingQuantity:
+            ((m['serving_quantity'] as num).toDouble()).clamp(0.01, 500.0),
+        unitName: m['unit_name'] as String? ?? 'serving',
+        gramWeight: ((m['gram_weight'] as num).toDouble()).clamp(0.1, 20000.0),
+        calories: ((m['calories'] as num).toDouble()).clamp(0.0, 20000.0),
+        protein: ((m['protein'] as num).toDouble()).clamp(0.0, 2000.0),
+        carbs: ((m['carbs'] as num).toDouble()).clamp(0.0, 3000.0),
+        fat: ((m['fat'] as num).toDouble()).clamp(0.0, 2000.0),
+        fiber: (((m['fiber'] as num?)?.toDouble()) ?? 0.0).clamp(0.0, 500.0),
+        activeDaysMask: (m['active_days_mask'] as num?)?.toInt() ?? 127,
+        isActive: (m['is_active'] as bool?) ?? true,
+        lastLoggedDate: m['last_logged_date'] as String?,
+        createdAt:
+            m['created_at'] as String? ?? DateTime.now().toIso8601String(),
+      );
 }
 
 /// Structured container for validated backup contents across all user data tables.
@@ -522,6 +634,9 @@ class DecodedBackup {
     this.waterLogs = const [],
     this.fastingSessions = const [],
     this.customRecipes = const [],
+    this.repeatItems = const [],
+    this.dayNotes = const {},
+    this.microGoals = const {},
   });
 
   final int schemaVersion;
@@ -539,4 +654,7 @@ class DecodedBackup {
   final List<WaterLog> waterLogs;
   final List<FastingSession> fastingSessions;
   final List<CustomRecipe> customRecipes;
+  final List<RepeatItemRecord> repeatItems;
+  final Map<String, String> dayNotes;
+  final Map<int, double> microGoals;
 }

@@ -12,12 +12,14 @@ class AdaptivePacingStep extends StatelessWidget {
     required this.weeklyRate,
     required this.currentWeightKg,
     required this.onRateSelected,
+    this.useLbs = false,
   });
 
   final GoalType selectedGoal;
   final double weeklyRate;
   final double currentWeightKg;
   final ValueChanged<double> onRateSelected;
+  final bool useLbs;
 
   @override
   Widget build(BuildContext context) {
@@ -98,14 +100,13 @@ class AdaptivePacingStep extends StatelessWidget {
           'rate': 0.0,
           'title': 'Caloric Equilibrium / Recomp',
           'desc':
-              '1:1 match with Bayesian daily energy expenditure. Zero planned weight delta.',
+              '1:1 match with your adaptive daily energy burn. Zero planned weight change.',
           'badge': 'True Balance',
         },
       ];
     }
 
-    final weeklyDeltaKg =
-        (currentWeightKg * (weeklyRate.abs() / 100.0)).toStringAsFixed(2);
+    final signedWeeklyKg = currentWeightKg * (weeklyRate / 100.0);
 
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
@@ -185,8 +186,11 @@ class AdaptivePacingStep extends StatelessWidget {
                 ),
                 child: Text(
                   weeklyRate == 0
-                      ? UnitFormatter.formatWeeklyRate(0.0)
-                      : '${weeklyRate < 0 ? "-" : "+"}$weeklyDeltaKg ${UnitFormatter.weightUnit()}/wk',
+                      ? UnitFormatter.formatWeeklyRate(0.0, useLbs: useLbs)
+                      : UnitFormatter.formatWeeklyRate(
+                          signedWeeklyKg,
+                          useLbs: useLbs,
+                        ),
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,

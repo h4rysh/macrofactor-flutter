@@ -45,9 +45,9 @@ class BackupCrypto {
     required String password,
     int iterations = defaultIterations,
   }) async {
-    if (password.length < minPasswordLength) {
+    if (password.trim().length < minPasswordLength) {
       throw const BackupCryptoException(
-        'Backup passphrase must be at least $minPasswordLength characters.',
+        'Backup passphrase must be at least $minPasswordLength non-space characters.',
       );
     }
     if (iterations < minIterations || iterations > maxIterations) {
@@ -119,7 +119,8 @@ class BackupCrypto {
     }
 
     try {
-      final version = (envelope['version'] as num?)?.toInt();
+      final rawVersion = envelope['version'];
+      final version = rawVersion is int ? rawVersion : null;
       if (version != currentEnvelopeVersion) {
         throw const BackupCryptoException(
           'Unsupported encrypted backup envelope version.',
@@ -132,10 +133,11 @@ class BackupCrypto {
         );
       }
       final rawIterations = envelope['iterations'];
-      if (rawIterations is! num) {
-        throw const BackupCryptoException('Missing KDF iteration count.');
+      if (rawIterations is! int) {
+        throw const BackupCryptoException(
+            'Missing or invalid KDF iteration count.');
       }
-      final iterations = rawIterations.toInt();
+      final iterations = rawIterations;
       if (iterations < minIterations || iterations > maxIterations) {
         throw const BackupCryptoException(
           'Encrypted backup KDF iteration count out of allowed range.',

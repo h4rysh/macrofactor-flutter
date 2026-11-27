@@ -109,7 +109,8 @@ class HealthSyncState {
           syncedWorkoutsCount == other.syncedWorkoutsCount &&
           syncedWeightsCount == other.syncedWeightsCount &&
           isAvailable == other.isAvailable &&
-          hasPermissions == other.hasPermissions;
+          hasPermissions == other.hasPermissions &&
+          writeNutritionEnabled == other.writeNutritionEnabled;
 
   @override
   int get hashCode => Object.hash(
@@ -120,6 +121,7 @@ class HealthSyncState {
         syncedWeightsCount,
         isAvailable,
         hasPermissions,
+        writeNutritionEnabled,
       );
 
   @override
@@ -146,13 +148,24 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
 
   static HealthSyncState _loadInitialState(AppDatabase db) {
     try {
+      final writeNutrition =
+          db.getSetting('hc_write_nutrition', 'false') == 'true';
       final session = db.getAccountSession();
+      final guestSyncAt =
+          DateTime.tryParse(db.getSetting('hc_last_sync_at', ''));
+      final guestPerms = db.getSetting('hc_sync_enabled', 'false') == 'true';
       if (session != null) {
         return HealthSyncState(
-          lastSyncedAt: session.lastHealthSyncTime,
-          hasPermissions: session.healthConnectEnabled,
+          lastSyncedAt: session.lastHealthSyncTime ?? guestSyncAt,
+          hasPermissions: session.healthConnectEnabled || guestPerms,
+          writeNutritionEnabled: writeNutrition,
         );
       }
+      return HealthSyncState(
+        lastSyncedAt: guestSyncAt,
+        hasPermissions: guestPerms,
+        writeNutritionEnabled: writeNutrition,
+      );
     } on SqliteException catch (e, st) {
       developer.log(
         'Failed to load initial health sync state from session',
@@ -223,6 +236,7 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
 
     try {
       final isAvailable = await _adapter.isAvailable();
+      if (!mounted) return false;
       if (!isAvailable) {
         state = state.copyWith(
           status: HealthSyncStatus.error,
@@ -233,8 +247,10 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
       }
 
       var hasPerms = await _adapter.hasPermissions();
+      if (!mounted) return false;
       if (!hasPerms) {
         hasPerms = await _adapter.requestPermissions();
+        if (!mounted) return false;
         if (!hasPerms) {
           state = state.copyWith(
             status: HealthSyncStatus.error,
@@ -261,6 +277,7 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
       );
 
       final results = await Future.wait([workoutsFuture, weightsFuture]);
+      if (!mounted) return false;
       final workouts = results[0] as List<WorkoutSession>;
       final weights = results[1] as List<ScaleWeightEntry>;
 
@@ -306,6 +323,7 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
       // 2b. Optional Two-Way Health Connect: Steps/Sleep read & Nutrition write-back
       if (_adapter is HealthConnectSyncAdapter) {
         final stepsAndSleep = await _adapter.fetchDailyStepsAndSleepHours(now);
+        if (!mounted) return false;
         _db.setSetting('hc_last_steps', stepsAndSleep.steps.toString());
         _db.setSetting(
           'hc_last_sleep_h',
@@ -320,23 +338,34 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
             final c = todayLogs.fold(0.0, (s, e) => s + e.carbs);
             final f = todayLogs.fold(0.0, (s, e) => s + e.fat);
             final fib = todayLogs.fold(0.0, (s, e) => s + e.fiber);
-            await _adapter.writeNutritionSummary(
-              startTime: DateTime(now.year, now.month, now.day, 8, 0),
-              endTime: now,
-              mealName: 'Sique Daily Intake',
-              calories: kcal,
-              protein: p,
-              carbs: c,
-              fat: f,
-              fiber: fib,
-            );
+            final sig =
+                '$todayStr:${kcal.toStringAsFixed(1)}:${p.toStringAsFixed(1)}:${c.toStringAsFixed(1)}:${f.toStringAsFixed(1)}:${fib.toStringAsFixed(1)}';
+            if (_db.getSetting('hc_last_written_nutrition', '') != sig) {
+              final wrote = await _adapter.writeNutritionSummary(
+                startTime: DateTime(now.year, now.month, now.day, 8, 0),
+                endTime: now,
+                mealName: 'Sique Daily Intake',
+                calories: kcal,
+                protein: p,
+                carbs: c,
+                fat: f,
+                fiber: fib,
+              );
+              if (!mounted) return false;
+              if (wrote) {
+                _db.setSetting('hc_last_written_nutrition', sig);
+              }
+            }
           }
         }
       }
 
-      // 3. Update session sync time in SQLite and AuthNotifier
+      // 3. Persist sync time for both authenticated & guest users
+      _db.setSetting('hc_last_sync_at', now.toIso8601String());
+      _db.setSetting('hc_sync_enabled', 'true');
       _ref?.read(authNotifierProvider.notifier).updateLastHealthSync(now);
 
+      if (!mounted) return false;
       state = state.copyWith(
         status: HealthSyncStatus.success,
         lastSyncedAt: now,
@@ -346,6 +375,7 @@ class HealthSyncNotifier extends StateNotifier<HealthSyncState> {
       );
       return true;
     } catch (e) {
+      if (!mounted) return false;
       final msg = e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '');
       state = state.copyWith(
         status: HealthSyncStatus.error,
@@ -375,6 +405,7 @@ final healthSyncAdapterProvider = Provider<HealthSyncAdapter>((ref) {
 /// Riverpod StateNotifierProvider for Health Connect synchronization.
 final healthConnectSyncProvider =
     StateNotifierProvider<HealthSyncNotifier, HealthSyncState>((ref) {
+  ref.watch(userDataEpochProvider);
   final db = ref.watch(databaseProvider);
   final adapter = ref.watch(healthSyncAdapterProvider);
   return HealthSyncNotifier(

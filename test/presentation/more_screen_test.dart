@@ -139,7 +139,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(ExpenditureSettingsScreen), findsOneWidget);
-      expect(find.text('Live Algorithmic State'), findsOneWidget);
+      expect(find.text('Live Adaptive State'), findsOneWidget);
       expect(find.text('Baseline Expenditure Prior'), findsOneWidget);
       expect(find.text('Adherence Neutrality Guarantee'), findsOneWidget);
 
@@ -203,7 +203,8 @@ void main() {
       expect(find.text('Sique'), findsOneWidget);
       expect(find.text('Indian Edition • Adherence-Neutral'), findsOneWidget);
       expect(find.text('Adaptive Nutrition Science'), findsOneWidget);
-      expect(find.text('ICMR-NIN IFCT 2017 Database'), findsOneWidget);
+      expect(find.text('Verified Regional & Global Food Database'),
+          findsOneWidget);
       expect(find.text('Local Data Sovereignty'), findsOneWidget);
 
       // Tap back

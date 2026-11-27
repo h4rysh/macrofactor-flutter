@@ -26,6 +26,10 @@ class WeightDao {
     String source = 'manual',
     String? userId,
   }) {
+    if (!scaleWeight.isFinite || scaleWeight <= 0) {
+      throw ArgumentError.value(
+          scaleWeight, 'scaleWeight', 'Must be a finite positive weight');
+    }
     final uid = userId ?? effectiveUserId;
     final stmt = _db.prepare('''
       INSERT INTO weight_logs (user_id, date, scale_weight, note, source, logged_at)
@@ -66,7 +70,8 @@ class WeightDao {
           ORDER BY date DESC, logged_at DESC
           LIMIT 1
         )
-        WHERE (user_id = ? OR id = ?) AND EXISTS (SELECT 1 FROM weight_logs WHERE user_id = ?);
+        WHERE (user_id = ? OR (id = ? AND user_id = 'default_user'))
+          AND EXISTS (SELECT 1 FROM weight_logs WHERE user_id = ?);
       ''');
       try {
         stmt.execute([uid, uid, uid, uid]);
@@ -96,7 +101,7 @@ class WeightDao {
       {String? userId}) {
     final uid = userId ?? effectiveUserId;
     final stmt = _db.prepare('''
-      SELECT date, scale_weight, note FROM weight_logs
+      SELECT date, scale_weight, note, source FROM weight_logs
       WHERE user_id = ? AND date >= ? AND date <= ?
       ORDER BY date ASC;
     ''');
@@ -107,6 +112,7 @@ class WeightDao {
           date: DateTime.parse(row['date'] as String),
           weightKg: (row['scale_weight'] as num).toDouble(),
           note: row['note'] as String?,
+          source: row['source'] as String? ?? 'manual',
         );
       }).toList();
     } finally {
@@ -129,6 +135,7 @@ class WeightDao {
           date: DateTime.parse(row['date'] as String),
           weightKg: (row['scale_weight'] as num).toDouble(),
           note: row['note'] as String?,
+          source: row['source'] as String? ?? 'manual',
         );
       }).toList();
     } finally {
@@ -140,7 +147,7 @@ class WeightDao {
   ScaleWeightEntry? getWeightLogForDate(String date, {String? userId}) {
     final uid = userId ?? effectiveUserId;
     final stmt = _db.prepare('''
-      SELECT date, scale_weight, note FROM weight_logs
+      SELECT date, scale_weight, note, source FROM weight_logs
       WHERE user_id = ? AND date = ?
       LIMIT 1;
     ''');
@@ -153,6 +160,7 @@ class WeightDao {
         date: DateTime.parse(row['date'] as String),
         weightKg: (row['scale_weight'] as num).toDouble(),
         note: row['note'] as String?,
+        source: row['source'] as String? ?? 'manual',
       );
     } finally {
       stmt.dispose();
@@ -162,19 +170,21 @@ class WeightDao {
   /// Retrieves recent weight entries up to limit scoped to user_id.
   List<ScaleWeightEntry> getWeightEntries({int limit = 90, String? userId}) {
     final uid = userId ?? effectiveUserId;
+    final safeLimit = limit < 1 ? 1 : limit;
     final stmt = _db.prepare('''
-      SELECT date, scale_weight, note FROM weight_logs
+      SELECT date, scale_weight, note, source FROM weight_logs
       WHERE user_id = ?
       ORDER BY date DESC
       LIMIT ?;
     ''');
     try {
-      final result = stmt.select([uid, limit]);
+      final result = stmt.select([uid, safeLimit]);
       return result
           .map((row) => ScaleWeightEntry(
                 date: DateTime.parse(row['date'] as String),
                 weightKg: (row['scale_weight'] as num).toDouble(),
                 note: row['note'] as String?,
+                source: row['source'] as String? ?? 'manual',
               ))
           .toList();
     } finally {

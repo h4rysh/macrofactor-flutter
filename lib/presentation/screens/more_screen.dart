@@ -133,7 +133,7 @@ class MoreScreen extends ConsumerWidget {
                   context: context,
                   icon: Icons.info_outline_rounded,
                   title: 'About Sique',
-                  subtitle: 'v3.0.0 • Clean-Room Adherence-Neutral',
+                  subtitle: 'v4.1.0 • Clean-Room Adherence-Neutral',
                   destination: const AboutScreen(),
                 ),
               ),

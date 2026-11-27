@@ -37,7 +37,7 @@ class AuthLegalFooter extends StatelessWidget {
               'Close',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: AppTheme.activeBlue,
+                color: AppTheme.activeBlueText,
               ),
             ),
           ),
@@ -77,7 +77,7 @@ class AuthLegalFooter extends StatelessWidget {
               'Understood',
               style: TextStyle(
                 fontWeight: FontWeight.w600,
-                color: AppTheme.activeBlue,
+                color: AppTheme.activeBlueText,
               ),
             ),
           ),
@@ -97,9 +97,9 @@ class AuthLegalFooter extends StatelessWidget {
           key: const Key('auth_privacy_policy_btn'),
           onPressed: () => showPrivacyPolicy(context),
           style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            minimumSize: const Size(44, 44),
+            tapTargetSize: MaterialTapTargetSize.padded,
           ),
           child: const Text(
             'Privacy Policy',
@@ -121,9 +121,9 @@ class AuthLegalFooter extends StatelessWidget {
           key: const Key('auth_medical_disclaimer_btn'),
           onPressed: () => showMedicalDisclaimer(context),
           style: TextButton.styleFrom(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            minimumSize: Size.zero,
-            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            minimumSize: const Size(44, 44),
+            tapTargetSize: MaterialTapTargetSize.padded,
           ),
           child: const Text(
             'Medical Disclaimer',

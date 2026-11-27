@@ -67,13 +67,15 @@ void main() async {
       overrides: [
         databaseProvider.overrideWithValue(db),
       ],
-      child: const SiqueApp(),
+      child: SiqueApp(
+        isVolatileStorage: db.isInMemory,
+      ),
     ),
   );
 }
 
 /// Safe error UI fallback screen for fatal database opening failures (ISS-8-01).
-class DatabaseErrorFallbackApp extends StatelessWidget {
+class DatabaseErrorFallbackApp extends StatefulWidget {
   const DatabaseErrorFallbackApp({
     super.key,
     this.error,
@@ -82,6 +84,20 @@ class DatabaseErrorFallbackApp extends StatelessWidget {
 
   final Object? error;
   final VoidCallback? onRetry;
+
+  @override
+  State<DatabaseErrorFallbackApp> createState() =>
+      _DatabaseErrorFallbackAppState();
+}
+
+class _DatabaseErrorFallbackAppState extends State<DatabaseErrorFallbackApp> {
+  bool _isRetrying = false;
+
+  void _handleRetry() {
+    if (_isRetrying || widget.onRetry == null) return;
+    setState(() => _isRetrying = true);
+    widget.onRetry!();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -116,7 +132,7 @@ class DatabaseErrorFallbackApp extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   const Text(
-                    'Sique could not open local SQLite storage safely. Your data is protected.',
+                    'Sique could not open local device storage safely. Your existing data is protected.',
                     style: TextStyle(
                       fontSize: 14,
                       color: AppTheme.textSecondary,
@@ -124,7 +140,7 @@ class DatabaseErrorFallbackApp extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  if (error != null) ...[
+                  if (widget.error != null) ...[
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -134,7 +150,7 @@ class DatabaseErrorFallbackApp extends StatelessWidget {
                         border: Border.all(color: AppTheme.cardBorder),
                       ),
                       child: Text(
-                        error.toString(),
+                        widget.error.toString(),
                         style: const TextStyle(
                           fontSize: 12,
                           fontFamily: 'monospace',
@@ -146,11 +162,12 @@ class DatabaseErrorFallbackApp extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 28),
-                  if (onRetry != null)
+                  if (widget.onRetry != null)
                     ElevatedButton.icon(
-                      onPressed: onRetry,
+                      onPressed: _isRetrying ? null : _handleRetry,
                       icon: const Icon(Icons.refresh_rounded, size: 18),
-                      label: const Text('Retry Startup'),
+                      label:
+                          Text(_isRetrying ? 'Retrying...' : 'Retry Startup'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.calories,
                         foregroundColor: AppTheme.background,
@@ -172,8 +189,20 @@ class DatabaseErrorFallbackApp extends StatelessWidget {
 }
 
 /// Sique Root Application.
-class SiqueApp extends StatelessWidget {
-  const SiqueApp({super.key});
+class SiqueApp extends StatefulWidget {
+  const SiqueApp({
+    super.key,
+    this.isVolatileStorage = false,
+  });
+
+  final bool isVolatileStorage;
+
+  @override
+  State<SiqueApp> createState() => _SiqueAppState();
+}
+
+class _SiqueAppState extends State<SiqueApp> {
+  bool _bannerDismissed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -194,15 +223,59 @@ class SiqueApp extends StatelessWidget {
       ],
       builder: (context, child) {
         final mediaQuery = MediaQuery.of(context);
-        return MediaQuery(
+        final content = MediaQuery(
           data: mediaQuery.copyWith(
             textScaler: mediaQuery.textScaler.clamp(
               minScaleFactor: 1.0,
-              maxScaleFactor:
-                  1.50, // Clamped to 1.50 to satisfy accessibility requirements ("not below 1.5") without layout overflow
+              maxScaleFactor: 2.0,
             ),
           ),
           child: child!,
+        );
+        if (!widget.isVolatileStorage || _bannerDismissed) {
+          return content;
+        }
+        return Column(
+          children: [
+            Material(
+              color: AppTheme.warning,
+              child: SafeArea(
+                bottom: false,
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.warning_amber_rounded,
+                          size: 16, color: AppTheme.background),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          'Temporary storage active: logs will not persist after closing Sique.',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.background,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: 'Dismiss storage warning',
+                        padding: EdgeInsets.zero,
+                        constraints:
+                            const BoxConstraints(minWidth: 36, minHeight: 36),
+                        icon: const Icon(Icons.close_rounded,
+                            size: 16, color: AppTheme.background),
+                        onPressed: () =>
+                            setState(() => _bannerDismissed = true),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Expanded(child: content),
+          ],
         );
       },
       home: const OnboardingCoordinator(),

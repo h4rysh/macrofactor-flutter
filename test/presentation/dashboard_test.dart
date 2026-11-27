@@ -118,7 +118,7 @@ void main() {
 
     // Verify Strategy screen is displayed
     expect(find.text('Strategy'), findsWidgets);
-    expect(find.text('ADAPTIVE TDEE'), findsOneWidget);
+    expect(find.text('ADAPTIVE BURN'), findsOneWidget);
     expect(find.text('kcal / day avg'), findsOneWidget);
     expect(find.text('PROTEIN'), findsOneWidget);
   });

@@ -216,6 +216,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       ref.invalidate(selectedDateProvider);
       ref.invalidate(weightLogsProvider);
       ref.invalidate(workoutSessionsProvider);
+      ref.invalidate(healthConnectSyncProvider);
     } catch (e, st) {
       developer.log(
         'Provider invalidation notice',
@@ -315,10 +316,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Updates Health Connect enablement flag on authenticated sessions.
+  /// Updates Health Connect enablement flag for both authenticated and guest sessions.
   void setHealthConnectEnabled(bool enabled) {
+    _db.setSetting('hc_sync_enabled', enabled ? 'true' : 'false');
     final current = state.user;
-    if (!current.isAuthenticated) return;
+    if (!current.isAuthenticated) {
+      final updatedGuest = current.copyWith(
+        healthConnectEnabled: enabled,
+        updatedAt: DateTime.now(),
+      );
+      if (state is AuthUnauthenticated || !state.isAuthenticated) {
+        state = AuthUnauthenticated(guestUser: updatedGuest);
+      }
+      return;
+    }
     final updated = current.copyWith(
       healthConnectEnabled: enabled,
       updatedAt: DateTime.now(),

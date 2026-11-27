@@ -78,69 +78,72 @@ class MacroGaugeRing extends StatelessWidget {
                   Tooltip(
                     message:
                         'Sique targets are ranges, not strict limits. Fuel your body without judgment.',
-                    child: FittedBox(
-                      fit: BoxFit.scaleDown,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          AnimatedCountText(
-                            value: consumed.calories,
-                            style: AppTypography.numericDisplay.copyWith(
-                              fontSize: 36,
-                              fontWeight: FontWeight.w900,
-                              color: AppTheme.textPrimary,
-                              letterSpacing: -1.0,
-                            ),
-                          ),
-                          Text(
-                            'Calories consumed',
-                            style: AppTypography.labelSmall.copyWith(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppTheme.textSecondary,
-                              letterSpacing: 0.1,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppTheme.surface.withValues(alpha: 0.9),
-                              borderRadius: AppRadii.mdBorderRadius,
-                              border: Border.all(
-                                color: isTargetAchieved
-                                    ? AppTheme.calmOverBudget
-                                        .withValues(alpha: 0.8)
-                                    : AppTheme.cardBorder
-                                        .withValues(alpha: 0.8),
-                                width: isTargetAchieved ? 1.4 : 0.8,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AnimatedCountText(
+                              value: consumed.calories,
+                              style: AppTypography.numericDisplay.copyWith(
+                                fontSize: 36,
+                                fontWeight: FontWeight.w900,
+                                color: AppTheme.textPrimary,
+                                letterSpacing: -1.0,
                               ),
-                              boxShadow: isTargetAchieved
-                                  ? [
-                                      BoxShadow(
-                                        color: AppTheme.calmOverBudget
-                                            .withValues(alpha: 0.25),
-                                        blurRadius: 10,
-                                        spreadRadius: 1,
-                                      ),
-                                    ]
-                                  : null,
                             ),
-                            child: Text(
-                              remainingCalories >= 0
-                                  ? '$remainingCalories left'
-                                  : '+${remainingCalories.abs()} kcal · Adapts automatically',
-                              style: AppTypography.numericSmall.copyWith(
-                                fontSize: 12,
+                            Text(
+                              'Calories consumed',
+                              style: AppTypography.labelSmall.copyWith(
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
-                                color: remainingCalories >= 0
-                                    ? AppTheme.calories
-                                    : AppTheme.calmOverBudget,
+                                color: AppTheme.textSecondary,
+                                letterSpacing: 0.1,
                               ),
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppTheme.surface.withValues(alpha: 0.9),
+                                borderRadius: AppRadii.mdBorderRadius,
+                                border: Border.all(
+                                  color: isTargetAchieved
+                                      ? AppTheme.calmOverBudget
+                                          .withValues(alpha: 0.8)
+                                      : AppTheme.cardBorder
+                                          .withValues(alpha: 0.8),
+                                  width: isTargetAchieved ? 1.4 : 0.8,
+                                ),
+                                boxShadow: isTargetAchieved
+                                    ? [
+                                        BoxShadow(
+                                          color: AppTheme.calmOverBudget
+                                              .withValues(alpha: 0.25),
+                                          blurRadius: 10,
+                                          spreadRadius: 1,
+                                        ),
+                                      ]
+                                    : null,
+                              ),
+                              child: Text(
+                                remainingCalories >= 0
+                                    ? '$remainingCalories left'
+                                    : '+${remainingCalories.abs()} kcal · Adapts automatically',
+                                style: AppTypography.numericSmall.copyWith(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: remainingCalories >= 0
+                                      ? AppTheme.caloriesSecondary
+                                      : AppTheme.calmOverBudget,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),

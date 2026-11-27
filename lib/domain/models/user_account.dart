@@ -121,6 +121,14 @@ class UserAccount {
           ? (DateTime.tryParse(map['updated_at'] as String) ?? DateTime.now())
           : DateTime.now(),
       isAuthenticated: (map['google_user_id'] as String? ?? '').isNotEmpty,
+      authProvider: AuthProviderType.values.firstWhere(
+        (p) =>
+            p.providerId == map['auth_provider'] ||
+            p.name == map['auth_provider'],
+        orElse: () => (map['google_user_id'] as String? ?? '').isNotEmpty
+            ? AuthProviderType.google
+            : AuthProviderType.guest,
+      ),
     );
   }
 
@@ -136,6 +144,7 @@ class UserAccount {
       'last_health_sync_time': lastHealthSyncTime?.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
+      'auth_provider': authProvider.providerId,
     };
   }
 

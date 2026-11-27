@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:sique/domain/models/food_models.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/utils/quantity_parser.dart';
 
 /// Interactive portion & serving selector with both direct numeric input
 /// and incremental stepper buttons.
@@ -59,7 +60,7 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
     _focusNode = FocusNode();
     _focusNode.addListener(() {
       if (!_focusNode.hasFocus) {
-        final parsed = double.tryParse(_controller.text);
+        final parsed = QuantityParser.parse(_controller.text);
         if (parsed == null || parsed <= 0) {
           _controller.text = _formatQuantity(_quantity);
         } else {
@@ -106,16 +107,62 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
           color: AppTheme.textPrimary,
         ),
       ),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Portion unit dropdown / selector
-            if (widget.portionUnits.isNotEmpty) ...[
+      content: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Portion unit dropdown / selector
+              if (widget.portionUnits.isNotEmpty) ...[
+                const Text(
+                  'UNIT',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppTheme.textSecondary,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.cardElevated,
+                    borderRadius: AppRadii.mdBorderRadius,
+                    border: Border.all(color: AppTheme.cardBorder),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<PortionUnit>(
+                      value: _selectedUnit,
+                      isExpanded: true,
+                      dropdownColor: AppTheme.cardElevated,
+                      items: widget.portionUnits.map((u) {
+                        return DropdownMenuItem<PortionUnit>(
+                          value: u,
+                          child: Text(
+                            '${u.unitName} (${u.gramWeight.toStringAsFixed(0)}g)',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: AppTheme.textPrimary,
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (val) {
+                        if (val != null) {
+                          setState(() => _selectedUnit = val);
+                        }
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
               const Text(
-                'UNIT',
+                'QUANTITY',
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
@@ -124,150 +171,106 @@ class _PortionSelectorDialogState extends State<PortionSelectorDialog> {
                 ),
               ),
               const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardElevated,
-                  borderRadius: AppRadii.mdBorderRadius,
-                  border: Border.all(color: AppTheme.cardBorder),
-                ),
-                child: DropdownButtonHideUnderline(
-                  child: DropdownButton<PortionUnit>(
-                    value: _selectedUnit,
-                    isExpanded: true,
-                    dropdownColor: AppTheme.cardElevated,
-                    items: widget.portionUnits.map((u) {
-                      return DropdownMenuItem<PortionUnit>(
-                        value: u,
-                        child: Text(
-                          '${u.unitName} (${u.gramWeight.toStringAsFixed(0)}g)',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: AppTheme.textPrimary,
-                          ),
+
+              // Stepper and numeric text input row
+              Row(
+                children: [
+                  // Stepper Decrement
+                  IconButton.filledTonal(
+                    key: const Key('portion_decrement_btn'),
+                    onPressed: () {
+                      final current =
+                          double.tryParse(_controller.text) ?? _quantity;
+                      if (current > 0.5) {
+                        _updateQuantity(current - 0.5);
+                      }
+                    },
+                    icon: const Icon(Icons.remove, size: 18),
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppTheme.cardElevated,
+                      foregroundColor: AppTheme.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+
+                  // Direct numeric input field (validated > 0)
+                  Expanded(
+                    child: TextFormField(
+                      key: const Key('portion_numeric_field'),
+                      focusNode: _focusNode,
+                      controller: _controller,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      textInputAction: TextInputAction.done,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.textPrimary,
+                      ),
+                      inputFormatters: [
+                        FilteringTextInputFormatter.allow(
+                            RegExp(r'^\d*[.,]?\d*')),
+                      ],
+                      decoration: const InputDecoration(
+                        contentPadding:
+                            EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+                        filled: true,
+                        fillColor: AppTheme.cardElevated,
+                        border: OutlineInputBorder(
+                          borderRadius: AppRadii.mdBorderRadius,
+                          borderSide: BorderSide(color: AppTheme.cardBorder),
                         ),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() => _selectedUnit = val);
-                      }
-                    },
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: AppRadii.mdBorderRadius,
+                          borderSide: BorderSide(color: AppTheme.cardBorder),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: AppRadii.mdBorderRadius,
+                          borderSide: BorderSide(
+                              color: AppTheme.activeBlue, width: 1.5),
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return 'Required';
+                        }
+                        final sanitized = value.trim().replaceAll(',', '.');
+                        final parsed = double.tryParse(sanitized);
+                        if (parsed == null || parsed <= 0) {
+                          return 'Must be > 0';
+                        }
+                        return null;
+                      },
+                      onChanged: (val) {
+                        final parsed =
+                            double.tryParse(val.trim().replaceAll(',', '.'));
+                        if (parsed != null && parsed > 0) {
+                          _quantity = parsed;
+                        }
+                      },
+                    ),
                   ),
-                ),
+                  const SizedBox(width: 8),
+
+                  // Stepper Increment
+                  IconButton.filledTonal(
+                    key: const Key('portion_increment_btn'),
+                    onPressed: () {
+                      final current =
+                          double.tryParse(_controller.text) ?? _quantity;
+                      _updateQuantity(current + 0.5);
+                    },
+                    icon: const Icon(Icons.add, size: 18),
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppTheme.cardElevated,
+                      foregroundColor: AppTheme.textPrimary,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
             ],
-
-            const Text(
-              'QUANTITY',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: AppTheme.textSecondary,
-                letterSpacing: 0.8,
-              ),
-            ),
-            const SizedBox(height: 6),
-
-            // Stepper and numeric text input row
-            Row(
-              children: [
-                // Stepper Decrement
-                IconButton.filledTonal(
-                  key: const Key('portion_decrement_btn'),
-                  onPressed: () {
-                    final current =
-                        double.tryParse(_controller.text) ?? _quantity;
-                    if (current > 0.5) {
-                      _updateQuantity(current - 0.5);
-                    }
-                  },
-                  icon: const Icon(Icons.remove, size: 18),
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppTheme.cardElevated,
-                    foregroundColor: AppTheme.textPrimary,
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // Direct numeric input field (validated > 0)
-                Expanded(
-                  child: TextFormField(
-                    key: const Key('portion_numeric_field'),
-                    focusNode: _focusNode,
-                    controller: _controller,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    textInputAction: TextInputAction.done,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w800,
-                      color: AppTheme.textPrimary,
-                    ),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*[.,]?\d*')),
-                    ],
-                    decoration: const InputDecoration(
-                      contentPadding:
-                          EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                      filled: true,
-                      fillColor: AppTheme.cardElevated,
-                      border: OutlineInputBorder(
-                        borderRadius: AppRadii.mdBorderRadius,
-                        borderSide: BorderSide(color: AppTheme.cardBorder),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: AppRadii.mdBorderRadius,
-                        borderSide: BorderSide(color: AppTheme.cardBorder),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: AppRadii.mdBorderRadius,
-                        borderSide:
-                            BorderSide(color: AppTheme.activeBlue, width: 1.5),
-                      ),
-                    ),
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return 'Required';
-                      }
-                      final sanitized = value.trim().replaceAll(',', '.');
-                      final parsed = double.tryParse(sanitized);
-                      if (parsed == null || parsed <= 0) {
-                        return 'Must be > 0';
-                      }
-                      return null;
-                    },
-                    onChanged: (val) {
-                      final parsed =
-                          double.tryParse(val.trim().replaceAll(',', '.'));
-                      if (parsed != null && parsed > 0) {
-                        _quantity = parsed;
-                      }
-                    },
-                  ),
-                ),
-                const SizedBox(width: 8),
-
-                // Stepper Increment
-                IconButton.filledTonal(
-                  key: const Key('portion_increment_btn'),
-                  onPressed: () {
-                    final current =
-                        double.tryParse(_controller.text) ?? _quantity;
-                    _updateQuantity(current + 0.5);
-                  },
-                  icon: const Icon(Icons.add, size: 18),
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppTheme.cardElevated,
-                    foregroundColor: AppTheme.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
       actions: [

@@ -107,8 +107,22 @@ class _NutrientExplorerScreenState
             ),
           ),
           const SizedBox(height: 14),
-          for (final item in filtered)
-            _buildNutrientTile(context, db, item, now),
+          if (filtered.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 36),
+              child: Center(
+                child: Text(
+                  'No biomarkers match this category.',
+                  style: TextStyle(
+                    color: AppTheme.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            )
+          else
+            for (final item in filtered)
+              _buildNutrientTile(context, db, item, now),
         ],
       ),
     );
@@ -202,6 +216,7 @@ class _NutrientExplorerScreenState
           ? item.targetAmount.toStringAsFixed(1)
           : item.targetAmount.toStringAsFixed(0),
     );
+    String? targetError;
 
     showModalBottomSheet<void>(
       context: context,
@@ -210,92 +225,112 @@ class _NutrientExplorerScreenState
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          18,
-          20,
-          MediaQuery.of(ctx).viewInsets.bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '${item.displayName} (${_windowDays}d Avg)',
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              'TOP FOOD CONTRIBUTORS',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 6),
-            if (contributors.isEmpty)
-              const Text(
-                'No logged foods with tracked data for this nutrient in this window.',
-                style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
-              )
-            else
-              for (final c in contributors)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          c.foodName,
-                          style: const TextStyle(
-                              color: AppTheme.textPrimary, fontSize: 13),
-                        ),
-                      ),
-                      Text(
-                        '${c.totalAmount.toStringAsFixed(1)} ${item.unit}',
-                        style: const TextStyle(
-                            color: AppTheme.activeBlue,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 12),
-                      ),
-                    ],
-                  ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (sheetCtx, setSheetState) => SingleChildScrollView(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            18,
+            20,
+            MediaQuery.of(ctx).viewInsets.bottom + 24,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${item.displayName} (${_windowDays}d Avg)',
+                style: const TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textPrimary,
                 ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: targetCtrl,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      labelText: 'Custom Daily Target (${item.unit})',
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                'TOP FOOD CONTRIBUTORS',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  color: AppTheme.textSecondary,
+                ),
+              ),
+              const SizedBox(height: 6),
+              if (contributors.isEmpty)
+                const Text(
+                  'No logged foods with tracked data for this nutrient in this window.',
+                  style: TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                )
+              else
+                for (final c in contributors)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            c.foodName,
+                            style: const TextStyle(
+                                color: AppTheme.textPrimary, fontSize: 13),
+                          ),
+                        ),
+                        Text(
+                          '${c.totalAmount.toStringAsFixed(1)} ${item.unit}',
+                          style: const TextStyle(
+                              color: AppTheme.activeBlueText,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12),
+                        ),
+                      ],
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    final v = double.tryParse(targetCtrl.text);
-                    if (v != null && v > 0) {
-                      db.diaryToolsDao.setCustomMicroGoal(item.nutrientId, v);
-                      ref.read(foodLogsRevisionProvider.notifier).state++;
-                    }
-                    Navigator.pop(ctx);
-                  },
-                  child: const Text('Save Goal'),
-                ),
-              ],
-            ),
-          ],
+              const SizedBox(height: 14),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: targetCtrl,
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: 'Custom Daily Target (${item.unit})',
+                        errorText: targetError,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  if (item.isCustomGoal) ...[
+                    TextButton(
+                      onPressed: () {
+                        db.diaryToolsDao.deleteCustomMicroGoal(item.nutrientId);
+                        ref.read(foodLogsRevisionProvider.notifier).state++;
+                        Navigator.pop(ctx);
+                      },
+                      child: const Text('Reset'),
+                    ),
+                    const SizedBox(width: 6),
+                  ],
+                  ElevatedButton(
+                    onPressed: () {
+                      final v =
+                          double.tryParse(targetCtrl.text.replaceAll(',', '.'));
+                      if (v != null && v.isFinite && v > 0 && v <= 100000) {
+                        db.diaryToolsDao.setCustomMicroGoal(item.nutrientId, v);
+                        ref.read(foodLogsRevisionProvider.notifier).state++;
+                        Navigator.pop(ctx);
+                      } else {
+                        setSheetState(() {
+                          targetError = 'Enter a valid value (1–100,000)';
+                        });
+                      }
+                    },
+                    child: const Text('Save Goal'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     ).whenComplete(targetCtrl.dispose);

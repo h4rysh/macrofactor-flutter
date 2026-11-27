@@ -99,6 +99,10 @@ class DiaryToolsDao {
         active_days_mask, is_active, last_logged_date, created_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       ON CONFLICT(id) DO UPDATE SET
+        food_id = excluded.food_id,
+        food_name = excluded.food_name,
+        meal_type = excluded.meal_type,
+        hour = excluded.hour,
         serving_quantity = excluded.serving_quantity,
         unit_name = excluded.unit_name,
         gram_weight = excluded.gram_weight,
@@ -186,7 +190,39 @@ class DiaryToolsDao {
     }
   }
 
+  List<RepeatItemRecord> getAllRepeatItems({String? userId}) {
+    final uid = userId ?? effectiveUserId;
+    final stmt = _db.prepare(
+      'SELECT * FROM repeat_items WHERE user_id = ? ORDER BY hour ASC, created_at ASC;',
+    );
+    try {
+      return stmt.select([uid]).map(RepeatItemRecord.fromRow).toList();
+    } finally {
+      stmt.dispose();
+    }
+  }
+
   // --- Day Notes ---
+
+  Map<String, String> getAllDayNotes({String? userId}) {
+    final uid = userId ?? effectiveUserId;
+    final stmt = _db.prepare(
+      'SELECT date, note FROM day_notes WHERE user_id = ? ORDER BY date ASC;',
+    );
+    try {
+      final out = <String, String>{};
+      for (final row in stmt.select([uid])) {
+        final date = row['date'] as String?;
+        final note = row['note'] as String?;
+        if (date != null && note != null && note.isNotEmpty) {
+          out[date] = note;
+        }
+      }
+      return out;
+    } finally {
+      stmt.dispose();
+    }
+  }
 
   String? getDayNote(String dateStr, {String? userId}) {
     final uid = userId ?? effectiveUserId;
@@ -260,6 +296,18 @@ class DiaryToolsDao {
     ''');
     try {
       stmt.execute([uid, nutrientId, target, DateTime.now().toIso8601String()]);
+    } finally {
+      stmt.dispose();
+    }
+  }
+
+  void deleteCustomMicroGoal(int nutrientId, {String? userId}) {
+    final uid = userId ?? effectiveUserId;
+    final stmt = _db.prepare(
+      'DELETE FROM micro_goals WHERE user_id = ? AND nutrient_id = ?;',
+    );
+    try {
+      stmt.execute([uid, nutrientId]);
     } finally {
       stmt.dispose();
     }

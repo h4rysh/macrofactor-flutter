@@ -15,8 +15,8 @@ import '../widgets/weekly_challenge_card.dart';
 import 'goal_questionnaire_sheet.dart';
 import 'onboarding/strategy_setup_wizard.dart';
 
-/// Strategy & Coaching Screen reconstructed with Sique's clean-room
-/// adherence-neutral algorithm, 7-day shifting, and Bayesian check-in engine.
+/// Strategy & Coaching Screen with adherence-neutral adaptive targets,
+/// 7-day calorie distribution, and weekly check-in tuning.
 class StrategyScreen extends ConsumerWidget {
   const StrategyScreen({super.key});
 
@@ -54,88 +54,100 @@ class StrategyScreen extends ConsumerWidget {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (sheetCtx) => DraggableScrollableSheet(
-        expand: false,
-        initialChildSize: 0.78,
-        maxChildSize: 0.92,
-        minChildSize: 0.45,
-        builder: (_, scrollController) => ListView(
-          controller: scrollController,
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
-          children: [
-            Center(
-              child: Container(
-                width: 36,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardBorder,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            const Text(
-              'Program & Goal Settings',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w800,
-                color: AppTheme.textPrimary,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildProgramModeCard(sheetCtx, ref, activeMode, profile),
-            const SizedBox(height: 16),
-            const AnthropometricsCard(),
-            const SizedBox(height: 16),
-            const LifestyleTelemetryStrip(),
-            const SizedBox(height: 16),
-            Row(
+      builder: (sheetCtx) => Consumer(
+        builder: (consumerCtx, sheetRef, _) {
+          final liveProgram = sheetRef.watch(weeklyMacroProgramProvider);
+          final liveProfile = sheetRef.watch(userProfileProvider);
+          return DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.78,
+            maxChildSize: 0.92,
+            minChildSize: 0.45,
+            builder: (_, scrollController) => ListView(
+              controller: scrollController,
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
               children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    key: const Key('strategy_personalize_goal_btn'),
-                    onPressed: () {
-                      Navigator.pop(sheetCtx);
-                      _openQuestionnaire(context);
-                    },
-                    icon: const Icon(Icons.edit_note_rounded, size: 18),
-                    label: const Text('Edit Goal & Diet'),
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.activeBlue,
-                      side: BorderSide(
-                        color: AppTheme.activeBlue.withValues(alpha: 0.4),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: AppRadii.mdBorderRadius,
-                      ),
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardBorder,
+                      borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton.icon(
-                    key: const Key('strategy_refigure_program_btn'),
-                    onPressed: () {
-                      Navigator.pop(sheetCtx);
-                      _openSetupWizard(context);
-                    },
-                    icon: const Icon(Icons.auto_fix_high_rounded, size: 18),
-                    label: const Text('Refigure Split'),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.calories,
-                      foregroundColor: AppTheme.buttonForeground,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: const RoundedRectangleBorder(
-                        borderRadius: AppRadii.mdBorderRadius,
+                const Text(
+                  'Program & Goal Settings',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppTheme.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildProgramModeCard(
+                  consumerCtx,
+                  sheetRef,
+                  liveProgram.mode,
+                  liveProfile,
+                ),
+                const SizedBox(height: 16),
+                const AnthropometricsCard(),
+                const SizedBox(height: 16),
+                const LifestyleTelemetryStrip(),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        key: const Key('strategy_personalize_goal_btn'),
+                        onPressed: () {
+                          Navigator.pop(sheetCtx);
+                          _openQuestionnaire(context);
+                        },
+                        icon: const Icon(Icons.edit_note_rounded, size: 18),
+                        label: const Text('Edit Goal & Diet'),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.activeBlueText,
+                          side: BorderSide(
+                            color: AppTheme.activeBlue.withValues(alpha: 0.4),
+                          ),
+                          minimumSize: const Size(0, 44),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: AppRadii.mdBorderRadius,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        key: const Key('strategy_refigure_program_btn'),
+                        onPressed: () {
+                          Navigator.pop(sheetCtx);
+                          _openSetupWizard(context);
+                        },
+                        icon: const Icon(Icons.auto_fix_high_rounded, size: 18),
+                        label: const Text('Refigure Split'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.calories,
+                          foregroundColor: AppTheme.buttonForeground,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: AppRadii.mdBorderRadius,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -204,8 +216,8 @@ class StrategyScreen extends ConsumerWidget {
                             'SET UP YOUR STRATEGY',
                             style: TextStyle(
                               fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: AppTheme.activeBlue,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.activeBlueText,
                               letterSpacing: 0.8,
                             ),
                           ),
@@ -214,13 +226,13 @@ class StrategyScreen extends ConsumerWidget {
                             'Build your personalized calorie & macro plan',
                             style: TextStyle(
                               fontSize: 17,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w700,
                               color: AppTheme.textPrimary,
                             ),
                           ),
                           const SizedBox(height: 6),
                           const Text(
-                            'Answer 4 quick questions to tailor your daily targets, protein level, and workout-day split.',
+                            'Answer 6 quick questions to tailor your daily targets, protein level, and workout-day split.',
                             style: TextStyle(
                               fontSize: 13,
                               color: AppTheme.textSecondary,
@@ -235,12 +247,16 @@ class StrategyScreen extends ConsumerWidget {
                               onPressed: () => _openSetupWizard(context),
                               icon: const Icon(Icons.auto_fix_high_rounded,
                                   size: 18),
-                              label: const Text('Start Strategy Setup'),
+                              label: const Text(
+                                'Start Strategy Setup',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: AppTheme.activeBlue,
-                                foregroundColor: Colors.white,
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 13),
+                                foregroundColor: AppTheme.buttonForeground,
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 13),
                                 shape: const RoundedRectangleBorder(
                                   borderRadius: AppRadii.mdBorderRadius,
                                 ),
@@ -373,12 +389,19 @@ class StrategyScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             AppleBouncy(
               scaleDown: 0.96,
-              onTap: () => CollaborativeMacroEditorSheet.show(
-                context,
-                mode: activeMode,
-              ),
+              onTap: () {
+                final navigator = Navigator.of(context);
+                if (navigator.canPop()) {
+                  navigator.pop();
+                }
+                CollaborativeMacroEditorSheet.show(
+                  navigator.context,
+                  mode: activeMode,
+                );
+              },
               child: Container(
                 width: double.infinity,
+                constraints: const BoxConstraints(minHeight: 44),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: AppTheme.activeBlue.withValues(alpha: 0.14),
@@ -395,7 +418,7 @@ class StrategyScreen extends ConsumerWidget {
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.activeBlue,
+                    color: AppTheme.activeBlueText,
                   ),
                 ),
               ),
@@ -506,6 +529,14 @@ class StrategyScreen extends ConsumerWidget {
         scaleDown: 0.94,
         onTap: () {
           AppHaptics.selectionClick();
+          final profile = ref.read(userProfileProvider);
+          ref.read(userProfileProvider.notifier).updateProfile(
+                profile.copyWith(
+                  programMode: mode,
+                  clearCustom: mode != ProgramMode.manual,
+                ),
+              );
+
           final program = ref.read(weeklyMacroProgramProvider);
           final updatedProgram = program.copyWith(
             mode: mode,
@@ -514,14 +545,6 @@ class StrategyScreen extends ConsumerWidget {
           ref
               .read(weeklyMacroProgramProvider.notifier)
               .updateProgram(updatedProgram);
-
-          final profile = ref.read(userProfileProvider);
-          ref.read(userProfileProvider.notifier).updateProfile(
-                profile.copyWith(
-                  programMode: mode,
-                  clearCustom: mode != ProgramMode.manual,
-                ),
-              );
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 240),

@@ -159,9 +159,10 @@ class IndianStapleChips extends StatelessWidget {
                   onStapleSelected(staple);
                 },
                 child: Container(
+                  constraints: const BoxConstraints(minHeight: 44),
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 7,
+                    horizontal: 14,
+                    vertical: 11,
                   ),
                   decoration: BoxDecoration(
                     color: AppTheme.cardSurface,
@@ -325,6 +326,8 @@ class PlateReviewBar extends StatelessWidget {
                     scaleDown: 0.94,
                     onTap: onDone,
                     child: Container(
+                      constraints: const BoxConstraints(minHeight: 44),
+                      alignment: Alignment.center,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 10,
@@ -337,7 +340,7 @@ class PlateReviewBar extends StatelessWidget {
                         buttonLabel,
                         style: const TextStyle(
                           fontSize: 13,
-                          fontWeight: FontWeight.w800,
+                          fontWeight: FontWeight.w700,
                           color: AppTheme.buttonText,
                         ),
                       ),

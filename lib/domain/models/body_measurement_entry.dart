@@ -37,14 +37,27 @@ class BodyMeasurementEntry {
   /// Waist-to-Height Ratio (WHtR).
   /// Clinical risk thresholds: < 0.40 Underweight, 0.40 - 0.49 Healthy, 0.50 - 0.59 Increased risk, >= 0.60 Very high risk.
   double? waistToHeightRatio(double heightCm) {
-    if (waistCm == null || heightCm <= 0) return null;
+    if (waistCm == null ||
+        !waistCm!.isFinite ||
+        waistCm! <= 0 ||
+        !heightCm.isFinite ||
+        heightCm <= 0) {
+      return null;
+    }
     return waistCm! / heightCm;
   }
 
   /// Waist-to-Hip Ratio (WHR).
   /// Male risk threshold: > 0.90; Female risk threshold: > 0.85.
   double? get waistToHipRatio {
-    if (waistCm == null || hipsCm == null || hipsCm! <= 0) return null;
+    if (waistCm == null ||
+        hipsCm == null ||
+        !waistCm!.isFinite ||
+        !hipsCm!.isFinite ||
+        waistCm! <= 0 ||
+        hipsCm! <= 0) {
+      return null;
+    }
     return waistCm! / hipsCm!;
   }
 

@@ -20,19 +20,22 @@ class DailyWaterNotifier extends StateNotifier<int> {
 
   void _loadTodayWater() {
     final db = _ref.read(databaseProvider);
-    state = db.waterDao.getDailyWaterMl(DateTime.now());
+    final now = _ref.read(clockProvider)();
+    state = db.waterDao.getDailyWaterMl(now);
   }
 
   void addWater(int amountMl) {
     if (amountMl <= 0) return;
     final db = _ref.read(databaseProvider);
-    db.waterDao.logWater(amountMl);
+    final now = _ref.read(clockProvider)();
+    db.waterDao.logWater(amountMl, date: now, loggedAt: now);
     state += amountMl;
   }
 
   void resetToday() {
     final db = _ref.read(databaseProvider);
-    db.waterDao.clearDayWater(DateTime.now());
+    final now = _ref.read(clockProvider)();
+    db.waterDao.clearDayWater(now);
     state = 0;
   }
 }
@@ -197,6 +200,9 @@ final recompositionStatusProvider = Provider<bool>((ref) {
     (s) => latestSmoothed.date.difference(s.date).inDays >= 14,
     orElse: () => smoothedSeries.first,
   );
+  if (latestSmoothed.date.difference(anchorSmoothed.date).inDays < 14) {
+    return false;
+  }
   final smoothedWaistDelta = latestSmoothed.value - anchorSmoothed.value;
 
   return AnthropometricService.isSilentRecomposition(
@@ -301,6 +307,7 @@ class WeeklyChallengesNotifier
           currentValue: newVal,
           status: nextStatus,
           completedAt: isFulfilled ? (ch.completedAt ?? DateTime.now()) : null,
+          clearCompletedAt: !isFulfilled,
         ));
       } else {
         syncedList.add(ch);
@@ -367,9 +374,15 @@ class WeeklyChallengesNotifier
       weightKg: profile.currentWeightKg > 0 ? profile.currentWeightKg : 70.0,
       isFemale: !profile.isMale,
     );
+    final swappedChallenge =
+        state.where((c) => c.id == challengeId).firstOrNull;
+    final now = _ref.read(clockProvider)();
+    final weekStart = swappedChallenge?.weekStartDate ??
+        DateTime(now.year, now.month, now.day)
+            .subtract(Duration(days: now.weekday - 1));
     final candidates = ChallengeGenerationService.generateAdaptiveChallengesV2(
       metrics: mined,
-      weekStart: DateTime.now(),
+      weekStart: weekStart,
       userId: db.currentUserId,
       proteinTargetG: pTarget,
       limit: 5,
@@ -395,5 +408,7 @@ final weeklyChallengesProvider =
   ref.listen<int>(foodLogsRevisionProvider, (_, __) => notifier.syncFromLogs());
   ref.listen(weightLogsProvider, (_, __) => notifier.syncFromLogs());
   ref.listen<int>(dailyWaterProvider, (_, __) => notifier.syncFromLogs());
+  ref.listen(workoutSessionsProvider, (_, __) => notifier.syncFromLogs());
+  ref.listen(bodyMeasurementsProvider, (_, __) => notifier.syncFromLogs());
   return notifier;
 });

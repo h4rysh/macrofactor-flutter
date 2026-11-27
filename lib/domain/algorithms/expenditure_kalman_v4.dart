@@ -269,8 +269,12 @@ class ExpenditureKalmanV4 {
     _lastDate = input.date;
 
     // 1. Cold start bootstrap if weight uninitialized
-    if (_weightKg == 0.0 && input.scaleWeightKg != null) {
-      _weightKg = input.scaleWeightKg!;
+    final incomingWeight = input.scaleWeightKg;
+    final hasValidWeight = incomingWeight != null &&
+        incomingWeight.isFinite &&
+        incomingWeight > 0.0;
+    if (_weightKg == 0.0 && hasValidWeight) {
+      _weightKg = incomingWeight;
       _pWW = rNoise;
     }
 
@@ -284,8 +288,8 @@ class ExpenditureKalmanV4 {
     _isPaused = unloggedCount7 > pauseThresholdDays;
 
     // 3. Measurement update step (Scale weight observation)
-    if (input.scaleWeightKg != null && _weightKg > 0.0) {
-      _performMeasurementUpdate(input.scaleWeightKg!);
+    if (hasValidWeight && _weightKg > 0.0) {
+      _performMeasurementUpdate(incomingWeight);
     }
 
     // 4. Incomplete day gating:
@@ -324,9 +328,10 @@ class ExpenditureKalmanV4 {
 
   /// Scale weight observation update with Huber innovation clipping & Joseph covariance update.
   void _performMeasurementUpdate(double scaleWeightKg) {
+    if (!scaleWeightKg.isFinite || scaleWeightKg <= 0.0) return;
     final innovation = scaleWeightKg - _weightKg;
-    final sVar = _pWW + rNoise;
-    final sigmaS = math.sqrt(math.max(sVar, 1e-9));
+    final sVar = math.max(_pWW + rNoise, 1e-9);
+    final sigmaS = math.sqrt(sVar);
 
     // Huber clipping threshold at 3 * sigma
     final tau = huberSigma * sigmaS;
@@ -420,10 +425,10 @@ class ExpenditureKalmanV4 {
 
   /// Regularizes covariance matrix to maintain strict positive-definiteness.
   void _regularizeCovariance() {
-    _pWW = math.max(_pWW, 1e-6);
-    _pEE = math.max(_pEE, 1.0);
+    _pWW = (_pWW.isFinite && _pWW > 1e-6) ? _pWW : 1e-6;
+    _pEE = (_pEE.isFinite && _pEE > 1.0) ? _pEE : 1.0;
     final maxCov = 0.999 * math.sqrt(_pWW * _pEE);
-    _pWE = _pWE.clamp(-maxCov, maxCov);
+    _pWE = _pWE.isFinite ? _pWE.clamp(-maxCov, maxCov) : 0.0;
   }
 
   /// Formulates immutable state snapshot.

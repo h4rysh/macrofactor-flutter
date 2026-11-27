@@ -170,7 +170,7 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                         Container(
                             width: 1, height: 28, color: AppTheme.cardBorder),
                         _buildSubMetric(
-                          label: 'Calculated TDEE',
+                          label: 'Daily Energy Burn',
                           value: '${_effectiveTdee.round()} kcal',
                           color: AppTheme.expenditure,
                         ),
@@ -199,7 +199,7 @@ class _Card06TdeeBlueprintState extends State<Card06TdeeBlueprint> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Known TDEE Override',
+                                'Known Burn Override',
                                 style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,

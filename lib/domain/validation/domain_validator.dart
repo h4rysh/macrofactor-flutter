@@ -66,8 +66,18 @@ class DomainValidator {
     required double targetWeightKg,
     required double heightCm,
     required GoalType goalType,
+    bool useImperial = false,
   }) {
-    if (targetWeightKg < minWeightKg || targetWeightKg > maxWeightKg) {
+    const kgToLbs = 2.20462262185;
+    if (!targetWeightKg.isFinite ||
+        !heightCm.isFinite ||
+        targetWeightKg < minWeightKg ||
+        targetWeightKg > maxWeightKg) {
+      if (useImperial) {
+        return ValidationResult.invalid(
+          'Target weight must be between ${(minWeightKg * kgToLbs).round()} lbs and ${(maxWeightKg * kgToLbs).round()} lbs.',
+        );
+      }
       return ValidationResult.invalid(
         'Target weight must be between ${minWeightKg.toStringAsFixed(0)} kg and ${maxWeightKg.toStringAsFixed(0)} kg.',
       );
@@ -77,6 +87,11 @@ class DomainValidator {
         isUnderweightBmi(targetWeightKg, heightCm)) {
       final safeMin = minSafeWeightKg(heightCm);
       final bmi = calculateBmi(targetWeightKg, heightCm);
+      if (useImperial) {
+        return ValidationResult.invalid(
+          'Target weight ${(targetWeightKg * kgToLbs).toStringAsFixed(1)} lbs places BMI (${bmi.toStringAsFixed(1)}) in the clinical underweight range (< 18.5). Safe minimum target is ${(safeMin * kgToLbs).toStringAsFixed(1)} lbs.',
+        );
+      }
       return ValidationResult.invalid(
         'Target weight ${targetWeightKg.toStringAsFixed(1)} kg places BMI (${bmi.toStringAsFixed(1)}) in the clinical underweight range (< 18.5). Safe minimum target is ${safeMin.toStringAsFixed(1)} kg.',
       );
@@ -90,6 +105,10 @@ class DomainValidator {
     required double ratePct,
     required GoalType goalType,
   }) {
+    if (!ratePct.isFinite) {
+      return const ValidationResult.invalid(
+          'Weekly rate must be a valid number.');
+    }
     switch (goalType) {
       case GoalType.fatLoss:
         if (ratePct > 0) {
@@ -129,11 +148,12 @@ class DomainValidator {
 
   /// Clamps weekly rate of change to physiological bounds.
   static double clampRateOfChange(double ratePct, GoalType goalType) {
+    final safeRate = ratePct.isFinite ? ratePct : 0.0;
     switch (goalType) {
       case GoalType.fatLoss:
-        return ratePct.clamp(minFatLossRatePct, 0.0);
+        return safeRate.clamp(minFatLossRatePct, 0.0);
       case GoalType.muscleGain:
-        return ratePct.clamp(0.0, maxMuscleGainRatePct);
+        return safeRate.clamp(0.0, maxMuscleGainRatePct);
       case GoalType.maintenance:
         return 0.0;
     }

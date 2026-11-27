@@ -4,6 +4,7 @@ import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/screens/profile_targets_screen.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
+import 'package:sique/utils/unit_formatter.dart';
 
 /// Section 5: Physical Stats & Targets overview card.
 class PhysicalStatsSummaryCard extends ConsumerWidget {
@@ -13,6 +14,7 @@ class PhysicalStatsSummaryCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(userProfileProvider);
     final macroTarget = ref.watch(dailyMacroTargetProvider);
+    final useImperial = ref.watch(useImperialUnitsProvider);
 
     return AppleGlassCard(
       padding: const EdgeInsets.all(16),
@@ -49,23 +51,29 @@ class PhysicalStatsSummaryCard extends ConsumerWidget {
                     ),
                   );
                 },
-                child: const Row(
-                  children: [
-                    Text(
-                      'Edit',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.activeBlue,
+                child: ConstrainedBox(
+                  constraints:
+                      const BoxConstraints(minWidth: 44, minHeight: 44),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      Text(
+                        'Edit',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppTheme.activeBlueText,
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 2),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 11,
-                      color: AppTheme.activeBlue,
-                    ),
-                  ],
+                      SizedBox(width: 2),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 11,
+                        color: AppTheme.activeBlueText,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -76,19 +84,28 @@ class PhysicalStatsSummaryCard extends ConsumerWidget {
               Expanded(
                 child: _buildMetricCol(
                   'Current Weight',
-                  '${profile.currentWeightKg.toStringAsFixed(1)} kg',
+                  UnitFormatter.formatWeight(
+                    profile.currentWeightKg,
+                    useLbs: useImperial,
+                  ),
                 ),
               ),
               Expanded(
                 child: _buildMetricCol(
                   'Target Weight',
-                  '${profile.targetWeightKg.toStringAsFixed(1)} kg',
+                  UnitFormatter.formatWeight(
+                    profile.targetWeightKg,
+                    useLbs: useImperial,
+                  ),
                 ),
               ),
               Expanded(
                 child: _buildMetricCol(
                   'Height',
-                  '${profile.heightCm.toStringAsFixed(0)} cm',
+                  UnitFormatter.formatHeight(
+                    profile.heightCm,
+                    useImperial: useImperial,
+                  ),
                 ),
               ),
             ],

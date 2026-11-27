@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:sique/domain/models/food_models.dart';
 import 'package:sique/presentation/providers/app_providers.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
+import 'package:sique/presentation/widgets/apple_sheet_grabber.dart';
 
 /// MacroFactor-parity Quick-Add Macros sheet (direct P/C/F/kcal entry without creating a food).
 class QuickAddMacrosSheet extends ConsumerStatefulWidget {
@@ -49,6 +50,7 @@ class _QuickAddMacrosSheetState extends ConsumerState<QuickAddMacrosSheet> {
   final _protCtrl = TextEditingController();
   final _carbCtrl = TextEditingController();
   final _fatCtrl = TextEditingController();
+  String? _validationError;
 
   @override
   void dispose() {
@@ -71,12 +73,21 @@ class _QuickAddMacrosSheetState extends ConsumerState<QuickAddMacrosSheet> {
   }
 
   void _submit() {
-    final p = double.tryParse(_protCtrl.text) ?? 0.0;
-    final c = double.tryParse(_carbCtrl.text) ?? 0.0;
-    final f = double.tryParse(_fatCtrl.text) ?? 0.0;
+    final p = double.tryParse(_protCtrl.text.trim()) ?? 0.0;
+    final c = double.tryParse(_carbCtrl.text.trim()) ?? 0.0;
+    final f = double.tryParse(_fatCtrl.text.trim()) ?? 0.0;
     final kcal =
-        double.tryParse(_kcalCtrl.text) ?? ((p * 4) + (c * 4) + (f * 9));
-    if (kcal <= 0 && p <= 0 && c <= 0 && f <= 0) return;
+        double.tryParse(_kcalCtrl.text.trim()) ?? ((p * 4) + (c * 4) + (f * 9));
+    if (kcal <= 0 && p <= 0 && c <= 0 && f <= 0) {
+      setState(() {
+        _validationError =
+            'Enter at least one positive value for calories or macros.';
+      });
+      return;
+    }
+    if (_validationError != null) {
+      setState(() => _validationError = null);
+    }
 
     final label = _nameCtrl.text.trim().isEmpty
         ? 'Quick Add Macros'
@@ -118,79 +129,95 @@ class _QuickAddMacrosSheetState extends ConsumerState<QuickAddMacrosSheet> {
   @override
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
-    return Padding(
-      padding: EdgeInsets.fromLTRB(20, 18, 20, bottom + 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'Quick Add Calories & Macros',
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w800,
-              color: AppTheme.textPrimary,
+    return SafeArea(
+      top: false,
+      child: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(20, 10, 20, bottom + 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const AppleSheetGrabber(margin: EdgeInsets.only(bottom: 10)),
+            const Text(
+              'Quick Add Macros',
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: AppTheme.textPrimary,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _nameCtrl,
-            decoration: const InputDecoration(labelText: 'Label (optional)'),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: _protCtrl,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Protein (g)'),
-                  onChanged: (_) => _recalcKcalIfAuto(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _carbCtrl,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Carbs (g)'),
-                  onChanged: (_) => _recalcKcalIfAuto(),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: TextField(
-                  controller: _fatCtrl,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                  decoration: const InputDecoration(labelText: 'Fat (g)'),
-                  onChanged: (_) => _recalcKcalIfAuto(),
+            if (_validationError != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _validationError!,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.errorText,
                 ),
               ),
             ],
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _kcalCtrl,
-            keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            decoration: const InputDecoration(labelText: 'Calories (kcal)'),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _submit,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.buttonBackground,
-              foregroundColor: AppTheme.buttonText,
-              minimumSize: const Size.fromHeight(48),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _nameCtrl,
+              decoration: const InputDecoration(labelText: 'Label (optional)'),
             ),
-            child: const Text(
-              'Log Macros',
-              style: TextStyle(fontWeight: FontWeight.w800),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _protCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Protein (g)'),
+                    onChanged: (_) => _recalcKcalIfAuto(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _carbCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Carbs (g)'),
+                    onChanged: (_) => _recalcKcalIfAuto(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: TextField(
+                    controller: _fatCtrl,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(labelText: 'Fat (g)'),
+                    onChanged: (_) => _recalcKcalIfAuto(),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
+            const SizedBox(height: 10),
+            TextField(
+              controller: _kcalCtrl,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              decoration: const InputDecoration(labelText: 'Calories (kcal)'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _submit,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.buttonBackground,
+                foregroundColor: AppTheme.buttonText,
+                minimumSize: const Size.fromHeight(48),
+              ),
+              child: const Text(
+                'Log Macros',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

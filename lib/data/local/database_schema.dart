@@ -115,6 +115,7 @@ class DatabaseSchema {
   static const String createWorkoutSessionsTable = '''
     CREATE TABLE IF NOT EXISTS workout_sessions (
       id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL DEFAULT 'default_user',
       source TEXT NOT NULL,
       title TEXT NOT NULL,
       start_time TEXT NOT NULL,

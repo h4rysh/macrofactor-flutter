@@ -37,15 +37,26 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
   @override
   void initState() {
     super.initState();
-    _selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final now = ref.read(clockProvider)();
+    final selectedStr = ref.read(selectedDateProvider);
+    _selectedDate = selectedStr.isNotEmpty
+        ? selectedStr
+        : DateFormat('yyyy-MM-dd').format(now);
+    _loadEntryForDate(_selectedDate);
+  }
 
-    // Pre-populate with previous weight in the user's active unit system.
-    final latestWeight = ref.read(weightLogsProvider);
+  void _loadEntryForDate(String dateStr) {
+    final weights = ref.read(weightLogsProvider);
     final useLbs = ref.read(useImperialUnitsProvider);
-    if (latestWeight.isNotEmpty) {
-      final kg = latestWeight.last.weightKg;
+    final exact = weights
+        .where((e) => DateFormat('yyyy-MM-dd').format(e.date) == dateStr)
+        .firstOrNull;
+    final entryToShow = exact ?? (weights.isNotEmpty ? weights.last : null);
+    if (entryToShow != null) {
+      final kg = entryToShow.weightKg;
       final displayVal = useLbs ? kg * _lbsPerKg : kg;
       _weightController.text = displayVal.toStringAsFixed(1);
+      _noteController.text = exact?.note ?? '';
     }
   }
 
@@ -146,22 +157,24 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
     try {
       AppHaptics.mediumImpact();
       final dateStr = DateFormat('yyyy-MM-dd').format(entry.date);
-      ref.read(weightLogsProvider.notifier).deleteWeight(dateStr);
+      final weightNotifier = ref.read(weightLogsProvider.notifier);
+      final messenger = ScaffoldMessenger.of(context);
+      weightNotifier.deleteWeight(dateStr);
       Navigator.of(context).pop();
 
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
-      ScaffoldMessenger.of(context).showSnackBar(
+      messenger.hideCurrentSnackBar();
+      messenger.showSnackBar(
         SnackBar(
           content: Text('Deleted weight log for $dateStr'),
           action: SnackBarAction(
             label: 'Undo',
             textColor: AppTheme.activeBlue,
             onPressed: () {
-              ref.read(weightLogsProvider.notifier).logWeight(
-                    dateStr,
-                    entry.weightKg,
-                    entry.note,
-                  );
+              weightNotifier.logWeight(
+                dateStr,
+                entry.weightKg,
+                entry.note,
+              );
             },
           ),
           behavior: SnackBarBehavior.floating,
@@ -194,8 +207,8 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
     // Compute preview trend weight if weight is entered
     double? previewTrendWeight;
     if (parsedWeightKg != null &&
-        parsedWeightKg > 30.0 &&
-        parsedWeightKg < 300.0) {
+        parsedWeightKg >= 20.0 &&
+        parsedWeightKg <= 500.0) {
       final simulatedList = List<ScaleWeightEntry>.from(existingWeights)
         ..removeWhere(
             (e) => DateFormat('yyyy-MM-dd').format(e.date) == _selectedDate)
@@ -270,16 +283,18 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                     ],
                     TextButton.icon(
                       onPressed: () async {
+                        final now = ref.read(clockProvider)();
                         final picked = await showDatePicker(
                           context: context,
                           initialDate: DateTime.parse(_selectedDate),
                           firstDate: DateTime(2020),
-                          lastDate: DateTime.now().add(const Duration(days: 1)),
+                          lastDate: now.add(const Duration(days: 1)),
                         );
-                        if (picked != null) {
+                        if (picked != null && mounted) {
                           setState(() {
                             _selectedDate =
                                 DateFormat('yyyy-MM-dd').format(picked);
+                            _loadEntryForDate(_selectedDate);
                           });
                         }
                       },
@@ -303,7 +318,9 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                   children: [
                     Semantics(
                       button: true,
-                      label: 'Decrease weight by 0.1 kilograms',
+                      label: useLbs
+                          ? 'Decrease weight by 0.1 pounds'
+                          : 'Decrease weight by 0.1 kilograms',
                       child: GestureDetector(
                         onLongPressStart: (_) => _startStepperHold(-0.1),
                         onLongPressEnd: (_) => _stopStepperHold(),
@@ -350,7 +367,9 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                           children: [
                             Expanded(
                               child: Semantics(
-                                label: 'Scale weight in kilograms',
+                                label: useLbs
+                                    ? 'Scale weight in pounds'
+                                    : 'Scale weight in kilograms',
                                 child: TextField(
                                   controller: _weightController,
                                   keyboardType:
@@ -401,7 +420,9 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                     const SizedBox(width: 8),
                     Semantics(
                       button: true,
-                      label: 'Increase weight by 0.1 kilograms',
+                      label: useLbs
+                          ? 'Increase weight by 0.1 pounds'
+                          : 'Increase weight by 0.1 kilograms',
                       child: GestureDetector(
                         onLongPressStart: (_) => _startStepperHold(0.1),
                         onLongPressEnd: (_) => _stopStepperHold(),
@@ -515,8 +536,9 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                         scaleDown: 0.94,
                         onTap: () => _toggleContextChip(chip),
                         child: Container(
+                          constraints: const BoxConstraints(minHeight: 44),
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
+                              horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
                             color: isSelected
                                 ? AppTheme.buttonBackground
@@ -582,7 +604,9 @@ class _WeightLogModalState extends ConsumerState<WeightLogModal> {
                   height: 52,
                   child: ElevatedButton(
                     onPressed: (parsedWeight != null &&
-                            parsedWeight > 0 &&
+                            parsedWeightKg != null &&
+                            parsedWeightKg >= 20.0 &&
+                            parsedWeightKg <= 500.0 &&
                             !_isSubmitting)
                         ? () => _handleSave(parsedWeight, useLbs: useLbs)
                         : null,

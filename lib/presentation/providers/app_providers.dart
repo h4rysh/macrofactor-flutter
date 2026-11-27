@@ -43,6 +43,7 @@ final userDataEpochProvider = StateProvider<int>((ref) => 0);
 
 /// Global revision counter tracking food log additions, edits, and deletions.
 final foodLogsRevisionProvider = StateProvider<int>((ref) => 0);
+final foodLogSettingsRevisionProvider = StateProvider<int>((ref) => 0);
 
 /// Manages day completion status and exposes toggle / set capabilities.
 class DayCompletionsNotifier extends StateNotifier<Map<String, bool>> {
@@ -119,6 +120,11 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
         (oldProfile.goalType != newProfile.goalType ||
             oldProfile.currentWeightKg != newProfile.currentWeightKg ||
             oldProfile.targetWeightKg != newProfile.targetWeightKg ||
+            oldProfile.heightCm != newProfile.heightCm ||
+            oldProfile.age != newProfile.age ||
+            oldProfile.isMale != newProfile.isMale ||
+            oldProfile.baselineExpenditureKcal !=
+                newProfile.baselineExpenditureKcal ||
             oldProfile.weeklyRateOfChangePct !=
                 newProfile.weeklyRateOfChangePct ||
             oldProfile.proteinPreference != newProfile.proteinPreference ||
@@ -130,9 +136,8 @@ class UserProfileNotifier extends StateNotifier<UserProfile> {
             oldProfile.customProteinGrams != newProfile.customProteinGrams ||
             oldProfile.customCarbsGrams != newProfile.customCarbsGrams ||
             oldProfile.customFatGrams != newProfile.customFatGrams)) {
-      final enteredReverse =
-          oldProfile.reverseDietPacing != newProfile.reverseDietPacing &&
-              newProfile.reverseDietPacing != 'none';
+      final enteredReverse = oldProfile.reverseDietPacing == 'none' &&
+          newProfile.reverseDietPacing != 'none';
       _ref.read(weeklyMacroProgramProvider.notifier).regenerateFromProfile(
             newProfile,
             applyReverseRamp: enteredReverse,
@@ -208,22 +213,37 @@ class DailyFoodLogsNotifier extends StateNotifier<List<FoodLogEntry>> {
     if (targetYear == null || targetMonth == null || targetDay == null) {
       return 0;
     }
+    final checkDate = DateTime(targetYear, targetMonth, targetDay);
+    if (checkDate.year != targetYear ||
+        checkDate.month != targetMonth ||
+        checkDate.day != targetDay) {
+      return 0;
+    }
 
-    for (final src in sourceLogs) {
-      final newLoggedAt = DateTime(
-        targetYear,
-        targetMonth,
-        targetDay,
-        src.loggedAt.hour,
-        src.loggedAt.minute,
-        src.loggedAt.second,
-      );
-      final newEntry = src.copyWith(
-        id: 0,
-        date: _date,
-        loggedAt: newLoggedAt,
-      );
-      _db.insertFoodLog(newEntry);
+    _db.rawDb.execute('BEGIN TRANSACTION;');
+    try {
+      for (final src in sourceLogs) {
+        final newLoggedAt = DateTime(
+          targetYear,
+          targetMonth,
+          targetDay,
+          src.loggedAt.hour,
+          src.loggedAt.minute,
+          src.loggedAt.second,
+        );
+        final newEntry = src.copyWith(
+          id: 0,
+          date: _date,
+          loggedAt: newLoggedAt,
+        );
+        _db.insertFoodLog(newEntry);
+      }
+      _db.rawDb.execute('COMMIT;');
+    } catch (_) {
+      try {
+        _db.rawDb.execute('ROLLBACK;');
+      } catch (_) {}
+      rethrow;
     }
     refresh();
     _notifyMutation();
@@ -308,12 +328,12 @@ final dailyNutritionSummaryProvider = Provider<NutritionalValues>((ref) {
   double totalGrams = 0.0;
 
   for (final entry in logs) {
-    totalCalories += entry.calories;
-    totalProtein += entry.protein;
-    totalCarbs += entry.carbs;
-    totalFat += entry.fat;
-    totalFiber += entry.fiber;
-    totalGrams += entry.gramWeight;
+    totalCalories += entry.effectiveCalories;
+    totalProtein += entry.effectiveProtein;
+    totalCarbs += entry.effectiveCarbs;
+    totalFat += entry.effectiveFat;
+    totalFiber += entry.effectiveFiber;
+    totalGrams += entry.gramWeight < 0 ? 0.0 : entry.gramWeight;
   }
 
   return NutritionalValues(
@@ -342,13 +362,25 @@ class WeightLogsNotifier extends StateNotifier<List<ScaleWeightEntry>> {
   void logWeight(String date, double weightKg, String? note) {
     _db.insertWeightLog(date, weightKg, note);
     refresh();
-    _ref?.invalidate(userProfileProvider);
+    if (_ref != null) {
+      _ref.invalidate(userProfileProvider);
+      final updatedProfile = _ref.read(userProfileProvider);
+      _ref
+          .read(weeklyMacroProgramProvider.notifier)
+          .regenerateFromProfile(updatedProfile);
+    }
   }
 
   void deleteWeight(String date) {
     _db.deleteWeightLogForDate(date);
     refresh();
-    _ref?.invalidate(userProfileProvider);
+    if (_ref != null) {
+      _ref.invalidate(userProfileProvider);
+      final updatedProfile = _ref.read(userProfileProvider);
+      _ref
+          .read(weeklyMacroProgramProvider.notifier)
+          .regenerateFromProfile(updatedProfile);
+    }
   }
 }
 
@@ -382,6 +414,9 @@ final expenditureStateProvider = Provider<ExpenditureState>((ref) {
   final db = ref.watch(databaseProvider);
   ref.watch(foodLogsRevisionProvider);
   ref.watch(workoutSessionsProvider);
+  ref.watch(bodyMeasurementsProvider);
+  ref.watch(dailyWaterProvider);
+  ref.watch(fastingSessionProvider);
   final dayCompletions = ref.watch(dayCompletionsProvider);
 
   final baselineKcal = profile.baselineExpenditureKcal > 0
@@ -474,6 +509,16 @@ final expenditureStateProvider = Provider<ExpenditureState>((ref) {
     }
   }
 
+  final sensitivity =
+      db.getSetting('expenditure_sensitivity', 'Standard').toLowerCase();
+  final qE = switch (sensitivity) {
+    'conservative' => 22.0,
+    'dynamic' => 55.0,
+    _ => 35.0,
+  };
+  final earliestIsFirstWeight = earliestDate.year == weights.first.date.year &&
+      earliestDate.month == weights.first.date.month &&
+      earliestDate.day == weights.first.date.day;
   final bmr = ExpenditureKalmanV5.computeBlendedBmr(
     weightKg: weights.first.weightKg,
     heightCm: profile.heightCm,
@@ -483,9 +528,10 @@ final expenditureStateProvider = Provider<ExpenditureState>((ref) {
   );
   final filter = ExpenditureKalmanV5(
     initialExpenditureKcal: baselineKcal,
-    initialWeightKg: weights.first.weightKg,
+    initialWeightKg: earliestIsFirstWeight ? weights.first.weightKg : null,
     bmrKcal: bmr,
     sigmaE0: sigmaE0,
+    qE: qE,
   );
 
   final recordsToSave = <ExpenditureRecord>[];
@@ -513,7 +559,7 @@ final expenditureStateProvider = Provider<ExpenditureState>((ref) {
   }
 
   final waterByDate = <String, int>{};
-  for (final w in db.waterDao.getAllWaterLogs(limit: 2000)) {
+  for (final w in db.waterDao.getAllWaterLogs()) {
     waterByDate[w.date] = (waterByDate[w.date] ?? 0) + w.amountMl;
   }
 
@@ -521,9 +567,11 @@ final expenditureStateProvider = Provider<ExpenditureState>((ref) {
 
   final extendedFastDates = <String>{};
   for (final f in db.fastingDao.getRecentFasts(limit: 90)) {
-    final end =
-        f.actualEndTime ?? (f.state == 'active' ? now : f.targetEndTime);
-    if (end.difference(f.startTime).inHours >= 18) {
+    final end = f.actualEndTime ??
+        (f.state == 'active'
+            ? now
+            : (f.state == 'completed' ? f.targetEndTime : null));
+    if (end != null && end.difference(f.startTime).inHours >= 18) {
       final d = DateTime(end.year, end.month, end.day);
       extendedFastDates.add(DateFormat('yyyy-MM-dd').format(d));
       extendedFastDates.add(
@@ -640,6 +688,7 @@ final goalEtaProjectionProvider = Provider<GoalEtaProjection>((ref) {
   final exp = ref.watch(expenditureStateProvider);
   final profile = ref.watch(userProfileProvider);
   final trendSeries = ref.watch(weightTrendSeriesProvider);
+  ref.watch(bodyMeasurementsProvider);
   final db = ref.watch(databaseProvider);
   final clock = ref.watch(clockProvider);
   final now = clock();
@@ -651,9 +700,12 @@ final goalEtaProjectionProvider = Provider<GoalEtaProjection>((ref) {
       (p) => latest.date.difference(p.date).inDays >= 14,
       orElse: () => trendSeries.first,
     );
-    final days = latest.date.difference(anchor.date).inDays.clamp(1, 365);
-    observedVelKgWk =
-        ((latest.trendWeightKg - anchor.trendWeightKg) / days) * 7.0;
+    final rawDays = latest.date.difference(anchor.date).inDays;
+    if (rawDays >= 7) {
+      observedVelKgWk = ((latest.trendWeightKg - anchor.trendWeightKg) /
+              rawDays.clamp(7, 365)) *
+          7.0;
+    }
   }
 
   final measurements = db.bodyMeasurementsDao.getRecentMeasurements(limit: 30);
@@ -681,11 +733,13 @@ final goalEtaProjectionProvider = Provider<GoalEtaProjection>((ref) {
       (s) => series.last.date.difference(s.date).inDays >= 14,
       orElse: () => series.first,
     );
-    waistDelta14 = currentWaist - anchorW.value;
-    isSilentRecomp = AnthropometricService.isSilentRecomposition(
-      weightDelta7DayKg: observedVelKgWk,
-      smoothedWaistDelta14DayCm: waistDelta14,
-    );
+    if (series.last.date.difference(anchorW.date).inDays >= 14) {
+      waistDelta14 = currentWaist - anchorW.value;
+      isSilentRecomp = AnthropometricService.isSilentRecomposition(
+        weightDelta7DayKg: observedVelKgWk,
+        smoothedWaistDelta14DayCm: waistDelta14,
+      );
+    }
   }
 
   final goalStr = switch (profile.goalType) {

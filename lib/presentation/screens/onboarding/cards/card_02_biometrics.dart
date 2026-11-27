@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:sique/presentation/theme/app_theme.dart';
 import 'package:sique/presentation/widgets/apple_tactile_card.dart';
 import 'package:sique/presentation/widgets/sique_frosted_chrome.dart';
+import 'package:sique/utils/unit_formatter.dart';
 
 /// Card 2: Biometrics (Sex, DOB via date picker, Height, Weight with metric/imperial toggle).
 class Card02Biometrics extends StatefulWidget {
@@ -15,6 +16,7 @@ class Card02Biometrics extends StatefulWidget {
     required this.initialWeightKg,
     required this.onBiometricsChanged,
     required this.onNext,
+    this.onUseImperialChanged,
   });
 
   final bool initialIsMale;
@@ -28,6 +30,7 @@ class Card02Biometrics extends StatefulWidget {
     required double weightKg,
   }) onBiometricsChanged;
   final VoidCallback onNext;
+  final ValueChanged<bool>? onUseImperialChanged;
 
   @override
   State<Card02Biometrics> createState() => _Card02BiometricsState();
@@ -64,11 +67,9 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
     _weightController =
         TextEditingController(text: _weightKg.toStringAsFixed(1));
 
-    final totalInches = _heightCm / 2.54;
-    final feet = totalInches ~/ 12;
-    final inches = (totalInches % 12).round();
-    _feetController = TextEditingController(text: feet.toString());
-    _inchesController = TextEditingController(text: inches.toString());
+    final imperial = UnitFormatter.cmToRoundedFeetInches(_heightCm);
+    _feetController = TextEditingController(text: imperial.feet.toString());
+    _inchesController = TextEditingController(text: imperial.inches.toString());
   }
 
   @override
@@ -159,7 +160,7 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Used to compute your resting metabolic baseline (Mifflin-St Jeor).',
+                'Used to estimate your daily resting metabolic baseline.',
                 style: TextStyle(
                   fontSize: 14,
                   color: AppTheme.textSecondary,
@@ -298,7 +299,20 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                     secondLabel: 'ft/in',
                     firstKey: const Key('step_04_unit_toggle_cm'),
                     secondKey: const Key('step_04_unit_toggle_ft'),
-                    onToggle: (first) => setState(() => _heightInCm = first),
+                    onToggle: (first) {
+                      setState(() {
+                        _heightInCm = first;
+                        if (first) {
+                          _heightController.text = _heightCm.toStringAsFixed(0);
+                        } else {
+                          final imperial =
+                              UnitFormatter.cmToRoundedFeetInches(_heightCm);
+                          _feetController.text = imperial.feet.toString();
+                          _inchesController.text = imperial.inches.toString();
+                        }
+                      });
+                      widget.onUseImperialChanged?.call(!first);
+                    },
                   ),
                 ],
               ),
@@ -321,7 +335,14 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                     secondLabel: 'lb',
                     firstKey: const Key('step_05_unit_toggle_kg'),
                     secondKey: const Key('step_05_unit_toggle_lb'),
-                    onToggle: (first) => setState(() => _weightInKg = first),
+                    onToggle: (first) {
+                      setState(() {
+                        _weightInKg = first;
+                        final disp = first ? _weightKg : (_weightKg * 2.20462);
+                        _weightController.text = disp.toStringAsFixed(1);
+                      });
+                      widget.onUseImperialChanged?.call(!first);
+                    },
                   ),
                 ],
               ),
@@ -446,9 +467,13 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
               onToggle(true);
             },
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 200),
               curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: isFirst ? AppTheme.activeBlue : Colors.transparent,
                 borderRadius: BorderRadius.circular(7),
@@ -457,7 +482,9 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                   style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: isFirst ? Colors.white : AppTheme.textSecondary)),
+                      color: isFirst
+                          ? AppTheme.buttonForeground
+                          : AppTheme.textSecondary)),
             ),
           ),
           GestureDetector(
@@ -467,9 +494,13 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
               onToggle(false);
             },
             child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
+              duration: MediaQuery.disableAnimationsOf(context)
+                  ? Duration.zero
+                  : const Duration(milliseconds: 200),
               curve: Curves.easeOutCubic,
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
                 color: !isFirst ? AppTheme.activeBlue : Colors.transparent,
                 borderRadius: BorderRadius.circular(7),
@@ -478,7 +509,9 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                   style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
-                      color: !isFirst ? Colors.white : AppTheme.textSecondary)),
+                      color: !isFirst
+                          ? AppTheme.buttonForeground
+                          : AppTheme.textSecondary)),
             ),
           ),
         ],
@@ -630,7 +663,11 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
                   ),
                   onChanged: (val) {
                     final parsed = double.tryParse(val.replaceAll(',', '.'));
-                    if (parsed != null && parsed >= 30.0 && parsed <= 300.0) {
+                    final minDisp = _weightInKg ? 30.0 : 66.0;
+                    final maxDisp = _weightInKg ? 300.0 : 660.0;
+                    if (parsed != null &&
+                        parsed >= minDisp &&
+                        parsed <= maxDisp) {
                       setState(() {
                         _weightKg = _weightInKg ? parsed : parsed / 2.20462;
                       });
@@ -657,7 +694,7 @@ class _Card02BiometricsState extends State<Card02Biometrics> {
             onChanged: (newVal) {
               setState(() {
                 _weightKg = _weightInKg ? newVal : newVal / 2.20462;
-                _weightController.text = _weightKg.toStringAsFixed(1);
+                _weightController.text = newVal.toStringAsFixed(1);
               });
               _notifyUpdate();
             },

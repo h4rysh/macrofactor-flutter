@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [4.1.0] - 2026-11-27
+
+### 🛡️ Reliability, Security & Domain Integrity Hardening (Waves 1–5)
+- **Encrypted & Atomic Backup Pipeline**: Added authenticated backup validation (`BackupCodec` / `BackupCrypto`), CSV formula-injection escaping (`CsvSanitizer`), transactional SQLite restore with rollback, and post-restore Riverpod provider invalidation across units, food logs, settings, workouts, and challenges.
+- **Database, DAO & Validation Safety**: Hardened parameterized queries, foreign/user-scoped isolation, DST-safe calendar arithmetic, single-source `DomainValidator` bounds on targets/weights/portions/custom micro goals, and `wave5_audit_regression_test.dart` coverage.
+- **Algorithmic & Sync Correctness**: Hardened `ExpenditureKalmanV4` / `ExpenditureKalmanV5`, `WeightTrendV2`, `CoachingEngine`, `AnthropometricService`, `ChallengeGenerationService`, `HealthConnectSyncAdapter`, `OpenFoodFactsService`, and Android `SiqueMacroWidgetProvider` updates.
+
+### ✨ UI/UX, Apple HIG & WCAG 2.1 AA Overhaul (Waves 1–4)
+- **Design Tokens & Accessibility**: Added high-contrast text-role tokens (`activeBlueText`, `errorText`), aligned display typography weights to declared Inter font weights (`w400`–`w700`/`w900`), enforced `>= 44dp` interactive hit targets across chips/buttons/steppers/dock controls, and respected `MediaQuery.disableAnimationsOf(context)` across custom transitions and controls.
+- **Dashboard, Charts & Strategy UX**: Added `MMM d` axis labels, Y-axis range bounds, target line labels, persistent touch scrub with `SemanticsService` announcements, ultra-compact (`320x568`) responsive layout fixes (`MetabolicCommandHeader`, `StrategySetupWizard`), confirmation dialogs for destructive resets/swaps (`WaterDialCard`, `FastingClockCard`, `WeeklyChallengeCard`), and unstacked sheet flows.
+- **Food Diary, Modals & Biomarkers**: Fixed AM/PM timestamps and intuitive swipe-to-duplicate colors in `TimelineFoodCard`, added keyboard-safe scroll + `SafeArea` + inline validation + safe `StatefulWidget` controller disposal (`_DayNoteDialog`, `_DialogControllerScope`), added close/confirm controls in `BarcodeScannerSheet`, `BatchDiaryToolbar`, `StagingPlateSheet`, and `RecipeBuilderSheet`, and added empty/error states in `NutrientExplorerScreen`.
+- **Onboarding, Auth & Export UX**: Persisted Card 2 unit toggles directly to `useImperialUnitsProvider`, fixed step progress math and `GoalQuestionnaireSheet` cancel/preservation semantics (`millet`, `poha_upma`, `heavy`, activity multiplier), surfaced Google Sign-In `AuthLoading`/`AuthError` feedback, and wired Health Connect & export busy-state indicators.
+
+### ✅ Verification
+- `dart format --output=none --set-exit-if-changed .` — **0** formatting issues (`291` files)
+- `flutter analyze --fatal-infos` — **0** warnings/infos
+- `flutter test` — **904 / 904** tests passing (including updated presentation goldens & `wave5_audit_regression_test.dart`)
+
+---
+
 ## [4.0.1] - 2026-11-26
 
 ### 🔧 Fixes & UX Polish

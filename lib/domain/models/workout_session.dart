@@ -76,8 +76,10 @@ class WorkoutSession {
       title: map['title'] as String? ?? 'Workout',
       startTime: DateTime.parse(map['start_time'] as String),
       endTime: DateTime.parse(map['end_time'] as String),
-      durationMinutes: (map['duration_minutes'] as num?)?.toInt() ?? 0,
-      caloriesBurned: (map['calories_burned'] as num?)?.toDouble() ?? 0.0,
+      durationMinutes:
+          ((map['duration_minutes'] as num?)?.toInt() ?? 0).clamp(0, 1440),
+      caloriesBurned: ((map['calories_burned'] as num?)?.toDouble() ?? 0.0)
+          .clamp(0.0, 20000.0),
       notes: map['notes'] as String?,
       createdAt: map['created_at'] != null
           ? DateTime.parse(map['created_at'] as String)

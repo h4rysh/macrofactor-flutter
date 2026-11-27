@@ -48,7 +48,7 @@ class ChallengeGenerationService {
         type: ChallengeType.fiberBuilder,
         title: 'Fiber & Satiety Builder',
         description: 'Reach at least 25g of dietary fiber on 4 days this week.',
-        targetMetric: 'days_hit',
+        targetMetric: 'fiber:25',
         targetValue: 4.0,
         currentValue: 0.0,
         unit: 'days',
@@ -107,7 +107,7 @@ class ChallengeGenerationService {
         type: ChallengeType.hydrationHero,
         title: 'Hydration Foundation (2.5L)',
         description: 'Drink at least 2,500ml of water on 5 days this week.',
-        targetMetric: 'days_hit',
+        targetMetric: 'hydration:2500',
         targetValue: 5.0,
         currentValue: 0.0,
         unit: 'days',
@@ -157,7 +157,7 @@ class ChallengeGenerationService {
         type: ChallengeType.hydrationHero,
         title: 'Daily Hydration Habit',
         description: 'Drink at least 2,500ml of water on 5 days this week.',
-        targetMetric: 'days_hit',
+        targetMetric: 'hydration:2500',
         targetValue: 5.0,
         currentValue: 0.0,
         unit: 'days',
@@ -187,18 +187,21 @@ class ChallengeGenerationService {
     final scored = <({double score, WeeklyChallengeModel challenge})>[];
 
     double roundTo25(double v) => (v / 25.0).round() * 25.0;
+    final safeProteinTarget = (proteinTargetG.isFinite && proteinTargetG > 0)
+        ? proteinTargetG
+        : 150.0;
 
     // Gate: if < 3 logged days, prioritize Scale Cadence & Hydration first
     if (metrics.totalLoggedDays >= 3) {
       // 1. Cumulative Weekly Protein Volume (forgiving: 1 low day won't fail)
-      if (metrics.avgDailyProteinG < 0.85 * proteinTargetG) {
+      if (metrics.avgDailyProteinG < 0.85 * safeProteinTarget) {
         final rawGoal = roundTo25(7.0 * metrics.avgDailyProteinG * 1.15);
         final weeklyTarget = rawGoal
-            .clamp(0.60 * 7.0 * proteinTargetG, 7.0 * proteinTargetG)
+            .clamp(0.60 * 7.0 * safeProteinTarget, 7.0 * safeProteinTarget)
             .clamp(250.0, 2000.0);
-        final severity =
-            (1.0 - (metrics.avgDailyProteinG / math.max(proteinTargetG, 60.0)))
-                .clamp(0.1, 1.0);
+        final severity = (1.0 -
+                (metrics.avgDailyProteinG / math.max(safeProteinTarget, 60.0)))
+            .clamp(0.1, 1.0);
         scored.add((
           score: 100.0 * severity + 20.0,
           challenge: WeeklyChallengeModel(
@@ -207,7 +210,7 @@ class ChallengeGenerationService {
             type: ChallengeType.proteinVolume,
             title: 'Hit ${weeklyTarget.round()}g+ Total Protein',
             description:
-                'Last week averaged ${metrics.avgDailyProteinG.round()}g/day vs ${proteinTargetG.round()}g goal. Cumulative weekly target.',
+                'Last week averaged ${metrics.avgDailyProteinG.round()}g/day vs ${safeProteinTarget.round()}g goal. Cumulative weekly target.',
             targetMetric: 'total_protein_g',
             targetValue: weeklyTarget,
             unit: 'g',
@@ -258,7 +261,7 @@ class ChallengeGenerationService {
             title: 'Reach ${stepTarget}g+ Fiber (4d)',
             description:
                 'Last week averaged ${metrics.avgFiberG.toStringAsFixed(1)}g fiber. Step up on 4 days.',
-            targetMetric: 'days_hit',
+            targetMetric: 'fiber:$stepTarget',
             targetValue: 4.0,
             unit: 'days',
             weekStartDate: weekStart,
@@ -346,7 +349,7 @@ class ChallengeGenerationService {
               'Hydrate ${(metrics.adaptiveWaterTargetMl / 1000.0).toStringAsFixed(1)}L+ (5d)',
           description:
               'Last week averaged ${metrics.avgHydrationMl}ml/day. Hit target on 5 days.',
-          targetMetric: 'days_hit',
+          targetMetric: 'hydration:${metrics.adaptiveWaterTargetMl}',
           targetValue: 5.0,
           unit: 'days',
           weekStartDate: weekStart,

@@ -51,9 +51,11 @@ class DeficitMiningV2 {
     DateTime? referenceDate,
   }) {
     final now = referenceDate ?? DateTime.now();
-    final sevenDaysAgo = now.subtract(const Duration(days: 7));
+    final sixDaysAgo = DateTime(now.year, now.month, now.day - 6);
     final startDateStr =
-        '${sevenDaysAgo.year.toString().padLeft(4, '0')}-${sevenDaysAgo.month.toString().padLeft(2, '0')}-${sevenDaysAgo.day.toString().padLeft(2, '0')}';
+        '${sixDaysAgo.year.toString().padLeft(4, '0')}-${sixDaysAgo.month.toString().padLeft(2, '0')}-${sixDaysAgo.day.toString().padLeft(2, '0')}';
+    final endDateStr =
+        '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
 
     // 1. Food logs: protein, fiber, expanded produce, late-night snacks, total kcal
     final foodStmt = db.prepare('''
@@ -90,25 +92,26 @@ class DeficitMiningV2 {
               AND CAST(substr(logged_at, 12, 2) AS INTEGER) >= 21
             THEN 1 ELSE 0 END) AS late_snacks
         FROM food_logs
-        WHERE user_id = ? AND date >= ?
+        WHERE user_id = ? AND date >= ? AND date <= ?
         GROUP BY date
       );
     ''');
 
     var proteinHitDays = 0;
     var avgDailyProteinG = 0.0;
-    var avgFiberG = 25.0;
+    var avgFiberG = 0.0;
     var produceDays = 0;
     var lateNightSnackDays = 0;
     var totalLoggedDays = 0;
     var totalKcal7d = 0.0;
     try {
-      final rows = foodStmt.select([proteinTargetG, userId, startDateStr]);
+      final rows =
+          foodStmt.select([proteinTargetG, userId, startDateStr, endDateStr]);
       if (rows.isNotEmpty) {
         final r = rows.first;
         proteinHitDays = (r['protein_hit_days'] as int?) ?? 0;
         avgDailyProteinG = (r['avg_protein_g'] as num?)?.toDouble() ?? 0.0;
-        avgFiberG = (r['avg_fiber_g'] as num?)?.toDouble() ?? 25.0;
+        avgFiberG = (r['avg_fiber_g'] as num?)?.toDouble() ?? 0.0;
         produceDays = (r['produce_days'] as int?) ?? 0;
         lateNightSnackDays = (r['late_snack_days'] as int?) ?? 0;
         totalLoggedDays = (r['total_logged_days'] as int?) ?? 0;
@@ -237,7 +240,8 @@ class DeficitMiningV2 {
       }
     }
 
-    final waterTarget = (35.0 * weightKg).round().clamp(2000, 3800);
+    final safeWeight = weightKg.isFinite && weightKg > 0 ? weightKg : 70.0;
+    final waterTarget = (35.0 * safeWeight).round().clamp(2000, 3800);
 
     return MinedDeficitMetricsV2(
       totalLoggedDays: totalLoggedDays,

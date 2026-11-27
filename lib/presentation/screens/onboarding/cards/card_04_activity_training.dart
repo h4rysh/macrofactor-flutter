@@ -123,7 +123,7 @@ class _Card04ActivityTrainingState extends State<Card04ActivityTraining> {
               ),
               const SizedBox(height: 6),
               const Text(
-                'Your baseline movement and resistance workouts seed the Bayesian expenditure filter.',
+                'Your daily movement and resistance workouts set your starting calorie budget.',
                 style: TextStyle(
                   fontSize: 14,
                   color: AppTheme.textSecondary,

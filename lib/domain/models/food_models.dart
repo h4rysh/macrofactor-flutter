@@ -99,27 +99,35 @@ class FoodItem {
     OilModifier oilModifier = OilModifier.standard,
     double? oilGrams,
   }) {
-    final clampedQuantity = math.max(0.0, quantity);
-    final unitWeight = unit.gramWeight > 0 ? unit.gramWeight : 100.0;
-    final totalGrams = clampedQuantity * unitWeight;
+    final safeQty = quantity.isFinite ? math.max(0.0, quantity) : 0.0;
+    final unitWeight = (unit.gramWeight.isFinite && unit.gramWeight > 0)
+        ? unit.gramWeight
+        : 100.0;
+    final totalGrams = safeQty * unitWeight;
     final ratio = totalGrams / 100.0;
 
-    final baseCalories = math.max(0.0, caloriesPer100g * ratio);
-    final baseProtein = math.max(0.0, proteinPer100g * ratio);
-    final baseCarbs = math.max(0.0, carbsPer100g * ratio);
-    final baseFat = math.max(0.0, fatPer100g * ratio);
-    final baseFiber = math.max(0.0, fiberPer100g * ratio);
+    final calPer100 = caloriesPer100g.isFinite ? caloriesPer100g : 0.0;
+    final protPer100 = proteinPer100g.isFinite ? proteinPer100g : 0.0;
+    final carbPer100 = carbsPer100g.isFinite ? carbsPer100g : 0.0;
+    final fatP100 = fatPer100g.isFinite ? fatPer100g : 0.0;
+    final fibPer100 = fiberPer100g.isFinite ? fiberPer100g : 0.0;
+
+    final baseCalories = math.max(0.0, calPer100 * ratio);
+    final baseProtein = math.max(0.0, protPer100 * ratio);
+    final baseCarbs = math.max(0.0, carbPer100 * ratio);
+    final baseFat = math.max(0.0, fatP100 * ratio);
+    final baseFiber = math.max(0.0, fibPer100 * ratio);
 
     // Apply oil modifier or explicit oil grams scaled proportionally by quantity and clamped at 0
     final double addedFat;
     final double addedCalories;
     if (oilGrams != null) {
-      final clampedOil = math.max(0.0, oilGrams);
-      addedFat = clampedOil * clampedQuantity;
+      final clampedOil = oilGrams.isFinite ? math.max(0.0, oilGrams) : 0.0;
+      addedFat = clampedOil * safeQty;
       addedCalories = addedFat * 9.0;
     } else {
-      addedFat = oilModifier.additionalFatGrams * clampedQuantity;
-      addedCalories = oilModifier.additionalCalories * clampedQuantity;
+      addedFat = oilModifier.additionalFatGrams * safeQty;
+      addedCalories = oilModifier.additionalCalories * safeQty;
     }
 
     final adjustedCalories = math.max(0.0, baseCalories + addedCalories);
@@ -332,18 +340,26 @@ class FoodLogEntry {
     final oilFat = oilModifier.additionalFatGrams * effectiveQuantity;
     final baseCalories = math.max(0.0, calories - oilCals);
     final baseFat = math.max(0.0, fat - oilFat);
+    final fallbackFactor = effectiveQuantity > 0 ? effectiveQuantity : 1.0;
     return FoodItem(
       id: foodId,
       uuid: 'food_$foodId',
       name: foodName,
       category: 'Food',
       region: 'All',
-      caloriesPer100g:
-          gramWeight > 0 ? (baseCalories / gramWeight) * 100 : baseCalories,
-      proteinPer100g: gramWeight > 0 ? (protein / gramWeight) * 100 : protein,
-      carbsPer100g: gramWeight > 0 ? (carbs / gramWeight) * 100 : carbs,
-      fatPer100g: gramWeight > 0 ? (baseFat / gramWeight) * 100 : baseFat,
-      fiberPer100g: gramWeight > 0 ? (fiber / gramWeight) * 100 : fiber,
+      caloriesPer100g: gramWeight > 0
+          ? (baseCalories / gramWeight) * 100
+          : baseCalories / fallbackFactor,
+      proteinPer100g: gramWeight > 0
+          ? (protein / gramWeight) * 100
+          : protein / fallbackFactor,
+      carbsPer100g:
+          gramWeight > 0 ? (carbs / gramWeight) * 100 : carbs / fallbackFactor,
+      fatPer100g: gramWeight > 0
+          ? (baseFat / gramWeight) * 100
+          : baseFat / fallbackFactor,
+      fiberPer100g:
+          gramWeight > 0 ? (fiber / gramWeight) * 100 : fiber / fallbackFactor,
       iconSvg: iconSvg,
       source: 'Catalog',
       aliases: foodName,

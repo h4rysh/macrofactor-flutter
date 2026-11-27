@@ -2,7 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/strategy_providers.dart';
+import '../../providers/app_providers.dart';
 import '../../theme/app_theme.dart';
 
 /// Interactive 7-day distribution bar chart showing daily calorie allocation
@@ -17,7 +17,13 @@ class SevenDayDistributionChart extends ConsumerStatefulWidget {
 
 class _SevenDayDistributionChartState
     extends ConsumerState<SevenDayDistributionChart> {
-  int _selectedDayIndex = 0;
+  late int _selectedDayIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedDayIndex = (ref.read(clockProvider)().weekday - 1).clamp(0, 6);
+  }
 
   void _handleScrub(
       BuildContext context, Offset localPos, double width, List<dynamic> days) {
@@ -40,6 +46,9 @@ class _SevenDayDistributionChartState
   Widget build(BuildContext context) {
     final program = ref.watch(weeklyMacroProgramProvider);
     final days = program.days;
+    if (days.isEmpty) {
+      return const SizedBox.shrink();
+    }
     final selectedDay = days[_selectedDayIndex.clamp(0, days.length - 1)];
 
     // Calculate max calorie value for normalization
@@ -111,65 +120,14 @@ class _SevenDayDistributionChartState
                 ),
               ],
             ),
-            const SizedBox(height: 12),
-
-            // Floating Tooltip smoothly tracking active scrubbed column
-            AnimatedAlign(
-              alignment: Alignment(-1.0 + (_selectedDayIndex / 3.0), 0),
-              duration: const Duration(milliseconds: 160),
-              curve: Curves.easeOutCubic,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                decoration: BoxDecoration(
-                  color: AppTheme.cardElevated,
-                  borderRadius: AppRadii.mdBorderRadius,
-                  border: Border.all(color: AppTheme.cardBorder, width: 0.8),
-                ),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        '${selectedDay.dayName.substring(0, 3)}: ',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.textPrimary,
-                        ),
-                      ),
-                      Text(
-                        '${selectedDay.calories.round()} kcal',
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: AppTheme.calories,
-                          fontFeatures: [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '(${selectedDay.proteinGrams.round()}P · ${selectedDay.fatGrams.round()}F · ${selectedDay.carbsGrams.round()}C)',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                          color: AppTheme.textSecondary,
-                          fontFeatures: [FontFeature.tabularFigures()],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
 
             // 7 Scrubbable / Tappable Bars
             LayoutBuilder(
               builder: (context, constraints) {
+                final textExtra =
+                    (MediaQuery.textScalerOf(context).scale(12) - 12)
+                        .clamp(0.0, 36.0);
                 return GestureDetector(
                   behavior: HitTestBehavior.opaque,
                   onHorizontalDragDown: (d) => _handleScrub(
@@ -185,7 +143,7 @@ class _SevenDayDistributionChartState
                     days,
                   ),
                   child: SizedBox(
-                    height: 140,
+                    height: 148 + textExtra,
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: List.generate(days.length, (idx) {
@@ -198,92 +156,102 @@ class _SevenDayDistributionChartState
                             0.4 + (0.6 * ((day.calories - minCal) / range));
 
                         return Expanded(
-                          child: GestureDetector(
-                            behavior: HitTestBehavior.opaque,
-                            onTap: () {
-                              AppHaptics.selectionClick();
-                              setState(() => _selectedDayIndex = idx);
-                            },
-                            child: Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 4),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    '${day.calories.round()}',
-                                    style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: isSelected
-                                          ? FontWeight.w800
-                                          : FontWeight.w600,
-                                      color: isSelected
-                                          ? AppTheme.calories
-                                          : AppTheme.textSecondary,
+                          child: Semantics(
+                            button: true,
+                            selected: isSelected,
+                            label:
+                                '${day.dayName}: ${day.calories.round()} kcal',
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: () {
+                                AppHaptics.selectionClick();
+                                setState(() => _selectedDayIndex = idx);
+                              },
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 4),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        '${day.calories.round()}',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: isSelected
+                                              ? FontWeight.w700
+                                              : FontWeight.w600,
+                                          color: isSelected
+                                              ? AppTheme.caloriesSecondary
+                                              : AppTheme.textSecondary,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Expanded(
-                                    child: Align(
-                                      alignment: Alignment.bottomCenter,
-                                      child: FractionallySizedBox(
-                                        heightFactor:
-                                            heightFactor.clamp(0.2, 1.0),
-                                        widthFactor: 1.0,
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color: isSelected
-                                                ? AppTheme.calories
-                                                : isWorkout
-                                                    ? AppTheme.calories
-                                                        .withValues(alpha: 0.45)
-                                                    : AppTheme.cardElevated,
-                                            borderRadius:
-                                                BorderRadius.circular(8),
-                                            border: isSelected
-                                                ? Border.all(
-                                                    color: Colors.white,
-                                                    width: 1.5)
-                                                : null,
+                                    const SizedBox(height: 6),
+                                    Expanded(
+                                      child: Align(
+                                        alignment: Alignment.bottomCenter,
+                                        child: FractionallySizedBox(
+                                          heightFactor:
+                                              heightFactor.clamp(0.2, 1.0),
+                                          widthFactor: 1.0,
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              color: isSelected
+                                                  ? AppTheme.calories
+                                                  : isWorkout
+                                                      ? AppTheme.calories
+                                                          .withValues(
+                                                              alpha: 0.45)
+                                                      : AppTheme.cardElevated,
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              border: isSelected
+                                                  ? Border.all(
+                                                      color: Colors.white,
+                                                      width: 1.5)
+                                                  : null,
+                                            ),
                                           ),
                                         ),
                                       ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        if (isWorkout) ...[
-                                          Container(
-                                            width: 4,
-                                            height: 4,
-                                            decoration: const BoxDecoration(
-                                              color: AppTheme.calories,
-                                              shape: BoxShape.circle,
+                                    const SizedBox(height: 8),
+                                    FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          if (isWorkout) ...[
+                                            Container(
+                                              width: 4,
+                                              height: 4,
+                                              decoration: const BoxDecoration(
+                                                color: AppTheme.calories,
+                                                shape: BoxShape.circle,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 2),
+                                          ],
+                                          Text(
+                                            day.dayName.substring(0, 3),
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              fontWeight: isSelected
+                                                  ? FontWeight.w800
+                                                  : FontWeight.w600,
+                                              color: isSelected
+                                                  ? AppTheme.textPrimary
+                                                  : AppTheme.textSecondary,
                                             ),
                                           ),
-                                          const SizedBox(width: 2),
                                         ],
-                                        Text(
-                                          day.dayName.substring(0, 3),
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: isSelected
-                                                ? FontWeight.w800
-                                                : FontWeight.w600,
-                                            color: isSelected
-                                                ? AppTheme.textPrimary
-                                                : AppTheme.textSecondary,
-                                          ),
-                                        ),
-                                      ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             ),
                           ),

@@ -45,43 +45,43 @@ class _MetabolicCommandHeaderState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        const Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Text(
+                            'ADAPTIVE BURN',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: AppTheme.textSecondary,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  AppTheme.expenditure.withValues(alpha: 0.16),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                             child: Text(
-                              'ADAPTIVE TDEE',
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w800,
-                                color: AppTheme.textSecondary,
-                                letterSpacing: 0.8,
+                              '$confPct% conf',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.expenditure,
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppTheme.expenditure.withValues(alpha: 0.16),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '$confPct% conf',
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: AppTheme.expenditure,
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 4),
                     FittedBox(
@@ -156,10 +156,10 @@ class _MetabolicCommandHeaderState
                                 : eta.headlineLabel,
                             style: TextStyle(
                               fontSize: 13,
-                              fontWeight: FontWeight.w800,
+                              fontWeight: FontWeight.w700,
                               color: eta.isRecompMode
                                   ? const Color(0xFF9CCC65)
-                                  : AppTheme.activeBlue,
+                                  : AppTheme.activeBlueText,
                             ),
                           ),
                         ),
@@ -228,7 +228,7 @@ class _MetabolicCommandHeaderState
                               : Icons.event_available_rounded,
                           size: 16,
                           color: checkIn.isDue
-                              ? AppTheme.calories
+                              ? AppTheme.caloriesSecondary
                               : AppTheme.textSecondary,
                         ),
                         const SizedBox(width: 8),
@@ -241,7 +241,7 @@ class _MetabolicCommandHeaderState
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                               color: checkIn.isDue
-                                  ? AppTheme.calories
+                                  ? AppTheme.caloriesSecondary
                                   : AppTheme.textPrimary,
                             ),
                           ),
@@ -256,16 +256,22 @@ class _MetabolicCommandHeaderState
                 message:
                     'No judgment tracking: higher-calorie or unlogged days simply help refine your targets — zero red warnings.',
                 triggerMode: TooltipTriggerMode.tap,
-                child: Container(
-                  padding: const EdgeInsets.all(9),
-                  decoration: BoxDecoration(
-                    color: AppTheme.cardElevated,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.info_outline_rounded,
-                    size: 16,
-                    color: AppTheme.textSecondary,
+                child: Semantics(
+                  button: true,
+                  label: 'No judgment tracking info',
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: AppTheme.cardElevated,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.center,
+                    child: const Icon(
+                      Icons.info_outline_rounded,
+                      size: 18,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ),
               ),

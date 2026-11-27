@@ -98,12 +98,8 @@ class CustomRecipesNotifier extends StateNotifier<List<CustomRecipe>> {
         gramWeight: unitWeight,
         isDefault: true,
       );
-      final n = food.calculateNutrition(
-        quantity: qty * ratio,
-        unit: scaledUnit,
-        oilModifier: OilModifier.standard,
-      );
-
+      // Scale stored ingredient nutrition directly so recipe-level oil modifiers
+      // captured during Save as Recipe are preserved on exploded logs.
       batchEntries.add(
         FoodLogEntry(
           id: 0,
@@ -113,15 +109,15 @@ class CustomRecipesNotifier extends StateNotifier<List<CustomRecipe>> {
           foodName: food.name,
           servingQuantity: qty * ratio,
           unitName: scaledUnit.unitName,
-          gramWeight: n.totalGrams,
-          calories: n.calories,
-          protein: n.protein,
-          carbs: n.carbs,
-          fat: n.fat,
-          fiber: n.fiber,
+          gramWeight: safeGrams * ratio,
+          calories: (ing.calories * ratio).clamp(0.0, 20000.0),
+          protein: (ing.protein * ratio).clamp(0.0, 2000.0),
+          carbs: (ing.carbs * ratio).clamp(0.0, 2000.0),
+          fat: (ing.fat * ratio).clamp(0.0, 2000.0),
+          fiber: (ing.fiber * ratio).clamp(0.0, 1000.0),
           oilModifier: OilModifier.standard,
           loggedAt: loggedAt,
-          iconSvg: food.category,
+          iconSvg: food.iconSvg,
         ),
       );
     }

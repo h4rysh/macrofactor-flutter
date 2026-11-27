@@ -27,6 +27,7 @@ class _ExpenditureSettingsScreenState
 
   void _updateSensitivity(String mode) {
     ref.read(databaseProvider).setSetting('expenditure_sensitivity', mode);
+    ref.invalidate(expenditureStateProvider);
     setState(() => _sensitivityMode = mode);
   }
 
@@ -78,7 +79,7 @@ class _ExpenditureSettingsScreenState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Live Algorithmic State',
+            'Live Adaptive State',
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -154,7 +155,10 @@ class _ExpenditureSettingsScreenState
                       const SizedBox(height: 4),
                       Text(
                         trendWeightKg != null
-                            ? '${trendWeightKg.toStringAsFixed(1)} kg'
+                            ? UnitFormatter.formatWeight(
+                                trendWeightKg,
+                                useLbs: ref.watch(useImperialUnitsProvider),
+                              )
                             : 'No logs yet',
                         style: const TextStyle(
                           fontSize: 18,
@@ -292,7 +296,7 @@ class _ExpenditureSettingsScreenState
           ),
           const SizedBox(height: 6),
           const Text(
-            'Configures the algorithmic variance sensitivity to shifts in caloric intake and scale trends.',
+            'Controls how quickly your estimated daily burn responds to changes in intake and scale trends.',
             style: TextStyle(
               fontSize: 12,
               color: AppTheme.textSecondary,
@@ -303,7 +307,7 @@ class _ExpenditureSettingsScreenState
           // Interactive Sensitivity Curve Preview
           Semantics(
             label:
-                'Kalman Filter Responsiveness Curve for $_sensitivityMode sensitivity mode',
+                'Adaptive responsiveness curve for $_sensitivityMode sensitivity mode',
             child: Container(
               height: 90,
               width: double.infinity,
@@ -441,8 +445,8 @@ class _ExpenditureSettingsScreenState
           Text(
             'Unlike legacy trackers that punish you with red alerts or arbitrary calorie drops when you overshoot targets, Sique treats your body as a thermodynamic system:\n\n'
             '• Overeating does not decrease your expenditure.\n'
-            '• Missing days (<500 kcal logged) are excluded from Bayesian updates to prevent false metabolic drop-offs.\n'
-            '• A hard ±150 kcal daily clamp prevents erratic spikes from temporary water weight or sodium retention.',
+            '• Sparse days (<500 kcal logged) are excluded from trend updates to prevent false dips.\n'
+            '• A smooth ±150 kcal daily bound prevents erratic swings from temporary water weight or sodium shifts.',
             style: TextStyle(
               fontSize: 12,
               color: AppTheme.textSecondary,
@@ -455,6 +459,7 @@ class _ExpenditureSettingsScreenState
   }
 
   Widget _buildNoiseEnvelopeEducationCard() {
+    final useLbs = ref.watch(useImperialUnitsProvider);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -470,7 +475,7 @@ class _ExpenditureSettingsScreenState
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Scale weight fluctuates up to ±${UnitFormatter.formatWeight(2.5)} daily due to glycogen hydration, fiber transit, and sodium. The Weight Trend algorithm filters this high-frequency noise using an exponential moving average with forward-backward passes.',
+              'Scale weight fluctuates up to ±${UnitFormatter.formatWeight(2.5, useLbs: useLbs)} daily due to glycogen hydration, fiber transit, and sodium. Sique’s weight trend filters out this day-to-day noise so you see your real trajectory.',
               style: const TextStyle(
                 fontSize: 12,
                 color: AppTheme.textSecondary,

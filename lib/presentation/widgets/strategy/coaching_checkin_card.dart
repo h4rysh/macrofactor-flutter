@@ -114,6 +114,7 @@ class CoachingCheckinCard extends ConsumerWidget {
               const SizedBox(height: 16),
               Container(
                 width: double.infinity,
+                constraints: const BoxConstraints(minHeight: 44),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: const BoxDecoration(
                   color: AppTheme.calories,
@@ -128,13 +129,13 @@ class CoachingCheckinCard extends ConsumerWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: Colors.white,
+                        color: AppTheme.buttonForeground,
                       ),
                     ),
                     SizedBox(width: 6),
                     Icon(
                       Icons.arrow_forward_rounded,
-                      color: Colors.white,
+                      color: AppTheme.buttonForeground,
                       size: 16,
                     ),
                   ],

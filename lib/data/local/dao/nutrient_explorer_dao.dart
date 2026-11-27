@@ -54,14 +54,17 @@ class NutrientExplorerDao {
     final startStr =
         '${start.year.toString().padLeft(4, '0')}-${start.month.toString().padLeft(2, '0')}-${start.day.toString().padLeft(2, '0')}';
 
+    final endStr =
+        '${referenceDate.year.toString().padLeft(4, '0')}-${referenceDate.month.toString().padLeft(2, '0')}-${referenceDate.day.toString().padLeft(2, '0')}';
+
     var loggedDays = 0;
     var totalKcal = 0.0;
     final dayStmt = db.prepare('''
       SELECT COUNT(DISTINCT date) AS d, COALESCE(SUM(calories), 0.0) AS k
-      FROM food_logs WHERE user_id = ? AND date >= ?;
+      FROM food_logs WHERE user_id = ? AND date >= ? AND date <= ?;
     ''');
     try {
-      final rows = dayStmt.select([userId, startStr]);
+      final rows = dayStmt.select([userId, startStr, endStr]);
       if (rows.isNotEmpty) {
         loggedDays = (rows.first['d'] as int?) ?? 0;
         totalKcal = (rows.first['k'] as num?)?.toDouble() ?? 0.0;
@@ -92,11 +95,11 @@ class NutrientExplorerDao {
              SUM(fl.calories) AS cov
       FROM food_logs fl
       INNER JOIN food_nutrients fn ON fl.food_id = fn.food_id
-      WHERE fl.user_id = ? AND fl.date >= ?
+      WHERE fl.user_id = ? AND fl.date >= ? AND fl.date <= ?
       GROUP BY fn.nutrient_id;
     ''');
     try {
-      for (final r in nStmt.select([userId, startStr])) {
+      for (final r in nStmt.select([userId, startStr, endStr])) {
         intakeById[(r['nid'] as num).toInt()] = (
           totalAmt: (r['amt'] as num?)?.toDouble() ?? 0.0,
           covKcal: (r['cov'] as num?)?.toDouble() ?? 0.0,
@@ -107,7 +110,7 @@ class NutrientExplorerDao {
     }
 
     final items = <BiomarkerSummary>[];
-    var maxCov = 0.0;
+    var sumCov = 0.0;
     final defStmt = db.prepare(
       'SELECT * FROM nutrient_definitions ORDER BY id ASC;',
     );
@@ -123,7 +126,7 @@ class NutrientExplorerDao {
         final cov = totalKcal > 0
             ? ((stats?.covKcal ?? 0.0) / totalKcal).clamp(0.0, 1.0)
             : 0.0;
-        if (cov > maxCov) maxCov = cov;
+        sumCov += cov;
         items.add(
           BiomarkerSummary(
             nutrientId: id,
@@ -143,7 +146,8 @@ class NutrientExplorerDao {
       defStmt.dispose();
     }
 
-    return (coveragePct: maxCov * 100.0, items: items);
+    final meanCov = items.isNotEmpty ? (sumCov / items.length) : 0.0;
+    return (coveragePct: meanCov * 100.0, items: items);
   }
 
   static List<NutrientFoodContributor> topContributors(
@@ -156,18 +160,20 @@ class NutrientExplorerDao {
     final start = referenceDate.subtract(Duration(days: windowDays - 1));
     final startStr =
         '${start.year.toString().padLeft(4, '0')}-${start.month.toString().padLeft(2, '0')}-${start.day.toString().padLeft(2, '0')}';
+    final endStr =
+        '${referenceDate.year.toString().padLeft(4, '0')}-${referenceDate.month.toString().padLeft(2, '0')}-${referenceDate.day.toString().padLeft(2, '0')}';
     final stmt = db.prepare('''
       SELECT fl.food_name AS name,
              SUM((fl.gram_weight / 100.0) * fn.amount_per_100g) AS amt
       FROM food_logs fl
       INNER JOIN food_nutrients fn ON fl.food_id = fn.food_id
-      WHERE fl.user_id = ? AND fl.date >= ? AND fn.nutrient_id = ?
-      GROUP BY fl.food_name
+      WHERE fl.user_id = ? AND fl.date >= ? AND fl.date <= ? AND fn.nutrient_id = ?
+      GROUP BY fl.food_id, fl.food_name
       ORDER BY amt DESC LIMIT 5;
     ''');
     try {
       return stmt
-          .select([userId, startStr, nutrientId])
+          .select([userId, startStr, endStr, nutrientId])
           .map((r) => NutrientFoodContributor(
                 foodName: r['name'] as String,
                 totalAmount: (r['amt'] as num?)?.toDouble() ?? 0.0,

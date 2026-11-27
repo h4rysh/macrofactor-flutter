@@ -93,7 +93,7 @@ class WorkoutStats {
     for (final s in sorted) {
       if (s.isHevy) hevyCount++;
       totalMins += s.durationMinutes;
-      totalCals += s.caloriesBurned;
+      totalCals += s.caloriesBurned.isFinite ? s.caloriesBurned : 0.0;
     }
 
     final avgMins = total > 0 ? totalMins / total : 0.0;
