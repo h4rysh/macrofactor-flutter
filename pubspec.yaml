@@ -19,7 +19,7 @@ dependencies:
   flutter_riverpod: ^2.5.1
 
   # Local Persistence & SQLite
-  sqlite3_flutter_libs: ^0.5.24
+  sqlite3_flutter_libs: ^0.6.0+eol
   sqlite3: ^2.4.3
   path_provider: ^2.1.3
   path: ^1.9.0
@@ -32,7 +32,7 @@ dependencies:
 
   # Utilities
   intl: ^0.20.2
-  meta: ^1.11.0
+  meta: ^1.19.0
   clock: ^1.1.1
   share_plus: ^12.0.2
   file_picker: ^8.1.4
